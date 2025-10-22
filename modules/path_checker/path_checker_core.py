@@ -19,19 +19,15 @@ DEFAULT_IGNORE = {
 }
 
 # --- 1. Hàm phân tích (Analysis Function) ---
-# --- MODIFIED: Đã bỏ tham số check_mode, cập nhật kiểu trả về ---
 def _update_files(
     files_to_scan: List[Path], 
     project_root: Path, 
     logger: logging.Logger
 ) -> List[Dict[str, Any]]:
-# --- END MODIFIED ---
     """
-    Internal function to process files. Reads and calls rule logic.
     This function *only* analyzes and *never* writes.
     Returns:
-        A list of dictionaries ({'path': Path, 'line': str, 'new_lines': List[str]})
-        for files that need fixing.
+        A list of dictionaries ({'path': ..., 'line': ..., 'new_lines': ..., 'fix_preview': ...})
     """
     
     files_needing_fix: List[Dict[str, Any]] = []
@@ -66,12 +62,17 @@ def _update_files(
                 continue
             
             first_line_content = lines[0].strip()
+            
+            # --- MODIFIED: Thêm biến để lưu preview ---
             new_lines = []
+            correct_comment_str = "" # Sẽ lưu preview ở đây
             rule_type = rule["type"]
+            # --- END MODIFIED ---
             
             if rule_type == "line":
                 prefix = rule["comment_prefix"]
                 correct_comment = f"{prefix} Path: {relative_path.as_posix()}\n"
+                correct_comment_str = correct_comment # <--- Lưu preview
                 new_lines = apply_line_comment_rule(lines, correct_comment, check_prefix=prefix)
             
             elif rule_type == "block":
@@ -79,20 +80,22 @@ def _update_files(
                 suffix = rule["comment_suffix"]
                 padding = " " if rule.get("padding", False) else ""
                 correct_comment = f"{prefix}{padding}Path: {relative_path.as_posix()}{padding}{suffix}\n"
+                correct_comment_str = correct_comment # <--- Lưu preview
                 new_lines = apply_block_comment_rule(lines, correct_comment, rule)
             
             else:
                 logger.warning(f"Skipping file: Unknown rule type '{rule_type}' for {relative_path.as_posix()}")
                 continue
 
-            # --- MODIFIED: Bỏ logic ghi file, chỉ trả về dict ---
             if new_lines != original_lines:
+                # --- MODIFIED: Thêm 'fix_preview' vào dict trả về ---
                 files_needing_fix.append({
                     "path": file_path,
                     "line": first_line_content,
-                    "new_lines": new_lines  # <--- Trả về nội dung mới
+                    "new_lines": new_lines,
+                    "fix_preview": correct_comment_str.strip() # .strip() để xóa \n
                 })
-            # --- END MODIFIED ---
+                # --- END MODIFIED ---
                 
         except Exception as e:
             logger.error(f"Error processing file {relative_path.as_posix()}: {e}")
@@ -101,7 +104,7 @@ def _update_files(
     return files_needing_fix
 
 # --- 2. Hàm Quét file (File Scanner) ---
-# (Vẫn giữ check_mode ở đây chỉ để logging)
+# (Hàm process_path_updates không thay đổi)
 def process_path_updates(
     logger: logging.Logger,
     project_root: Path,
@@ -110,12 +113,11 @@ def process_path_updates(
     cli_ignore: Set[str],
     script_file_path: Path,
     check_mode: bool
-) -> List[Dict[str, Any]]: # <--- Cập nhật kiểu trả về
+) -> List[Dict[str, Any]]: 
     """
     Scans for files and returns a list of proposed changes.
     Returns:
-        A list of dictionaries ({'path': Path, 'line': str, 'new_lines': List[str]})
-        for files that need processing.
+        A list of dictionaries ({'path': ..., 'line': ..., 'new_lines': ..., 'fix_preview': ...})
     """
     
     from utils.core import get_submodule_paths, parse_gitignore, is_path_matched
@@ -160,6 +162,4 @@ def process_path_updates(
             continue
         files_to_process.append(file_path)
         
-    # --- MODIFIED: Bỏ check_mode khi gọi _update_files ---
     return _update_files(files_to_process, project_root, logger)
-    # --- END MODIFIED ---

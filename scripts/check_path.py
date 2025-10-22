@@ -95,7 +95,6 @@ def main():
     try:
         # 3. Run the core logic
         files_to_fix = process_path_updates(
-            # ... (tham số không đổi) ...
             logger=logger,
             project_root=scan_root,
             target_dir_str=args.target_directory,
@@ -110,20 +109,22 @@ def main():
         # 4. Report results
         if processed_count > 0:
             
-            # In báo cáo (không đổi)
+            # --- MODIFIED: Cập nhật logic in báo cáo ---
             logger.warning(f"⚠️ {processed_count} files do not conform to the path convention:")
             for info in files_to_fix:
                 file_path = info["path"]
                 first_line = info["line"]
+                fix_preview = info["fix_preview"] # <--- Lấy thông tin preview
+                
                 logger.warning(f"   -> {file_path.relative_to(scan_root).as_posix()}")
-                logger.warning(f"      (L1: {first_line})")
+                logger.warning(f"      (Current L1: {first_line})")
+                logger.warning(f"      (Proposed:   {fix_preview})") # <--- Hiển thị
+            # --- END MODIFIED ---
 
             if check_mode:
-                # --- MODIFIED: In lệnh "fix" theo cách dễ copy ---
+                # --- MODIFIED: Xóa indentation khỏi lệnh "fix" ---
                 logger.warning("\n-> To fix these files, run:")
-                # In ra console (logger đã được cấu hình 
-                # để chỉ in message ra stdout)
-                logger.warning(f"\n   {fix_command_str}\n")
+                logger.warning(f"\n{fix_command_str}\n") # <--- Đã xóa "   "
                 sys.exit(1)
                 # --- END MODIFIED ---
             else:
@@ -134,7 +135,7 @@ def main():
                     confirmation = 'n'
                 
                 if confirmation.lower() == 'y':
-                    # ... (logic ghi file không đổi) ...
+                    logger.debug("User confirmed fix. Proceeding to write files.")
                     written_count = 0
                     for info in files_to_fix:
                         file_path: Path = info["path"]
