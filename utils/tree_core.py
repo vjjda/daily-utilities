@@ -15,6 +15,8 @@ DEFAULT_IGNORE: Set[str] = {
 }
 DEFAULT_PRUNE: Set[str] = {"dist", "build"}
 DEFAULT_DIRS_ONLY: Set[str] = set()
+DEFAULT_MAX_LEVEL: Optional[int] = 4
+CONFIG_FILENAME = ".tree.ini"
 
 # --- HÀM HỖ TRỢ ---
 

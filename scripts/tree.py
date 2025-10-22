@@ -24,9 +24,9 @@ if str(PROJECT_ROOT) not in sys.path:
 from utils.logging_config import configure_project_logger, log_start, log_success, log_warning
 from utils.tree_core import (
     generate_tree, get_submodule_paths, parse_comma_list, 
-    CONFIG_TEMPLATE, DEFAULT_IGNORE, DEFAULT_PRUNE, DEFAULT_DIRS_ONLY
+    CONFIG_TEMPLATE, DEFAULT_IGNORE, DEFAULT_PRUNE, DEFAULT_DIRS_ONLY,
+    DEFAULT_MAX_LEVEL, CONFIG_FILENAME # <--- DÒNG BỔ SUNG
 )
-
 
 def main():
     """Main function to handle arguments, configuration, and run the tree generator."""
@@ -46,17 +46,17 @@ def main():
     logger = configure_project_logger(script_name="CTree")
     
     # 2. Xử lý cờ --init
-    if args.init: # [cite: 13]
-        config_filename = ".treeconfig.ini"
-        config_file_path = Path.cwd() / config_filename
+    if args.init: 
+        # Sử dụng CONFIG_FILENAME đã import
+        config_file_path = Path.cwd() / CONFIG_FILENAME 
         if config_file_path.exists():
-            overwrite = input(f"'{config_filename}' already exists. Overwrite? (y/n): ").lower() # [cite: 14]
+            overwrite = input(f"'{CONFIG_FILENAME}' already exists. Overwrite? (y/n): ").lower() 
             if overwrite != 'y':
                 logger.info("Operation cancelled.")
                 return
-        with open(config_filename, 'w', encoding='utf-8') as f:
+        with open(config_file_path, 'w', encoding='utf-8') as f:
             f.write(CONFIG_TEMPLATE)
-        log_success(logger, f"Successfully created '{config_filename}'.")
+        log_success(logger, f"Successfully created '{CONFIG_FILENAME}'.")
         return
 
     # 3. Xử lý Đường dẫn Khởi động
@@ -68,17 +68,19 @@ def main():
 
     # 4. Đọc Cấu hình từ File
     config = configparser.ConfigParser()
-    config_file_path = start_dir / ".treeconfig.ini"
+    # Sử dụng CONFIG_FILENAME đã import
+    config_file_path = start_dir / CONFIG_FILENAME 
     if config_file_path.exists():
         try:
-            config.read(config_file_path) # [cite: 16]
+            config.read(config_file_path)
         except Exception as e:
-            log_warning(logger, f"Could not read .treeconfig.ini file: {e}")
+            log_warning(logger, f"Could not read {CONFIG_FILENAME} file: {e}")
 
     # 5. Hợp nhất Cấu hình (CLI > File > Mặc định)
     
     # Mức sâu (Level)
-    level = args.level if args.level is not None else config.getint('tree', 'level', fallback=None)
+    level_from_config_file = config.getint('tree', 'level', fallback=DEFAULT_MAX_LEVEL)
+    level = args.level if args.level is not None else level_from_config_file
     # Submodules
     show_submodules = args.show_submodules if args.show_submodules is not None else config.getboolean('tree', 'show-submodules', fallback=False)
 
