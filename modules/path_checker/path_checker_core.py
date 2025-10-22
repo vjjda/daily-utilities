@@ -61,10 +61,10 @@ def _update_files(
                 original_lines = file_path.read_text(encoding='utf-8').splitlines(True)
                 lines = list(original_lines) 
             except UnicodeDecodeError:
-                # ... (error handling không đổi) ...
+                logger.warning(f"Skipping file with encoding error: {relative_path.as_posix()}")
                 continue
             except IOError as e:
-                # ... (error handling không đổi) ...
+                logger.error(f"Could not read file {relative_path.as_posix()}: {e}")
                 continue
             
             if not lines:
