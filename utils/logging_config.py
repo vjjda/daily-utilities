@@ -64,14 +64,6 @@ def log_start(logger, message: str):
 def log_success(logger, message: str):
     """Logs success message with emoji to INFO level (visible on console)."""
     logger.info(f"✅ {message}")
-
-def log_start(logger, message: str):
-    """Logs start message with emoji to INFO level (visible on console)."""
-    logger.info(f"🚀 {message}")
-
-def log_success(logger, message: str):
-    """Logs success message with emoji to INFO level (visible on console)."""
-    logger.info(f"✅ {message}")
     
 # Ta loại bỏ log_warning, log_error. 
 # Người dùng sẽ dùng: logger.warning("⚠️ Warning message"), logger.error("❌ Error message")
