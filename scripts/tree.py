@@ -9,7 +9,7 @@ import argparse
 import configparser
 from pathlib import Path
 # Bổ sung import các kiểu dữ liệu cần thiết
-from utils.logging_config import configure_project_logger, log_start, log_success
+from utils.logging_config import configure_project_logger, log_success
 from typing import Set # <--- DÒNG BỔ SUNG
 
 # ----------------------------------------------------------------------
@@ -144,7 +144,6 @@ def main():
     mode_info = ", directories only" if global_dirs_only else ""
     
     # Ghi lại thông tin tổng quan vào file log
-    logger.info(f"Tổng quan: [{filter_info}, {level_info}{mode_info}]")
     print(f"{start_dir.name}/ [{filter_info}, {level_info}{mode_info}]")
 
     # 7. Chạy Logic Đệ quy
@@ -160,12 +159,11 @@ def main():
     files_info = "0 files (hidden)" if global_dirs_only and counters['files'] == 0 else f"{counters['files']} files" # [cite: 20]
     print(f"\n{counters['dirs']} directories, {files_info}")
     
-    log_success(logger, f"Tree generation completed. {counters['dirs']} dirs, {files_info}")
 if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
         # Thêm print() trực tiếp vì tại đây logger chưa chắc đã được khởi tạo.
         # Hoặc ta chỉ in ra một thông báo đơn giản.
-        print("\n\n❌ [NGẮT LỆNH] Đã hủy bỏ việc tạo cây thư mục.")
+        print("\n\n❌ [Stop Command] Stop generating tree.")
         sys.exit(1) # Thoát với mã lỗi 1 để báo hiệu ngắt lệnh
