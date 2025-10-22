@@ -15,7 +15,6 @@ from modules.path_checker.path_checker_core import process_path_updates
 
 # --- CONSTANTS ---
 THIS_SCRIPT_PATH = Path(__file__).resolve()
-# --- MODIFIED: Không cần PROJECT_ROOT ở đây nữa ---
 
 def main():
     """Main orchestration function: Parses args and runs the path checker."""
@@ -73,6 +72,7 @@ def main():
 
     try:
         # 3. Run the core logic
+        # --- files_to_fix giờ là List[Dict[str, Any]] ---
         files_to_fix = process_path_updates(
             logger=logger,
             project_root=scan_root,
@@ -89,8 +89,16 @@ def main():
         if processed_count > 0:
             if check_mode:
                 logger.warning(f"⚠️ [Check Mode] {processed_count} files do not conform to the path convention:")
-                for file_path in files_to_fix:
+                
+                # --- MODIFIED: Cập nhật logic logging ---
+                for info in files_to_fix:
+                    file_path = info["path"]
+                    first_line = info["line"]
                     logger.warning(f"   -> {file_path.relative_to(scan_root).as_posix()}")
+                    # Thêm dòng này để hiển thị chi tiết
+                    logger.warning(f"      (L1: {first_line})")
+                # --- END MODIFIED ---
+                    
                 logger.warning("\n-> Run 'cpath --fix' to fix them automatically.")
                 sys.exit(1) 
             else:
