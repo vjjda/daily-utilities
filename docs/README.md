@@ -1,4 +1,4 @@
-# Path: docs/README.md
+<!-- # Path: docs/README.md -->
 
 # Daily Utilities - Documentation
 

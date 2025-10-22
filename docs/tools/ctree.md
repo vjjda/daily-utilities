@@ -1,4 +1,4 @@
-# Path: docs/tools/ctree.md
+<!-- # Path: docs/tools/ctree.md -->
 
 # Tool Guide: ctree
 
