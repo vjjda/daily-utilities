@@ -8,13 +8,14 @@ import configparser
 from pathlib import Path
 # Bổ sung import các kiểu dữ liệu cần thiết
 from utils.logging_config import setup_logging, log_success
-from utils.core import run_command # <--- BỔ SUNG
+from utils.core import run_command 
 from typing import Set 
 
 # ----------------------------------------------------------------------
 
-# Import các tiện ích từ module 'modules.tree'
-from modules.tree.core import (
+# --- THAY ĐỔI IMPORT ---
+# Import các tiện ích từ module 'modules.tree.tree_core'
+from modules.tree.tree_core import (
     generate_tree, get_submodule_paths, parse_comma_list, 
     CONFIG_TEMPLATE, DEFAULT_IGNORE, DEFAULT_PRUNE, DEFAULT_DIRS_ONLY,
     DEFAULT_MAX_LEVEL, CONFIG_FILENAME, PROJECT_CONFIG_FILENAME, CONFIG_SECTION_NAME
