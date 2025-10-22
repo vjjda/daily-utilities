@@ -3,17 +3,14 @@
 
 import logging
 from pathlib import Path
-# --- MODIFIED: Thêm Dict và Any cho type hint ---
 from typing import List, Set, Optional, Dict, Any
-# --- END MODIFIED ---
 
 # Import shared utilities
 from utils.core import is_path_matched
 
-# --- IMPORT LOGIC & CONFIG TỪ FILE MỚI ---
+# IMPORT LOGIC & CONFIG TỪ FILE MỚI
 from .path_checker_config import COMMENT_RULES_BY_EXT
 from .path_checker_rules import apply_line_comment_rule, apply_block_comment_rule
-# ----------------------------------------
 
 # --- MODULE-SPECIFIC CONSTANTS ---
 DEFAULT_IGNORE = {
@@ -21,26 +18,23 @@ DEFAULT_IGNORE = {
     "node_modules", "dist", "build", "out"
 }
 
-# --- 1. Hàm điều phối I/O (I/O Orchestrator) ---
+# --- 1. Hàm phân tích (Analysis Function) ---
+# --- MODIFIED: Đã bỏ tham số check_mode, cập nhật kiểu trả về ---
 def _update_files(
     files_to_scan: List[Path], 
     project_root: Path, 
-    logger: logging.Logger,
-    check_mode: bool
-# --- MODIFIED: Thay đổi kiểu trả về ---
+    logger: logging.Logger
 ) -> List[Dict[str, Any]]:
 # --- END MODIFIED ---
     """
-    Internal function to process files. Reads, calls rule logic,
-    and writes files if needed.
+    Internal function to process files. Reads and calls rule logic.
+    This function *only* analyzes and *never* writes.
     Returns:
-        A list of dictionaries ({'path': Path, 'line': str}) 
-        for files that need (or needed) fixing.
+        A list of dictionaries ({'path': Path, 'line': str, 'new_lines': List[str]})
+        for files that need fixing.
     """
     
-    # --- MODIFIED: Thay đổi kiểu của list ---
     files_needing_fix: List[Dict[str, Any]] = []
-    # --- END MODIFIED ---
     
     if not files_to_scan:
         logger.warning("No files to process (after exclusions).")
@@ -59,7 +53,7 @@ def _update_files(
         try:
             try:
                 original_lines = file_path.read_text(encoding='utf-8').splitlines(True)
-                lines = list(original_lines) 
+                lines = list(original_lines)
             except UnicodeDecodeError:
                 logger.warning(f"Skipping file with encoding error: {relative_path.as_posix()}")
                 continue
@@ -71,10 +65,7 @@ def _update_files(
                 logger.debug(f"Skipping empty file: {relative_path.as_posix()}")
                 continue
             
-            # --- Biến tạm để lưu dòng đầu tiên ---
             first_line_content = lines[0].strip()
-            # ---
-
             new_lines = []
             rule_type = rule["type"]
             
@@ -94,18 +85,14 @@ def _update_files(
                 logger.warning(f"Skipping file: Unknown rule type '{rule_type}' for {relative_path.as_posix()}")
                 continue
 
+            # --- MODIFIED: Bỏ logic ghi file, chỉ trả về dict ---
             if new_lines != original_lines:
-                # --- MODIFIED: Thêm dict vào list (thay vì chỉ path) ---
                 files_needing_fix.append({
                     "path": file_path,
-                    "line": first_line_content
+                    "line": first_line_content,
+                    "new_lines": new_lines  # <--- Trả về nội dung mới
                 })
-                # --- END MODIFIED ---
-                
-                if not check_mode:
-                    logger.info(f"Fixing header for: {relative_path.as_posix()}")
-                    with file_path.open('w', encoding='utf-8') as f:
-                        f.writelines(new_lines)
+            # --- END MODIFIED ---
                 
         except Exception as e:
             logger.error(f"Error processing file {relative_path.as_posix()}: {e}")
@@ -114,6 +101,7 @@ def _update_files(
     return files_needing_fix
 
 # --- 2. Hàm Quét file (File Scanner) ---
+# (Vẫn giữ check_mode ở đây chỉ để logging)
 def process_path_updates(
     logger: logging.Logger,
     project_root: Path,
@@ -122,17 +110,13 @@ def process_path_updates(
     cli_ignore: Set[str],
     script_file_path: Path,
     check_mode: bool
-# --- MODIFIED: Thay đổi kiểu trả về ---
-) -> List[Dict[str, Any]]:
-# --- END MODIFIED ---
+) -> List[Dict[str, Any]]: # <--- Cập nhật kiểu trả về
     """
-    Scans and updates path comments for files in the project.
+    Scans for files and returns a list of proposed changes.
     Returns:
-        A list of dictionaries ({'path': Path, 'line': str}) 
+        A list of dictionaries ({'path': Path, 'line': str, 'new_lines': List[str]})
         for files that need processing.
     """
-    
-    # ... (Nội dung hàm này không thay đổi, chỉ có type hint ở trên) ...
     
     from utils.core import get_submodule_paths, parse_gitignore, is_path_matched
 
@@ -154,7 +138,7 @@ def process_path_updates(
     final_ignore_patterns = DEFAULT_IGNORE.union(gitignore_patterns).union(cli_ignore)
     
     if check_mode:
-        logger.info("Running in [Check Mode] (dry-run). No files will be modified.")
+        logger.info("Running in [Check Mode] (dry-run).")
     
     logger.info(f"Scanning for *.{', *.'.join(extensions)} in: {scan_path.relative_to(scan_path.parent) if scan_path.parent != scan_path else scan_path.name}")
     if final_ignore_patterns:
@@ -176,4 +160,6 @@ def process_path_updates(
             continue
         files_to_process.append(file_path)
         
-    return _update_files(files_to_process, project_root, logger, check_mode)
+    # --- MODIFIED: Bỏ check_mode khi gọi _update_files ---
+    return _update_files(files_to_process, project_root, logger)
+    # --- END MODIFIED ---

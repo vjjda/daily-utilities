@@ -5,6 +5,7 @@ import sys
 import argparse
 import logging
 from pathlib import Path
+from typing import List # <--- Thêm List
 
 # Common utilities
 from utils.logging_config import setup_logging, log_success
@@ -72,7 +73,7 @@ def main():
 
     try:
         # 3. Run the core logic
-        # --- files_to_fix giờ là List[Dict[str, Any]] ---
+        # files_to_fix giờ là List[Dict[str, Any]]
         files_to_fix = process_path_updates(
             logger=logger,
             project_root=scan_root,
@@ -87,22 +88,50 @@ def main():
 
         # 4. Report results
         if processed_count > 0:
+            
+            # --- MODIFIED: Luôn in báo cáo chi tiết ---
+            logger.warning(f"⚠️ {processed_count} files do not conform to the path convention:")
+            for info in files_to_fix:
+                file_path = info["path"]
+                first_line = info["line"]
+                logger.warning(f"   -> {file_path.relative_to(scan_root).as_posix()}")
+                logger.warning(f"      (L1: {first_line})")
+            # --- END MODIFIED ---
+
             if check_mode:
-                logger.warning(f"⚠️ [Check Mode] {processed_count} files do not conform to the path convention:")
-                
-                # --- MODIFIED: Cập nhật logic logging ---
-                for info in files_to_fix:
-                    file_path = info["path"]
-                    first_line = info["line"]
-                    logger.warning(f"   -> {file_path.relative_to(scan_root).as_posix()}")
-                    # Thêm dòng này để hiển thị chi tiết
-                    logger.warning(f"      (L1: {first_line})")
-                # --- END MODIFIED ---
-                    
+                # --- Chế độ "check" (mặc định) ---
                 logger.warning("\n-> Run 'cpath --fix' to fix them automatically.")
                 sys.exit(1) 
             else:
-                log_success(logger, f"Done! Fixed {processed_count} files.")
+                # --- Chế độ "--fix" ---
+                # --- NEW: Thêm bước xác nhận ---
+                try:
+                    confirmation = input("\nProceed to fix these files? (y/n): ")
+                except EOFError:
+                    confirmation = 'n' # Coi Ctrl+D (EOF) là 'n'
+                
+                if confirmation.lower() == 'y':
+                    logger.debug("User confirmed fix. Proceeding to write files.")
+                    written_count = 0
+                    for info in files_to_fix:
+                        file_path: Path = info["path"]
+                        new_lines: List[str] = info["new_lines"]
+                        try:
+                            # Đây là nơi duy nhất script ghi file
+                            with file_path.open('w', encoding='utf-8') as f:
+                                f.writelines(new_lines)
+                            logger.info(f"Fixed: {file_path.relative_to(scan_root).as_posix()}")
+                            written_count += 1
+                        except IOError as e:
+                            logger.error(f"❌ Failed to write file {file_path.relative_to(scan_root).as_posix()}: {e}")
+                    
+                    log_success(logger, f"Done! Fixed {written_count} files.")
+                
+                else:
+                    logger.warning("Fix operation cancelled by user.")
+                    sys.exit(0) # Thoát (không lỗi) vì người dùng chủ động hủy
+                # --- END NEW ---
+                
         else:
             log_success(logger, "All files already conform to the convention. No changes needed.")
 
