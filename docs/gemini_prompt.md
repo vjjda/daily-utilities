@@ -43,6 +43,5 @@ Các dự án của chúng ta tập trung chủ yếu về những codes utiliti
   * Trong Code: Tất cả commit messages, log output, print(), và comments (trừ khi bạn yêu cầu giải thích cụ thể) sẽ được viết bằng Tiếng Anh.
   * Trong Trao đổi: Tôi sẽ tiếp tục thảo luận và trả lời bạn bằng Tiếng Việt (như tin nhắn này).
 * Khi tôi chỉnh sửa code, bạn sẽ thử và confirm xem nó hoạt động chưa. Nếu hoạt động tốt, và bạn nói `commit`, tôi sẽ cung cấp một câu lệnh `git add` những files thay đổi, và `git commit -m` khớp với những sửa đổi, trước lúc tiếp tục trao đổi thêm.
-  * Lệnh `git add` sẽ được tách riêng thành một khối copy/paste. Lệnh `git commit -m` một khối khác.
-  * Lệnh `commit` sẽ được cung cấp theo cách an toàn hơn để copy-paste, sử dụng nhiều cờ (flag) `-m` (mỗi `-m` cho một đoạn).
+  * Cung cấp thuần lệnh `git` để copy/paste, không comment hay chú thích gì thêm.
 * Với các script chạy system-wide, tôi sẽ đề xuất áp dụng kĩ thuật Wrapper Shell Script rồi symlink vào trong `~/$HOME/bin`.
