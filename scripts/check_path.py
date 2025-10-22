@@ -34,8 +34,10 @@ def main():
     )
     parser.add_argument(
         "-e", "--extensions", 
-        default="py,js,ts,css,scss,md,zsh,sh", 
-        help="File extensions to scan (default: 'py,js,ts,css,scss,md,zsh,sh')."
+        # --- FIX: Đã xóa 'md' khỏi danh sách mặc định ---
+        default="py,js,ts,css,scss,zsh,sh", 
+        help="File extensions to scan (default: 'py,js,ts,css,scss,zsh,sh')."
+        # --- END FIX ---
     )
     parser.add_argument(
         "-I", "--ignore", 

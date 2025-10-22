@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 # Path: modules/path_checker/path_checker_core.py
-# Path: modules/path_checker/path_checker_core.py
 
 import logging
 from pathlib import Path
@@ -31,10 +30,7 @@ def _update_files(
     for file_path in files_to_scan:
         relative_path = file_path.relative_to(project_root)
         try:
-            comment_prefix = None
             
-            # --- FIX 1: SỬA LOGIC COMMENT VÀ .MD ---
-            # Group all '#' comment types together, including '.md'
             # --- FIX: Logic mới để xử lý các loại comment khác nhau ---
             if file_path.suffix in {'.py', '.zsh', '.sh'}:
                 comment_prefix_for_check = '#'
@@ -42,10 +38,7 @@ def _update_files(
             elif file_path.suffix in {'.js', '.ts', '.css', '.scss'}:
                 comment_prefix_for_check = '//'
                 correct_path_comment = f"// Path: {relative_path.as_posix()}\n"
-            elif file_path.suffix == '.md':
-                # Xử lý đặc biệt cho Markdown
-                comment_prefix_for_check = '<!--'
-                correct_path_comment = f"<!--Path: {relative_path.as_posix()}-->\n"
+            # --- FIX: ĐÃ XÓA KHỐI 'elif file_path.suffix == .md' ---
             else:
                 # Skip files with extensions we don't know how to comment
                 logger.debug(f"Skipping unsupported file type: {relative_path.as_posix()}")
@@ -63,20 +56,21 @@ def _update_files(
                 logger.error(f"Could not read file {relative_path.as_posix()}: {e}")
                 continue
             
-            # Handle empty files
+            # --- FIX: XỬ LÝ FILE RỖNG ---
+            # Handle empty files: Log and skip, do not modify.
             if not lines:
-                lines.append(correct_path_comment)
-                logger.info(f"Fixing header for: {relative_path.as_posix()} (empty file)")
-                with file_path.open('w', encoding='utf-8') as f:
-                    f.writelines(lines)
-                processed_count += 1
+                logger.debug(f"Skipping empty file: {relative_path.as_posix()}")
                 continue # Go to next file
+            # --- END FIX ---
 
             # --- FIX 4: Corrected logic (Variables are now defined) ---
             line1_is_shebang = lines[0].startswith('#!')
-            line1_is_path = lines[0].startswith(f"{comment_prefix} Path:")
+
+            # --- FIX: SỬ DỤNG 'comment_prefix_for_check' ---
+            line1_is_path = lines[0].startswith(f"{comment_prefix_for_check} Path:")
             line2_is_path = False
-            if len(lines) > 1 and lines[1].startswith(f"{comment_prefix} Path:"):
+            if len(lines) > 1 and lines[1].startswith(f"{comment_prefix_for_check} Path:"):
+            # --- END FIX ---
                 line2_is_path = True
 
             # Logic to insert or correct the path comment

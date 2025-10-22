@@ -91,10 +91,27 @@ def is_path_matched(path: Path, patterns: Set[str], start_dir: Path) -> bool:
     if not patterns: 
         return False
     
-    relative_path_str = path.relative_to(start_dir).as_posix()
+    relative_path = path.relative_to(start_dir)
+    relative_path_str = relative_path.as_posix()
+    
+    # --- FIX: Lấy tất cả các phần của đường dẫn ---
+    # Ví dụ: Path('a/b/c.txt') -> ('a', 'b', 'c.txt')
+    path_parts = relative_path.parts 
+
     for pattern in patterns: 
-        if fnmatch.fnmatch(path.name, pattern) or fnmatch.fnmatch(relative_path_str, pattern):
+        # Check 1: Match full relative path (e.g., 'docs/drafts', 'build/')
+        if fnmatch.fnmatch(relative_path_str, pattern):
             return True
+        
+        # Check 2: Match just the name (e.g., '.DS_Store', '*.log')
+        if fnmatch.fnmatch(path.name, pattern):
+            return True
+
+        # Check 3 (FIX): Match any part of the path (e.g., '.venv', 'build')
+        # Điều này xử lý khi 'build' nằm trong .gitignore và chúng ta đang kiểm tra 'build/main.py'
+        if any(fnmatch.fnmatch(part, pattern) for part in path_parts):
+            return True
+            
     return False
 
 def parse_comma_list(value: Union[str, None]) -> Set[str]:
