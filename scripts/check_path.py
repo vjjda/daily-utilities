@@ -10,12 +10,13 @@ import shlex
 
 # Common utilities
 from utils.logging_config import setup_logging
-from utils.core import parse_comma_list
+# --- MODIFIED: Import is_git_repository ---
+from utils.core import parse_comma_list, is_git_repository
+# --- END MODIFIED ---
 
-# --- MODIFIED: Import các module đã refactor ---
+# Import the main logic
 from modules.path_checker.path_checker_core import process_path_updates
 from modules.path_checker.path_checker_executor import handle_results
-# --- END MODIFIED ---
 
 # --- CONSTANTS ---
 THIS_SCRIPT_PATH = Path(__file__).resolve()
@@ -54,10 +55,11 @@ def main():
     )
     args = parser.parse_args()
 
-    # --- 2. Chuẩn bị biến (Setup variables) ---
+    # 1. Setup Logging
     logger = setup_logging(script_name="CPath")
     logger.debug("CPath script started.")
 
+    # --- Xác định thư mục gốc ---
     if args.target_directory:
         scan_root = Path(args.target_directory).resolve()
     else:
@@ -67,6 +69,12 @@ def main():
         logger.error(f"❌ Path does not exist: '{args.target_directory or scan_root}'")
         sys.exit(1)
         
+    # --- NEW: Get Git warning, but don't print yet ---
+    git_warning_str = ""
+    if not is_git_repository(scan_root):
+        git_warning_str = f"⚠️ Warning: '{scan_root.name}/' does not contain a '.git' directory. Ensure this is the correct project root."
+    # --- END NEW ---
+
     check_mode = not args.fix
 
     # Xây dựng lệnh "fix"
@@ -100,7 +108,8 @@ def main():
             files_to_fix=files_to_fix,
             check_mode=check_mode,
             fix_command_str=fix_command_str,
-            scan_root=scan_root
+            scan_root=scan_root,
+            git_warning_str=git_warning_str # <-- New parameter
         )
 
     except Exception as e:

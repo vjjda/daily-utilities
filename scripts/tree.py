@@ -8,7 +8,7 @@ from pathlib import Path
 
 # Common utilities
 from utils.logging_config import setup_logging, log_success
-from utils.core import run_command 
+from utils.core import run_command, is_git_repository
 
 # --- MODULE IMPORTS ---
 from modules.tree.tree_core import (
@@ -93,7 +93,7 @@ def main():
         logger.error(f"❌ Path does not exist: '{args.start_path}'")
         return
     start_dir = initial_path.parent if initial_path.is_file() else initial_path
-
+    is_git_repo = is_git_repository(start_dir)
     # 4. Load and Merge Configuration (Separated module)
     try:
         config_params = load_and_merge_config(args, start_dir, logger)
@@ -110,7 +110,11 @@ def main():
                  f"depth limit: {config_params['max_level']}"
     mode_info = ", directories only" if config_params["global_dirs_only_flag"] else ""
     
-    print(f"{start_dir.name}/ [{filter_info}, {level_info}{mode_info}]")
+    # --- MODIFIED: Thêm Git status vào header chỉ khi nó là Git repo ---
+    git_info = ", Git project" if is_git_repo else ""
+    
+    print(f"{start_dir.name}/ [{filter_info}, {level_info}{mode_info}{git_info}]")
+    # --- END MODIFIED ---
 
     # 6. Run Recursive Logic
     counters = {'dirs': 0, 'files': 0}

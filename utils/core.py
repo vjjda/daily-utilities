@@ -63,6 +63,10 @@ def run_command(command: Union[str, List[str]], logger: Logger, description: str
 # FILE SYSTEM & CONFIG UTILITIES (NEW)
 # ----------------------------------------------------------------------
 
+def is_git_repository(root: Path) -> bool:
+    """Checks if the given root path is the root of a Git repository."""
+    return (root / ".git").is_dir()
+
 def get_submodule_paths(root: Path, logger: Optional[logging.Logger] = None) -> Set[Path]: # <--- THAY ĐỔI KIỂU TRẢ VỀ
     """Gets submodule directory full paths based on the .gitmodules file."""
     submodule_paths = set()
