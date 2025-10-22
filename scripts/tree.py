@@ -5,23 +5,16 @@
 # BOOTSTRAP MODULE HANDLING
 # ----------------------------------------------------------------------
 import sys
-from pathlib import Path
 import argparse
 import configparser
+from pathlib import Path
 # Bổ sung import các kiểu dữ liệu cần thiết
+from utils.logging_config import configure_project_logger, log_start, log_success
 from typing import Set # <--- DÒNG BỔ SUNG
-
-# Tính toán đường dẫn gốc của dự án:
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-
-# Thêm thư mục gốc dự án vào sys.path
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.append(str(PROJECT_ROOT))
 
 # ----------------------------------------------------------------------
 
 # Import các tiện ích từ package nội bộ 'utils'
-from utils.logging_config import configure_project_logger, log_start, log_success, log_warning
 from utils.tree_core import (
     generate_tree, get_submodule_paths, parse_comma_list, 
     CONFIG_TEMPLATE, DEFAULT_IGNORE, DEFAULT_PRUNE, DEFAULT_DIRS_ONLY,
@@ -45,6 +38,9 @@ def main():
     # 1. Cấu hình Logging
     logger = configure_project_logger(script_name="CTree")
     
+    # Ghi log DEBUG về đường dẫn khởi động
+    logger.debug(f"Đã nhận đường dẫn khởi động: {args.start_path}")
+    
     # 2. Xử lý cờ --init
     if args.init: 
         # Sử dụng CONFIG_FILENAME đã import
@@ -62,7 +58,7 @@ def main():
     # 3. Xử lý Đường dẫn Khởi động
     initial_path = Path(args.start_path).resolve() # [cite: 15]
     if not initial_path.exists():
-        logger.error(f"Path does not exist: '{args.start_path}'")
+        logger.error(f"❌ Path does not exist: '{args.start_path}'")
         return
     start_dir = initial_path.parent if initial_path.is_file() else initial_path
 
@@ -95,7 +91,7 @@ def main():
             config.read(files_to_read) 
             logger.debug(f"Đã tải cấu hình từ các file: {[p.name for p in files_to_read]}")
         except Exception as e:
-            log_warning(logger, f"Could not read config files: {e}")
+            logger.warning(logger, f"Could not read config files: {e}")
     else:
         logger.debug("Không tìm thấy file cấu hình .tree.ini hoặc .project.ini. Sử dụng mặc định.")
 
@@ -147,8 +143,9 @@ def main():
     level_info = "full depth" if level is None else f"depth limit: {level}"
     mode_info = ", directories only" if global_dirs_only else ""
     
-    # In thông tin tổng quan ra Terminal
-    print(f"{start_dir.name}/ [{filter_info}, {level_info}{mode_info}]") # [cite: 19]
+    # Ghi lại thông tin tổng quan vào file log
+    logger.info(f"Tổng quan: [{filter_info}, {level_info}{mode_info}]")
+    print(f"{start_dir.name}/ [{filter_info}, {level_info}{mode_info}]")
 
     # 7. Chạy Logic Đệ quy
     counters = {'dirs': 0, 'files': 0}
@@ -163,7 +160,12 @@ def main():
     files_info = "0 files (hidden)" if global_dirs_only and counters['files'] == 0 else f"{counters['files']} files" # [cite: 20]
     print(f"\n{counters['dirs']} directories, {files_info}")
     
-    logger.debug("Tree generation completed successfully.")
-
+    log_success(logger, f"Tree generation completed. {counters['dirs']} dirs, {files_info}")
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        # Thêm print() trực tiếp vì tại đây logger chưa chắc đã được khởi tạo.
+        # Hoặc ta chỉ in ra một thông báo đơn giản.
+        print("\n\n❌ [NGẮT LỆNH] Đã hủy bỏ việc tạo cây thư mục.")
+        sys.exit(1) # Thoát với mã lỗi 1 để báo hiệu ngắt lệnh

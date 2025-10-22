@@ -4,6 +4,7 @@
 import logging
 import sys
 from pathlib import Path
+from .constants import LOG_DIR_NAME, FILE_LOG_LEVEL, CONSOLE_LOG_LEVEL
 
 # Cấp độ logging tùy chỉnh cho console:
 # INFO: Thông báo thành công/khởi động (dùng emoji)
@@ -57,19 +58,20 @@ def configure_project_logger(script_name: str, log_dir: str = "logs", console_le
 # ----------------------------------------------------------------------
 
 def log_start(logger, message: str):
-    """Ghi log bắt đầu, hiển thị emoji khởi động."""
+    """Logs start message with emoji to INFO level (visible on console)."""
     logger.info(f"🚀 {message}")
 
 def log_success(logger, message: str):
-    """Ghi log thành công, hiển thị emoji thành công."""
+    """Logs success message with emoji to INFO level (visible on console)."""
+    logger.info(f"✅ {message}")
+
+def log_start(logger, message: str):
+    """Logs start message with emoji to INFO level (visible on console)."""
+    logger.info(f"🚀 {message}")
+
+def log_success(logger, message: str):
+    """Logs success message with emoji to INFO level (visible on console)."""
     logger.info(f"✅ {message}")
     
-def log_warning(logger, message: str):
-    """Ghi log cảnh báo, hiển thị emoji cảnh báo."""
-    logger.warning(f"⚠️ CẢNH BÁO: {message}")
-
-def log_error(logger, message: str):
-    """Ghi log lỗi, hiển thị emoji lỗi."""
-    logger.error(f"❌ LỖI: {message}")
-
-# Sau khi cấu hình, ta có thể dùng logger.debug(), logger.error(), v.v...
+# Ta loại bỏ log_warning, log_error. 
+# Người dùng sẽ dùng: logger.warning("⚠️ Warning message"), logger.error("❌ Error message")

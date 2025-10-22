@@ -6,11 +6,6 @@
 # Cách đơn giản nhất và thường hoạt động tốt với Zsh là:
 # Bắt đầu từ vị trí của symlink ($0)
 SCRIPT_PATH="$(readlink -f "$0" 2>/dev/null || realpath "$0" 2>/dev/null || echo "$0")"
-
-# Nếu readlink/realpath không hoạt động hoặc không được cài đặt, ta cần cách khác:
-# Lấy đường dẫn tuyệt đối của file binary gốc mà symlink đang trỏ đến.
-# Trong trường hợp của chúng ta, symlink trỏ đến bin/ctree.
-# PROJECT_ROOT là thư mục gốc của dự án: (SCRIPT_PATH/../..)
 PROJECT_ROOT=$(cd "$(dirname "$SCRIPT_PATH")/.." && pwd)
 VENV_PATH="$PROJECT_ROOT/.venv"
 
@@ -22,4 +17,4 @@ else
 fi
 
 # 3. Chạy script Python chính và truyền tất cả đối số ($@)
-python "$PROJECT_ROOT/scripts/tree.py" "$@"
+PYTHONPATH="$PROJECT_ROOT:$PYTHONPATH" python "$PROJECT_ROOT/scripts/tree.py" "$@"
