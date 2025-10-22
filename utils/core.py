@@ -57,10 +57,3 @@ def run_command(command: Union[str, List[str]], logger: Logger, description: str
         return False, error_message
 
 # Thêm các hàm tiện ích khác ở đây (ví dụ: file_handling, config_reader)
-
-def get_config_value(key: str) -> str:
-    """Hàm giả lập đọc giá trị cấu hình."""
-    # Logic đọc file JSON/YAML/INI sẽ ở đây
-    if key == "default_target_folder":
-        return "~/Desktop/Cleaned"
-    return ""
