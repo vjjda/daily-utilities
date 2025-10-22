@@ -3,23 +3,24 @@
 
 import sys
 import argparse
+import logging  # <--- FIX: Added missing import
 from pathlib import Path
 
-# Các tiện ích chung
+# Common utilities
 from utils.logging_config import setup_logging, log_success
 from utils.core import run_command 
 
-# --- THAY ĐỔI IMPORT ---
-# Chỉ import các thành phần cần thiết cho script điều phối
+# --- MODULE IMPORTS ---
+# Import only necessary components for orchestration
 from modules.tree.tree_core import (
     generate_tree, CONFIG_FILENAME, CONFIG_TEMPLATE
 )
-# Import module xử lý config mới
+# Import the new config processing module
 from modules.tree.tree_config import load_and_merge_config
 # ---------------------
 
 def handle_init_command(logger: logging.Logger) -> None:
-    """Xử lý logic cho cờ --init."""
+    """Handles the logic for the --init flag."""
     config_file_path = Path.cwd() / CONFIG_FILENAME
     file_existed = config_file_path.exists()
     
@@ -42,31 +43,31 @@ def handle_init_command(logger: logging.Logger) -> None:
                 f.write(CONFIG_TEMPLATE)
             
             log_msg = f"Successfully created '{CONFIG_FILENAME}'."
-            if file_existed:
+            if file_existed: # This means it was an overwrite
                 log_msg = f"Successfully overwrote '{CONFIG_FILENAME}'."
             log_success(logger, log_msg)
             
         except IOError as e:
             logger.error(f"❌ Failed to write file '{config_file_path}': {e}")
-            return # Không thử mở nếu ghi lỗi
+            return # Don't try to open if write failed
     
-    # Mở file
+    # Open the file
     try:
         logger.info(f"Opening '{config_file_path.name}' in default editor...")
         success, output = run_command(
             ["open", str(config_file_path)], 
             logger, 
-            description=f"Mở file {CONFIG_FILENAME}"
+            description=f"Opening {CONFIG_FILENAME}"
         )
         if not success:
             logger.warning(f"⚠️ Could not automatically open file. Please open it manually.")
-            logger.debug(f"Lỗi khi mở file: {output}")
+            logger.debug(f"Error opening file: {output}")
             
     except Exception as e:
         logger.error(f"❌ An unexpected error occurred while trying to open the file: {e}")
 
 def main():
-    """Hàm main điều phối: Phân tích đối số, gọi xử lý config và chạy hàm tree."""
+    """Main orchestration function: Parses args, calls config processing, and runs the tree."""
     
     parser = argparse.ArgumentParser(description="A smart directory tree generator with support for a .treeconfig.ini file.")
     parser.add_argument("start_path", nargs='?', 
@@ -79,31 +80,31 @@ def main():
     parser.add_argument("--init", action='store_true', help="Create a sample .treeconfig.ini file and open it.")
     args = parser.parse_args()
 
-    # 1. Cấu hình Logging
+    # 1. Setup Logging
     logger = setup_logging(script_name="CTree")
-    logger.debug(f"Đã nhận đường dẫn khởi động: {args.start_path}")
+    logger.debug(f"Received start path: {args.start_path}")
     
-    # 2. Xử lý cờ --init (Tách ra hàm riêng)
+    # 2. Handle --init flag (separated function)
     if args.init: 
         handle_init_command(logger)
-        return # Kết thúc sau khi --init
+        return # Exit after --init
 
-    # 3. Xử lý Đường dẫn Khởi động
+    # 3. Process Start Path
     initial_path = Path(args.start_path).resolve() 
     if not initial_path.exists():
         logger.error(f"❌ Path does not exist: '{args.start_path}'")
         return
     start_dir = initial_path.parent if initial_path.is_file() else initial_path
 
-    # 4. Tải và Hợp nhất Cấu hình (Đã tách ra module riêng)
+    # 4. Load and Merge Configuration (Separated module)
     try:
         config_params = load_and_merge_config(args, start_dir, logger)
     except Exception as e:
-        logger.error(f"❌ Lỗi nghiêm trọng khi xử lý cấu hình: {e}")
+        logger.error(f"❌ Critical error during config processing: {e}")
         logger.debug("Traceback:", exc_info=True)
         return
 
-    # 5. Thông báo Trạng thái
+    # 5. Print Status Header
     is_truly_full_view = not any(config_params["filter_lists"].values())
     filter_info = "Full view" if is_truly_full_view else "Filtered view"
     
@@ -113,10 +114,10 @@ def main():
     
     print(f"{start_dir.name}/ [{filter_info}, {level_info}{mode_info}]")
 
-    # 6. Chạy Logic Đệ quy
+    # 6. Run Recursive Logic
     counters = {'dirs': 0, 'files': 0}
     
-    # Sử dụng dict config đã xử lý để truyền tham số
+    # Use the processed config dict to pass parameters
     generate_tree(
         start_dir, 
         start_dir, 
@@ -129,7 +130,7 @@ def main():
         is_in_dirs_only_zone=config_params["is_in_dirs_only_zone"]
     )
 
-    # 7. Kết quả cuối cùng
+    # 7. Print Final Result
     files_info = "0 files (hidden)" if config_params["global_dirs_only_flag"] and counters['files'] == 0 else \
                  f"{counters['files']} files" 
     print(f"\n{counters['dirs']} directories, {files_info}")
