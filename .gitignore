@@ -1,0 +1,19 @@
+# Path: .gitignore
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+# Môi trường ảo (Quan trọng!)
+.venv
+venv
+env
+
+# Logs và Output
+*.log
+dist/
+build/
+
+# macOS
+.DS_Store
