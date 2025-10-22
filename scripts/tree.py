@@ -1,0 +1,139 @@
+#!/usr/bin/env python
+# Path: scripts/tree.py
+
+# ----------------------------------------------------------------------
+# BOOTSTRAP MODULE HANDLING
+# ----------------------------------------------------------------------
+import sys
+from pathlib import Path
+import argparse
+import configparser
+# Bổ sung import các kiểu dữ liệu cần thiết
+from typing import Set # <--- DÒNG BỔ SUNG
+
+# Tính toán đường dẫn gốc của dự án:
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+
+# Thêm thư mục gốc dự án vào sys.path
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.append(str(PROJECT_ROOT))
+
+# ----------------------------------------------------------------------
+
+# Import các tiện ích từ package nội bộ 'utils'
+from utils.logging_config import configure_project_logger, log_start, log_success, log_warning
+from utils.tree_core import (
+    generate_tree, get_submodule_paths, parse_comma_list, 
+    CONFIG_TEMPLATE, DEFAULT_IGNORE, DEFAULT_PRUNE, DEFAULT_DIRS_ONLY
+)
+
+
+def main():
+    """Main function to handle arguments, configuration, and run the tree generator."""
+    
+    parser = argparse.ArgumentParser(description="A smart directory tree generator with support for a .treeconfig.ini file.")
+    parser.add_argument("start_path", nargs='?', 
+                        default=".", help="Starting path (file or directory).") # [cite: 12]
+    parser.add_argument("-L", "--level", type=int, help="Limit the display depth.")
+    parser.add_argument("-I", "--ignore", type=str, help="Comma-separated list of patterns to ignore.")
+    parser.add_argument("-P", "--prune", type=str, help="Comma-separated list of patterns to prune.")
+    parser.add_argument("-d", "--dirs-only", nargs='?', const='_ALL_', default=None, type=str, help="Show directories only.")
+    parser.add_argument("-s", "--show-submodules", action='store_true', default=None, help="Show the contents of submodules.")
+    parser.add_argument("--init", action='store_true', help="Create a sample .treeconfig.ini file and exit.")
+    args = parser.parse_args()
+
+    # 1. Cấu hình Logging
+    logger = configure_project_logger(script_name="CTree")
+    
+    # 2. Xử lý cờ --init
+    if args.init: # [cite: 13]
+        config_filename = ".treeconfig.ini"
+        config_file_path = Path.cwd() / config_filename
+        if config_file_path.exists():
+            overwrite = input(f"'{config_filename}' already exists. Overwrite? (y/n): ").lower() # [cite: 14]
+            if overwrite != 'y':
+                logger.info("Operation cancelled.")
+                return
+        with open(config_filename, 'w', encoding='utf-8') as f:
+            f.write(CONFIG_TEMPLATE)
+        log_success(logger, f"Successfully created '{config_filename}'.")
+        return
+
+    # 3. Xử lý Đường dẫn Khởi động
+    initial_path = Path(args.start_path).resolve() # [cite: 15]
+    if not initial_path.exists():
+        logger.error(f"Path does not exist: '{args.start_path}'")
+        return
+    start_dir = initial_path.parent if initial_path.is_file() else initial_path
+
+    # 4. Đọc Cấu hình từ File
+    config = configparser.ConfigParser()
+    config_file_path = start_dir / ".treeconfig.ini"
+    if config_file_path.exists():
+        try:
+            config.read(config_file_path) # [cite: 16]
+        except Exception as e:
+            log_warning(logger, f"Could not read .treeconfig.ini file: {e}")
+
+    # 5. Hợp nhất Cấu hình (CLI > File > Mặc định)
+    
+    # Mức sâu (Level)
+    level = args.level if args.level is not None else config.getint('tree', 'level', fallback=None)
+    # Submodules
+    show_submodules = args.show_submodules if args.show_submodules is not None else config.getboolean('tree', 'show-submodules', fallback=False)
+
+    # Ignore List
+    ignore_cli = parse_comma_list(args.ignore)
+    ignore_file = parse_comma_list(config.get('tree', 'ignore', fallback=None))
+    final_ignore_list = DEFAULT_IGNORE.union(ignore_file).union(ignore_cli)
+
+    # Prune List
+    prune_cli = parse_comma_list(args.prune) # [cite: 17]
+    prune_file = parse_comma_list(config.get('tree', 'prune', fallback=None))
+    final_prune_list = DEFAULT_PRUNE.union(prune_file).union(prune_cli)
+
+    # Dirs Only List
+    dirs_only_cli = args.dirs_only
+    dirs_only_file = config.get('tree', 'dirs-only', fallback=None)
+    final_dirs_only = dirs_only_cli if dirs_only_cli is not None else dirs_only_file
+    
+    global_dirs_only = final_dirs_only == '_ALL_'
+    dirs_only_list_custom = set()
+    if final_dirs_only is not None and not global_dirs_only:
+        dirs_only_list_custom = parse_comma_list(final_dirs_only)
+    final_dirs_only_list = DEFAULT_DIRS_ONLY.union(dirs_only_list_custom)
+    
+    submodule_names: Set[str] = set()
+    if not show_submodules: # [cite: 18]
+        # Ta cần điều chỉnh hàm này trong tree_core để trả về tên (name) thay vì Path
+        submodule_paths = get_submodule_paths(start_dir)
+        submodule_names = {p.name for p in submodule_paths} 
+        # LƯU Ý: Đã điều chỉnh logic get_submodule_paths trong tree_core để trả về set tên (string name) 
+
+    # 6. Thông báo Trạng thái (Sử dụng logger.info)
+    is_truly_full_view = not final_ignore_list and not final_prune_list and not final_dirs_only_list and not global_dirs_only and not submodule_names
+    filter_info = "Full view" if is_truly_full_view else "Filtered view"
+    
+    level_info = "full depth" if level is None else f"depth limit: {level}"
+    mode_info = ", directories only" if global_dirs_only else ""
+    
+    # In thông tin tổng quan ra Terminal
+    print(f"{start_dir.name}/ [{filter_info}, {level_info}{mode_info}]") # [cite: 19]
+
+    # 7. Chạy Logic Đệ quy
+    counters = {'dirs': 0, 'files': 0}
+    generate_tree(
+        start_dir, start_dir, max_level=level, 
+        ignore_list=final_ignore_list, submodules=submodule_names, 
+        prune_list=final_prune_list, dirs_only_list=final_dirs_only_list, 
+        is_in_dirs_only_zone=global_dirs_only, counters=counters
+    )
+
+    # 8. Kết quả cuối cùng
+    files_info = "0 files (hidden)" if global_dirs_only and counters['files'] == 0 else f"{counters['files']} files" # [cite: 20]
+    print(f"\n{counters['dirs']} directories, {files_info}")
+    
+    logger.debug("Tree generation completed successfully.")
+
+if __name__ == "__main__":
+    main()
