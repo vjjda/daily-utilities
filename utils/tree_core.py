@@ -17,6 +17,8 @@ DEFAULT_PRUNE: Set[str] = {"dist", "build"}
 DEFAULT_DIRS_ONLY: Set[str] = set()
 DEFAULT_MAX_LEVEL: Optional[int] = 4
 CONFIG_FILENAME = ".tree.ini"
+PROJECT_CONFIG_FILENAME = ".project.ini" # <--- DÒNG BỔ SUNG
+CONFIG_SECTION_NAME = "tree" # <--- Hằng số mới để làm rõ section
 
 # --- HÀM HỖ TRỢ ---
 
@@ -136,12 +138,12 @@ def generate_tree(
 # --- NỘI DUNG TEMPLATE CONFIG (Vẫn giữ ở đây) ---
 
 # CONFIG_TEMPLATE được giữ ở đây vì nó là dữ liệu liên quan đến logic cấu hình
-CONFIG_TEMPLATE = """
+CONFIG_TEMPLATE = f"""
 ; Configuration file for the custom_tree script.
-; Uncomment lines you wish to use by removing the ';' [cite: 2] symbol.
+; Uncomment lines you wish to use by removing the ';' symbol.
 ; Patterns support shell-like wildcards (e.g., *, ?, **).
 
-[tree]
+[{CONFIG_SECTION_NAME}] # <--- ĐÃ DÙNG BIẾN THAY VÌ HARDCODE 'tree'
 
 ; --- DISPLAY ---
 

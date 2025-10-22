@@ -25,7 +25,7 @@ from utils.logging_config import configure_project_logger, log_start, log_succes
 from utils.tree_core import (
     generate_tree, get_submodule_paths, parse_comma_list, 
     CONFIG_TEMPLATE, DEFAULT_IGNORE, DEFAULT_PRUNE, DEFAULT_DIRS_ONLY,
-    DEFAULT_MAX_LEVEL, CONFIG_FILENAME # <--- DÒNG BỔ SUNG
+    DEFAULT_MAX_LEVEL, CONFIG_FILENAME, PROJECT_CONFIG_FILENAME, CONFIG_SECTION_NAME # <--- DÒNG BỔ SUNG
 )
 
 def main():
@@ -48,7 +48,7 @@ def main():
     # 2. Xử lý cờ --init
     if args.init: 
         # Sử dụng CONFIG_FILENAME đã import
-        config_file_path = Path.cwd() / CONFIG_FILENAME 
+        config_file_path = Path.cwd() / CONFIG_FILENAME # <--- Sử dụng CONFIG_FILENAME
         if config_file_path.exists():
             overwrite = input(f"'{CONFIG_FILENAME}' already exists. Overwrite? (y/n): ").lower() 
             if overwrite != 'y':
@@ -66,15 +66,44 @@ def main():
         return
     start_dir = initial_path.parent if initial_path.is_file() else initial_path
 
-    # 4. Đọc Cấu hình từ File
+    # 4. Đọc Cấu hình từ File (.tree.ini Tối ưu > .project.ini Fallback)
+    
+    # configparser sẽ được dùng để đọc cả hai file
     config = configparser.ConfigParser()
-    # Sử dụng CONFIG_FILENAME đã import
-    config_file_path = start_dir / CONFIG_FILENAME 
-    if config_file_path.exists():
+    
+    # 4.1. Đường dẫn file cấu hình của script (Ưu tiên cao)
+    tree_config_path = start_dir / CONFIG_FILENAME
+    
+    # 4.2. Đường dẫn file cấu hình dự án (Fallback)
+    project_config_path = start_dir / PROJECT_CONFIG_FILENAME
+
+    files_to_read = []
+    
+    # Đọc file cấu hình dự án (Fallback) trước, để các giá trị của nó
+    # có thể bị ghi đè bởi file cấu hình riêng (tree) sau
+    if project_config_path.exists():
+        files_to_read.append(project_config_path)
+    
+    # Đọc file cấu hình riêng (Ưu tiên)
+    if tree_config_path.exists():
+        files_to_read.append(tree_config_path)
+
+    if files_to_read:
         try:
-            config.read(config_file_path)
+            # configparser.read() đọc danh sách file theo thứ tự. 
+            # Các giá trị trong file sau sẽ ghi đè các giá trị trong file trước.
+            config.read(files_to_read) 
+            logger.debug(f"Đã tải cấu hình từ các file: {[p.name for p in files_to_read]}")
         except Exception as e:
-            log_warning(logger, f"Could not read {CONFIG_FILENAME} file: {e}")
+            log_warning(logger, f"Could not read config files: {e}")
+    else:
+        logger.debug("Không tìm thấy file cấu hình .tree.ini hoặc .project.ini. Sử dụng mặc định.")
+
+
+    # Đảm bảo section [tree] tồn tại để config.get() không bị lỗi KeyError
+    if CONFIG_SECTION_NAME not in config:
+        config.add_section(CONFIG_SECTION_NAME)
+        logger.debug(f"Đã thêm section '{CONFIG_SECTION_NAME}' trống để xử lý fallback an toàn.")
 
     # 5. Hợp nhất Cấu hình (CLI > File > Mặc định)
     
