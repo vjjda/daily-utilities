@@ -8,10 +8,22 @@ This file defines which file types are supported and which
 commenting rules they use.
 """
 
-from typing import Dict, Any
+# --- MODIFIED: Thêm Set ---
+from typing import Dict, Any, Set
+# --- END MODIFIED ---
+
+# --- NEW: Thêm DEFAULT_IGNORE ---
+# Các pattern mặc định luôn bị bỏ qua khi quét
+DEFAULT_IGNORE: Set[str] = {
+    ".venv", "venv", "__pycache__", ".git", 
+    "node_modules", "dist", "build", "out"
+}
+# --- END NEW ---
+
 
 # --- 1. Định nghĩa các quy tắc (Rules) ---
 COMMENT_RULES: Dict[str, Dict[str, Any]] = {
+    # ... (Nội dung không đổi) ...
     "hash_line": {
         "type": "line",
         "comment_prefix": "#",
@@ -20,36 +32,28 @@ COMMENT_RULES: Dict[str, Dict[str, Any]] = {
         "type": "line",
         "comment_prefix": "//",
     },
-    # --- NEW: Thêm quy tắc block comment ---
     "css_block": {
         "type": "block",
         "comment_prefix": "/*",
         "comment_suffix": "*/",
-        "padding": True, # Thêm space: /* Path: ... */
+        "padding": True, 
     },
     "md_block": {
         "type": "block",
-        "comment_prefix": "<!--",
-        "comment_suffix": "-->",
+        "comment_prefix": "",
         "padding": True, 
     }
-    # --- END NEW ---
 }
 
 # --- 2. Ánh xạ Đuôi file (Extensions) tới Quy tắc ---
 COMMENT_RULES_BY_EXT: Dict[str, Dict[str, Any]] = {
-    # 'hash_line' users
+    # ... (Nội dung không đổi) ...
     ".py":   COMMENT_RULES["hash_line"],
     ".zsh":  COMMENT_RULES["hash_line"],
     ".sh":   COMMENT_RULES["hash_line"],
-    
-    # 'slash_line' users
     ".js":   COMMENT_RULES["slash_line"],
     ".ts":   COMMENT_RULES["slash_line"],
     ".scss": COMMENT_RULES["slash_line"],
-    
-    # --- NEW: 'block' users ---
     ".css":  COMMENT_RULES["css_block"],
     ".md":   COMMENT_RULES["md_block"],
-    # --- END NEW ---
 }

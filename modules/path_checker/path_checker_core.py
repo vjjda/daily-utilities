@@ -8,15 +8,13 @@ from typing import List, Set, Optional, Dict, Any
 # Import shared utilities
 from utils.core import is_path_matched
 
-# IMPORT LOGIC & CONFIG TỪ FILE MỚI
-from .path_checker_config import COMMENT_RULES_BY_EXT
+# --- IMPORT LOGIC & CONFIG TỪ FILE MỚI ---
+# --- MODIFIED: Import thêm DEFAULT_IGNORE ---
+from .path_checker_config import COMMENT_RULES_BY_EXT, DEFAULT_IGNORE
 from .path_checker_rules import apply_line_comment_rule, apply_block_comment_rule
+# --- END MODIFIED ---
 
-# --- MODULE-SPECIFIC CONSTANTS ---
-DEFAULT_IGNORE = {
-    ".venv", "venv", "__pycache__", ".git", 
-    "node_modules", "dist", "build", "out"
-}
+# --- MODIFIED: Đã xóa hằng số DEFAULT_IGNORE ---
 
 # --- 1. Hàm phân tích (Analysis Function) ---
 def _update_files(
@@ -29,6 +27,8 @@ def _update_files(
     Returns:
         A list of dictionaries ({'path': ..., 'line': ..., 'new_lines': ..., 'fix_preview': ...})
     """
+    
+    # ... (Nội dung hàm _update_files không thay đổi) ...
     
     files_needing_fix: List[Dict[str, Any]] = []
     
@@ -63,16 +63,14 @@ def _update_files(
             
             first_line_content = lines[0].strip()
             
-            # --- MODIFIED: Thêm biến để lưu preview ---
             new_lines = []
-            correct_comment_str = "" # Sẽ lưu preview ở đây
+            correct_comment_str = "" 
             rule_type = rule["type"]
-            # --- END MODIFIED ---
             
             if rule_type == "line":
                 prefix = rule["comment_prefix"]
                 correct_comment = f"{prefix} Path: {relative_path.as_posix()}\n"
-                correct_comment_str = correct_comment # <--- Lưu preview
+                correct_comment_str = correct_comment 
                 new_lines = apply_line_comment_rule(lines, correct_comment, check_prefix=prefix)
             
             elif rule_type == "block":
@@ -80,7 +78,7 @@ def _update_files(
                 suffix = rule["comment_suffix"]
                 padding = " " if rule.get("padding", False) else ""
                 correct_comment = f"{prefix}{padding}Path: {relative_path.as_posix()}{padding}{suffix}\n"
-                correct_comment_str = correct_comment # <--- Lưu preview
+                correct_comment_str = correct_comment 
                 new_lines = apply_block_comment_rule(lines, correct_comment, rule)
             
             else:
@@ -88,14 +86,12 @@ def _update_files(
                 continue
 
             if new_lines != original_lines:
-                # --- MODIFIED: Thêm 'fix_preview' vào dict trả về ---
                 files_needing_fix.append({
                     "path": file_path,
                     "line": first_line_content,
                     "new_lines": new_lines,
-                    "fix_preview": correct_comment_str.strip() # .strip() để xóa \n
+                    "fix_preview": correct_comment_str.strip() 
                 })
-                # --- END MODIFIED ---
                 
         except Exception as e:
             logger.error(f"Error processing file {relative_path.as_posix()}: {e}")
@@ -104,7 +100,8 @@ def _update_files(
     return files_needing_fix
 
 # --- 2. Hàm Quét file (File Scanner) ---
-# (Hàm process_path_updates không thay đổi)
+# (Hàm process_path_updates không thay đổi,
+# vì nó đã import DEFAULT_IGNORE từ path_checker_config)
 def process_path_updates(
     logger: logging.Logger,
     project_root: Path,
@@ -137,7 +134,9 @@ def process_path_updates(
     else:
         logger.info(f"Specific path mode: Not using .gitignore for '{target_dir_str}'.")
 
+    # --- MODIFIED: DEFAULT_IGNORE giờ đã được import ---
     final_ignore_patterns = DEFAULT_IGNORE.union(gitignore_patterns).union(cli_ignore)
+    # --- END MODIFIED ---
     
     if check_mode:
         logger.info("Running in [Check Mode] (dry-run).")
