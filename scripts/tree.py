@@ -8,12 +8,12 @@ import configparser
 from pathlib import Path
 # Bổ sung import các kiểu dữ liệu cần thiết
 from utils.logging_config import setup_logging, log_success
+from utils.core import run_command # <--- BỔ SUNG
 from typing import Set 
 
 # ----------------------------------------------------------------------
 
-# --- THAY ĐỔI IMPORT ---
-# Import các tiện ích từ module 'modules.tree' thay vì 'utils'
+# Import các tiện ích từ module 'modules.tree'
 from modules.tree.core import (
     generate_tree, get_submodule_paths, parse_comma_list, 
     CONFIG_TEMPLATE, DEFAULT_IGNORE, DEFAULT_PRUNE, DEFAULT_DIRS_ONLY,
@@ -32,7 +32,7 @@ def main():
     parser.add_argument("-P", "--prune", type=str, help="Comma-separated list of patterns to prune.")
     parser.add_argument("-d", "--dirs-only", nargs='?', const='_ALL_', default=None, type=str, help="Show directories only.")
     parser.add_argument("-s", "--show-submodules", action='store_true', default=None, help="Show the contents of submodules.")
-    parser.add_argument("--init", action='store_true', help="Create a sample .treeconfig.ini file and exit.")
+    parser.add_argument("--init", action='store_true', help="Create a sample .treeconfig.ini file and open it.")
     args = parser.parse_args()
 
     # 1. Cấu hình Logging
@@ -43,25 +43,61 @@ def main():
     
     # 2. Xử lý cờ --init
     if args.init: 
-        # Sử dụng CONFIG_FILENAME đã import
-        config_file_path = Path.cwd() / CONFIG_FILENAME 
-        if config_file_path.exists():
+        config_file_path = Path.cwd() / CONFIG_FILENAME
+        file_existed = config_file_path.exists()
+        
+        should_write = False
+        
+        if file_existed:
             overwrite = input(f"'{CONFIG_FILENAME}' already exists. Overwrite? (y/n): ").lower() 
-            if overwrite != 'y':
-                logger.info("Operation cancelled.")
-                return
-        with open(config_file_path, 'w', encoding='utf-8') as f:
-            f.write(CONFIG_TEMPLATE)
-        log_success(logger, f"Successfully created '{CONFIG_FILENAME}'.")
-        return
+            if overwrite == 'y':
+                should_write = True
+                logger.debug(f"User chose to overwrite '{CONFIG_FILENAME}'.")
+            else:
+                logger.info(f"Skipped overwrite for existing '{CONFIG_FILENAME}'.")
+        else:
+            should_write = True
+            logger.debug(f"Creating new '{CONFIG_FILENAME}'.")
+
+        if should_write:
+            try:
+                with open(config_file_path, 'w', encoding='utf-8') as f:
+                    f.write(CONFIG_TEMPLATE)
+                
+                log_msg = f"Successfully created '{CONFIG_FILENAME}'."
+                if file_existed: # This means it was an overwrite
+                    log_msg = f"Successfully overwrote '{CONFIG_FILENAME}'."
+                log_success(logger, log_msg)
+                
+            except IOError as e:
+                logger.error(f"❌ Failed to write file '{config_file_path}': {e}")
+                return # Không thử mở nếu ghi lỗi
+        
+        # Mở file (bất kể đã ghi đè hay chỉ bỏ qua)
+        try:
+            logger.info(f"Opening '{config_file_path.name}' in default editor...")
+            # Sử dụng hàm tiện ích run_command để chạy 'open' trên macOS
+            success, output = run_command(
+                ["open", str(config_file_path)], 
+                logger, 
+                description=f"Mở file {CONFIG_FILENAME}"
+            )
+            if not success:
+                # logger.error đã được gọi bên trong run_command
+                logger.warning(f"⚠️ Could not automatically open file. Please open it manually.")
+                logger.debug(f"Lỗi khi mở file: {output}")
+                
+        except Exception as e:
+            logger.error(f"❌ An unexpected error occurred while trying to open the file: {e}")
+            
+        return # Kết thúc sau khi --init
 
     # 3. Xử lý Đường dẫn Khởi động
     initial_path = Path(args.start_path).resolve() 
     if not initial_path.exists():
-        # --- THAY ĐỔI LOGGING ---
-        # Thêm emoji cảnh báo cho lỗi người dùng
+        
         logger.error(f"❌ Path does not exist: '{args.start_path}'")
-        # -------------------------
+        
         return
     start_dir = initial_path.parent if initial_path.is_file() else initial_path
 
@@ -94,10 +130,9 @@ def main():
             config.read(files_to_read) 
             logger.debug(f"Đã tải cấu hình từ các file: {[p.name for p in files_to_read]}")
         except Exception as e:
-            # --- THAY ĐỔI LOGGING ---
-            # Thêm emoji cảnh báo
+            
             logger.warning(logger, f"⚠️ Could not read config files: {e}")
-            # -------------------------
+            
     else:
         logger.debug("Không tìm thấy file cấu hình .tree.ini hoặc .project.ini. Sử dụng mặc định.")
 
@@ -138,10 +173,9 @@ def main():
     
     submodule_names: Set[str] = set()
     if not show_submodules: 
-        # --- THAY ĐỔI LOGIC ---
-        # Truyền logger vào hàm
+        
         submodule_paths = get_submodule_paths(start_dir, logger=logger)
-        # ---------------------
+        
         submodule_names = submodule_paths
 
 
