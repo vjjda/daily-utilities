@@ -5,7 +5,8 @@ import sys
 import argparse
 import logging
 from pathlib import Path
-from typing import List # <--- Thêm List
+from typing import List
+import shlex
 
 # Common utilities
 from utils.logging_config import setup_logging, log_success
@@ -67,21 +68,41 @@ def main():
         
     check_mode = not args.fix
 
+    # --- NEW: Xây dựng lệnh "fix" để copy-paste ---
+    # Lấy tất cả các đối số gốc (ví dụ: ['-I', '*.js'])
+    original_args = sys.argv[1:]
+    
+    # Lọc bỏ '--check' hoặc '--fix' (nếu có)
+    filtered_args = []
+    for arg in original_args:
+        if arg not in ('--check', '--fix'):
+            # shlex.quote() sẽ bọc các đối số cần thiết,
+            # ví dụ: '*.js' -> "'*.js'"
+            filtered_args.append(shlex.quote(arg))
+    
+    # Thêm '--fix' vào lệnh
+    filtered_args.append('--fix')
+    
+    # Tạo chuỗi lệnh cuối cùng
+    # (Chúng ta hard-code 'cpath' vì đó là alias dự định)
+    fix_command_str = "cpath " + " ".join(filtered_args)
+    # --- END NEW ---
+
     # 2. Prepare arguments for the core logic
     extensions_to_scan = [ext.strip() for ext in args.extensions.split(',') if ext.strip()]
     cli_ignore_patterns = parse_comma_list(args.ignore)
 
     try:
         # 3. Run the core logic
-        # files_to_fix giờ là List[Dict[str, Any]]
         files_to_fix = process_path_updates(
+            # ... (tham số không đổi) ...
             logger=logger,
             project_root=scan_root,
             target_dir_str=args.target_directory,
             extensions=extensions_to_scan,
             cli_ignore=cli_ignore_patterns,
             script_file_path=THIS_SCRIPT_PATH,
-            check_mode=check_mode 
+            check_mode=check_mode
         )
 
         processed_count = len(files_to_fix)
@@ -89,35 +110,36 @@ def main():
         # 4. Report results
         if processed_count > 0:
             
-            # --- MODIFIED: Luôn in báo cáo chi tiết ---
+            # In báo cáo (không đổi)
             logger.warning(f"⚠️ {processed_count} files do not conform to the path convention:")
             for info in files_to_fix:
                 file_path = info["path"]
                 first_line = info["line"]
                 logger.warning(f"   -> {file_path.relative_to(scan_root).as_posix()}")
                 logger.warning(f"      (L1: {first_line})")
-            # --- END MODIFIED ---
 
             if check_mode:
-                # --- Chế độ "check" (mặc định) ---
-                logger.warning("\n-> Run 'cpath --fix' to fix them automatically.")
-                sys.exit(1) 
+                # --- MODIFIED: In lệnh "fix" theo cách dễ copy ---
+                logger.warning("\n-> To fix these files, run:")
+                # In ra console (logger đã được cấu hình 
+                # để chỉ in message ra stdout)
+                logger.warning(f"\n   {fix_command_str}\n")
+                sys.exit(1)
+                # --- END MODIFIED ---
             else:
-                # --- Chế độ "--fix" ---
-                # --- NEW: Thêm bước xác nhận ---
+                # --- Chế độ "--fix" (logic xác nhận không đổi) ---
                 try:
                     confirmation = input("\nProceed to fix these files? (y/n): ")
                 except EOFError:
-                    confirmation = 'n' # Coi Ctrl+D (EOF) là 'n'
+                    confirmation = 'n'
                 
                 if confirmation.lower() == 'y':
-                    logger.debug("User confirmed fix. Proceeding to write files.")
+                    # ... (logic ghi file không đổi) ...
                     written_count = 0
                     for info in files_to_fix:
                         file_path: Path = info["path"]
                         new_lines: List[str] = info["new_lines"]
                         try:
-                            # Đây là nơi duy nhất script ghi file
                             with file_path.open('w', encoding='utf-8') as f:
                                 f.writelines(new_lines)
                             logger.info(f"Fixed: {file_path.relative_to(scan_root).as_posix()}")
@@ -129,8 +151,7 @@ def main():
                 
                 else:
                     logger.warning("Fix operation cancelled by user.")
-                    sys.exit(0) # Thoát (không lỗi) vì người dùng chủ động hủy
-                # --- END NEW ---
+                    sys.exit(0)
                 
         else:
             log_success(logger, "All files already conform to the convention. No changes needed.")
