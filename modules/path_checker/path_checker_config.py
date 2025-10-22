@@ -11,8 +11,6 @@ commenting rules they use.
 from typing import Dict, Any
 
 # --- 1. Định nghĩa các quy tắc (Rules) ---
-# Đây là "khuôn mẫu" cho các loại comment.
-# Sắp tới chúng ta sẽ thêm 'block_css' ở đây.
 COMMENT_RULES: Dict[str, Dict[str, Any]] = {
     "hash_line": {
         "type": "line",
@@ -21,11 +19,24 @@ COMMENT_RULES: Dict[str, Dict[str, Any]] = {
     "slash_line": {
         "type": "line",
         "comment_prefix": "//",
+    },
+    # --- NEW: Thêm quy tắc block comment ---
+    "css_block": {
+        "type": "block",
+        "comment_prefix": "/*",
+        "comment_suffix": "*/",
+        "padding": True, # Thêm space: /* Path: ... */
+    },
+    "md_block": {
+        "type": "block",
+        "comment_prefix": "<!--",
+        "comment_suffix": "-->",
+        "padding": True, 
     }
+    # --- END NEW ---
 }
 
 # --- 2. Ánh xạ Đuôi file (Extensions) tới Quy tắc ---
-# Đây là "bảng tra cứu" mà core logic sẽ sử dụng.
 COMMENT_RULES_BY_EXT: Dict[str, Dict[str, Any]] = {
     # 'hash_line' users
     ".py":   COMMENT_RULES["hash_line"],
@@ -37,5 +48,8 @@ COMMENT_RULES_BY_EXT: Dict[str, Dict[str, Any]] = {
     ".ts":   COMMENT_RULES["slash_line"],
     ".scss": COMMENT_RULES["slash_line"],
     
-    # Sẽ sớm thêm .css tại đây
+    # --- NEW: 'block' users ---
+    ".css":  COMMENT_RULES["css_block"],
+    ".md":   COMMENT_RULES["md_block"],
+    # --- END NEW ---
 }

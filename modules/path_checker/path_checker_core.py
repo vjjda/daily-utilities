@@ -10,8 +10,9 @@ from utils.core import is_path_matched
 
 # --- IMPORT LOGIC & CONFIG TỪ FILE MỚI ---
 from .path_checker_config import COMMENT_RULES_BY_EXT
-from .path_checker_rules import apply_line_comment_rule
-# ----------------------------------------
+# --- MODIFIED: Import thêm rule mới ---
+from .path_checker_rules import apply_line_comment_rule, apply_block_comment_rule
+# --- END MODIFIED ---
 
 # --- MODULE-SPECIFIC CONSTANTS ---
 DEFAULT_IGNORE = {
@@ -20,7 +21,6 @@ DEFAULT_IGNORE = {
 }
 
 # --- 1. Hàm điều phối I/O (I/O Orchestrator) ---
-# (Phần này "ít thay đổi")
 def _update_files(
     files_to_scan: List[Path], 
     project_root: Path, 
@@ -67,8 +67,9 @@ def _update_files(
 
             # 3. Gọi hàm logic (Rule) tương ứng
             new_lines = []
+            rule_type = rule["type"]
             
-            if rule["type"] == "line":
+            if rule_type == "line":
                 prefix = rule["comment_prefix"]
                 correct_comment = f"{prefix} Path: {relative_path.as_posix()}\n"
                 
@@ -79,10 +80,24 @@ def _update_files(
                     check_prefix=prefix
                 )
             
-            # (Chúng ta sẽ thêm 'elif rule["type"] == "block":' ở đây sau)
+            # --- NEW: Thêm logic xử lý "block" ---
+            elif rule_type == "block":
+                prefix = rule["comment_prefix"]
+                suffix = rule["comment_suffix"]
+                padding = " " if rule.get("padding", False) else ""
+                
+                correct_comment = f"{prefix}{padding}Path: {relative_path.as_posix()}{padding}{suffix}\n"
+
+                # Gọi logic block mới từ file rules.py
+                new_lines = apply_block_comment_rule(
+                    lines,
+                    correct_comment,
+                    rule
+                )
+            # --- END NEW ---
             
             else:
-                logger.warning(f"Skipping file: Unknown rule type '{rule['type']}' for {relative_path.as_posix()}")
+                logger.warning(f"Skipping file: Unknown rule type '{rule_type}' for {relative_path.as_posix()}")
                 continue
 
             # 4. Ghi file (nếu cần)
@@ -101,7 +116,7 @@ def _update_files(
     return files_needing_fix
 
 # --- 2. Hàm Quét file (File Scanner) ---
-# (Phần này "ít thay đổi" - Đây là Public API của module)
+# (Hàm process_path_updates không thay đổi)
 def process_path_updates(
     logger: logging.Logger,
     project_root: Path,

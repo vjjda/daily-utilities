@@ -29,23 +29,25 @@ def main():
         default=None, 
         help="Directory to scan (default: current working directory, respects .gitignore)."
     )
+    
+    # --- MODIFIED: Thêm css, md vào default ---
     parser.add_argument(
         "-e", "--extensions", 
-        default="py,js,ts,css,scss,zsh,sh", 
-        help="File extensions to scan (default: 'py,js,ts,css,scss,zsh,sh')."
+        default="py,js,ts,css,scss,zsh,sh,md", 
+        help="File extensions to scan (default: 'py,js,ts,css,scss,zsh,sh,md')."
     )
+    # --- END MODIFIED ---
+    
     parser.add_argument(
         "-I", "--ignore", 
         type=str, 
         help="Comma-separated list of additional patterns to ignore."
     )
-    # --- MODIFIED: Thay --check bằng --fix ---
     parser.add_argument(
         "--fix",
         action="store_true",
         help="Fix files in place. (Default is 'check' mode/dry-run)."
     )
-    # --- END MODIFIED ---
     args = parser.parse_args()
 
     # 1. Setup Logging
@@ -62,12 +64,7 @@ def main():
         logger.error(f"❌ Path does not exist: '{args.target_directory or scan_root}'")
         sys.exit(1)
         
-    # --- MODIFIED: Đảo ngược logic check_mode ---
-    # Mặc định, check_mode là True (dry-run)
-    # Nếu người dùng chạy `cpath --fix`, args.fix sẽ là True,
-    # và check_mode sẽ trở thành False (tức là "đừng check nữa, hãy fix đi")
     check_mode = not args.fix
-    # --- END MODIFIED ---
 
     # 2. Prepare arguments for the core logic
     extensions_to_scan = [ext.strip() for ext in args.extensions.split(',') if ext.strip()]
@@ -82,25 +79,21 @@ def main():
             extensions=extensions_to_scan,
             cli_ignore=cli_ignore_patterns,
             script_file_path=THIS_SCRIPT_PATH,
-            check_mode=check_mode # Truyền vào logic đã đảo ngược
+            check_mode=check_mode 
         )
 
         processed_count = len(files_to_fix)
 
         # 4. Report results
         if processed_count > 0:
-            # --- MODIFIED: Cập nhật logic báo cáo ---
             if check_mode:
-                # Đây là chế độ mặc định (dry-run)
                 logger.warning(f"⚠️ [Check Mode] {processed_count} files do not conform to the path convention:")
                 for file_path in files_to_fix:
                     logger.warning(f"   -> {file_path.relative_to(scan_root).as_posix()}")
                 logger.warning("\n-> Run 'cpath --fix' to fix them automatically.")
-                sys.exit(1) # Thoát với mã lỗi 1 cho CI/CD
+                sys.exit(1) 
             else:
-                # Đây là chế độ --fix
                 log_success(logger, f"Done! Fixed {processed_count} files.")
-            # --- END MODIFIED ---
         else:
             log_success(logger, "All files already conform to the convention. No changes needed.")
 
