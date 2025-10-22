@@ -135,11 +135,10 @@ def main():
     final_dirs_only_list = DEFAULT_DIRS_ONLY.union(dirs_only_list_custom)
     
     submodule_names: Set[str] = set()
-    if not show_submodules: # [cite: 18]
-        # Ta cần điều chỉnh hàm này trong tree_core để trả về tên (name) thay vì Path
+    if not show_submodules: 
         submodule_paths = get_submodule_paths(start_dir)
-        submodule_names = {p.name for p in submodule_paths} 
-        # LƯU Ý: Đã điều chỉnh logic get_submodule_paths trong tree_core để trả về set tên (string name) 
+        submodule_names = submodule_paths
+
 
     # 6. Thông báo Trạng thái (Sử dụng logger.info)
     is_truly_full_view = not final_ignore_list and not final_prune_list and not final_dirs_only_list and not global_dirs_only and not submodule_names
