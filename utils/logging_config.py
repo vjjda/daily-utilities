@@ -4,14 +4,16 @@
 import logging
 import sys
 from pathlib import Path
-from .constants import LOG_DIR_NAME, FILE_LOG_LEVEL, CONSOLE_LOG_LEVEL
+# --- MODIFIED: Import các hằng số mới ---
+from .constants import LOG_DIR_PATH, FILE_LOG_LEVEL, CONSOLE_LOG_LEVEL
+# --- END MODIFIED ---
 
 # Cấp độ logging tùy chỉnh cho console:
-# INFO: Thông báo thành công/khởi động (dùng emoji)
-# WARNING: Cảnh báo
-# ERROR: Lỗi
+# ...
 
-def setup_logging(script_name: str, log_dir: str = "logs", console_level=logging.INFO):
+# --- MODIFIED: Đơn giản hóa chữ ký hàm ---
+def setup_logging(script_name: str, console_level_str: str = CONSOLE_LOG_LEVEL):
+# --- END MODIFIED ---
     """
     Cấu hình logging cho script.
     - Ghi chi tiết (DEBUG) vào file log.
@@ -20,15 +22,15 @@ def setup_logging(script_name: str, log_dir: str = "logs", console_level=logging
     
     # 1. Khởi tạo logger
     logger = logging.getLogger(script_name)
-    logger.setLevel(logging.DEBUG) # Mức thấp nhất để đảm bảo tất cả đều được ghi vào file
+    logger.setLevel(logging.DEBUG) # Mức thấp nhất
 
-    # Loại bỏ các handler cũ nếu có, để tránh logger bị cấu hình lại nhiều lần
     if logger.hasHandlers():
         logger.handlers.clear()
 
-    # 2. Tạo thư mục logs
-    log_path = Path(log_dir)
-    log_path.mkdir(exist_ok=True)
+    # --- MODIFIED: Sử dụng hằng số LOG_DIR_PATH ---
+    # 2. Tạo thư mục logs (dùng đường dẫn tuyệt đối)
+    LOG_DIR_PATH.mkdir(exist_ok=True)
+    # --- END MODIFIED ---
     
     # --- Định dạng cho File Log (Chi tiết) ---
     file_formatter = logging.Formatter(
@@ -37,19 +39,23 @@ def setup_logging(script_name: str, log_dir: str = "logs", console_level=logging
     )
     
     # --- File Handler ---
-    file_handler = logging.FileHandler(log_path / f'{script_name}.log')
+    # --- MODIFIED: Sử dụng LOG_DIR_PATH ---
+    file_handler = logging.FileHandler(LOG_DIR_PATH / f'{script_name}.log')
     file_handler.setFormatter(file_formatter)
-    file_handler.setLevel(logging.DEBUG)
+    # --- MODIFIED: Sử dụng hằng số FILE_LOG_LEVEL ---
+    file_handler.setLevel(getattr(logging, FILE_LOG_LEVEL.upper(), logging.DEBUG))
     logger.addHandler(file_handler)
+    # --- END MODIFIED ---
 
     # --- Console Handler (Thân thiện với người dùng) ---
-    # Ta dùng định dạng đơn giản, và sẽ dùng hàm helper để thêm emoji khi cần
     console_formatter = logging.Formatter('%(message)s')
     
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setFormatter(console_formatter)
-    console_handler.setLevel(console_level) # Chỉ hiển thị INFO trở lên
+    # --- MODIFIED: Sử dụng hằng số CONSOLE_LOG_LEVEL ---
+    console_handler.setLevel(getattr(logging, console_level_str.upper(), logging.INFO))
     logger.addHandler(console_handler)
+    # --- END MODIFIED ---
 
     return logger
 

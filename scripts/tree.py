@@ -3,7 +3,7 @@
 
 import sys
 import argparse
-import logging  # <--- FIX: Added missing import
+import logging
 from pathlib import Path
 
 # Common utilities
@@ -11,11 +11,9 @@ from utils.logging_config import setup_logging, log_success
 from utils.core import run_command 
 
 # --- MODULE IMPORTS ---
-# Import only necessary components for orchestration
 from modules.tree.tree_core import (
     generate_tree, CONFIG_FILENAME, CONFIG_TEMPLATE
 )
-# Import the new config processing module
 from modules.tree.tree_config import load_and_merge_config
 # ---------------------
 

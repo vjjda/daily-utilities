@@ -15,6 +15,7 @@ from modules.path_checker.path_checker_core import process_path_updates
 
 # --- CONSTANTS ---
 THIS_SCRIPT_PATH = Path(__file__).resolve()
+# --- MODIFIED: Không cần PROJECT_ROOT ở đây nữa ---
 
 def main():
     """Main orchestration function: Parses args and runs the path checker."""
