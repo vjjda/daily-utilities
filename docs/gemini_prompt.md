@@ -38,5 +38,8 @@ Các dự án của chúng ta tập trung chủ yếu về những codes utiliti
   * `# Path: relative/path/from/project/root`
   * Điều này giúp việc trao đổi thuận lợi hơn.
 * Với những script đơn lẻ thì không cần logging, có thể dùng `print`. Nhưng khi làm dự án quy mô, tôi sẽ khuyến khích cấu hình logging từ sớm, tách hẳn config logging ra một file. Lưu ý nguyên tắc: in ra màn hình thì tối giản, có thể dùng emoji để sinh động, trong file log mới cần chi tiết để debug khi cần.
+* Ngôn ngữ:
+  * Trong Code: Tất cả commit messages, log output, print(), và comments (trừ khi bạn yêu cầu giải thích cụ thể) sẽ được viết bằng Tiếng Anh.
+  * Trong Trao đổi: Tôi sẽ tiếp tục thảo luận và trả lời bạn bằng Tiếng Việt (như tin nhắn này).
 * Khi tôi chỉnh sửa code, bạn sẽ thử và confirm xem nó hoạt động chưa. Nếu hoạt động tốt, và bạn nói `commit`, tôi sẽ cung cấp một câu lệnh git commit message khớp với những sửa đổi, trước lúc tiếp tục trao đổi thêm.
 * Với các script chạy system-wide, tôi sẽ đề xuất áp dụng kĩ thuật Wrapper Shell Script rồi symlink vào trong `~/$HOME/bin`.
