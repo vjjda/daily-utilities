@@ -1,29 +1,72 @@
 #!/usr/bin/env python3
 # Path: scripts/tree.py
 
-
 import sys
 import argparse
-import configparser
 from pathlib import Path
-# Bổ sung import các kiểu dữ liệu cần thiết
+
+# Các tiện ích chung
 from utils.logging_config import setup_logging, log_success
 from utils.core import run_command 
-from typing import Set 
-
-# ----------------------------------------------------------------------
 
 # --- THAY ĐỔI IMPORT ---
-# Import các tiện ích từ module 'modules.tree.tree_core'
+# Chỉ import các thành phần cần thiết cho script điều phối
 from modules.tree.tree_core import (
-    generate_tree, get_submodule_paths, parse_comma_list, 
-    CONFIG_TEMPLATE, DEFAULT_IGNORE, DEFAULT_PRUNE, DEFAULT_DIRS_ONLY,
-    DEFAULT_MAX_LEVEL, CONFIG_FILENAME, PROJECT_CONFIG_FILENAME, CONFIG_SECTION_NAME
+    generate_tree, CONFIG_FILENAME, CONFIG_TEMPLATE
 )
+# Import module xử lý config mới
+from modules.tree.tree_config import load_and_merge_config
 # ---------------------
 
+def handle_init_command(logger: logging.Logger) -> None:
+    """Xử lý logic cho cờ --init."""
+    config_file_path = Path.cwd() / CONFIG_FILENAME
+    file_existed = config_file_path.exists()
+    
+    should_write = False
+    
+    if file_existed:
+        overwrite = input(f"'{CONFIG_FILENAME}' already exists. Overwrite? (y/n): ").lower() 
+        if overwrite == 'y':
+            should_write = True
+            logger.debug(f"User chose to overwrite '{CONFIG_FILENAME}'.")
+        else:
+            logger.info(f"Skipped overwrite for existing '{CONFIG_FILENAME}'.")
+    else:
+        should_write = True
+        logger.debug(f"Creating new '{CONFIG_FILENAME}'.")
+
+    if should_write:
+        try:
+            with open(config_file_path, 'w', encoding='utf-8') as f:
+                f.write(CONFIG_TEMPLATE)
+            
+            log_msg = f"Successfully created '{CONFIG_FILENAME}'."
+            if file_existed:
+                log_msg = f"Successfully overwrote '{CONFIG_FILENAME}'."
+            log_success(logger, log_msg)
+            
+        except IOError as e:
+            logger.error(f"❌ Failed to write file '{config_file_path}': {e}")
+            return # Không thử mở nếu ghi lỗi
+    
+    # Mở file
+    try:
+        logger.info(f"Opening '{config_file_path.name}' in default editor...")
+        success, output = run_command(
+            ["open", str(config_file_path)], 
+            logger, 
+            description=f"Mở file {CONFIG_FILENAME}"
+        )
+        if not success:
+            logger.warning(f"⚠️ Could not automatically open file. Please open it manually.")
+            logger.debug(f"Lỗi khi mở file: {output}")
+            
+    except Exception as e:
+        logger.error(f"❌ An unexpected error occurred while trying to open the file: {e}")
+
 def main():
-    """Main function to handle arguments, configuration, and run the tree generator."""
+    """Hàm main điều phối: Phân tích đối số, gọi xử lý config và chạy hàm tree."""
     
     parser = argparse.ArgumentParser(description="A smart directory tree generator with support for a .treeconfig.ini file.")
     parser.add_argument("start_path", nargs='?', 
@@ -38,176 +81,62 @@ def main():
 
     # 1. Cấu hình Logging
     logger = setup_logging(script_name="CTree")
-    
-    # Ghi log DEBUG về đường dẫn khởi động
     logger.debug(f"Đã nhận đường dẫn khởi động: {args.start_path}")
     
-    # 2. Xử lý cờ --init
+    # 2. Xử lý cờ --init (Tách ra hàm riêng)
     if args.init: 
-        config_file_path = Path.cwd() / CONFIG_FILENAME
-        file_existed = config_file_path.exists()
-        
-        should_write = False
-        
-        if file_existed:
-            overwrite = input(f"'{CONFIG_FILENAME}' already exists. Overwrite? (y/n): ").lower() 
-            if overwrite == 'y':
-                should_write = True
-                logger.debug(f"User chose to overwrite '{CONFIG_FILENAME}'.")
-            else:
-                logger.info(f"Skipped overwrite for existing '{CONFIG_FILENAME}'.")
-        else:
-            should_write = True
-            logger.debug(f"Creating new '{CONFIG_FILENAME}'.")
-
-        if should_write:
-            try:
-                with open(config_file_path, 'w', encoding='utf-8') as f:
-                    f.write(CONFIG_TEMPLATE)
-                
-                log_msg = f"Successfully created '{CONFIG_FILENAME}'."
-                if file_existed: # This means it was an overwrite
-                    log_msg = f"Successfully overwrote '{CONFIG_FILENAME}'."
-                log_success(logger, log_msg)
-                
-            except IOError as e:
-                logger.error(f"❌ Failed to write file '{config_file_path}': {e}")
-                return # Không thử mở nếu ghi lỗi
-        
-        # Mở file (bất kể đã ghi đè hay chỉ bỏ qua)
-        try:
-            logger.info(f"Opening '{config_file_path.name}' in default editor...")
-            # Sử dụng hàm tiện ích run_command để chạy 'open' trên macOS
-            success, output = run_command(
-                ["open", str(config_file_path)], 
-                logger, 
-                description=f"Mở file {CONFIG_FILENAME}"
-            )
-            if not success:
-                # logger.error đã được gọi bên trong run_command
-                logger.warning(f"⚠️ Could not automatically open file. Please open it manually.")
-                logger.debug(f"Lỗi khi mở file: {output}")
-                
-        except Exception as e:
-            logger.error(f"❌ An unexpected error occurred while trying to open the file: {e}")
-            
+        handle_init_command(logger)
         return # Kết thúc sau khi --init
 
     # 3. Xử lý Đường dẫn Khởi động
     initial_path = Path(args.start_path).resolve() 
     if not initial_path.exists():
-        
         logger.error(f"❌ Path does not exist: '{args.start_path}'")
-        
         return
     start_dir = initial_path.parent if initial_path.is_file() else initial_path
 
-    # 4. Đọc Cấu hình từ File (.tree.ini Tối ưu > .project.ini Fallback)
-    
-    # configparser sẽ được dùng để đọc cả hai file
-    config = configparser.ConfigParser()
-    
-    # 4.1. Đường dẫn file cấu hình của script (Ưu tiên cao)
-    tree_config_path = start_dir / CONFIG_FILENAME
-    
-    # 4.2. Đường dẫn file cấu hình dự án (Fallback)
-    project_config_path = start_dir / PROJECT_CONFIG_FILENAME
+    # 4. Tải và Hợp nhất Cấu hình (Đã tách ra module riêng)
+    try:
+        config_params = load_and_merge_config(args, start_dir, logger)
+    except Exception as e:
+        logger.error(f"❌ Lỗi nghiêm trọng khi xử lý cấu hình: {e}")
+        logger.debug("Traceback:", exc_info=True)
+        return
 
-    files_to_read = []
-    
-    # Đọc file cấu hình dự án (Fallback) trước, để các giá trị của nó
-    # có thể bị ghi đè bởi file cấu hình riêng (tree) sau
-    if project_config_path.exists():
-        files_to_read.append(project_config_path)
-    
-    # Đọc file cấu hình riêng (Ưu tiên)
-    if tree_config_path.exists():
-        files_to_read.append(tree_config_path)
-
-    if files_to_read:
-        try:
-            # configparser.read() đọc danh sách file theo thứ tự. 
-            # Các giá trị trong file sau sẽ ghi đè các giá trị trong file trước.
-            config.read(files_to_read) 
-            logger.debug(f"Đã tải cấu hình từ các file: {[p.name for p in files_to_read]}")
-        except Exception as e:
-            
-            logger.warning(logger, f"⚠️ Could not read config files: {e}")
-            
-    else:
-        logger.debug("Không tìm thấy file cấu hình .tree.ini hoặc .project.ini. Sử dụng mặc định.")
-
-
-    # Đảm bảo section [tree] tồn tại để config.get() không bị lỗi KeyError
-    if CONFIG_SECTION_NAME not in config:
-        config.add_section(CONFIG_SECTION_NAME)
-        logger.debug(f"Đã thêm section '{CONFIG_SECTION_NAME}' trống để xử lý fallback an toàn.")
-
-    # 5. Hợp nhất Cấu hình (CLI > File > Mặc định)
-    
-    # Mức sâu (Level)
-    level_from_config_file = config.getint('tree', 'level', fallback=DEFAULT_MAX_LEVEL)
-    level = args.level if args.level is not None else level_from_config_file
-    # Submodules
-    show_submodules = args.show_submodules if args.show_submodules is not None else config.getboolean('tree', 'show-submodules', fallback=False)
-
-    # Ignore List
-    ignore_cli = parse_comma_list(args.ignore)
-    ignore_file = parse_comma_list(config.get('tree', 'ignore', fallback=None))
-    final_ignore_list = DEFAULT_IGNORE.union(ignore_file).union(ignore_cli)
-
-    # Prune List
-    prune_cli = parse_comma_list(args.prune) 
-    prune_file = parse_comma_list(config.get('tree', 'prune', fallback=None))
-    final_prune_list = DEFAULT_PRUNE.union(prune_file).union(prune_cli)
-
-    # Dirs Only List
-    dirs_only_cli = args.dirs_only
-    dirs_only_file = config.get('tree', 'dirs-only', fallback=None)
-    final_dirs_only = dirs_only_cli if dirs_only_cli is not None else dirs_only_file
-    
-    global_dirs_only = final_dirs_only == '_ALL_'
-    dirs_only_list_custom = set()
-    if final_dirs_only is not None and not global_dirs_only:
-        dirs_only_list_custom = parse_comma_list(final_dirs_only)
-    final_dirs_only_list = DEFAULT_DIRS_ONLY.union(dirs_only_list_custom)
-    
-    submodule_names: Set[str] = set()
-    if not show_submodules: 
-        
-        submodule_paths = get_submodule_paths(start_dir, logger=logger)
-        
-        submodule_names = submodule_paths
-
-
-    # 6. Thông báo Trạng thái (Sử dụng logger.info)
-    is_truly_full_view = not final_ignore_list and not final_prune_list and not final_dirs_only_list and not global_dirs_only and not submodule_names
+    # 5. Thông báo Trạng thái
+    is_truly_full_view = not any(config_params["filter_lists"].values())
     filter_info = "Full view" if is_truly_full_view else "Filtered view"
     
-    level_info = "full depth" if level is None else f"depth limit: {level}"
-    mode_info = ", directories only" if global_dirs_only else ""
+    level_info = "full depth" if config_params["max_level"] is None else \
+                 f"depth limit: {config_params['max_level']}"
+    mode_info = ", directories only" if config_params["global_dirs_only_flag"] else ""
     
-    # Ghi lại thông tin tổng quan vào file log
     print(f"{start_dir.name}/ [{filter_info}, {level_info}{mode_info}]")
 
-    # 7. Chạy Logic Đệ quy
+    # 6. Chạy Logic Đệ quy
     counters = {'dirs': 0, 'files': 0}
+    
+    # Sử dụng dict config đã xử lý để truyền tham số
     generate_tree(
-        start_dir, start_dir, max_level=level, 
-        ignore_list=final_ignore_list, submodules=submodule_names, 
-        prune_list=final_prune_list, dirs_only_list=final_dirs_only_list, 
-        is_in_dirs_only_zone=global_dirs_only, counters=counters
+        start_dir, 
+        start_dir, 
+        counters=counters,
+        max_level=config_params["max_level"],
+        ignore_list=config_params["ignore_list"],
+        submodules=config_params["submodules"],
+        prune_list=config_params["prune_list"],
+        dirs_only_list=config_params["dirs_only_list"],
+        is_in_dirs_only_zone=config_params["is_in_dirs_only_zone"]
     )
 
-    # 8. Kết quả cuối cùng
-    files_info = "0 files (hidden)" if global_dirs_only and counters['files'] == 0 else f"{counters['files']} files" 
+    # 7. Kết quả cuối cùng
+    files_info = "0 files (hidden)" if config_params["global_dirs_only_flag"] and counters['files'] == 0 else \
+                 f"{counters['files']} files" 
     print(f"\n{counters['dirs']} directories, {files_info}")
     
 if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        # Thêm print() trực tiếp vì tại đây logger chưa chắc đã được khởi tạo.
-        # Hoặc ta chỉ in ra một thông báo đơn giản.
         print("\n\n❌ [Stop Command] Stop generating tree.")
-        sys.exit(1) # Thoát với mã lỗi 1 để báo hiệu ngắt lệnh
+        sys.exit(1)
