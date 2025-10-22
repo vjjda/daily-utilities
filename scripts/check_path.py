@@ -9,18 +9,24 @@ from typing import List
 import shlex
 
 # Common utilities
-from utils.logging_config import setup_logging, log_success
+from utils.logging_config import setup_logging
 from utils.core import parse_comma_list
 
-# Import the main logic
+# --- MODIFIED: Import các module đã refactor ---
 from modules.path_checker.path_checker_core import process_path_updates
+from modules.path_checker.path_checker_executor import handle_results
+# --- END MODIFIED ---
 
 # --- CONSTANTS ---
 THIS_SCRIPT_PATH = Path(__file__).resolve()
 
 def main():
-    """Main orchestration function: Parses args and runs the path checker."""
+    """
+    Main orchestration function.
+    Parses args, calls core analysis, and calls executor to handle results.
+    """
     
+    # --- 1. Phân tích đối số (Parse args) ---
     parser = argparse.ArgumentParser(
         description="Check for (and optionally fix) '# Path:' comments in source files.",
         epilog="Default mode is a 'dry-run' (check only). Use --fix to apply changes."
@@ -31,15 +37,11 @@ def main():
         default=None, 
         help="Directory to scan (default: current working directory, respects .gitignore)."
     )
-    
-    # --- MODIFIED: Thêm css, md vào default ---
     parser.add_argument(
         "-e", "--extensions", 
         default="py,js,ts,css,scss,zsh,sh,md", 
         help="File extensions to scan (default: 'py,js,ts,css,scss,zsh,sh,md')."
     )
-    # --- END MODIFIED ---
-    
     parser.add_argument(
         "-I", "--ignore", 
         type=str, 
@@ -52,11 +54,10 @@ def main():
     )
     args = parser.parse_args()
 
-    # 1. Setup Logging
+    # --- 2. Chuẩn bị biến (Setup variables) ---
     logger = setup_logging(script_name="CPath")
     logger.debug("CPath script started.")
 
-    # --- Xác định thư mục gốc ---
     if args.target_directory:
         scan_root = Path(args.target_directory).resolve()
     else:
@@ -68,32 +69,20 @@ def main():
         
     check_mode = not args.fix
 
-    # --- NEW: Xây dựng lệnh "fix" để copy-paste ---
-    # Lấy tất cả các đối số gốc (ví dụ: ['-I', '*.js'])
+    # Xây dựng lệnh "fix"
     original_args = sys.argv[1:]
-    
-    # Lọc bỏ '--check' hoặc '--fix' (nếu có)
     filtered_args = []
     for arg in original_args:
         if arg not in ('--check', '--fix'):
-            # shlex.quote() sẽ bọc các đối số cần thiết,
-            # ví dụ: '*.js' -> "'*.js'"
             filtered_args.append(shlex.quote(arg))
-    
-    # Thêm '--fix' vào lệnh
     filtered_args.append('--fix')
-    
-    # Tạo chuỗi lệnh cuối cùng
-    # (Chúng ta hard-code 'cpath' vì đó là alias dự định)
     fix_command_str = "cpath " + " ".join(filtered_args)
-    # --- END NEW ---
 
-    # 2. Prepare arguments for the core logic
     extensions_to_scan = [ext.strip() for ext in args.extensions.split(',') if ext.strip()]
     cli_ignore_patterns = parse_comma_list(args.ignore)
 
     try:
-        # 3. Run the core logic
+        # --- 3. Gọi Core (Run Core Analysis) ---
         files_to_fix = process_path_updates(
             logger=logger,
             project_root=scan_root,
@@ -104,58 +93,15 @@ def main():
             check_mode=check_mode
         )
 
-        processed_count = len(files_to_fix)
-
-        # 4. Report results
-        if processed_count > 0:
-            
-            # --- MODIFIED: Cập nhật logic in báo cáo ---
-            logger.warning(f"⚠️ {processed_count} files do not conform to the path convention:")
-            for info in files_to_fix:
-                file_path = info["path"]
-                first_line = info["line"]
-                fix_preview = info["fix_preview"] # <--- Lấy thông tin preview
-                
-                logger.warning(f"   -> {file_path.relative_to(scan_root).as_posix()}")
-                logger.warning(f"      (Current L1: {first_line})")
-                logger.warning(f"      (Proposed:   {fix_preview})") # <--- Hiển thị
-            # --- END MODIFIED ---
-
-            if check_mode:
-                # --- MODIFIED: Xóa indentation khỏi lệnh "fix" ---
-                logger.warning("\n-> To fix these files, run:")
-                logger.warning(f"\n{fix_command_str}\n") # <--- Đã xóa "   "
-                sys.exit(1)
-                # --- END MODIFIED ---
-            else:
-                # --- Chế độ "--fix" (logic xác nhận không đổi) ---
-                try:
-                    confirmation = input("\nProceed to fix these files? (y/n): ")
-                except EOFError:
-                    confirmation = 'n'
-                
-                if confirmation.lower() == 'y':
-                    logger.debug("User confirmed fix. Proceeding to write files.")
-                    written_count = 0
-                    for info in files_to_fix:
-                        file_path: Path = info["path"]
-                        new_lines: List[str] = info["new_lines"]
-                        try:
-                            with file_path.open('w', encoding='utf-8') as f:
-                                f.writelines(new_lines)
-                            logger.info(f"Fixed: {file_path.relative_to(scan_root).as_posix()}")
-                            written_count += 1
-                        except IOError as e:
-                            logger.error(f"❌ Failed to write file {file_path.relative_to(scan_root).as_posix()}: {e}")
-                    
-                    log_success(logger, f"Done! Fixed {written_count} files.")
-                
-                else:
-                    logger.warning("Fix operation cancelled by user.")
-                    sys.exit(0)
-                
-        else:
-            log_success(logger, "All files already conform to the convention. No changes needed.")
+        # --- 4. Gọi Executor (Handle Results) ---
+        # (Toàn bộ logic báo cáo/ghi file đã chuyển vào đây)
+        handle_results(
+            logger=logger,
+            files_to_fix=files_to_fix,
+            check_mode=check_mode,
+            fix_command_str=fix_command_str,
+            scan_root=scan_root
+        )
 
     except Exception as e:
         logger.error(f"❌ An unexpected error occurred: {e}")
