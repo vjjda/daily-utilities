@@ -7,7 +7,7 @@ import argparse
 import configparser
 from pathlib import Path
 # Bổ sung import các kiểu dữ liệu cần thiết
-from utils.logging_config import configure_project_logger, log_success
+from utils.logging_config import setup_logging, log_success
 from typing import Set # <--- DÒNG BỔ SUNG
 
 # ----------------------------------------------------------------------
@@ -34,7 +34,7 @@ def main():
     args = parser.parse_args()
 
     # 1. Cấu hình Logging
-    logger = configure_project_logger(script_name="CTree")
+    logger = setup_logging(script_name="CTree")
     
     # Ghi log DEBUG về đường dẫn khởi động
     logger.debug(f"Đã nhận đường dẫn khởi động: {args.start_path}")

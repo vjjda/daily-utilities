@@ -11,7 +11,7 @@ from .constants import LOG_DIR_NAME, FILE_LOG_LEVEL, CONSOLE_LOG_LEVEL
 # WARNING: Cảnh báo
 # ERROR: Lỗi
 
-def configure_project_logger(script_name: str, log_dir: str = "logs", console_level=logging.INFO):
+def setup_logging(script_name: str, log_dir: str = "logs", console_level=logging.INFO):
     """
     Cấu hình logging cho script.
     - Ghi chi tiết (DEBUG) vào file log.
