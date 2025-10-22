@@ -30,12 +30,13 @@ Các dự án của chúng ta tập trung chủ yếu về những codes utiliti
 
 # **Lưu ý về codes**
 
-* Nên có shebang:
+* Nên có shebang nếu file hỗ trợ:
   * Shell script: `#!/usr/bin/env zsh`
   * Python: `#!/usr/bin/env python3`
   * Javascript: `#!/usr/bin/env node`
-* Sau dòng `#!` nên thêm dòng:
+* Sau dòng `#!` nên thêm dòng comment:
   * `# Path: relative/path/from/project/root`
+  * Thay đổi dấu comment # cho phù hợp định dạng file, ví dụ: file `md` nên dùng `<!--Path: relative/path/from/project/root -->`
   * Điều này giúp việc trao đổi thuận lợi hơn.
 * Với những script đơn lẻ thì không cần logging, có thể dùng `print`. Nhưng khi làm dự án quy mô, tôi sẽ khuyến khích cấu hình logging từ sớm, tách hẳn config logging ra một file. Lưu ý nguyên tắc: in ra màn hình thì tối giản, có thể dùng emoji để sinh động, trong file log mới cần chi tiết để debug khi cần.
 * Ngôn ngữ:
