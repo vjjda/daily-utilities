@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # Path: scripts/tree.py
 
 
@@ -8,23 +8,25 @@ import configparser
 from pathlib import Path
 # Bổ sung import các kiểu dữ liệu cần thiết
 from utils.logging_config import setup_logging, log_success
-from typing import Set # <--- DÒNG BỔ SUNG
+from typing import Set 
 
 # ----------------------------------------------------------------------
 
-# Import các tiện ích từ package nội bộ 'utils'
-from utils.tree_core import (
+# --- THAY ĐỔI IMPORT ---
+# Import các tiện ích từ module 'modules.tree' thay vì 'utils'
+from modules.tree.core import (
     generate_tree, get_submodule_paths, parse_comma_list, 
     CONFIG_TEMPLATE, DEFAULT_IGNORE, DEFAULT_PRUNE, DEFAULT_DIRS_ONLY,
-    DEFAULT_MAX_LEVEL, CONFIG_FILENAME, PROJECT_CONFIG_FILENAME, CONFIG_SECTION_NAME # <--- DÒNG BỔ SUNG
+    DEFAULT_MAX_LEVEL, CONFIG_FILENAME, PROJECT_CONFIG_FILENAME, CONFIG_SECTION_NAME
 )
+# ---------------------
 
 def main():
     """Main function to handle arguments, configuration, and run the tree generator."""
     
     parser = argparse.ArgumentParser(description="A smart directory tree generator with support for a .treeconfig.ini file.")
     parser.add_argument("start_path", nargs='?', 
-                        default=".", help="Starting path (file or directory).") # [cite: 12]
+                        default=".", help="Starting path (file or directory).") 
     parser.add_argument("-L", "--level", type=int, help="Limit the display depth.")
     parser.add_argument("-I", "--ignore", type=str, help="Comma-separated list of patterns to ignore.")
     parser.add_argument("-P", "--prune", type=str, help="Comma-separated list of patterns to prune.")
@@ -42,7 +44,7 @@ def main():
     # 2. Xử lý cờ --init
     if args.init: 
         # Sử dụng CONFIG_FILENAME đã import
-        config_file_path = Path.cwd() / CONFIG_FILENAME # <--- Sử dụng CONFIG_FILENAME
+        config_file_path = Path.cwd() / CONFIG_FILENAME 
         if config_file_path.exists():
             overwrite = input(f"'{CONFIG_FILENAME}' already exists. Overwrite? (y/n): ").lower() 
             if overwrite != 'y':
@@ -54,9 +56,12 @@ def main():
         return
 
     # 3. Xử lý Đường dẫn Khởi động
-    initial_path = Path(args.start_path).resolve() # [cite: 15]
+    initial_path = Path(args.start_path).resolve() 
     if not initial_path.exists():
+        # --- THAY ĐỔI LOGGING ---
+        # Thêm emoji cảnh báo cho lỗi người dùng
         logger.error(f"❌ Path does not exist: '{args.start_path}'")
+        # -------------------------
         return
     start_dir = initial_path.parent if initial_path.is_file() else initial_path
 
@@ -89,7 +94,10 @@ def main():
             config.read(files_to_read) 
             logger.debug(f"Đã tải cấu hình từ các file: {[p.name for p in files_to_read]}")
         except Exception as e:
-            logger.warning(logger, f"Could not read config files: {e}")
+            # --- THAY ĐỔI LOGGING ---
+            # Thêm emoji cảnh báo
+            logger.warning(logger, f"⚠️ Could not read config files: {e}")
+            # -------------------------
     else:
         logger.debug("Không tìm thấy file cấu hình .tree.ini hoặc .project.ini. Sử dụng mặc định.")
 
@@ -113,7 +121,7 @@ def main():
     final_ignore_list = DEFAULT_IGNORE.union(ignore_file).union(ignore_cli)
 
     # Prune List
-    prune_cli = parse_comma_list(args.prune) # [cite: 17]
+    prune_cli = parse_comma_list(args.prune) 
     prune_file = parse_comma_list(config.get('tree', 'prune', fallback=None))
     final_prune_list = DEFAULT_PRUNE.union(prune_file).union(prune_cli)
 
@@ -130,7 +138,10 @@ def main():
     
     submodule_names: Set[str] = set()
     if not show_submodules: 
-        submodule_paths = get_submodule_paths(start_dir)
+        # --- THAY ĐỔI LOGIC ---
+        # Truyền logger vào hàm
+        submodule_paths = get_submodule_paths(start_dir, logger=logger)
+        # ---------------------
         submodule_names = submodule_paths
 
 
@@ -154,7 +165,7 @@ def main():
     )
 
     # 8. Kết quả cuối cùng
-    files_info = "0 files (hidden)" if global_dirs_only and counters['files'] == 0 else f"{counters['files']} files" # [cite: 20]
+    files_info = "0 files (hidden)" if global_dirs_only and counters['files'] == 0 else f"{counters['files']} files" 
     print(f"\n{counters['dirs']} directories, {files_info}")
     
 if __name__ == "__main__":

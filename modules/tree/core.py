@@ -1,10 +1,11 @@
-#!/usr/bin/env python
-# Path: utils/tree_core.py
+#!/usr/bin/env python3
+# Path: modules/tree/core.py
 
 import configparser
 import fnmatch
 from pathlib import Path
 import os
+import logging # <--- BỔ SUNG
 from typing import List, Set, Optional, Dict, Union
 
 # --- CÁC HẰNG SỐ NỘI BỘ (Chỉ dùng trong module này) ---
@@ -17,12 +18,12 @@ DEFAULT_PRUNE: Set[str] = {"dist", "build"}
 DEFAULT_DIRS_ONLY: Set[str] = set()
 DEFAULT_MAX_LEVEL: Optional[int] = None
 CONFIG_FILENAME = ".tree.ini"
-PROJECT_CONFIG_FILENAME = ".project.ini" # <--- DÒNG BỔ SUNG
-CONFIG_SECTION_NAME = "tree" # <--- Hằng số mới để làm rõ section
+PROJECT_CONFIG_FILENAME = ".project.ini" 
+CONFIG_SECTION_NAME = "tree" 
 
 # --- HÀM HỖ TRỢ ---
 
-def get_submodule_paths(root: Path) -> Set[str]:
+def get_submodule_paths(root: Path, logger: Optional[logging.Logger] = None) -> Set[str]: # <--- THAY ĐỔI SIGNATURE
     """Lấy tên các thư mục submodule dựa trên file .gitmodules."""
     submodule_paths = set()
     gitmodules_path = root / ".gitmodules"
@@ -31,28 +32,36 @@ def get_submodule_paths(root: Path) -> Set[str]:
             config = configparser.ConfigParser()
             config.read(gitmodules_path)
             for section in config.sections():
-                # [cite: 5]
+                
                 if config.has_option(section, "path"):
                     path_str = config.get(section, "path")
                     # Chỉ cần tên thư mục (relative path)
                     submodule_paths.add(path_str.split(os.sep)[-1]) 
         except configparser.Error as e:
-            # Ta dùng logger thay cho print sau khi tích hợp logging
-            print(f"Warning: Could not parse .gitmodules file: {e}") 
+            # --- THAY ĐỔI LOGIC LOGGING ---
+            warning_msg = f"Could not parse .gitmodules file: {e}"
+            if logger:
+                # Sử dụng logger nếu có, theo chuẩn của dự án
+                logger.warning(f"⚠️ {warning_msg}")
+            else:
+                # Fallback về print nếu không có logger (ví dụ: khi test độc lập)
+                print(f"Warning: {warning_msg}") 
+            # -------------------------------
+            
     return submodule_paths
 
 def is_path_matched(path: Path, patterns: Set[str], start_dir: Path) -> bool:
     """Kiểm tra xem đường dẫn có khớp với bất kỳ mẫu nào không (sử dụng fnmatch)."""
     if not patterns: return False
     relative_path_str = path.relative_to(start_dir).as_posix()
-    for pattern in patterns: # [cite: 6]
+    for pattern in patterns: 
         if fnmatch.fnmatch(path.name, pattern) or fnmatch.fnmatch(relative_path_str, pattern):
             return True
     return False
 
 def parse_comma_list(value: Union[str, None]) -> Set[str]:
     """Chuyển chuỗi phân cách bằng dấu phẩy thành set các mục."""
-    if not value: return set() # [cite: 7]
+    if not value: return set() 
     return {item.strip() for item in value.split(',') if item.strip() != ''}
 
 # --- HÀM CHÍNH (LOGIC ĐỆ QUY) ---
@@ -89,7 +98,7 @@ def generate_tree(
     
     files: List[Path] = []
     # Lọc file: chỉ hiển thị nếu KHÔNG nằm trong vùng dirs-only
-    if not is_in_dirs_only_zone: # [cite: 9]
+    if not is_in_dirs_only_zone: 
         files = sorted(
             [f for f in contents if f.is_file() and not is_path_matched(f, ignore_list, start_dir)], 
             key=lambda p: p.name.lower()
@@ -110,7 +119,7 @@ def generate_tree(
             path.is_dir() and 
             is_path_matched(path, dirs_only_list, start_dir) and 
             not is_in_dirs_only_zone
-        ) # [cite: 10]
+        ) 
         
         line = f"{prefix}{pointer}{path.name}{'/' if path.is_dir() else ''}"
         
@@ -123,7 +132,7 @@ def generate_tree(
 
         # Điều kiện để đệ quy: là thư mục VÀ không phải submodule VÀ không bị prune
         if path.is_dir() and not is_submodule and not is_pruned:
-            extension = "│   " if pointer == "├── " else "    " # [cite: 11]
+            extension = "│   " if pointer == "├── " else "    " 
             
             # Cập nhật cờ: Nếu đang trong vùng dirs-only HOẶC đây là điểm khởi động dirs-only mới
             next_is_in_dirs_only_zone = is_in_dirs_only_zone or is_dirs_only_entry
@@ -167,7 +176,7 @@ CONFIG_TEMPLATE = f"""
 ;
 ; ignore = 
 
-; prune: Display a directory but do not traverse into it (shows '[...]'). [cite: 3]
+; prune: Display a directory but do not traverse into it (shows '[...]'). 
 ; Useful for directories with many auto-generated files.
 ;
 ; Example (single names):        prune = dist, build
@@ -176,7 +185,7 @@ CONFIG_TEMPLATE = f"""
 ; prune = 
 
 ; dirs-only: Only display subdirectories inside directories matching a pattern.
-; The entry directory will be marked with '[dirs only]'. [cite: 4]
+; The entry directory will be marked with '[dirs only]'. 
 ;
 ; dirs-only = assets, static
 ;
