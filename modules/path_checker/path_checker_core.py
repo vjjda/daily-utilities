@@ -14,18 +14,28 @@ DEFAULT_IGNORE = {
     "node_modules", "dist", "build", "out"
 }
 
-# This is the internal function that does the file writing
+# --- MODIFIED: Cập nhật chữ ký hàm ---
 def _update_files(
     files_to_scan: List[Path], 
     project_root: Path, 
-    logger: logging.Logger
-) -> int:
-    """Internal function to process and rewrite files with correct path comments."""
+    logger: logging.Logger,
+    check_mode: bool  # <--- Thêm tham số
+) -> List[Path]: # <--- Thay đổi kiểu trả về
+    """
+    Internal function to process files.
+    - If check_mode=False, rewrites files with correct path comments.
+    - If check_mode=True, only reports files that need fixing.
+    Returns:
+        A list of paths that need (or needed) fixing.
+    """
     
-    processed_count = 0
+    # --- MODIFIED: Thay đổi biến đếm ---
+    files_needing_fix: List[Path] = []
+    # --- END MODIFIED ---
+    
     if not files_to_scan:
         logger.warning("No files to process (after exclusions).")
-        return 0
+        return files_needing_fix # Trả về list rỗng
 
     for file_path in files_to_scan:
         relative_path = file_path.relative_to(project_root)
@@ -92,48 +102,62 @@ def _update_files(
             else: # No shebang, no path
                 lines.insert(0, correct_path_comment) # Insert at top
 
-            # Write changes if needed
+            # --- MODIFIED: Logic ghi file có điều kiện ---
             if lines != original_lines:
-                logger.info(f"Fixing header for: {relative_path.as_posix()}")
-                with file_path.open('w', encoding='utf-8') as f:
-                    f.writelines(lines)
-                processed_count += 1
+                # Thêm file vào danh sách cần sửa
+                files_needing_fix.append(file_path)
+                
+                # Chỉ ghi file nếu *không* ở check_mode
+                if not check_mode:
+                    logger.info(f"Fixing header for: {relative_path.as_posix()}")
+                    with file_path.open('w', encoding='utf-8') as f:
+                        f.writelines(lines)
+            # --- END MODIFIED ---
                 
         except Exception as e:
             logger.error(f"Error processing file {relative_path.as_posix()}: {e}")
             logger.debug("Traceback:", exc_info=True)
     
-    return processed_count
+    return files_needing_fix # <--- Trả về danh sách
+# --- END MODIFIED ---
 
 # This is the main public function called by the script
 def process_path_updates(
     logger: logging.Logger,
-    project_root: Path,
+    project_root: Path, # <--- Đây giờ là CWD (hoặc thư mục chỉ định)
     target_dir_str: Optional[str],
     extensions: List[str],
     cli_ignore: Set[str],
-    script_file_path: Path
-) -> int:
+    script_file_path: Path,
+    check_mode: bool
+) -> List[Path]:
     """
     Scans and updates path comments for files in the project.
     Returns:
-        The number of files processed.
+        A list of files that needed processing.
     """
     
     # Import shared utilities here, inside the function
     from utils.core import get_submodule_paths, parse_gitignore, is_path_matched
 
-    use_gitignore = target_dir_str is None
-    scan_path = project_root / (target_dir_str or ".")
+    # --- MODIFIED: Logic xác định đường dẫn quét ---
+    # project_root bây giờ là thư mục gốc (base) cho việc quét
+    # và là nơi tìm .gitignore, .gitmodules
     
-    logger.debug(f"Project root identified as: {project_root}")
-    logger.debug(f"Scan path set to: {scan_path}")
+    use_gitignore = target_dir_str is None
+    # Đường dẫn để bắt đầu rglob() (quét đệ quy) chính là project_root
+    scan_path = project_root
+    
+    logger.debug(f"Scan Root (base for rules) identified as: {project_root}")
+    logger.debug(f"Scan Path (rglob start) set to: {scan_path}")
+    # --- END MODIFIED ---
 
     submodule_paths = get_submodule_paths(project_root, logger)
     
     # Merge ignore sources
     gitignore_patterns = set()
     if use_gitignore:
+        # Tìm .gitignore tại thư mục gốc (CWD)
         gitignore_patterns = parse_gitignore(project_root)
         logger.info("Default mode: Respecting .gitignore rules.")
     else:
@@ -142,12 +166,16 @@ def process_path_updates(
     # Combine all ignore patterns
     final_ignore_patterns = DEFAULT_IGNORE.union(gitignore_patterns).union(cli_ignore)
     
-    logger.info(f"Scanning for *.{', *.'.join(extensions)} in: {scan_path.relative_to(project_root)}")
+    if check_mode:
+        logger.info("Running in [Check Mode] (dry-run). No files will be modified.")
+    
+    logger.info(f"Scanning for *.{', *.'.join(extensions)} in: {scan_path.relative_to(scan_path.parent) if scan_path.parent != scan_path else scan_path.name}")
     if final_ignore_patterns:
         logger.debug(f"Ignoring patterns: {', '.join(sorted(list(final_ignore_patterns)))}")
 
     all_files = []
     for ext in extensions:
+        # Quét từ scan_path
         all_files.extend(scan_path.rglob(f"*.{ext}"))
     
     files_to_process = []
@@ -155,7 +183,7 @@ def process_path_updates(
         # 1. Resolve to absolute path for comparisons
         abs_file_path = file_path.resolve()
 
-        # 2. Skip this script itself
+        # 2. Skip this script itself (quan trọng nếu daily-utilities tự quét chính nó)
         if abs_file_path.samefile(script_file_path):
             continue
             
@@ -164,11 +192,11 @@ def process_path_updates(
         if is_in_submodule:
             continue
             
-        # 4. Skip ignored files
+        # 4. Skip ignored files (so sánh tương đối với project_root)
         if is_path_matched(file_path, final_ignore_patterns, project_root):
             continue
             
         files_to_process.append(file_path)
         
-    # Run the update logic
-    return _update_files(files_to_process, project_root, logger)
+    # Run the update logic (dùng project_root làm base cho relative path)
+    return _update_files(files_to_process, project_root, logger, check_mode)

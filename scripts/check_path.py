@@ -14,60 +14,93 @@ from utils.core import parse_comma_list
 from modules.path_checker.path_checker_core import process_path_updates
 
 # --- CONSTANTS ---
-# Determine Project Root (since this file is in 'scripts/', root is parent.parent)
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-# Get the path to this script file itself, to avoid processing it
 THIS_SCRIPT_PATH = Path(__file__).resolve()
 
 def main():
     """Main orchestration function: Parses args and runs the path checker."""
     
     parser = argparse.ArgumentParser(
-        description="Automatically update or add '# Path:' comments to source files.",
-        epilog="Default mode (no target_directory) respects .gitignore."
+        description="Check for (and optionally fix) '# Path:' comments in source files.",
+        epilog="Default mode is a 'dry-run' (check only). Use --fix to apply changes."
     )
     parser.add_argument(
         "target_directory", 
         nargs='?', 
         default=None, 
-        help="Directory to scan (default: entire project, respecting .gitignore)."
+        help="Directory to scan (default: current working directory, respects .gitignore)."
     )
     parser.add_argument(
         "-e", "--extensions", 
-        # --- FIX: Đã xóa 'md' khỏi danh sách mặc định ---
         default="py,js,ts,css,scss,zsh,sh", 
         help="File extensions to scan (default: 'py,js,ts,css,scss,zsh,sh')."
-        # --- END FIX ---
     )
     parser.add_argument(
         "-I", "--ignore", 
         type=str, 
         help="Comma-separated list of additional patterns to ignore."
     )
+    # --- MODIFIED: Thay --check bằng --fix ---
+    parser.add_argument(
+        "--fix",
+        action="store_true",
+        help="Fix files in place. (Default is 'check' mode/dry-run)."
+    )
+    # --- END MODIFIED ---
     args = parser.parse_args()
 
     # 1. Setup Logging
     logger = setup_logging(script_name="CPath")
     logger.debug("CPath script started.")
-    
+
+    # --- Xác định thư mục gốc ---
+    if args.target_directory:
+        scan_root = Path(args.target_directory).resolve()
+    else:
+        scan_root = Path.cwd()
+
+    if not scan_root.exists():
+        logger.error(f"❌ Path does not exist: '{args.target_directory or scan_root}'")
+        sys.exit(1)
+        
+    # --- MODIFIED: Đảo ngược logic check_mode ---
+    # Mặc định, check_mode là True (dry-run)
+    # Nếu người dùng chạy `cpath --fix`, args.fix sẽ là True,
+    # và check_mode sẽ trở thành False (tức là "đừng check nữa, hãy fix đi")
+    check_mode = not args.fix
+    # --- END MODIFIED ---
+
     # 2. Prepare arguments for the core logic
     extensions_to_scan = [ext.strip() for ext in args.extensions.split(',') if ext.strip()]
     cli_ignore_patterns = parse_comma_list(args.ignore)
 
     try:
         # 3. Run the core logic
-        processed_count = process_path_updates(
+        files_to_fix = process_path_updates(
             logger=logger,
-            project_root=PROJECT_ROOT,
+            project_root=scan_root,
             target_dir_str=args.target_directory,
             extensions=extensions_to_scan,
             cli_ignore=cli_ignore_patterns,
-            script_file_path=THIS_SCRIPT_PATH
+            script_file_path=THIS_SCRIPT_PATH,
+            check_mode=check_mode # Truyền vào logic đã đảo ngược
         )
+
+        processed_count = len(files_to_fix)
 
         # 4. Report results
         if processed_count > 0:
-            log_success(logger, f"Done! Processed {processed_count} files.")
+            # --- MODIFIED: Cập nhật logic báo cáo ---
+            if check_mode:
+                # Đây là chế độ mặc định (dry-run)
+                logger.warning(f"⚠️ [Check Mode] {processed_count} files do not conform to the path convention:")
+                for file_path in files_to_fix:
+                    logger.warning(f"   -> {file_path.relative_to(scan_root).as_posix()}")
+                logger.warning("\n-> Run 'cpath --fix' to fix them automatically.")
+                sys.exit(1) # Thoát với mã lỗi 1 cho CI/CD
+            else:
+                # Đây là chế độ --fix
+                log_success(logger, f"Done! Fixed {processed_count} files.")
+            # --- END MODIFIED ---
         else:
             log_success(logger, "All files already conform to the convention. No changes needed.")
 
