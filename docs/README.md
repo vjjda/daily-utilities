@@ -1,5 +1,4 @@
-<!-- # Path: docs/README.md -->
-
+<!-- Path: docs/README.md -->
 # Daily Utilities - Documentation
 
 This directory contains the user documentation for all utilities available in this project.
