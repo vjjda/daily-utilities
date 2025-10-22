@@ -5,18 +5,20 @@ import logging
 from pathlib import Path
 from typing import List, Set, Optional, Dict, Any
 
-# Import shared utilities
-from utils.core import is_path_matched
-
-# --- IMPORT LOGIC & CONFIG TỪ FILE MỚI ---
-# --- MODIFIED: Import thêm DEFAULT_IGNORE ---
-from .path_checker_config import COMMENT_RULES_BY_EXT, DEFAULT_IGNORE
-from .path_checker_rules import apply_line_comment_rule, apply_block_comment_rule
+# --- MODIFIED: Xóa import không còn dùng ---
+# (utils.core.is_path_matched, ... đã chuyển sang scanner.py)
 # --- END MODIFIED ---
 
-# --- MODIFIED: Đã xóa hằng số DEFAULT_IGNORE ---
+# --- IMPORT LOGIC & CONFIG TỪ FILE MỚI ---
+from .path_checker_config import COMMENT_RULES_BY_EXT
+from .path_checker_rules import apply_line_comment_rule, apply_block_comment_rule
+# --- NEW: Import scanner mới ---
+from .path_checker_scanner import scan_for_files
+# --- END NEW ---
+
 
 # --- 1. Hàm phân tích (Analysis Function) ---
+# (Hàm _update_files không thay đổi so với bước trước)
 def _update_files(
     files_to_scan: List[Path], 
     project_root: Path, 
@@ -27,8 +29,6 @@ def _update_files(
     Returns:
         A list of dictionaries ({'path': ..., 'line': ..., 'new_lines': ..., 'fix_preview': ...})
     """
-    
-    # ... (Nội dung hàm _update_files không thay đổi) ...
     
     files_needing_fix: List[Dict[str, Any]] = []
     
@@ -99,9 +99,8 @@ def _update_files(
     
     return files_needing_fix
 
-# --- 2. Hàm Quét file (File Scanner) ---
-# (Hàm process_path_updates không thay đổi,
-# vì nó đã import DEFAULT_IGNORE từ path_checker_config)
+# --- 2. Hàm Điều phối (Orchestrator) ---
+# --- MODIFIED: Đã thu gọn hàm này ---
 def process_path_updates(
     logger: logging.Logger,
     project_root: Path,
@@ -112,53 +111,26 @@ def process_path_updates(
     check_mode: bool
 ) -> List[Dict[str, Any]]: 
     """
-    Scans for files and returns a list of proposed changes.
+    Orchestrates the path checking process:
+    1. Scans for files.
+    2. Analyzes them for compliance.
     Returns:
-        A list of dictionaries ({'path': ..., 'line': ..., 'new_lines': ..., 'fix_preview': ...})
+        A list of dictionaries for files that need processing.
     """
     
-    from utils.core import get_submodule_paths, parse_gitignore, is_path_matched
-
-    use_gitignore = target_dir_str is None
-    scan_path = project_root
+    # --- MODIFIED: Toàn bộ logic quét đã chuyển đi ---
     
-    logger.debug(f"Scan Root (base for rules) identified as: {project_root}")
-    logger.debug(f"Scan Path (rglob start) set to: {scan_path}")
-
-    submodule_paths = get_submodule_paths(project_root, logger)
+    # 1. Quét file (Gọi file scanner.py)
+    files_to_process = scan_for_files(
+        logger=logger,
+        project_root=project_root,
+        target_dir_str=target_dir_str,
+        extensions=extensions,
+        cli_ignore=cli_ignore,
+        script_file_path=script_file_path,
+        check_mode=check_mode
+    )
     
-    gitignore_patterns = set()
-    if use_gitignore:
-        gitignore_patterns = parse_gitignore(project_root)
-        logger.info("Default mode: Respecting .gitignore rules.")
-    else:
-        logger.info(f"Specific path mode: Not using .gitignore for '{target_dir_str}'.")
-
-    # --- MODIFIED: DEFAULT_IGNORE giờ đã được import ---
-    final_ignore_patterns = DEFAULT_IGNORE.union(gitignore_patterns).union(cli_ignore)
-    # --- END MODIFIED ---
-    
-    if check_mode:
-        logger.info("Running in [Check Mode] (dry-run).")
-    
-    logger.info(f"Scanning for *.{', *.'.join(extensions)} in: {scan_path.relative_to(scan_path.parent) if scan_path.parent != scan_path else scan_path.name}")
-    if final_ignore_patterns:
-        logger.debug(f"Ignoring patterns: {', '.join(sorted(list(final_ignore_patterns)))}")
-
-    all_files = []
-    for ext in extensions:
-        all_files.extend(scan_path.rglob(f"*.{ext}"))
-    
-    files_to_process = []
-    for file_path in all_files:
-        abs_file_path = file_path.resolve()
-        if abs_file_path.samefile(script_file_path):
-            continue
-        is_in_submodule = any(abs_file_path.is_relative_to(p) for p in submodule_paths)
-        if is_in_submodule:
-            continue
-        if is_path_matched(file_path, final_ignore_patterns, project_root):
-            continue
-        files_to_process.append(file_path)
-        
+    # 2. Phân tích file (Gọi hàm _update_files)
     return _update_files(files_to_process, project_root, logger)
+    # --- END MODIFIED ---
