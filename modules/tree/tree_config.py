@@ -4,16 +4,17 @@
 import configparser
 import logging
 from pathlib import Path
-from typing import Set, Dict, Any, Optional
+from typing import Set, Dict, Any
 import argparse
 
-# Import các hằng số và hàm tiện ích từ file core
+# --- IMPORT CONSTANTS FROM CORE ---
 from .tree_core import (
-    get_submodule_paths, parse_comma_list,
     DEFAULT_IGNORE, DEFAULT_PRUNE, DEFAULT_DIRS_ONLY,
     DEFAULT_MAX_LEVEL, CONFIG_FILENAME, PROJECT_CONFIG_FILENAME,
     CONFIG_SECTION_NAME
 )
+# --- IMPORT UTILITIES FROM CENTRAL LOCATION ---
+from utils.core import get_submodule_paths, parse_comma_list
 
 def load_and_merge_config(
     args: argparse.Namespace, 
@@ -21,11 +22,11 @@ def load_and_merge_config(
     logger: logging.Logger
 ) -> Dict[str, Any]:
     """
-    Tải cấu hình từ file .ini và hợp nhất chúng với các đối số CLI.
-    Thứ tự ưu tiên: CLI > .tree.ini > .project.ini > Mặc định.
+    Loads configuration from .ini files and merges them with CLI arguments.
+    Priority order: CLI > .tree.ini > .project.ini > Defaults.
     """
     
-    # 1. Đọc Cấu hình từ File (.tree.ini Tối ưu > .project.ini Fallback)
+    # 1. Read Config from Files
     config = configparser.ConfigParser()
     
     tree_config_path = start_dir / CONFIG_FILENAME
@@ -40,20 +41,20 @@ def load_and_merge_config(
     if files_to_read:
         try:
             config.read(files_to_read) 
-            logger.debug(f"Đã tải cấu hình từ các file: {[p.name for p in files_to_read]}")
+            logger.debug(f"Loaded config from files: {[p.name for p in files_to_read]}")
         except Exception as e:
             logger.warning(logger, f"⚠️ Could not read config files: {e}")
     else:
-        logger.debug("Không tìm thấy file cấu hình .tree.ini hoặc .project.ini. Sử dụng mặc định.")
+        logger.debug("No .tree.ini or .project.ini config files found. Using defaults.")
 
-    # Đảm bảo section [tree] tồn tại
+    # Ensure [tree] section exists
     if CONFIG_SECTION_NAME not in config:
         config.add_section(CONFIG_SECTION_NAME)
-        logger.debug(f"Đã thêm section '{CONFIG_SECTION_NAME}' trống để xử lý fallback an toàn.")
+        logger.debug(f"Added empty '{CONFIG_SECTION_NAME}' section for safe fallback.")
 
-    # 2. Hợp nhất Cấu hình (CLI > File > Mặc định)
+    # 2. Merge Configs (CLI > File > Default)
     
-    # Mức sâu (Level)
+    # Level
     level_from_config_file = config.getint(CONFIG_SECTION_NAME, 'level', fallback=DEFAULT_MAX_LEVEL)
     final_level = args.level if args.level is not None else level_from_config_file
     
@@ -82,13 +83,13 @@ def load_and_merge_config(
         dirs_only_list_custom = parse_comma_list(final_dirs_only_mode)
     final_dirs_only_list = DEFAULT_DIRS_ONLY.union(dirs_only_list_custom)
     
-    # Tính toán Submodule Names
+    # Calculate Submodule Names
     submodule_names: Set[str] = set()
     if not show_submodules: 
         submodule_paths = get_submodule_paths(start_dir, logger=logger)
         submodule_names = submodule_paths
 
-    # 3. Trả về một dict chứa các cài đặt đã được xử lý
+    # 3. Return a dict of processed settings
     return {
         "max_level": final_level,
         "ignore_list": final_ignore_list,
@@ -96,7 +97,7 @@ def load_and_merge_config(
         "prune_list": final_prune_list,
         "dirs_only_list": final_dirs_only_list,
         "is_in_dirs_only_zone": global_dirs_only,
-        # Thêm các thông tin khác để in ra cho người dùng
+        # Add other info for user printing
         "global_dirs_only_flag": global_dirs_only,
         "filter_lists": {
             "ignore": final_ignore_list,

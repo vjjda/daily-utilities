@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 # Path: modules/tree/tree_core.py
 
-import configparser
-import fnmatch
 from pathlib import Path
-import os
 import logging 
-from typing import List, Set, Optional, Dict, Union
+from typing import List, Set, Optional, Dict
 
-# --- CÁC HẰNG SỐ NỘI BỘ (Chỉ dùng trong module này) ---
+# --- IMPORT UTILITIES FROM CENTRAL LOCATION ---
+from utils.core import is_path_matched
+# --------------------------------------------
+
+# --- MODULE-SPECIFIC CONSTANTS ---
 DEFAULT_IGNORE: Set[str] = {
     "__pycache__", ".venv", "venv", "node_modules", 
     ".git"
@@ -20,47 +21,7 @@ CONFIG_FILENAME = ".tree.ini"
 PROJECT_CONFIG_FILENAME = ".project.ini" 
 CONFIG_SECTION_NAME = "tree" 
 
-# --- HÀM HỖ TRỢ ---
-
-def get_submodule_paths(root: Path, logger: Optional[logging.Logger] = None) -> Set[str]: 
-    """Lấy tên các thư mục submodule dựa trên file .gitmodules."""
-    submodule_paths = set()
-    gitmodules_path = root / ".gitmodules"
-    if gitmodules_path.exists():
-        try:
-            config = configparser.ConfigParser()
-            config.read(gitmodules_path)
-            for section in config.sections():
-                
-                if config.has_option(section, "path"):
-                    path_str = config.get(section, "path")
-                    # Chỉ cần tên thư mục (relative path)
-                    submodule_paths.add(path_str.split(os.sep)[-1]) 
-        except configparser.Error as e:
-            
-            warning_msg = f"Could not parse .gitmodules file: {e}"
-            if logger:
-                logger.warning(f"⚠️ {warning_msg}")
-            else:
-                print(f"Warning: {warning_msg}") 
-            
-    return submodule_paths
-
-def is_path_matched(path: Path, patterns: Set[str], start_dir: Path) -> bool:
-    """Kiểm tra xem đường dẫn có khớp với bất kỳ mẫu nào không (sử dụng fnmatch)."""
-    if not patterns: return False
-    relative_path_str = path.relative_to(start_dir).as_posix()
-    for pattern in patterns: 
-        if fnmatch.fnmatch(path.name, pattern) or fnmatch.fnmatch(relative_path_str, pattern):
-            return True
-    return False
-
-def parse_comma_list(value: Union[str, None]) -> Set[str]:
-    """Chuyển chuỗi phân cách bằng dấu phẩy thành set các mục."""
-    if not value: return set() 
-    return {item.strip() for item in value.split(',') if item.strip() != ''}
-
-# --- HÀM CHÍNH (LOGIC ĐỆ QUY) ---
+# --- MAIN RECURSIVE LOGIC ---
 
 def generate_tree(
     directory: Path, 
@@ -76,21 +37,25 @@ def generate_tree(
     counters: Dict[str, int] = None
 ):
     """
-    Hàm đệ quy để tạo và in ra biểu đồ cây thư mục.
+    Recursive function to generate and print the directory tree.
     """
-    if max_level is not None and level >= max_level: return
+    if max_level is not None and level >= max_level: 
+        return
     
     try: 
+        # Get contents, ignoring hidden files/folders (starting with '.')
         contents = [path for path in directory.iterdir() if not path.name.startswith('.')]
     except (FileNotFoundError, NotADirectoryError): 
         return
         
+    # Filter directories: exclude items in ignore_list
     dirs = sorted(
         [d for d in contents if d.is_dir() and not is_path_matched(d, ignore_list, start_dir)], 
         key=lambda p: p.name.lower()
     )
     
     files: List[Path] = []
+    # Filter files: only show if NOT in a dirs-only zone
     if not is_in_dirs_only_zone: 
         files = sorted(
             [f for f in contents if f.is_file() and not is_path_matched(f, ignore_list, start_dir)], 
@@ -101,12 +66,15 @@ def generate_tree(
     pointers = ["├── "] * (len(items_to_print) - 1) + ["└── "]
 
     for pointer, path in zip(pointers, items_to_print):
-        if path.is_dir(): counters['dirs'] += 1
-        else: counters['files'] += 1
+        if path.is_dir(): 
+            counters['dirs'] += 1
+        else: 
+            counters['files'] += 1
 
         is_submodule = path.is_dir() and path.name in submodules
         is_pruned = path.is_dir() and is_path_matched(path, prune_list, start_dir)
         
+        # Check if this directory is the start of a dirs-only rule
         is_dirs_only_entry = (
             path.is_dir() and 
             is_path_matched(path, dirs_only_list, start_dir) and 
@@ -115,28 +83,38 @@ def generate_tree(
         
         line = f"{prefix}{pointer}{path.name}{'/' if path.is_dir() else ''}"
         
-        if is_submodule: line += " [submodule]"
-        elif is_pruned: line += " [...]"
-        elif is_dirs_only_entry: line += " [dirs only]"
+        # Add suffixes
+        if is_submodule: 
+            line += " [submodule]"
+        elif is_pruned: 
+            line += " [...]"
+        elif is_dirs_only_entry: 
+            line += " [dirs only]"
         
         print(line)
 
+        # Recurse condition: is a directory AND not a submodule AND not pruned
         if path.is_dir() and not is_submodule and not is_pruned:
             extension = "│   " if pointer == "├── " else "    " 
             
+            # Update flag: If already in a dirs-only zone OR this is a new dirs-only entry
             next_is_in_dirs_only_zone = is_in_dirs_only_zone or is_dirs_only_entry
             
+            # Recurse
             generate_tree(
                 path, start_dir, prefix + extension, level + 1, max_level, 
                 ignore_list, submodules, prune_list, dirs_only_list, 
                 next_is_in_dirs_only_zone, counters
             )
 
-# --- NỘI DUNG TEMPLATE CONFIG (Tải từ file) ---
+# --- CONFIG TEMPLATE CONTENT (Loaded from file) ---
 
 try:
+    # Get the directory containing this 'tree_core.py' file
     _CURRENT_DIR = Path(__file__).parent
+    # Full path to the template file
     _TEMPLATE_PATH = _CURRENT_DIR / "tree.ini.template"
+    # Read the content and assign to the variable
     CONFIG_TEMPLATE = _TEMPLATE_PATH.read_text(encoding="utf-8")
 except FileNotFoundError:
     print("FATAL ERROR: Could not find 'tree.ini.template'.")
