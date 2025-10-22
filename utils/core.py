@@ -63,8 +63,8 @@ def run_command(command: Union[str, List[str]], logger: Logger, description: str
 # FILE SYSTEM & CONFIG UTILITIES (NEW)
 # ----------------------------------------------------------------------
 
-def get_submodule_paths(root: Path, logger: Optional[logging.Logger] = None) -> Set[str]:
-    """Gets submodule directory names based on the .gitmodules file."""
+def get_submodule_paths(root: Path, logger: Optional[logging.Logger] = None) -> Set[Path]: # <--- THAY ĐỔI KIỂU TRẢ VỀ
+    """Gets submodule directory full paths based on the .gitmodules file."""
     submodule_paths = set()
     gitmodules_path = root / ".gitmodules"
     if gitmodules_path.exists():
@@ -74,8 +74,10 @@ def get_submodule_paths(root: Path, logger: Optional[logging.Logger] = None) -> 
             for section in config.sections():
                 if config.has_option(section, "path"):
                     path_str = config.get(section, "path")
-                    # We only need the directory name (relative path)
-                    submodule_paths.add(path_str.split(os.sep)[-1]) 
+                    # --- THAY ĐỔI LOGIC ---
+                    # Trả về đường dẫn đầy đủ, đã giải quyết
+                    submodule_paths.add((root / path_str).resolve())
+                    # --------------------
         except configparser.Error as e:
             warning_msg = f"Could not parse .gitmodules file: {e}"
             if logger:

@@ -87,7 +87,10 @@ def load_and_merge_config(
     submodule_names: Set[str] = set()
     if not show_submodules: 
         submodule_paths = get_submodule_paths(start_dir, logger=logger)
-        submodule_names = submodule_paths
+        # --- THAY ĐỔI LOGIC ---
+        # Chuyển đổi Set[Path] thành Set[str] (tên)
+        submodule_names = {p.name for p in submodule_paths}
+        # --------------------
 
     # 3. Return a dict of processed settings
     return {
