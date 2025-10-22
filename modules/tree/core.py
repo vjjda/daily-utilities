@@ -5,7 +5,7 @@ import configparser
 import fnmatch
 from pathlib import Path
 import os
-import logging # <--- BỔ SUNG
+import logging 
 from typing import List, Set, Optional, Dict, Union
 
 # --- CÁC HẰNG SỐ NỘI BỘ (Chỉ dùng trong module này) ---
@@ -23,7 +23,7 @@ CONFIG_SECTION_NAME = "tree"
 
 # --- HÀM HỖ TRỢ ---
 
-def get_submodule_paths(root: Path, logger: Optional[logging.Logger] = None) -> Set[str]: # <--- THAY ĐỔI SIGNATURE
+def get_submodule_paths(root: Path, logger: Optional[logging.Logger] = None) -> Set[str]: 
     """Lấy tên các thư mục submodule dựa trên file .gitmodules."""
     submodule_paths = set()
     gitmodules_path = root / ".gitmodules"
@@ -38,7 +38,7 @@ def get_submodule_paths(root: Path, logger: Optional[logging.Logger] = None) -> 
                     # Chỉ cần tên thư mục (relative path)
                     submodule_paths.add(path_str.split(os.sep)[-1]) 
         except configparser.Error as e:
-            # --- THAY ĐỔI LOGIC LOGGING ---
+            
             warning_msg = f"Could not parse .gitmodules file: {e}"
             if logger:
                 # Sử dụng logger nếu có, theo chuẩn của dự án
@@ -46,7 +46,6 @@ def get_submodule_paths(root: Path, logger: Optional[logging.Logger] = None) -> 
             else:
                 # Fallback về print nếu không có logger (ví dụ: khi test độc lập)
                 print(f"Warning: {warning_msg}") 
-            # -------------------------------
             
     return submodule_paths
 
@@ -144,49 +143,18 @@ def generate_tree(
                 next_is_in_dirs_only_zone, counters
             )
 
-# --- NỘI DUNG TEMPLATE CONFIG (Vẫn giữ ở đây) ---
+# --- NỘI DUNG TEMPLATE CONFIG (Tải từ file) ---
 
-# CONFIG_TEMPLATE được giữ ở đây vì nó là dữ liệu liên quan đến logic cấu hình
-CONFIG_TEMPLATE = f"""
-; Configuration file for the custom_tree script.
-; Uncomment lines you wish to use by removing the ';' symbol.
-; Patterns support shell-like wildcards (e.g., *, ?, **).
-
-[{CONFIG_SECTION_NAME}] # <--- ĐÃ DÙNG BIẾN THAY VÌ HARDCODE 'tree'
-
-; --- DISPLAY ---
-
-; level: Limit the depth of the directory tree.
-; Example: level = 3
-; level = 3
-
-; show-submodules: Display the contents of submodule directories.
-; Defaults to false. Set to true to enable.
-; show-submodules = false
-
-
-; --- FILTERING RULES ---
-
-; ignore: Completely hide files/directories matching a pattern.
-; Multiple patterns can be listed, separated by commas.
-;
-; Example (single names):   ignore = .DS_Store, thumbs.db
-; Example (wildcards):      ignore = *.tmp, *.log
-; Example (path patterns):  ignore = docs/drafts, src/**/temp
-;
-; ignore = 
-
-; prune: Display a directory but do not traverse into it (shows '[...]'). 
-; Useful for directories with many auto-generated files.
-;
-; Example (single names):        prune = dist, build
-; Example (path with wildcard):  prune = */suttaplex/update
-;
-; prune = 
-
-; dirs-only: Only display subdirectories inside directories matching a pattern.
-; The entry directory will be marked with '[dirs only]'. 
-;
-; dirs-only = assets, static
-;
-"""
+try:
+    # Lấy đường dẫn thư mục chứa file 'core.py' này
+    _CURRENT_DIR = Path(__file__).parent
+    # Đường dẫn đầy đủ đến file template
+    _TEMPLATE_PATH = _CURRENT_DIR / "tree.ini.template"
+    # Đọc nội dung file và gán vào biến
+    CONFIG_TEMPLATE = _TEMPLATE_PATH.read_text(encoding="utf-8")
+except FileNotFoundError:
+    print("FATAL ERROR: Could not find 'tree.ini.template'.")
+    CONFIG_TEMPLATE = "; ERROR: Template file missing."
+except Exception as e:
+    print(f"FATAL ERROR: Could not read 'tree.ini.template': {e}")
+    CONFIG_TEMPLATE = "; ERROR: Template file could not be read."
