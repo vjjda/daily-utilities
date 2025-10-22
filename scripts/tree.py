@@ -1,9 +1,7 @@
 #!/usr/bin/env python
 # Path: scripts/tree.py
 
-# ----------------------------------------------------------------------
-# BOOTSTRAP MODULE HANDLING
-# ----------------------------------------------------------------------
+
 import sys
 import argparse
 import configparser
