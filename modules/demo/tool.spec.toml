@@ -1,0 +1,55 @@
+# Path: modules/demo/tool.spec.toml
+#
+# BẢN THIẾT KẾ THỬ NGHIỆM (TEST) CHO TOOL "c-demo"
+#
+
+# --- 1. THÔNG TIN CƠ BẢN ---
+[meta]
+tool_name = "c-demo"
+script_file = "demo.py"
+logger_name = "CDemo"
+
+# --- 2. CẤU HÌNH PARSER ---
+[argparse]
+description = "Một công cụ demo để thử nghiệm hệ thống bootstrap."
+epilog = "Ví dụ: c-demo /path/to/dir --level 3 --fix"
+
+# --- 3. DANH SÁCH ARGUMENTS (TEST) ---
+
+# --- TEST 1: Positional Argument (nargs='?') ---
+[[argparse.args]]
+name = "target_dir"
+positional = true
+nargs = "?"
+default = "."
+help = "Thư mục mục tiêu để chạy demo."
+
+# --- TEST 2: Flag (action='store_true') ---
+[[argparse.args]]
+name = "fix"
+short = "-f"
+long = "--fix"
+action = "store_true"
+help = "Áp dụng các thay đổi (thay vì chỉ báo cáo)."
+
+# --- TEST 3: Argument có giá trị (type='int') ---
+[[argparse.args]]
+name = "level"
+short = "-L"
+long = "--level"
+type = "int"
+default = 3
+help = "Giới hạn độ sâu xử lý."
+
+# --- TEST 4: Argument có choices ---
+[[argparse.args]]
+name = "format"
+long = "--format"
+choices = ["json", "xml", "text"]
+default = "text"
+help = "Định dạng đầu ra."
+
+# --- 4. TÀI LIỆU ---
+[docs]
+enabled = true
+short_description = "Một công cụ demo để kiểm tra bootstrap."
