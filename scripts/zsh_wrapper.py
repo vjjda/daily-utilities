@@ -13,11 +13,11 @@ sys.path.append(str(PROJECT_ROOT))
 try:
     from utils.logging_config import setup_logging, log_success
     # --- MODULE IMPORTS ---
-    # (Tự động thêm import khi cần)
-    # from modules.zsh_wrapper.zsh_wrapper_core import ...
+    from modules.zsh_wrapper.zsh_wrapper_core import process_zsh_wrapper_logic
+    from modules.zsh_wrapper.zsh_wrapper_executor import execute_zsh_wrapper_action
     # ----------------------
-except ImportError:
-    print(f"Lỗi: Không thể import utils/modules. Đảm bảo PROJECT_ROOT đúng: {PROJECT_ROOT}", file=sys.stderr)
+except ImportError as e:
+    print(f"Lỗi: Không thể import utils/modules: {e}", file=sys.stderr)
     sys.exit(1)
 
 # --- CONSTANTS ---
@@ -36,8 +36,8 @@ def main():
     )
 
     parser.add_argument("script_path", help="Đường dẫn đến file Python cần wrap.")
-    parser.add_argument("-o", "--output", help="Đường dẫn để tạo file wrapper Zsh.")
-    parser.add_argument("-m", "--mode", choices=['relative', 'absolute'], default="relative", help="Loại wrapper: 'relative' (project di chuyển được) hoặc 'absolute' (wrapper di chuyển được).")
+    parser.add_argument("-o", "--output", required=True, help="Đường dẫn để tạo file wrapper Zsh.")
+    parser.add_argument("-m", "--mode", choices=["relative", "absolute"], default="relative", help="Loại wrapper: 'relative' (project di chuyển được) hoặc 'absolute' (wrapper di chuyển được).")
     parser.add_argument("-r", "--root", help="Chỉ định Project Root. Mặc định: tự động tìm (find_git_root() từ file script).")
     parser.add_argument("-v", "--venv", default=".venv", help="Tên thư mục virtual environment.")
     parser.add_argument("-f", "--force", action="store_true", help="Ghi đè file output nếu đã tồn tại.")
@@ -50,23 +50,22 @@ def main():
     
     # 3. Execute Core Logic
     try:
-        logger.info("Tool đang được phát triển...")
-        #
-        # --- TODO: GỌI LOGIC TỪ MODULES ---
-        #
-        # result = process_..._logic(
-        #     logger=logger,
-        #     args=args
-        # )
-        #
-        # execute_..._action(
-        #     logger=logger,
-        #     result=result
-        # )
-        #
+        # --- GỌI LOGIC TỪ MODULES ---
+        
+        result = process_zsh_wrapper_logic(
+            logger=logger,
+            args=args
+        )
+        
+        if result:
+            execute_zsh_wrapper_action(
+                logger=logger,
+                result=result
+            )
+        
         # --------------------------------
         
-        log_success(logger, "Hoàn thành (placeholder).")
+        log_success(logger, "Hoàn thành.")
             
     except Exception as e:
         logger.error(f"❌ Đã xảy ra lỗi không mong muốn: {e}")
@@ -78,5 +77,5 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print("\\n\\n❌ [Lệnh dừng] Hoạt động của tool đã bị dừng.")
+        print("\n\n❌ [Lệnh dừng] Hoạt động của tool đã bị dừng.")
         sys.exit(1)

@@ -1,0 +1,25 @@
+#!/usr/bin/env zsh
+# Path: {output_path_rel_to_project}
+#
+# File wrapper này sử dụng đường dẫn tương đối. Toàn bộ project
+# (bao gồm cả wrapper này) có thể được di chuyển cùng nhau.
+# CẢNH BÁO: KHÔNG di chuyển file này. Hãy dùng symlink nếu cần.
+
+# 1. Find the project root
+SCRIPT_PATH="$(readlink -f "$0" 2>/dev/null || realpath "$0" 2>/dev/null || echo "$0")"
+PROJECT_ROOT=$(cd "$(dirname "$SCRIPT_PATH")/{project_root_rel_to_output}" && pwd)
+
+# --- Relative Paths (Calculated by zrap) ---
+VENV_PATH="$PROJECT_ROOT/{venv_path_rel_to_project}"
+SCRIPT_TO_RUN="$PROJECT_ROOT/{script_path_rel_to_project}"
+# --- END PATHS ---
+
+# 2. Activate virtual environment
+if [ -d "$VENV_PATH" ]; then
+    source "$VENV_PATH/bin/activate"
+else
+    echo "⚠️ Warning: No virtual environment found at $VENV_PATH."
+fi
+
+# 3. Run the main Python script
+PYTHONPATH="$PROJECT_ROOT:$PYTHONPATH" python "$SCRIPT_TO_RUN" "$@"
