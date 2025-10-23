@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # Path: modules/path_checker/path_checker_rules.py
 
 """
@@ -13,16 +12,34 @@ from typing import List, Dict, Any
 def apply_line_comment_rule(
     lines: List[str], 
     correct_path_comment: str, 
-    check_prefix: str
+    check_prefix: str,
+    is_executable: bool  # <-- THAM SỐ MỚI
 ) -> List[str]:
     """
     Applies logic to insert/fix path comments for files
     that use single-line comments (e.g., #, //).
+    
+    NEW: Now also checks for executable status to remove
+    invalid shebangs.
     """
     
     # Logic "chẩn đoán"
     line1_is_shebang = lines[0].startswith('#!')
     
+    # --- NEW: Logic dọn dẹp Shebang ---
+    if line1_is_shebang and not is_executable:
+        # Case 1 (Mới): File có shebang nhưng không phải executable
+        # -> Xóa shebang và xử lý như file bình thường
+        lines.pop(0)
+        
+        # Nếu file rỗng sau khi pop, thoát
+        if not lines:
+            return lines # Trả về list rỗng
+            
+        # Cập nhật lại chẩn đoán cho logic bên dưới
+        line1_is_shebang = False 
+    # --- END NEW ---
+
     line1_is_path = lines[0].startswith(f"{check_prefix} Path:")
     line2_is_path = False
     if len(lines) > 1 and lines[1].startswith(f"{check_prefix} Path:"):
@@ -30,6 +47,7 @@ def apply_line_comment_rule(
 
     # Logic "điều trị" (Giữ nguyên)
     if line1_is_shebang:
+        # --- (Logic này giờ chỉ chạy nếu is_executable == True) ---
         if line2_is_path:
             if lines[1] != correct_path_comment:
                 lines[1] = correct_path_comment # Fix existing
@@ -38,9 +56,17 @@ def apply_line_comment_rule(
     elif line1_is_path:
         # Check for swapped shebang/path
         if len(lines) > 1 and lines[1].startswith('#!'):
-            lines[0], lines[1] = lines[1], lines[0] # Swap them
-            if lines[1] != correct_path_comment: # Fix path (now on line 2)
-                lines[1] = correct_path_comment
+            # --- MODIFIED: Chỉ swap nếu file là executable ---
+            if is_executable:
+                lines[0], lines[1] = lines[1], lines[0] # Swap them
+                if lines[1] != correct_path_comment: # Fix path (now on line 2)
+                    lines[1] = correct_path_comment
+            else:
+                # File không executable, xóa shebang ở dòng 2
+                lines.pop(1)
+                if lines[0] != correct_path_comment: # Fix path (ở dòng 1)
+                    lines[0] = correct_path_comment
+            # --- END MODIFIED ---
         else: # Path on line 1, no shebang
             if lines[0] != correct_path_comment:
                 lines[0] = correct_path_comment # Fix existing

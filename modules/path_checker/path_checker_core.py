@@ -1,13 +1,9 @@
-#!/usr/bin/env python3
 # Path: modules/path_checker/path_checker_core.py
 
 import logging
+import os  # <-- THÊM IMPORT
 from pathlib import Path
 from typing import List, Set, Optional, Dict, Any
-
-# --- MODIFIED: Xóa import không còn dùng ---
-# (utils.core.is_path_matched, ... đã chuyển sang scanner.py)
-# --- END MODIFIED ---
 
 # --- IMPORT LOGIC & CONFIG TỪ FILE MỚI ---
 from .path_checker_config import COMMENT_RULES_BY_EXT
@@ -61,6 +57,13 @@ def _update_files(
                 logger.debug(f"Skipping empty file: {relative_path.as_posix()}")
                 continue
             
+            # --- NEW: Kiểm tra quyền thực thi ---
+            try:
+                is_executable = os.access(file_path, os.X_OK)
+            except Exception:
+                is_executable = False # Mặc định là False nếu có lỗi
+            # --- END NEW ---
+            
             first_line_content = lines[0].strip()
             
             new_lines = []
@@ -71,7 +74,14 @@ def _update_files(
                 prefix = rule["comment_prefix"]
                 correct_comment = f"{prefix} Path: {relative_path.as_posix()}\n"
                 correct_comment_str = correct_comment 
-                new_lines = apply_line_comment_rule(lines, correct_comment, check_prefix=prefix)
+                # --- MODIFIED: Truyền cờ is_executable ---
+                new_lines = apply_line_comment_rule(
+                    lines, 
+                    correct_comment, 
+                    check_prefix=prefix,
+                    is_executable=is_executable # <-- Tham số mới
+                )
+                # --- END MODIFIED ---
             
             elif rule_type == "block":
                 prefix = rule["comment_prefix"]
@@ -86,12 +96,18 @@ def _update_files(
                 continue
 
             if new_lines != original_lines:
+                # --- MODIFIED: Cải thiện logic preview ---
+                fix_preview_str = correct_comment_str.strip()
+                if first_line_content.startswith("#!") and not is_executable:
+                    fix_preview_str = f"(Removed Shebang) -> {fix_preview_str}"
+                
                 files_needing_fix.append({
                     "path": file_path,
                     "line": first_line_content,
                     "new_lines": new_lines,
-                    "fix_preview": correct_comment_str.strip() 
+                    "fix_preview": fix_preview_str
                 })
+                # --- END MODIFIED ---
                 
         except Exception as e:
             logger.error(f"Error processing file {relative_path.as_posix()}: {e}")
@@ -100,7 +116,7 @@ def _update_files(
     return files_needing_fix
 
 # --- 2. Hàm Điều phối (Orchestrator) ---
-# --- MODIFIED: Đã thu gọn hàm này ---
+# --- (Hàm process_path_updates không thay đổi) ---
 def process_path_updates(
     logger: logging.Logger,
     project_root: Path,
@@ -118,8 +134,6 @@ def process_path_updates(
         A list of dictionaries for files that need processing.
     """
     
-    # --- MODIFIED: Toàn bộ logic quét đã chuyển đi ---
-    
     # 1. Quét file (Gọi file scanner.py)
     files_to_process = scan_for_files(
         logger=logger,
@@ -133,4 +147,3 @@ def process_path_updates(
     
     # 2. Phân tích file (Gọi hàm _update_files)
     return _update_files(files_to_process, project_root, logger)
-    # --- END MODIFIED ---
