@@ -58,9 +58,9 @@ Mục đích của tôi là giúp bạn thực hiện các tác vụ như viết
 - Nên có dòng path comment ở đầu code:
   - `Path: relative/path/from/project/root`
   - Thay đổi dấu comment cho phù hợp định dạng file, ví dụ:
-    - `md`: `<!--Path: relative/path/from/project/root-->`
     - `css`: `/* Path: ... */`
     - `python`: `# Path: ...`
+  - Không tạo path comment cho file `md`!!!
 - Nếu script dùng dạng executable thì sẽ cần shebang, được đặt trước dòng path comment:
   - Shell script: `#!/usr/bin/env zsh`
   - Python: `#!/usr/bin/env python3`
