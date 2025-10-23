@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # Path: modules/clip_diag/clip_diag_core.py
 
 """
@@ -26,7 +27,12 @@ DiagramResult = Dict[str, Any]
 
 def _detect_diagram_type(content: str) -> Optional[str]:
     """Nhận diện loại biểu đồ (graphviz hoặc mermaid)."""
+    # --- MODIFIED: strip() được gọi ở đây để đảm bảo ---
+    # (Hàm _trim_leading_comments_and_whitespace đã lọc các dòng,
+    # nhưng hàm này vẫn cần strip() để xử lý khoảng trắng đầu dòng
+    # của dòng code đầu tiên.)
     stripped_content = content.strip()
+    # --- END MODIFIED ---
     lower_content = stripped_content.lower()
 
     # Logic Mermaid (Giữ nguyên từ file gốc)
@@ -93,6 +99,41 @@ def _filter_emoji(content: str, logger: logging.Logger) -> str:
     )
     return emoji_pattern.sub(r'', content)
 
+# --- NEW: HÀM 4: LỌC COMMENT/DÒNG TRẮNG ĐẦU VÀO ---
+
+def _trim_leading_comments_and_whitespace(content: str) -> str:
+    """
+    Lọc bỏ các dòng comment (%%, /*, //, #) và dòng trắng
+    ở ĐẦU nội dung clipboard để tìm ra dòng code thực sự đầu tiên.
+    """
+    lines = content.splitlines()
+    first_code_line_index = -1
+    
+    for i, line in enumerate(lines):
+        stripped_line = line.strip()
+        
+        if not stripped_line:
+            # Dòng trắng, bỏ qua
+            continue
+        
+        if stripped_line.startswith(('%%', '/*', '//', '#')):
+            # Dòng comment, bỏ qua
+            continue
+        
+        # Đây là dòng code đầu tiên
+        first_code_line_index = i
+        break
+    
+    if first_code_line_index == -1:
+        # Nếu vòng lặp chạy hết (ví dụ: clipboard chỉ chứa comment/rỗng)
+        # Trả về chuỗi rỗng
+        return ""
+
+    # Trả về nội dung từ dòng code đầu tiên trở đi
+    return '\n'.join(lines[first_code_line_index:])
+
+# --- END NEW ---
+
 # --- HÀM ĐIỀU PHỐI CHÍNH (Orchestrator) ---
 
 def process_clipboard_content(
@@ -119,8 +160,14 @@ def process_clipboard_content(
     if filter_emoji:
         processed_content = _filter_emoji(processed_content, logger)
 
+    # --- NEW: 2.5 Lọc comment/dòng trắng ở ĐẦU vào ---
+    logger.info("🧹 Trimming leading comments/whitespace...")
+    processed_content = _trim_leading_comments_and_whitespace(processed_content)
+    # --- END NEW ---
+
     if not processed_content.strip():
-        logger.info("Content is empty after filtering.")
+        # --- MODIFIED: Cập nhật thông báo ---
+        logger.info("Content is empty after filtering and trimming.")
         return None
 
     # 3. Nhận diện loại biểu đồ
