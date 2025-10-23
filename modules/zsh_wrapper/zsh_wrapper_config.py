@@ -14,4 +14,8 @@ DEFAULT_MODE = "relative"
 DEFAULT_VENV = ".venv"
 # --- End generated constants ---
 
+# --- NEW: Thư mục mặc định cho wrapper ---
+DEFAULT_WRAPPER_DIR = "to_run"
+# --- END NEW ---
+
 # (Ví dụ: DEFAULT_OUTPUT_DIR = Path.home() / 'Documents' / 'zsh_wrapper_output')

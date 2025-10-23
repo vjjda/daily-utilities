@@ -15,7 +15,9 @@ try:
     
     # --- CONFIG DEFAULTS ---
     # (Tự động import các giá trị default từ _config.py)
-    from modules.zsh_wrapper.zsh_wrapper_config import DEFAULT_MODE, DEFAULT_VENV
+    # --- MODIFIED: Thêm DEFAULT_WRAPPER_DIR ---
+    from modules.zsh_wrapper.zsh_wrapper_config import DEFAULT_MODE, DEFAULT_VENV, DEFAULT_WRAPPER_DIR
+    # --- END MODIFIED ---
     # --- END CONFIG DEFAULTS ---
     
     # --- MODULE IMPORTS ---
@@ -43,7 +45,7 @@ def main():
 
     parser.add_argument("script_path", help="Đường dẫn đến file Python cần wrap.")
     # --- MODIFIED: Bỏ required=True, thêm default=None ---
-    parser.add_argument("-o", "--output", default=None, help="Đường dẫn để tạo file wrapper Zsh. [Mặc định: bin/{tên_script}]")
+    parser.add_argument("-o", "--output", default=None, help="Đường dẫn để tạo file wrapper Zsh. [Mặc định: {DEFAULT_WRAPPER_DIR}/{tên_script}]")
     # --- END MODIFIED ---
     parser.add_argument("-m", "--mode", choices=["relative", "absolute"], default=DEFAULT_MODE, help="Loại wrapper: 'relative' (project di chuyển được) hoặc 'absolute' (wrapper di chuyển được).")
     parser.add_argument("-r", "--root", help="Chỉ định Project Root. Mặc định: tự động tìm (find_git_root() từ file script).")
@@ -61,7 +63,9 @@ def main():
         try:
             # Tính toán đường dẫn mặc định
             script_name_without_ext = Path(args.script_path).stem
-            default_output_path = PROJECT_ROOT / "bin" / script_name_without_ext
+            # --- MODIFIED: Sử dụng hằng số DEFAULT_WRAPPER_DIR ---
+            default_output_path = PROJECT_ROOT / DEFAULT_WRAPPER_DIR / script_name_without_ext
+            # --- END MODIFIED ---
             
             # Thông báo cho người dùng
             logger.warning("⚠️  Output path (-o) not specified.")
