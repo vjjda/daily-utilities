@@ -1,0 +1,110 @@
+# Path: modules/NEW_MODULE_NAME/tool.spec.toml
+#
+# BẢN THIẾT KẾ TOOL (TEMPLATE)
+# ---------------------------------
+# Điền thông tin vào file này, sau đó chạy:
+# python scripts/internal/bootstrap_tool.py modules/NEW_MODULE_NAME
+#
+
+# --- 1. THÔNG TIN CƠ BẢN ---
+# (Bắt buộc)
+[meta]
+# Tên file thực thi trong /bin/ (ví dụ: cdiag, cpath, ctree)
+tool_name = "c-new-tool"
+
+# Tên file entrypoint Python trong /scripts/
+script_file = "new_tool.py"
+
+# Tên Logger cho setup_logging() (ví dụ: CDiag, CPath, CTree)
+logger_name = "CNewTool"
+
+# --- 2. CẤU HÌNH PARSER ---
+# (Bắt buộc)
+[argparse]
+# Mô tả chính cho tool (hiển thị khi chạy --help)
+description = "Mô tả về công dụng của tool này."
+
+# (Tùy chọn) Đoạn text hiển thị ở cuối --help
+epilog = "Ví dụ sử dụng: c-new-tool --fix /path/to/scan"
+
+
+# --- 3. DANH SÁCH ARGUMENTS ---
+# (Tùy chọn)
+# Định nghĩa các arguments cho argparse.
+# Script bootstrap sẽ tự động viết code `parser.add_argument(...)`
+#
+# Dùng `[[argparse.args]]` cho mỗi argument.
+#
+
+#
+# --- MẪU 1: Positional Argument (ví dụ: ctree [start_path]) ---
+#
+# [[argparse.args]]
+# # Tên của argument (cho argparse)
+# name = "start_path"
+# # Đánh dấu đây là positional argument
+# positional = true
+# # Số lượng: "?" = 0 hoặc 1, "*" = 0 hoặc nhiều, "+" = 1 hoặc nhiều
+# nargs = "?"
+# # Giá trị mặc định
+# default = "."
+# help = "Đường dẫn (file hoặc thư mục) để bắt đầu."
+
+#
+# --- MẪU 2: Flag (ví dụ: cpath --fix) ---
+#
+# [[argparse.args]]
+# # Tên của argument
+# name = "fix"
+# # Cờ ngắn
+# short = "-f"
+# # Cờ dài
+# long = "--fix"
+# # Hành động khi có cờ này (không cần giá trị)
+# action = "store_true"
+# help = "Fix các file (thay vì chỉ kiểm tra)."
+
+#
+# --- MẪU 3: Argument có giá trị (ví dụ: ctree -L 3) ---
+#
+# [[argparse.args]]
+# name = "level"
+# short = "-L"
+# long = "--level"
+# # Kiểu dữ liệu mong muốn (bootstrap sẽ tự thêm type=int)
+# type = "int"
+# help = "Giới hạn độ sâu hiển thị."
+
+#
+# --- MẪU 4: Argument có giá trị (ví dụ: cdiag -t svg) ---
+#
+# [[argparse.args]]
+# name = "to"
+# short = "-t"
+# long = "--to"
+# # Chỉ chấp nhận các giá trị này
+# choices = ["svg", "png"]
+# # (Không cần 'type', 'choices' đã ngụ ý là string)
+# help = "Convert source sang định dạng ảnh (svg hoặc png)."
+
+#
+# --- MẪU 5: Argument có nhiều giá trị (ví dụ: cpath -e py,js) ---
+#
+# [[argparse.args]]
+# name = "extensions"
+# short = "-e"
+# long = "--extensions"
+# default = "py,js,ts,md,zsh"
+# help = "Các đuôi file cần quét (phân cách bằng dấu phẩy)."
+# # (Script entrypoint `scripts/new_tool.py` sẽ cần tự xử lý
+# # việc .split(',') giá trị này)
+
+
+# --- 4. TÀI LIỆU ---
+# (Tùy chọn)
+# Tự động tạo file docs/tools/c-new-tool.md
+#
+# [docs]
+# enabled = true
+# # Mô tả ngắn (1-2 câu) cho file README
+# short_description = "Một công cụ mới để làm [việc X]."
