@@ -17,6 +17,9 @@ from utils.core import parse_comma_list, is_git_repository, find_git_root
 # Import the main logic
 from modules.path_checker.path_checker_core import process_path_updates
 from modules.path_checker.path_checker_executor import handle_results
+# --- NEW: Import DEFAULT_EXTENSIONS_STRING ---
+from modules.path_checker.path_checker_config import DEFAULT_EXTENSIONS_STRING
+# --- END NEW ---
 
 # --- CONSTANTS ---
 THIS_SCRIPT_PATH = Path(__file__).resolve()
@@ -40,8 +43,10 @@ def main():
     )
     parser.add_argument(
         "-e", "--extensions", 
-        default="py,js,ts,css,scss,zsh,sh,md", 
-        help="File extensions to scan (default: 'py,js,ts,css,scss,zsh,sh,md')."
+        # --- MODIFIED: Sử dụng hằng số ---
+        default=DEFAULT_EXTENSIONS_STRING, 
+        help=f"File extensions to scan (default: '{DEFAULT_EXTENSIONS_STRING}')."
+        # --- END MODIFIED ---
     )
     parser.add_argument(
         "-I", "--ignore", 

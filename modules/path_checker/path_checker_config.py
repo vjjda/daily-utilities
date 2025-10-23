@@ -20,6 +20,10 @@ DEFAULT_IGNORE: Set[str] = {
 }
 # --- END NEW ---
 
+# --- NEW: Thêm DEFAULT_EXTENSIONS_STRING ---
+DEFAULT_EXTENSIONS_STRING = "py,js,ts,css,scss,zsh,sh"
+# --- END NEW ---
+
 
 # --- 1. Định nghĩa các quy tắc (Rules) ---
 COMMENT_RULES: Dict[str, Dict[str, Any]] = {
