@@ -11,19 +11,18 @@ from utils.logging_config import setup_logging, log_success
 from utils.core import run_command, is_git_repository
 
 # --- MODULE IMPORTS ---
-# --- MODIFIED: Import `load_and_merge_config` from tree_core ---
+# --- MODIFIED: Split imports for core and executor ---
 from modules.tree.tree_core import (
-    generate_tree, CONFIG_TEMPLATE, load_and_merge_config
+    CONFIG_TEMPLATE, load_and_merge_config
 )
+from modules.tree.tree_executor import generate_tree
 # --- END MODIFIED ---
-# --- MODIFIED: Import argparse defaults from SSOT ---
 from modules.tree.tree_config import (
     CONFIG_FILENAME,
     DEFAULT_MAX_LEVEL_ARG,
     DEFAULT_SHOW_SUBMODULES_ARG,
     DEFAULT_DIRS_ONLY_ARG
 )
-# --- END MODIFIED ---
 # ---------------------
 
 def handle_init_command(logger: logging.Logger) -> None:
@@ -79,13 +78,11 @@ def main():
     parser = argparse.ArgumentParser(description="A smart directory tree generator with support for a .treeconfig.ini file.")
     parser.add_argument("start_path", nargs='?', 
                         default=".", help="Starting path (file or directory).") 
-    # --- MODIFIED: Use imported defaults ---
     parser.add_argument("-L", "--level", type=int, default=DEFAULT_MAX_LEVEL_ARG, help="Limit the display depth.")
     parser.add_argument("-I", "--ignore", type=str, help="Comma-separated list of patterns to ignore.")
     parser.add_argument("-P", "--prune", type=str, help="Comma-separated list of patterns to prune.")
     parser.add_argument("-d", "--dirs-only", nargs='?', const='_ALL_', default=DEFAULT_DIRS_ONLY_ARG, type=str, help="Show directories only.")
     parser.add_argument("-s", "--show-submodules", action='store_true', default=DEFAULT_SHOW_SUBMODULES_ARG, help="Show the contents of submodules.")
-    # --- END MODIFIED ---
     parser.add_argument("--init", action='store_true', help="Create a sample .treeconfig.ini file and open it.")
     args = parser.parse_args()
 
@@ -106,11 +103,9 @@ def main():
     start_dir = initial_path.parent if initial_path.is_file() else initial_path
     is_git_repo = is_git_repository(start_dir)
     
-    # 4. Load and Merge Configuration (Separated module)
+    # 4. Load and Merge Configuration (Core logic)
     try:
-        # --- MODIFIED: This function is now correctly imported from tree_core ---
         config_params = load_and_merge_config(args, start_dir, logger)
-        # --- END MODIFIED ---
     except Exception as e:
         logger.error(f"❌ Critical error during config processing: {e}")
         logger.debug("Traceback:", exc_info=True)
@@ -130,7 +125,7 @@ def main():
     print(f"{start_dir.name}/ [{filter_info}, {level_info}{mode_info}{git_info}]")
     # --- END MODIFIED ---
 
-    # 6. Run Recursive Logic
+    # 6. Run Recursive Logic (Executor logic)
     counters = {'dirs': 0, 'files': 0}
     
     # Use the processed config dict to pass parameters
