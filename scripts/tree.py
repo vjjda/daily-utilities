@@ -22,7 +22,8 @@ from modules.tree.tree_config import (
     DEFAULT_MAX_LEVEL_ARG,
     DEFAULT_SHOW_SUBMODULES_ARG,
     DEFAULT_DIRS_ONLY_ARG,
-    DEFAULT_NO_GITIGNORE_ARG
+    DEFAULT_NO_GITIGNORE_ARG,
+    DEFAULT_FULL_VIEW_ARG
 )
 # --- END MODIFIED ---
 # ---------------------
@@ -86,12 +87,19 @@ def main():
     parser.add_argument("-d", "--dirs-only", nargs='?', const='_ALL_', default=DEFAULT_DIRS_ONLY_ARG, type=str, help="Show directories only.")
     parser.add_argument("-s", "--show-submodules", action='store_true', default=DEFAULT_SHOW_SUBMODULES_ARG, help="Show the contents of submodules.")
     
-    # --- NEW: Thêm cờ --no-gitignore ---
     parser.add_argument(
         "--no-gitignore", 
         action='store_true', 
         default=DEFAULT_NO_GITIGNORE_ARG, 
         help="Do not respect .gitignore files."
+    )
+    
+    # --- NEW: Thêm cờ --full-view ---
+    parser.add_argument(
+        "-f", "--full-view",
+        action='store_true', 
+        default=DEFAULT_FULL_VIEW_ARG, 
+        help="Bypass all filters (.gitignore, ignore/prune rules, level limit) and show all files."
     )
     # --- END NEW ---
     
@@ -117,9 +125,10 @@ def main():
     
     # 4. Load and Merge Configuration (Core logic)
     try:
-        # --- MODIFIED: Truyền is_git_repo vào hàm config ---
+        # --- (Không thay đổi) ---
+        # Logic của -f sẽ được xử lý bên trong hàm này
         config_params = load_and_merge_config(args, start_dir, logger, is_git_repo)
-        # --- END MODIFIED ---
+        # --- END ---
     except Exception as e:
         logger.error(f"❌ Critical error during config processing: {e}")
         logger.debug("Traceback:", exc_info=True)
@@ -133,11 +142,9 @@ def main():
                  f"depth limit: {config_params['max_level']}"
     mode_info = ", directories only" if config_params["global_dirs_only_flag"] else ""
     
-    # --- MODIFIED: Thêm Git status vào header chỉ khi nó là Git repo ---
     git_info = ", Git project" if is_git_repo else ""
     
     print(f"{start_dir.name}/ [{filter_info}, {level_info}{mode_info}{git_info}]")
-    # --- END MODIFIED ---
 
     # 6. Run Recursive Logic (Executor logic)
     counters = {'dirs': 0, 'files': 0}

@@ -4,38 +4,51 @@ from pathlib import Path
 import logging 
 import configparser
 import argparse
-# --- MODIFIED: Removed imports only used by generate_tree ---
 from typing import Set, Optional, Dict, Any 
 
-# --- IMPORT UTILITIES FROM CENTRAL LOCATION ---
-# --- MODIFIED: Thêm parse_gitignore ---
 from utils.core import get_submodule_paths, parse_comma_list, parse_gitignore
-# --- END MODIFIED ---
 
-# --- MODULE-SPECIFIC CONSTANTS (NOW IMPORTED) ---
 from .tree_config import (
     DEFAULT_IGNORE, DEFAULT_PRUNE, DEFAULT_DIRS_ONLY_LOGIC,
     DEFAULT_MAX_LEVEL, CONFIG_FILENAME, PROJECT_CONFIG_FILENAME,
     CONFIG_SECTION_NAME, FALLBACK_SHOW_SUBMODULES,
-    # --- NEW: Import hằng số gitignore ---
     FALLBACK_USE_GITIGNORE
-    # --- END NEW ---
 )
-# --- END MODIFIED ---
 
-# --- LOGIC MOVED FROM old tree_config.py ---
 def load_and_merge_config(
     args: argparse.Namespace, 
     start_dir: Path, 
     logger: logging.Logger,
-    is_git_repo: bool  # <-- THAM SỐ MỚI
+    is_git_repo: bool
 ) -> Dict[str, Any]:
     """
     Loads configuration from .ini files and merges them with CLI arguments.
     (This function is pure logic, no side-effects)
     """
     
-    # 1. Read Config from Files
+    # --- NEW: 1. Check for Full View Override ---
+    # This flag bypasses all other config (files, args, defaults)
+    if args.full_view:
+        logger.info("⚡ Full View mode enabled. Bypassing all filters and limits.")
+        # Return empty filter sets and no level limit
+        return {
+            "max_level": None,
+            "ignore_list": set(),
+            "submodules": set(),  # An empty set means no submodules will be hidden
+            "prune_list": set(),
+            "dirs_only_list": set(),
+            "is_in_dirs_only_zone": False,
+            "global_dirs_only_flag": False,
+            "filter_lists": {
+                "ignore": set(),
+                "prune": set(),
+                "dirs_only": set(),
+                "submodules": set()
+            }
+        }
+    # --- END NEW ---
+
+    # --- 2. Read Config from Files (Original logic) ---
     config = configparser.ConfigParser()
     
     tree_config_path = start_dir / CONFIG_FILENAME
@@ -61,7 +74,7 @@ def load_and_merge_config(
         config.add_section(CONFIG_SECTION_NAME)
         logger.debug(f"Added empty '{CONFIG_SECTION_NAME}' section for safe fallback.")
 
-    # 2. Merge Configs (CLI > File > Default)
+    # --- 3. Merge Configs (CLI > File > Default) ---
     
     # Level
     level_from_config_file = config.getint(CONFIG_SECTION_NAME, 'level', fallback=DEFAULT_MAX_LEVEL)
@@ -71,15 +84,11 @@ def load_and_merge_config(
     show_submodules = args.show_submodules if args.show_submodules is not None else \
                       config.getboolean(CONFIG_SECTION_NAME, 'show-submodules', fallback=FALLBACK_SHOW_SUBMODULES)
 
-    # --- NEW: Gitignore Logic ---
-    # Ưu tiên 1: Cờ CLI (--no-gitignore)
-    # Ưu tiên 2: Config file (.tree.ini)
-    # Ưu tiên 3: Hằng số (FALLBACK_USE_GITIGNORE)
+    # Gitignore Logic
     use_gitignore_from_config = config.getboolean(
         CONFIG_SECTION_NAME, 'use-gitignore', 
         fallback=FALLBACK_USE_GITIGNORE
     )
-    # args.no_gitignore sẽ là True nếu cờ được dùng, ghi đè config file
     final_use_gitignore = False if args.no_gitignore else use_gitignore_from_config
     
     gitignore_patterns: Set[str] = set()
@@ -90,15 +99,11 @@ def load_and_merge_config(
         logger.debug("Git repository detected, but skipping .gitignore (due to flag or config).")
     else:
         logger.debug("Not a Git repository. Skipping .gitignore.")
-    # --- END NEW ---
 
     # Ignore List
     ignore_cli = parse_comma_list(args.ignore)
     ignore_file = parse_comma_list(config.get(CONFIG_SECTION_NAME, 'ignore', fallback=None))
-    # --- MODIFIED: Thêm gitignore_patterns vào union ---
-    # Thứ tự: Default (code) -> .gitignore -> .ini file -> CLI args
     final_ignore_list = DEFAULT_IGNORE.union(gitignore_patterns).union(ignore_file).union(ignore_cli)
-    # --- END MODIFIED ---
 
     # Prune List
     prune_cli = parse_comma_list(args.prune) 
@@ -122,7 +127,7 @@ def load_and_merge_config(
         submodule_paths = get_submodule_paths(start_dir, logger=logger)
         submodule_names = {p.name for p in submodule_paths}
 
-    # 3. Return a dict of processed settings
+    # --- 4. Return a dict of processed settings ---
     return {
         "max_level": final_level,
         "ignore_list": final_ignore_list,
@@ -142,12 +147,8 @@ def load_and_merge_config(
 # --- END MOVED LOGIC ---
 
 
-# --- MAIN RECURSIVE LOGIC ---
-# --- MODIFIED: generate_tree function was removed and moved to tree_executor.py ---
-# --- END MODIFIED ---
-
 # --- CONFIG TEMPLATE CONTENT (Loaded from file) ---
-
+# ... (Phần này không đổi) ...
 try:
     # Get the directory containing this 'tree_core.py' file
     _CURRENT_DIR = Path(__file__).parent

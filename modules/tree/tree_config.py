@@ -36,6 +36,10 @@ DEFAULT_DIRS_ONLY_ARG: Optional[str] = None
 DEFAULT_NO_GITIGNORE_ARG: Optional[bool] = None
 # --- END NEW ---
 
+# --- NEW: Full View Argparse Default ---
+DEFAULT_FULL_VIEW_ARG: Optional[bool] = None
+# --- END NEW ---
+
 # --- 3. Config File Names ---
 CONFIG_FILENAME: str = ".tree.ini"
 PROJECT_CONFIG_FILENAME: str = ".project.ini"
