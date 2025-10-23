@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # Path: modules/zsh_wrapper/zsh_wrapper_config.py
 
 """

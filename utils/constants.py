@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # Path: utils/constants.py
 
 # --- NEW: Thêm Path để xác định root ---

@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # Path: scripts/clip_diag.py
 
 import sys

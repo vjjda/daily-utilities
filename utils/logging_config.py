@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # Path: utils/logging_config.py
 
 import logging

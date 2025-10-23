@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # Path: modules/path_checker/path_checker_config.py
 
 """
