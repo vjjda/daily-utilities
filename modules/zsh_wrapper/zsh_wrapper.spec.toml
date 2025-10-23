@@ -1,0 +1,69 @@
+# Path: modules/zsh_wrapper/zsh_wrapper.spec.toml
+#
+# BẢN THIẾT KẾ CHO TOOL "zrap" (Đã cập nhật)
+#
+
+# --- 1. THÔNG TIN CƠ BẢN ---
+[meta]
+tool_name = "zrap"
+script_file = "zsh_wrapper.py"
+logger_name = "Zrap"
+
+# --- 2. CẤU HÌNH PARSER ---
+[argparse]
+description = "Tạo một wrapper Zsh cho một script Python, tự động quản lý venv và PYTHONPATH."
+epilog = "Ví dụ: zrap scripts/check_path.py -o bin/cpath -m relative"
+
+# --- 3. DANH SÁCH ARGUMENTS ---
+
+# --- Argument 1: Script (Input) - Positional ---
+[[argparse.args]]
+name = "script_path"
+positional = true
+help = "Đường dẫn đến file Python cần wrap."
+# (Bootstrap sẽ tạo ra: parser.add_argument("script_path", ...))
+
+# --- Argument 2: Output (Bắt buộc) ---
+[[argparse.args]]
+name = "output"
+short = "-o"
+long = "--output"
+help = "Đường dẫn để tạo file wrapper Zsh."
+# (Chúng ta sẽ làm nó là 'required=True' trong code)
+
+# --- Argument 3: Mode (Relative vs Absolute) ---
+[[argparse.args]]
+name = "mode"
+short = "-m"
+long = "--mode"
+choices = ["relative", "absolute"]
+default = "relative"
+help = "Loại wrapper: 'relative' (project di chuyển được) hoặc 'absolute' (wrapper di chuyển được)."
+
+# --- Argument 4: Project Root (Tùy chọn) ---
+[[argparse.args]]
+name = "root"
+short = "-r"
+long = "--root"
+help = "Chỉ định Project Root. Mặc định: tự động tìm (find_git_root() từ file script)."
+
+# --- Argument 5: Venv (Tùy chọn) ---
+[[argparse.args]]
+name = "venv"
+long = "--venv"
+short = "-v"
+default = ".venv"
+help = "Tên thư mục virtual environment."
+
+# --- Argument 6: Force (Tùy chọn) ---
+[[argparse.args]]
+name = "force"
+short = "-f"
+long = "--force"
+action = "store_true"
+help = "Ghi đè file output nếu đã tồn tại."
+
+# --- 4. TÀI LIỆU ---
+[docs]
+enabled = true
+short_description = "Công cụ tạo Zsh wrapper 'di động' hoặc 'tương đối' cho các script Python."
