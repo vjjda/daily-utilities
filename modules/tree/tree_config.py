@@ -1,111 +1,32 @@
 #!/usr/bin/env python3
 # Path: modules/tree/tree_config.py
 
-import configparser
-import logging
-from pathlib import Path
-from typing import Set, Dict, Any
-import argparse
+"""
+Configuration constants for the Tree (ctree) module.
+(Single Source of Truth)
+"""
 
-# --- IMPORT CONSTANTS FROM CORE ---
-from .tree_core import (
-    DEFAULT_IGNORE, DEFAULT_PRUNE, DEFAULT_DIRS_ONLY,
-    DEFAULT_MAX_LEVEL, CONFIG_FILENAME, PROJECT_CONFIG_FILENAME,
-    CONFIG_SECTION_NAME
-)
-# --- IMPORT UTILITIES FROM CENTRAL LOCATION ---
-from utils.core import get_submodule_paths, parse_comma_list
+from typing import Set, Optional
 
-def load_and_merge_config(
-    args: argparse.Namespace, 
-    start_dir: Path, 
-    logger: logging.Logger
-) -> Dict[str, Any]:
-    """
-    Loads configuration from .ini files and merges them with CLI arguments.
-    Priority order: CLI > .tree.ini > .project.ini > Defaults.
-    """
-    
-    # 1. Read Config from Files
-    config = configparser.ConfigParser()
-    
-    tree_config_path = start_dir / CONFIG_FILENAME
-    project_config_path = start_dir / PROJECT_CONFIG_FILENAME
+# --- 1. Logic Fallback Defaults ---
+# Đây là giá trị mặc định "thực sự" của tool nếu không
+# có cờ CLI hoặc file .ini nào được cấu hình.
+DEFAULT_IGNORE: Set[str] = {
+    "__pycache__", ".venv", "venv", "node_modules", ".git"
+}
+DEFAULT_PRUNE: Set[str] = {"dist", "build"}
+DEFAULT_DIRS_ONLY_LOGIC: Set[str] = set()
+FALLBACK_SHOW_SUBMODULES: bool = False
+DEFAULT_MAX_LEVEL: Optional[int] = None
 
-    files_to_read = []
-    if project_config_path.exists():
-        files_to_read.append(project_config_path)
-    if tree_config_path.exists():
-        files_to_read.append(tree_config_path)
+# --- 2. Argparse Defaults ---
+# Các giá trị `None` này rất quan trọng để kích hoạt
+# logic ưu tiên 3 tầng (CLI > .ini > Fallback).
+DEFAULT_MAX_LEVEL_ARG: Optional[int] = DEFAULT_MAX_LEVEL
+DEFAULT_SHOW_SUBMODULES_ARG: Optional[bool] = None
+DEFAULT_DIRS_ONLY_ARG: Optional[str] = None
 
-    if files_to_read:
-        try:
-            config.read(files_to_read) 
-            logger.debug(f"Loaded config from files: {[p.name for p in files_to_read]}")
-        except Exception as e:
-            logger.warning(logger, f"⚠️ Could not read config files: {e}")
-    else:
-        logger.debug("No .tree.ini or .project.ini config files found. Using defaults.")
-
-    # Ensure [tree] section exists
-    if CONFIG_SECTION_NAME not in config:
-        config.add_section(CONFIG_SECTION_NAME)
-        logger.debug(f"Added empty '{CONFIG_SECTION_NAME}' section for safe fallback.")
-
-    # 2. Merge Configs (CLI > File > Default)
-    
-    # Level
-    level_from_config_file = config.getint(CONFIG_SECTION_NAME, 'level', fallback=DEFAULT_MAX_LEVEL)
-    final_level = args.level if args.level is not None else level_from_config_file
-    
-    # Submodules
-    show_submodules = args.show_submodules if args.show_submodules is not None else \
-                      config.getboolean(CONFIG_SECTION_NAME, 'show-submodules', fallback=False)
-
-    # Ignore List
-    ignore_cli = parse_comma_list(args.ignore)
-    ignore_file = parse_comma_list(config.get(CONFIG_SECTION_NAME, 'ignore', fallback=None))
-    final_ignore_list = DEFAULT_IGNORE.union(ignore_file).union(ignore_cli)
-
-    # Prune List
-    prune_cli = parse_comma_list(args.prune) 
-    prune_file = parse_comma_list(config.get(CONFIG_SECTION_NAME, 'prune', fallback=None))
-    final_prune_list = DEFAULT_PRUNE.union(prune_file).union(prune_cli)
-
-    # Dirs Only List
-    dirs_only_cli = args.dirs_only
-    dirs_only_file = config.get(CONFIG_SECTION_NAME, 'dirs-only', fallback=None)
-    final_dirs_only_mode = dirs_only_cli if dirs_only_cli is not None else dirs_only_file
-    
-    global_dirs_only = final_dirs_only_mode == '_ALL_'
-    dirs_only_list_custom = set()
-    if final_dirs_only_mode is not None and not global_dirs_only:
-        dirs_only_list_custom = parse_comma_list(final_dirs_only_mode)
-    final_dirs_only_list = DEFAULT_DIRS_ONLY.union(dirs_only_list_custom)
-    
-    # Calculate Submodule Names
-    submodule_names: Set[str] = set()
-    if not show_submodules: 
-        submodule_paths = get_submodule_paths(start_dir, logger=logger)
-        # --- THAY ĐỔI LOGIC ---
-        # Chuyển đổi Set[Path] thành Set[str] (tên)
-        submodule_names = {p.name for p in submodule_paths}
-        # --------------------
-
-    # 3. Return a dict of processed settings
-    return {
-        "max_level": final_level,
-        "ignore_list": final_ignore_list,
-        "submodules": submodule_names,
-        "prune_list": final_prune_list,
-        "dirs_only_list": final_dirs_only_list,
-        "is_in_dirs_only_zone": global_dirs_only,
-        # Add other info for user printing
-        "global_dirs_only_flag": global_dirs_only,
-        "filter_lists": {
-            "ignore": final_ignore_list,
-            "prune": final_prune_list,
-            "dirs_only": final_dirs_only_list,
-            "submodules": submodule_names
-        }
-    }
+# --- 3. Config File Names ---
+CONFIG_FILENAME: str = ".tree.ini"
+PROJECT_CONFIG_FILENAME: str = ".project.ini"
+CONFIG_SECTION_NAME: str = "tree"
