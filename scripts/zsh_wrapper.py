@@ -42,7 +42,9 @@ def main():
     )
 
     parser.add_argument("script_path", help="Đường dẫn đến file Python cần wrap.")
-    parser.add_argument("-o", "--output", required=True, help="Đường dẫn để tạo file wrapper Zsh.")
+    # --- MODIFIED: Bỏ required=True, thêm default=None ---
+    parser.add_argument("-o", "--output", default=None, help="Đường dẫn để tạo file wrapper Zsh. [Mặc định: bin/{tên_script}]")
+    # --- END MODIFIED ---
     parser.add_argument("-m", "--mode", choices=["relative", "absolute"], default=DEFAULT_MODE, help="Loại wrapper: 'relative' (project di chuyển được) hoặc 'absolute' (wrapper di chuyển được).")
     parser.add_argument("-r", "--root", help="Chỉ định Project Root. Mặc định: tự động tìm (find_git_root() từ file script).")
     parser.add_argument("-v", "--venv", default=DEFAULT_VENV, help="Tên thư mục virtual environment.")
@@ -54,6 +56,37 @@ def main():
     logger = setup_logging(script_name="Zrap")
     logger.debug("Zrap script started.")
     
+    # --- NEW: Xử lý output mặc định + Xác nhận ---
+    if args.output is None:
+        try:
+            # Tính toán đường dẫn mặc định
+            script_name_without_ext = Path(args.script_path).stem
+            default_output_path = PROJECT_ROOT / "bin" / script_name_without_ext
+            
+            # Thông báo cho người dùng
+            logger.warning("⚠️  Output path (-o) not specified.")
+            logger.info(f"   Defaulting to: {default_output_path.relative_to(PROJECT_ROOT).as_posix()}")
+            logger.info("   (You can use -o <path> to specify a custom name)")
+            
+            # Hỏi xác nhận
+            confirmation = input("   Proceed with this default path? (y/n): ")
+            
+            if confirmation.lower().strip() != 'y':
+                logger.warning("Operation cancelled by user.")
+                sys.exit(0)
+            
+            # Người dùng đã xác nhận, gán đường dẫn default
+            args.output = str(default_output_path)
+            
+        except EOFError:
+             logger.warning("\nOperation cancelled by user (EOF).")
+             sys.exit(1)
+        except KeyboardInterrupt:
+            # Đã xử lý ở __main__, nhưng thêm vào đây cho an toàn
+            print("\n\n❌ [Lệnh dừng] Hoạt động của tool đã bị dừng.")
+            sys.exit(1)
+    # --- END NEW ---
+
     # 3. Execute Core Logic
     try:
         # --- GỌI LOGIC TỪ MODULES ---
