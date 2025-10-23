@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # Path: modules/clip_diag/clip_diag_config.py
 
 """
@@ -7,7 +8,7 @@ Defines paths for output, external tools, and viewing applications.
 
 import os
 from pathlib import Path
-from typing import Dict, Any
+from typing import Dict, Any, Optional # <-- Thêm Optional
 
 # --- CẤU HÌNH ĐƯỜNG DẪN CỐ ĐỊNH ---
 # Thư mục mặc định để lưu file diagram.
@@ -35,3 +36,6 @@ APP_CONFIG: Dict[str, str] = {
 # Tên tiền tố file nguồn/ảnh
 GRAPHVIZ_PREFIX: str = "graphviz"
 MERMAID_PREFIX: str = "mermaid"
+
+# --- NEW: Argparse Default ---
+DEFAULT_TO_ARG: Optional[str] = None

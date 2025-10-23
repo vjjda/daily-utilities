@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # Path: scripts/clip_diag.py
 
 import sys
@@ -12,6 +13,9 @@ from utils.logging_config import setup_logging
 # Kết nối các module core và executor
 from modules.clip_diag.clip_diag_core import process_clipboard_content
 from modules.clip_diag.clip_diag_executor import execute_diagram_generation
+# --- NEW: Import argparse default ---
+from modules.clip_diag.clip_diag_config import DEFAULT_TO_ARG
+# --- END NEW ---
 # ----------------------
 
 # --- CONSTANTS ---
@@ -31,7 +35,9 @@ def main():
     parser.add_argument(
         '-t', '--to',
         choices=['svg', 'png'],
-        default=None,
+        # --- MODIFIED: Sử dụng hằng số ---
+        default=DEFAULT_TO_ARG,
+        # --- END MODIFIED ---
         help='Convert source code to an image file (svg or png) and open it.'
     )
     parser.add_argument(
