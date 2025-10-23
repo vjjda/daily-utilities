@@ -8,15 +8,18 @@ import argparse
 from typing import Set, Optional, Dict, Any 
 
 # --- IMPORT UTILITIES FROM CENTRAL LOCATION ---
-# --- MODIFIED: Removed is_path_matched (moved to executor) ---
-from utils.core import get_submodule_paths, parse_comma_list
+# --- MODIFIED: Thêm parse_gitignore ---
+from utils.core import get_submodule_paths, parse_comma_list, parse_gitignore
 # --- END MODIFIED ---
 
 # --- MODULE-SPECIFIC CONSTANTS (NOW IMPORTED) ---
 from .tree_config import (
     DEFAULT_IGNORE, DEFAULT_PRUNE, DEFAULT_DIRS_ONLY_LOGIC,
     DEFAULT_MAX_LEVEL, CONFIG_FILENAME, PROJECT_CONFIG_FILENAME,
-    CONFIG_SECTION_NAME, FALLBACK_SHOW_SUBMODULES
+    CONFIG_SECTION_NAME, FALLBACK_SHOW_SUBMODULES,
+    # --- NEW: Import hằng số gitignore ---
+    FALLBACK_USE_GITIGNORE
+    # --- END NEW ---
 )
 # --- END MODIFIED ---
 
@@ -24,7 +27,8 @@ from .tree_config import (
 def load_and_merge_config(
     args: argparse.Namespace, 
     start_dir: Path, 
-    logger: logging.Logger
+    logger: logging.Logger,
+    is_git_repo: bool  # <-- THAM SỐ MỚI
 ) -> Dict[str, Any]:
     """
     Loads configuration from .ini files and merges them with CLI arguments.
@@ -67,10 +71,34 @@ def load_and_merge_config(
     show_submodules = args.show_submodules if args.show_submodules is not None else \
                       config.getboolean(CONFIG_SECTION_NAME, 'show-submodules', fallback=FALLBACK_SHOW_SUBMODULES)
 
+    # --- NEW: Gitignore Logic ---
+    # Ưu tiên 1: Cờ CLI (--no-gitignore)
+    # Ưu tiên 2: Config file (.tree.ini)
+    # Ưu tiên 3: Hằng số (FALLBACK_USE_GITIGNORE)
+    use_gitignore_from_config = config.getboolean(
+        CONFIG_SECTION_NAME, 'use-gitignore', 
+        fallback=FALLBACK_USE_GITIGNORE
+    )
+    # args.no_gitignore sẽ là True nếu cờ được dùng, ghi đè config file
+    final_use_gitignore = False if args.no_gitignore else use_gitignore_from_config
+    
+    gitignore_patterns: Set[str] = set()
+    if is_git_repo and final_use_gitignore:
+        logger.debug("Git repository detected. Loading .gitignore patterns.")
+        gitignore_patterns = parse_gitignore(start_dir)
+    elif is_git_repo and not final_use_gitignore:
+        logger.debug("Git repository detected, but skipping .gitignore (due to flag or config).")
+    else:
+        logger.debug("Not a Git repository. Skipping .gitignore.")
+    # --- END NEW ---
+
     # Ignore List
     ignore_cli = parse_comma_list(args.ignore)
     ignore_file = parse_comma_list(config.get(CONFIG_SECTION_NAME, 'ignore', fallback=None))
-    final_ignore_list = DEFAULT_IGNORE.union(ignore_file).union(ignore_cli)
+    # --- MODIFIED: Thêm gitignore_patterns vào union ---
+    # Thứ tự: Default (code) -> .gitignore -> .ini file -> CLI args
+    final_ignore_list = DEFAULT_IGNORE.union(gitignore_patterns).union(ignore_file).union(ignore_cli)
+    # --- END MODIFIED ---
 
     # Prune List
     prune_cli = parse_comma_list(args.prune) 

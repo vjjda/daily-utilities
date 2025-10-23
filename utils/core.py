@@ -150,6 +150,12 @@ def parse_comma_list(value: Union[str, None]) -> Set[str]:
         return set()
     return {item.strip() for item in value.split(',') if item.strip() != ''}
 
+def parse_comma_list(value: Union[str, None]) -> Set[str]:
+    """Converts a comma-separated string into a set of stripped items."""
+    if not value: 
+        return set()
+    return {item.strip() for item in value.split(',') if item.strip() != ''}
+
 def parse_gitignore(root: Path) -> Set[str]:
     """Parses a .gitignore file and returns a set of non-empty, non-comment patterns."""
     gitignore_path = root / ".gitignore"
@@ -159,8 +165,23 @@ def parse_gitignore(root: Path) -> Set[str]:
             with open(gitignore_path, 'r', encoding='utf-8') as f:
                 for line in f:
                     stripped_line = line.strip()
-                    if stripped_line and not stripped_line.startswith('#'):
+                    
+                    # 1. Bỏ qua comment hoặc dòng trống
+                    if not stripped_line or stripped_line.startswith('#'):
+                        continue
+
+                    # --- FIX: Chuẩn hóa pattern ---
+                    # Xử lý trường hợp pattern bắt đầu bằng '/' (ví dụ: /build)
+                    # Chúng ta loại bỏ nó để khớp với đường dẫn tương đối (ví dụ: build)
+                    # vì is_path_matched luôn so sánh với đường dẫn tương đối.
+                    if stripped_line.startswith('/'):
+                        stripped_line = stripped_line[1:]
+                    # --- END FIX ---
+
+                    # 2. Thêm pattern đã chuẩn hóa (nếu nó không rỗng)
+                    if stripped_line:
                         patterns.add(stripped_line)
+                        
         except Exception as e:
             # We don't use logger here as this might be called before logging is set up
             print(f"Warning: Could not read .gitignore file: {e}")

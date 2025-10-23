@@ -16,12 +16,15 @@ from modules.tree.tree_core import (
 )
 from modules.tree.tree_executor import generate_tree
 # --- END MODIFIED ---
+# --- MODIFIED: Import hằng số mới ---
 from modules.tree.tree_config import (
     CONFIG_FILENAME,
     DEFAULT_MAX_LEVEL_ARG,
     DEFAULT_SHOW_SUBMODULES_ARG,
-    DEFAULT_DIRS_ONLY_ARG
+    DEFAULT_DIRS_ONLY_ARG,
+    DEFAULT_NO_GITIGNORE_ARG
 )
+# --- END MODIFIED ---
 # ---------------------
 
 def handle_init_command(logger: logging.Logger) -> None:
@@ -82,6 +85,16 @@ def main():
     parser.add_argument("-P", "--prune", type=str, help="Comma-separated list of patterns to prune.")
     parser.add_argument("-d", "--dirs-only", nargs='?', const='_ALL_', default=DEFAULT_DIRS_ONLY_ARG, type=str, help="Show directories only.")
     parser.add_argument("-s", "--show-submodules", action='store_true', default=DEFAULT_SHOW_SUBMODULES_ARG, help="Show the contents of submodules.")
+    
+    # --- NEW: Thêm cờ --no-gitignore ---
+    parser.add_argument(
+        "--no-gitignore", 
+        action='store_true', 
+        default=DEFAULT_NO_GITIGNORE_ARG, 
+        help="Do not respect .gitignore files."
+    )
+    # --- END NEW ---
+    
     parser.add_argument("--init", action='store_true', help="Create a sample .treeconfig.ini file and open it.")
     args = parser.parse_args()
 
@@ -104,7 +117,9 @@ def main():
     
     # 4. Load and Merge Configuration (Core logic)
     try:
-        config_params = load_and_merge_config(args, start_dir, logger)
+        # --- MODIFIED: Truyền is_git_repo vào hàm config ---
+        config_params = load_and_merge_config(args, start_dir, logger, is_git_repo)
+        # --- END MODIFIED ---
     except Exception as e:
         logger.error(f"❌ Critical error during config processing: {e}")
         logger.debug("Traceback:", exc_info=True)

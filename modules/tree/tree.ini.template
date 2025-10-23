@@ -16,7 +16,14 @@
 ; Defaults to false. Set to true to enable.
 ; show-submodules = false
 
+;
+; --- NEW: Gitignore ---
+; use-gitignore: Automatically read and apply rules from .gitignore.
+; Defaults to true. Set to false to disable (or use --no-gitignore).
+; use-gitignore = true
 
+
+;
 ; --- FILTERING RULES ---
 
 ; ignore: Completely hide files/directories matching a pattern.
@@ -26,7 +33,7 @@
 ; Example (wildcards):      ignore = *.tmp, *.log
 ; Example (path patterns):  ignore = docs/drafts, src/**/temp
 ;
-; ignore = __pycache__,.venv,venv,node_modules,.git
+; ignore = 
 
 ; prune: Display a directory but do not traverse into it (shows '[...]'). 
 ; Useful for directories with many auto-generated files.
@@ -34,7 +41,7 @@
 ; Example (single names):        prune = dist, build
 ; Example (path with wildcard):  prune = */suttaplex/update
 ;
-; prune = dist,build
+; prune = 
 
 ; dirs-only: Only display subdirectories inside directories matching a pattern.
 ; The entry directory will be marked with '[dirs only]'. 
