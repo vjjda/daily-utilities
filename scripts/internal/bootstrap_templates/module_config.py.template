@@ -1,0 +1,12 @@
+#!/usr/bin/env python3
+# Path: modules/{module_name}/{module_name}_config.py
+
+"""
+Configuration constants for {module_name}.
+"""
+
+import os
+from pathlib import Path
+from typing import Dict, Any
+
+# (Ví dụ: DEFAULT_OUTPUT_DIR = Path.home() / 'Documents' / '{module_name}_output')
