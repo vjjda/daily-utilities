@@ -26,7 +26,7 @@
 ; Example (wildcards):      ignore = *.tmp, *.log
 ; Example (path patterns):  ignore = docs/drafts, src/**/temp
 ;
-; ignore = 
+; ignore = __pycache__,.venv,venv,node_modules,.git
 
 ; prune: Display a directory but do not traverse into it (shows '[...]'). 
 ; Useful for directories with many auto-generated files.
@@ -34,7 +34,7 @@
 ; Example (single names):        prune = dist, build
 ; Example (path with wildcard):  prune = */suttaplex/update
 ;
-; prune = 
+; prune = dist,build
 
 ; dirs-only: Only display subdirectories inside directories matching a pattern.
 ; The entry directory will be marked with '[dirs only]'. 
