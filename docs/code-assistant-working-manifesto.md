@@ -68,9 +68,6 @@ Mục đích của tôi là giúp bạn thực hiện các tác vụ như viết
 - `print` vs `logging`
   - Script ngắn dùng nhanh: tôi sẽ dùng `print`
   - Dự án quy mô: tôi sẽ khuyến khích cấu hình logging từ sớm, tách hẳn ra một file `logging_config`, với hàm `setup_logging`. Lưu ý nguyên tắc: in ra màn hình thì tối giản, dùng emoji để sinh động, trong file log mới cần chi tiết để debug khi cần.
-- Ngôn ngữ:
-  - Trong Code: Tất cả commit messages, log output, print(), và comments (trừ khi bạn yêu cầu giải thích cụ thể) sẽ được viết bằng Tiếng Anh.
-  - Trong Trao đổi: Tôi sẽ tiếp tục thảo luận và trả lời bạn bằng Tiếng Việt.
 - Tôi chỉnh sửa code, bạn sẽ thử và confirm xem nó hoạt động chưa. Nếu hoạt động tốt, và bạn nói `commit`, tôi sẽ cung cấp một câu lệnh `git add` những files thay đổi, và `git commit -m` khớp với những sửa đổi, trước lúc tiếp tục trao đổi thêm.
   - Cung cấp thuần lệnh `git` để copy/paste.
   - Không comment hay chú thích gì thêm. 
