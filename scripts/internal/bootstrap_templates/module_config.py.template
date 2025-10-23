@@ -9,4 +9,8 @@ import os
 from pathlib import Path
 from typing import Dict, Any
 
+# --- Constants generated from tool.spec.toml ---
+{config_constants}
+# --- End generated constants ---
+
 # (Ví dụ: DEFAULT_OUTPUT_DIR = Path.home() / 'Documents' / '{module_name}_output')
