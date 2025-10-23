@@ -1,0 +1,19 @@
+#!/usr/bin/env zsh
+# Path: bin/cdiag
+
+# 1. Find the project root (the directory this script is in, then up one level)
+SCRIPT_PATH="$(readlink -f "$0" 2>/dev/null || realpath "$0" 2>/dev/null || echo "$0")"
+PROJECT_ROOT=$(cd "$(dirname "$SCRIPT_PATH")/.." && pwd)
+VENV_PATH="$PROJECT_ROOT/.venv"
+
+# 2. Activate virtual environment if it exists
+if [ -d "$VENV_PATH" ];
+then
+    source "$VENV_PATH/bin/activate"
+else
+    # Allow running without venv, but log a warning
+    echo "⚠️ Warning: No virtual environment found at $VENV_PATH. Using system Python."
+fi
+
+# 3. Run the main Python script, passing all arguments ($@)
+PYTHONPATH="$PROJECT_ROOT:$PYTHONPATH" python "$PROJECT_ROOT/scripts/clip_diag.py" "$@"
