@@ -42,8 +42,9 @@ def execute_zsh_wrapper_action(
         output_path.parent.mkdir(parents=True, exist_ok=True)
         
         output_path.write_text(final_content, encoding='utf-8')
-        # Hiển thị đường dẫn tương đối cho gọn gàng
-        logger.info(f"✍️  Đã ghi wrapper: {output_path.relative_to(Path.cwd())}")
+        
+        # --- FIX 1: Luôn dùng đường dẫn tuyệt đối (an toàn) ---
+        logger.info(f"✍️  Đã ghi wrapper: {output_path}")
 
         # 3. Cấp quyền thực thi
         os.chmod(output_path, 0o755)
@@ -51,5 +52,9 @@ def execute_zsh_wrapper_action(
         
     except IOError as e:
         logger.error(f"❌ Lỗi I/O khi ghi file: {e}")
+        # --- FIX 2: Ném lỗi lên để entrypoint bắt ---
+        raise
     except Exception as e:
         logger.error(f"❌ Lỗi không xác định khi ghi file: {e}")
+        # --- FIX 2: Ném lỗi lên để entrypoint bắt ---
+        raise
