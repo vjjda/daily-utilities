@@ -9,4 +9,9 @@ import os
 from pathlib import Path
 from typing import Dict, Any
 
+# --- Constants generated from tool.spec.toml ---
+DEFAULT_MODE = "relative"
+DEFAULT_VENV = ".venv"
+# --- End generated constants ---
+
 # (Ví dụ: DEFAULT_OUTPUT_DIR = Path.home() / 'Documents' / 'zsh_wrapper_output')
