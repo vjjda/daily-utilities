@@ -36,17 +36,19 @@ def main(
     script_path_arg: Path = typer.Argument( 
         ..., 
         help="Đường dẫn đến file Python cần wrap. Use '~' for home directory.",
-        exists=True,
+        # exists=True, # <-- Sẽ check thủ công
         file_okay=True,
         dir_okay=False,
-        resolve_path=True,
-        # --- REMOVED: expanduser=True ---
+        # --- FIX: Đã xóa resolve_path=True ---
+        # resolve_path=True,
+        # --- END FIX ---
     ),
     output_arg: Optional[Path] = typer.Option( # <-- Đổi tên biến tạm thời
         None, "-o", "--output", 
         help=f"Đường dẫn để tạo file wrapper Zsh. [Mặc định: {DEFAULT_WRAPPER_DIR}/{{tên_script}}]. Use '~' for home directory.",
-        resolve_path=True,
-        # --- REMOVED: expanduser=True ---
+        # --- FIX: Đã xóa resolve_path=True ---
+        # resolve_path=True,
+        # --- END FIX ---
     ),
     mode: str = typer.Option(
         DEFAULT_MODE, "-m", "--mode", 
@@ -55,11 +57,12 @@ def main(
     root_arg: Optional[Path] = typer.Option( # <-- Đổi tên biến tạm thời
         None, "-r", "--root", 
         help="Chỉ định Project Root. Mặc định: tự động tìm (find_git_root() từ file script). Use '~' for home directory.",
-        exists=True,
+        # exists=True, # <-- Sẽ check thủ công
         file_okay=False,
         dir_okay=True,
-        resolve_path=True,
-        # --- REMOVED: expanduser=True ---
+        # --- FIX: Đã xóa resolve_path=True ---
+        # resolve_path=True,
+        # --- END FIX ---
     ),
     venv: str = typer.Option(
         DEFAULT_VENV, "-v", "--venv", 
@@ -74,17 +77,34 @@ def main(
     Tạo một wrapper Zsh cho một script Python, tự động quản lý venv và PYTHONPATH.
     """
     
-    # --- NEW: Mở rộng `~` thủ công cho tất cả Path ---
+    # --- 1. Setup Logging (sớm) ---
+    logger = setup_logging(script_name="Zrap")
+    logger.debug("Zrap script started.")
+
+    # --- 2. Mở rộng `~` thủ công cho tất cả Path ---
     script_path = script_path_arg.expanduser()
     output = output_arg.expanduser() if output_arg else None
     root = root_arg.expanduser() if root_arg else None
-    # --- END NEW ---
+    # --- END ---
 
-    # 1. Setup Logging
-    logger = setup_logging(script_name="Zrap")
-    logger.debug("Zrap script started.")
+    # --- 3. KIỂM TRA TỒN TẠI (thủ công) ---
+    if not script_path.exists():
+        logger.error(f"❌ Lỗi: File script không tồn tại (sau khi expanduser): {script_path}")
+        raise typer.Exit(code=1)
+    if not script_path.is_file():
+        logger.error(f"❌ Lỗi: Đường dẫn script không phải là file: {script_path}")
+        raise typer.Exit(code=1)
+        
+    if root and not root.exists():
+        logger.error(f"❌ Lỗi: Thư mục root chỉ định không tồn tại (sau khi expanduser): {root}")
+        raise typer.Exit(code=1)
+    if root and not root.is_dir():
+        logger.error(f"❌ Lỗi: Đường dẫn root không phải là thư mục: {root}")
+        raise typer.Exit(code=1)
+    # --- KẾT THÚC KIỂM TRA ---
+
     
-    # --- 2. Xử lý output mặc định + Xác nhận ---
+    # --- 4. Xử lý output mặc định + Xác nhận ---
     final_output_path = output # Sử dụng biến đã expand
     if final_output_path is None:
         try:
@@ -93,35 +113,3 @@ def main(
             logger.warning("⚠️  Output path (-o) not specified.")
             logger.info(f"   Defaulting to: {default_output_path.relative_to(PROJECT_ROOT).as_posix()}")
             logger.info("   (You can use -o <path> to specify a custom name)")
-            if not typer.confirm("   Proceed with this default path?", abort=True): pass 
-            final_output_path = default_output_path
-        except typer.Abort: logger.warning("Operation cancelled by user."); sys.exit(0)
-        except EOFError: logger.warning("\nOperation cancelled by user (EOF)."); sys.exit(1)
-        except KeyboardInterrupt: print("\n\n❌ [Lệnh dừng] Hoạt động của tool đã bị dừng."); sys.exit(1)
-    # --- END ---
-
-    # --- 3. Tạo 'args' object giả lập cho core logic ---
-    args_for_core = argparse.Namespace(
-        script_path=str(script_path), 
-        output=str(final_output_path), # Sử dụng biến đã expand/default 
-        mode=mode,
-        root=str(root) if root else None, # Sử dụng biến đã expand
-        venv=venv,
-        force=force
-    )
-    # --- END ---
-
-    # 4. Execute Core Logic 
-    try:
-        result = process_zsh_wrapper_logic( logger=logger, args=args_for_core )
-        if result: execute_zsh_wrapper_action( logger=logger, result=result )
-        log_success(logger, "Hoàn thành.")
-    except Exception as e:
-        logger.error(f"❌ Đã xảy ra lỗi không mong muốn: {e}")
-        logger.debug("Traceback:", exc_info=True)
-        sys.exit(1)
-
-
-if __name__ == "__main__":
-    try: typer.run(main)
-    except KeyboardInterrupt: print("\n\n❌ [Lệnh dừng] Hoạt động của tool đã bị dừng."); sys.exit(1)

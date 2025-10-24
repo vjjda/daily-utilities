@@ -29,11 +29,12 @@ def main(
     target_directory_arg: Optional[Path] = typer.Argument( # <-- Đổi tên biến tạm thời
         None, 
         help="Directory to scan (default: current working directory, respects .gitignore). Use '~' for home directory.",
-        exists=True,
-        resolve_path=True,
+        # --- FIX: Đã xóa resolve_path=True và exists=True ---
+        # exists=True,
+        # resolve_path=True,
+        # --- END FIX ---
         file_okay=False,
         dir_okay=True,
-        # --- REMOVED: expanduser=True ---
     ),
     extensions: str = typer.Option( DEFAULT_EXTENSIONS_STRING, "-e", "--extensions", help=f"File extensions to scan (default: '{DEFAULT_EXTENSIONS_STRING}')." ),
     ignore: Optional[str] = typer.Option( None, "-I", "--ignore", help="Comma-separated list of additional patterns to ignore." ),
@@ -51,11 +52,21 @@ def main(
     else:
         scan_root = Path.cwd().expanduser() 
     # --- END MODIFIED ---
+
+    # --- NEW: KIỂM TRA TỒN TẠI (thủ công) ---
+    if not scan_root.exists():
+        logger.error(f"❌ Lỗi: Thư mục mục tiêu không tồn tại (sau khi expanduser): {scan_root}")
+        raise typer.Exit(code=1)
+    if not scan_root.is_dir():
+        logger.error(f"❌ Lỗi: Đường dẫn mục tiêu không phải là thư mục: {scan_root}")
+        raise typer.Exit(code=1)
+    # --- END NEW ---
     
     # --- Logic gợi ý Git Root (Không thay đổi) ---
     git_warning_str = ""
     effective_scan_root = scan_root
     if not is_git_repository(scan_root):
+        # ... (logic này giữ nguyên) ...
         suggested_root = find_git_root(scan_root.parent)
         if suggested_root:
             logger.warning(f"⚠️ Current directory '{scan_root.name}/' is not a Git root.")
@@ -85,9 +96,9 @@ def main(
         # 3. Run the core logic
         files_to_fix = process_path_updates(
             logger=logger, project_root=effective_scan_root,
-            # --- MODIFIED: Truyền target_directory_arg đã expand ---
-            target_dir_str=str(target_directory_arg.expanduser()) if target_directory_arg else None,
-            # --- END MODIFIED ---
+            # (Truyền đường dẫn *gốc* (chưa expand) nếu có, 
+            #  vì logic core đã được thiết kế để xử lý 'None')
+            target_dir_str=str(target_directory_arg) if target_directory_arg else None,
             extensions=extensions_to_scan, cli_ignore=cli_ignore_patterns,
             script_file_path=THIS_SCRIPT_PATH, check_mode=check_mode
         )

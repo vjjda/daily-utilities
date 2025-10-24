@@ -34,6 +34,7 @@ app = typer.Typer(
     help="Create a sample .tree.ini file and open it."
 )
 def init_command():
+    # ... (logic này giữ nguyên) ...
     logger = setup_logging(script_name="CTree")
     config_file_path = Path.cwd() / CONFIG_FILENAME
     file_existed = config_file_path.exists()
@@ -67,9 +68,10 @@ def main(
     start_path_arg: Path = typer.Argument( # <-- Đổi tên biến tạm thời
         Path("."), 
         help="Starting path (file or directory). Use '~' for home directory.",
-        exists=True,
-        resolve_path=True,
-        # --- REMOVED: expanduser=True ---
+        # --- FIX: Đã xóa resolve_path=True và exists=True ---
+        # exists=True,
+        # resolve_path=True,
+        # --- END FIX ---
     ),
     level: Optional[int] = typer.Option( None, "-L", "--level", help="Limit the display depth.", min=1 ),
     ignore: Optional[str] = typer.Option( None, "-I", "--ignore", help="Comma-separated list of patterns to ignore." ),
@@ -83,15 +85,22 @@ def main(
     """ Main orchestration function: Parses args, calls config processing, and runs the tree. """
     if ctx.invoked_subcommand: return
 
-    # --- NEW: Mở rộng `~` thủ công ---
+    # --- 1. Setup Logging (sớm) ---
+    logger = setup_logging(script_name="CTree")
+    
+    # --- 2. Mở rộng `~` thủ công ---
     start_path = start_path_arg.expanduser()
     # --- END NEW ---
+    
+    # --- 3. KIỂM TRA TỒN TẠI (thủ công) ---
+    if not start_path.exists():
+        logger.error(f"❌ Lỗi: Đường dẫn bắt đầu không tồn tại (sau khi expanduser): {start_path}")
+        raise typer.Exit(code=1)
+    # --- END NEW ---
 
-    # 1. Setup Logging
-    logger = setup_logging(script_name="CTree")
     logger.debug(f"Received start path: {start_path}")
     
-    # 2. Xây dựng 'args' object giả lập
+    # 4. Xây dựng 'args' object giả lập
     cli_dirs_only = "_ALL_" if all_dirs else dirs_patterns
     args = argparse.Namespace(
         level=level, ignore=ignore, prune=prune, dirs_only=cli_dirs_only,
@@ -99,19 +108,19 @@ def main(
         init=False, start_path=str(start_path) 
     )
 
-    # 3. Process Start Path
+    # 5. Process Start Path
     initial_path: Path = start_path
     start_dir = initial_path.parent if initial_path.is_file() else initial_path
     is_git_repo = is_git_repository(start_dir)
     
-    # 4. Load and Merge Configuration
+    # 6. Load and Merge Configuration
     try: config_params = load_and_merge_config(args, start_dir, logger, is_git_repo)
     except Exception as e:
         logger.error(f"❌ Critical error during config processing: {e}")
         logger.debug("Traceback:", exc_info=True)
         raise typer.Exit(code=1)
 
-    # 5. Print Status Header 
+    # 7. Print Status Header 
     is_truly_full_view = not any(config_params["filter_lists"].values()) and not config_params["using_gitignore"] and config_params["max_level"] is None
     filter_info = "Full view" if is_truly_full_view else "Filtered view"
     level_info = "full depth" if config_params["max_level"] is None else f"depth limit: {config_params['max_level']}"
@@ -120,7 +129,7 @@ def main(
     if is_git_repo: git_info = ", Git project (.gitignore enabled)" if config_params["using_gitignore"] else (", Git project (.gitignore disabled by flag)" if args.no_gitignore else ", Git project")
     print(f"{start_dir.name}/ [{filter_info}, {level_info}{mode_info}{git_info}]")
 
-    # 6. Run Recursive Logic 
+    # 8. Run Recursive Logic 
     counters = {'dirs': 0, 'files': 0}
     generate_tree(
         start_dir, start_dir, counters=counters, max_level=config_params["max_level"],
@@ -129,7 +138,7 @@ def main(
         dirs_only_list=config_params["dirs_only_list"], is_in_dirs_only_zone=config_params["is_in_dirs_only_zone"]
     )
 
-    # 7. Print Final Result 
+    # 9. Print Final Result 
     files_info = "0 files (hidden)" if config_params["global_dirs_only_flag"] and counters['files'] == 0 else f"{counters['files']} files" 
     print(f"\n{counters['dirs']} directories, {files_info}")
     
