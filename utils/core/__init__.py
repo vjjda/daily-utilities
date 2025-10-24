@@ -13,7 +13,7 @@ from utils.core import run_command
 
 import logging
 from pathlib import Path
-from importlib import import_module # Thêm thư viện này
+from importlib import import_module 
 from typing import List, Tuple, Union, Set, Optional
 
 # Type hint for logger
@@ -31,9 +31,15 @@ modules_to_export = [
 
 # Thực hiện import * cho từng module
 for module_name in modules_to_export:
-    # Tương đương với lệnh 'from .<module_name> import *'
-    import_module(f".{module_name}", package=__name__)
+    # 1. Import module object (relative import)
+    module = import_module(f".{module_name}", package=__name__)
     
-# NOTE: Kỹ thuật này tự động re-export tất cả các tên được định nghĩa trong 
-# biến __all__ của mỗi submodule (process, git, parsing, filter).
+    # 2. Check for __all__ and explicitly add names to the current module's namespace (globals)
+    if hasattr(module, '__all__'):
+        for name in module.__all__:
+            # Lấy đối tượng (hàm, biến) từ module con
+            obj = getattr(module, name)
+            # Gán đối tượng đó vào namespace của __init__.py (globals())
+            globals()[name] = obj 
+            
 # ----------------------------------------------------------------------
