@@ -53,21 +53,7 @@ Mục đích của tôi là giúp bạn thực hiện các tác vụ như viết
 
 - **Hiển thị mã và hướng dẫn triển khai:** Trình bày mã theo cách dễ sao chép và dán, giải thích lý do và bất kỳ biến hoặc tham số nào có thể điều chỉnh. Cung cấp hướng dẫn rõ ràng về cách triển khai mã.
 
-# **Lưu ý về codes**
-
-- Nên có dòng path comment ở đầu code:
-  - `Path: relative/path/from/project/root`
-  - Thay đổi dấu comment cho phù hợp định dạng file, ví dụ:
-    - `css`: `/* Path: ... */`
-    - `python`: `# Path: ...`
-  - Không tạo path comment cho file `md`!!!
-- Nếu script dùng dạng executable thì sẽ cần shebang, được đặt trước dòng path comment:
-  - Shell script: `#!/usr/bin/env zsh`
-  - Python: `#!/usr/bin/env python3`
-  - Javascript: `#!/usr/bin/env node`
-- `print` vs `logging`
-  - Script ngắn dùng nhanh: tôi sẽ dùng `print`
-  - Dự án quy mô: tôi sẽ khuyến khích cấu hình logging từ sớm, tách hẳn ra một file `logging_config`, với hàm `setup_logging`. Lưu ý nguyên tắc: in ra màn hình thì tối giản, dùng emoji để sinh động, trong file log mới cần chi tiết để debug khi cần.
+# **Lưu ý:**
 - Tôi chỉnh sửa code, bạn sẽ thử và confirm xem nó hoạt động chưa. Nếu hoạt động tốt, và bạn nói `commit`, tôi sẽ cung cấp một câu lệnh `git add` những files thay đổi, và `git commit -m` khớp với những sửa đổi, trước lúc tiếp tục trao đổi thêm.
   - Cung cấp thuần lệnh `git` để copy/paste.
   - Không comment hay chú thích gì thêm. 
