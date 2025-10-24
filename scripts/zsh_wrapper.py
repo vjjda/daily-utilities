@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Path: scripts/zsh_wrapper.py
+# Path: scripts/tree.py
 
 import sys
 import argparse 
@@ -9,107 +9,139 @@ from typing import Optional
 
 import typer
 
-# --- Thêm PROJECT_ROOT vào sys.path để import utils/modules ---
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-sys.path.append(str(PROJECT_ROOT))
+# Common utilities
+from utils.logging_config import setup_logging, log_success
+from utils.core import run_command, is_git_repository
 
-try:
-    from utils.logging_config import setup_logging, log_success
-    
-    from modules.zsh_wrapper import (
-        DEFAULT_MODE, 
-        DEFAULT_VENV, 
-        DEFAULT_WRAPPER_DIR,
-        process_zsh_wrapper_logic,
-        execute_zsh_wrapper_action
-    )
-    
-except ImportError as e:
-    print(f"Lỗi: Không thể import utils/modules: {e}", file=sys.stderr)
-    sys.exit(1)
+# Module Imports
+from modules.tree import (
+    CONFIG_TEMPLATE, 
+    load_and_merge_config,
+    generate_tree,
+    CONFIG_FILENAME
+)
 
-# --- CONSTANTS ---
-THIS_SCRIPT_PATH = Path(__file__).resolve()
+# Khởi tạo Typer App
+app = typer.Typer(
+    help="A smart directory tree generator with support for a .treeconfig.ini file.",
+    add_completion=False,
+    context_settings={"help_option_names": ["--help", "-h"]}
+)
 
-
-def main(
-    script_path_arg: Path = typer.Argument( 
-        ..., 
-        help="Đường dẫn đến file Python cần wrap. Use '~' for home directory.",
-        # exists=True, # <-- Sẽ check thủ công
-        file_okay=True,
-        dir_okay=False,
-        # --- FIX: Đã xóa resolve_path=True ---
-        # resolve_path=True,
-        # --- END FIX ---
-    ),
-    output_arg: Optional[Path] = typer.Option( # <-- Đổi tên biến tạm thời
-        None, "-o", "--output", 
-        help=f"Đường dẫn để tạo file wrapper Zsh. [Mặc định: {DEFAULT_WRAPPER_DIR}/{{tên_script}}]. Use '~' for home directory.",
-        # --- FIX: Đã xóa resolve_path=True ---
-        # resolve_path=True,
-        # --- END FIX ---
-    ),
-    mode: str = typer.Option(
-        DEFAULT_MODE, "-m", "--mode", 
-        help="Loại wrapper: 'relative' (project di chuyển được) hoặc 'absolute' (wrapper di chuyển được)."
-    ),
-    root_arg: Optional[Path] = typer.Option( # <-- Đổi tên biến tạm thời
-        None, "-r", "--root", 
-        help="Chỉ định Project Root. Mặc định: tự động tìm (find_git_root() từ file script). Use '~' for home directory.",
-        # exists=True, # <-- Sẽ check thủ công
-        file_okay=False,
-        dir_okay=True,
-        # --- FIX: Đã xóa resolve_path=True ---
-        # resolve_path=True,
-        # --- END FIX ---
-    ),
-    venv: str = typer.Option(
-        DEFAULT_VENV, "-v", "--venv", 
-        help="Tên thư mục virtual environment."
-    ),
-    force: bool = typer.Option(
-        False, "-f", "--force", 
-        help="Ghi đè file output nếu đã tồn tại."
-    )
-):
-    """
-    Tạo một wrapper Zsh cho một script Python, tự động quản lý venv và PYTHONPATH.
-    """
-    
-    # --- 1. Setup Logging (sớm) ---
-    logger = setup_logging(script_name="Zrap")
-    logger.debug("Zrap script started.")
-
-    # --- 2. Mở rộng `~` thủ công cho tất cả Path ---
-    script_path = script_path_arg.expanduser()
-    output = output_arg.expanduser() if output_arg else None
-    root = root_arg.expanduser() if root_arg else None
-    # --- END ---
-
-    # --- 3. KIỂM TRA TỒN TẠI (thủ công) ---
-    if not script_path.exists():
-        logger.error(f"❌ Lỗi: File script không tồn tại (sau khi expanduser): {script_path}")
-        raise typer.Exit(code=1)
-    if not script_path.is_file():
-        logger.error(f"❌ Lỗi: Đường dẫn script không phải là file: {script_path}")
-        raise typer.Exit(code=1)
-        
-    if root and not root.exists():
-        logger.error(f"❌ Lỗi: Thư mục root chỉ định không tồn tại (sau khi expanduser): {root}")
-        raise typer.Exit(code=1)
-    if root and not root.is_dir():
-        logger.error(f"❌ Lỗi: Đường dẫn root không phải là thư mục: {root}")
-        raise typer.Exit(code=1)
-    # --- KẾT THÚC KIỂM TRA ---
-
-    
-    # --- 4. Xử lý output mặc định + Xác nhận ---
-    final_output_path = output # Sử dụng biến đã expand
-    if final_output_path is None:
+# Command 'init' (Không thay đổi)
+@app.command(
+    name="init",
+    help="Create a sample .tree.ini file and open it."
+)
+def init_command():
+    # ... (logic này giữ nguyên) ...
+    logger = setup_logging(script_name="CTree")
+    config_file_path = Path.cwd() / CONFIG_FILENAME
+    file_existed = config_file_path.exists()
+    should_write = False
+    if file_existed:
+        should_write = typer.confirm(f"'{CONFIG_FILENAME}' already exists. Overwrite?", abort=True)
+        logger.debug(f"User chose to overwrite '{CONFIG_FILENAME}'.")
+    else:
+        should_write = True
+        logger.debug(f"Creating new '{CONFIG_FILENAME}'.")
+    if should_write:
         try:
-            script_name_without_ext = script_path.stem
-            default_output_path = PROJECT_ROOT / DEFAULT_WRAPPER_DIR / script_name_without_ext
-            logger.warning("⚠️  Output path (-o) not specified.")
-            logger.info(f"   Defaulting to: {default_output_path.relative_to(PROJECT_ROOT).as_posix()}")
-            logger.info("   (You can use -o <path> to specify a custom name)")
+            with open(config_file_path, 'w', encoding='utf-8') as f: f.write(CONFIG_TEMPLATE)
+            log_msg = f"Successfully created '{CONFIG_FILENAME}'." if not file_existed else f"Successfully overwrote '{CONFIG_FILENAME}'."
+            log_success(logger, log_msg)
+        except IOError as e:
+            logger.error(f"❌ Failed to write file '{config_file_path}': {e}")
+            raise typer.Exit(code=1)
+    try:
+        logger.info(f"Opening '{config_file_path.name}' in default editor...")
+        typer.launch(str(config_file_path))
+    except Exception as e:
+        logger.error(f"❌ An unexpected error occurred while trying to open the file: {e}")
+        logger.warning(f"⚠️ Could not automatically open file. Please open it manually.")
+
+
+# Command chính (mặc định)
+@app.callback(invoke_without_command=True)
+def main(
+    ctx: typer.Context,
+    start_path_arg: Path = typer.Argument( # <-- Đổi tên biến tạm thời
+        Path("."), 
+        help="Starting path (file or directory). Use '~' for home directory.",
+        # --- FIX: Đã xóa resolve_path=True và exists=True ---
+        # exists=True,
+        # resolve_path=True,
+        # --- END FIX ---
+    ),
+    level: Optional[int] = typer.Option( None, "-L", "--level", help="Limit the display depth.", min=1 ),
+    ignore: Optional[str] = typer.Option( None, "-I", "--ignore", help="Comma-separated list of patterns to ignore." ),
+    prune: Optional[str] = typer.Option( None, "-P", "--prune", help="Comma-separated list of patterns to prune." ),
+    all_dirs: bool = typer.Option( False, "-d", "--dirs-only", help="Show directories only for the entire tree." ),
+    dirs_patterns: Optional[str] = typer.Option( None, "--dirs-patterns", help="Show sub-directories only for specific patterns (e.g., 'assets')." ),
+    show_submodules: bool = typer.Option( False, "-s", "--show-submodules", help="Show the contents of submodules." ),
+    no_gitignore: bool = typer.Option( False, "--no-gitignore", help="Do not respect .gitignore files." ),
+    full_view: bool = typer.Option( False, "-f", "--full-view", help="Bypass all filters (.gitignore, rules, level) and show all files." )
+):
+    """ Main orchestration function: Parses args, calls config processing, and runs the tree. """
+    if ctx.invoked_subcommand: return
+
+    # --- 1. Setup Logging (sớm) ---
+    logger = setup_logging(script_name="CTree")
+    
+    # --- 2. Mở rộng `~` thủ công ---
+    start_path = start_path_arg.expanduser()
+    # --- END NEW ---
+    
+    # --- 3. KIỂM TRA TỒN TẠI (thủ công) ---
+    if not start_path.exists():
+        logger.error(f"❌ Lỗi: Đường dẫn bắt đầu không tồn tại (sau khi expanduser): {start_path}")
+        raise typer.Exit(code=1)
+    # --- END NEW ---
+
+    logger.debug(f"Received start path: {start_path}")
+    
+    # 4. Xây dựng 'args' object giả lập
+    cli_dirs_only = "_ALL_" if all_dirs else dirs_patterns
+    args = argparse.Namespace(
+        level=level, ignore=ignore, prune=prune, dirs_only=cli_dirs_only,
+        show_submodules=show_submodules, no_gitignore=no_gitignore, full_view=full_view,
+        init=False, start_path=str(start_path) 
+    )
+
+    # 5. Process Start Path
+    initial_path: Path = start_path
+    start_dir = initial_path.parent if initial_path.is_file() else initial_path
+    is_git_repo = is_git_repository(start_dir)
+    
+    # 6. Load and Merge Configuration
+    try: config_params = load_and_merge_config(args, start_dir, logger, is_git_repo)
+    except Exception as e:
+        logger.error(f"❌ Critical error during config processing: {e}")
+        logger.debug("Traceback:", exc_info=True)
+        raise typer.Exit(code=1)
+
+    # 7. Print Status Header 
+    is_truly_full_view = not any(config_params["filter_lists"].values()) and not config_params["using_gitignore"] and config_params["max_level"] is None
+    filter_info = "Full view" if is_truly_full_view else "Filtered view"
+    level_info = "full depth" if config_params["max_level"] is None else f"depth limit: {config_params['max_level']}"
+    mode_info = ", directories only" if config_params["global_dirs_only_flag"] else ""
+    git_info = ""
+    if is_git_repo: git_info = ", Git project (.gitignore enabled)" if config_params["using_gitignore"] else (", Git project (.gitignore disabled by flag)" if args.no_gitignore else ", Git project")
+    print(f"{start_dir.name}/ [{filter_info}, {level_info}{mode_info}{git_info}]")
+
+    # 8. Run Recursive Logic 
+    counters = {'dirs': 0, 'files': 0}
+    generate_tree(
+        start_dir, start_dir, counters=counters, max_level=config_params["max_level"],
+        ignore_list=config_params["ignore_list"], submodules=config_params["submodules"],
+        prune_list=config_params["prune_list"], gitignore_spec=config_params["gitignore_spec"],
+        dirs_only_list=config_params["dirs_only_list"], is_in_dirs_only_zone=config_params["is_in_dirs_only_zone"]
+    )
+
+    # 9. Print Final Result 
+    files_info = "0 files (hidden)" if config_params["global_dirs_only_flag"] and counters['files'] == 0 else f"{counters['files']} files" 
+    print(f"\n{counters['dirs']} directories, {files_info}")
+    
+if __name__ == "__main__":
+    try: app()
+    except KeyboardInterrupt: print("\n\n❌ [Stop Command] Stop generating tree."); sys.exit(1)
