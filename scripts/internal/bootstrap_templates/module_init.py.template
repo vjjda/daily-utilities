@@ -43,7 +43,9 @@ for module_name in modules_to_export:
         
     except ImportError as e:
         # Handle cases where a submodule might fail to import
-        print(f"Warning: Could not import symbols from {module_name}: {e}")
+        # --- MODIFIED: Escaped braces {{e}} ---
+        print(f"Warning: Could not import symbols from {module_name}: {{e}}")
+        # --- END MODIFIED ---
 
 # Clean up temporary variables
 del Path, import_module, List, current_dir, modules_to_export, module_name

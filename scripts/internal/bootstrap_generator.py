@@ -2,9 +2,6 @@
 
 """
 Bộ não tạo code cho bootstrap_tool.py.
-
-Chịu trách nhiệm load template từ thư mục /bootstrap_templates/
-và điền dữ liệu từ config TOML vào.
 (Đã refactor cho Typer và SRP)
 """
 
@@ -12,16 +9,14 @@ import logging
 from pathlib import Path
 from typing import Dict, Any, List
 
-# Đường dẫn đến thư mục chứa các file .template
+# (Các import và hằng số giữ nguyên)
 TEMPLATE_DIR = Path(__file__).parent / "bootstrap_templates"
-# Ánh xạ type TOML sang Python type hint
 TYPE_HINT_MAP = {"int": "int", "str": "str", "bool": "bool", "Path": "Path"}
-# Các type cần import từ 'typing'
 TYPING_IMPORTS = {"Optional", "List"}
 
 
 def _load_template(template_name: str) -> str:
-    """Helper: Đọc nội dung từ một file template."""
+    # (Hàm này giữ nguyên)
     try:
         template_path = TEMPLATE_DIR / template_name
         return template_path.read_text(encoding='utf-8')
@@ -32,8 +27,7 @@ def _load_template(template_name: str) -> str:
         logging.error(f"Lỗi khi đọc template '{template_name}': {e}")
         raise
 
-# --- Helper functions (Đã viết lại) ---
-
+# --- (Các hàm _get_cli_args, _build_config..., _build_typer_app_code... giữ nguyên) ---
 def _get_cli_args(config: Dict[str, Any]) -> List[Dict[str, Any]]:
     """Helper: Lấy danh sách [[cli.args]] từ config."""
     return config.get('cli', {}).get('args', [])
@@ -49,7 +43,6 @@ def _build_config_constants(config: Dict[str, Any]) -> str:
     for arg in default_args:
         name = arg['name']
         const_name = f"DEFAULT_{name.upper()}"
-        # repr() tự động thêm dấu ngoặc kép cho chuỗi, giữ nguyên số
         const_value = repr(arg['default'])
         code_lines.append(f"{const_name} = {const_value}")
             
@@ -59,12 +52,12 @@ def _build_config_all_constants(config: Dict[str, Any]) -> str:
     """Tạo danh sách __all__ cho file config."""
     default_args = [arg for arg in _get_cli_args(config) if 'default' in arg]
     if not default_args:
-        return "" # Trả về rỗng
+        return "" 
         
     const_names = []
     for arg in default_args:
         const_name = f"DEFAULT_{arg['name'].upper()}"
-        const_names.append(f'"{const_name}"') # Thêm dấu ngoặc kép
+        const_names.append(f'"{const_name}"') 
             
     return ", ".join(const_names)
 
@@ -108,8 +101,13 @@ def _build_typer_path_expands(config: Dict[str, Any]) -> str:
         
     for arg in path_args:
         name = arg['name']
-        # Tạo biến mới với suffix _expanded
-        code_lines.append(f"    {name}_expanded = {name}.expanduser() if {name} else None")
+        # --- MODIFIED: Thêm kiểm tra 'is_argument' và 'default' ---
+        # Nếu là argument bắt buộc (không có default), không cần 'if {name} else None'
+        if arg.get('is_argument') and 'default' not in arg:
+             code_lines.append(f"    {name}_expanded = {name}.expanduser()")
+        else:
+             code_lines.append(f"    {name}_expanded = {name}.expanduser() if {name} else None")
+        # --- END MODIFIED ---
             
     return "\n".join(code_lines)
 
@@ -122,7 +120,6 @@ def _build_typer_args_pass_to_core(config: Dict[str, Any]) -> str:
         
     for arg in args:
         name = arg['name']
-        # Nếu là Path, truyền biến _expanded
         if arg.get('type') == 'Path':
             code_lines.append(f"            {name}={name}_expanded,")
         else:
@@ -130,8 +127,10 @@ def _build_typer_args_pass_to_core(config: Dict[str, Any]) -> str:
             
     return "\n".join(code_lines)
 
+
+# --- MODIFIED: Hàm này đã được sửa logic ---
 def _build_typer_main_function_signature(config: Dict[str, Any]) -> str:
-    """Tạo chữ ký hàm def main(...) cho Typer."""
+    """TQuery chữ ký hàm def main(...) cho Typer."""
     code_lines = [
         f"def main(",
         f"    ctx: typer.Context,"
@@ -144,19 +143,26 @@ def _build_typer_main_function_signature(config: Dict[str, Any]) -> str:
         py_type = TYPE_HINT_MAP.get(arg['type'], 'str')
         help_str = arg.get('help', f"The {name} argument.")
         
-        # Xử lý default và Optional
+        # --- NEW: Logic xử lý default và type hint (đã sửa) ---
+        default_const = ""
+        type_hint = py_type # e.g., "Path"
+
         if 'default' in arg:
+            # Có default: Dùng hằng số DEFAULT_...
             default_const = f"DEFAULT_{name.upper()}"
-            type_hint = py_type # "int"
         else:
-            # Không có default (trừ bool)
+            # Không có default
             if py_type == 'bool':
-                # Cờ bool không có default là False
-                default_const = "False"
-                type_hint = "bool"
+                default_const = "False" # Cờ bool mặc định là False
             else:
-                default_const = "None"
-                type_hint = f"Optional[{py_type}]"
+                if arg.get('is_argument', False):
+                    # Argument bắt buộc: Dùng ... (Ellipsis)
+                    default_const = "..." 
+                else:
+                    # Option tùy chọn: Dùng None và Optional[]
+                    default_const = "None" 
+                    type_hint = f"Optional[{type_hint}]"
+        # --- END NEW LOGIC ---
         
         # Xử lý Argument vs Option
         if arg.get('is_argument', False):
@@ -170,24 +176,21 @@ def _build_typer_main_function_signature(config: Dict[str, Any]) -> str:
             code_lines.append(f"    {name}: {type_hint} = typer.Option(")
             code_lines.append(f"        {default_const},")
             
-            # Thêm cờ ngắn (ví dụ: "-L")
             if 'short' in arg:
                 code_lines.append(f"        \"{arg['short']}\",")
                 
-            # Thêm cờ dài (ví dụ: "--level")
             code_lines.append(f"        \"--{name}\",")
             code_lines.append(f"        help=\"{help_str}\"")
             code_lines.append(f"    ),")
 
     code_lines.append(f"):")
     return "\n".join(code_lines)
+# --- END MODIFIED ---
 
 
-# --- CÁC HÀM GENERATE CHÍNH ---
-
+# --- (Các hàm generate_... còn lại giữ nguyên) ---
 def generate_bin_wrapper(config: Dict[str, Any]) -> str:
     """Tạo nội dung cho file wrapper Zsh trong /bin/"""
-    # (Không thay đổi)
     template = _load_template("bin_wrapper.zsh.template")
     return template.format(
         tool_name=config['meta']['tool_name'],
@@ -198,7 +201,6 @@ def generate_script_entrypoint(config: Dict[str, Any]) -> str:
     """Tạo nội dung cho file entrypoint Python trong /scripts/"""
     template = _load_template("script_entrypoint.py.template")
     
-    # (Gọi các hàm generator mới)
     config_imports_code = _build_config_imports(config['module_name'], config)
     typer_app_code = _build_typer_app_code(config)
     typer_main_sig = _build_typer_main_function_signature(config)
@@ -222,7 +224,7 @@ def generate_module_file(config: Dict[str, Any], file_type: str) -> str:
         "config": "module_config.py.template",
         "core": "module_core.py.template",
         "executor": "module_executor.py.template",
-        "loader": "module_loader.py.template", # (Mới)
+        "loader": "module_loader.py.template", 
     }
     template_name = template_name_map[file_type]
     template = _load_template(template_name)
@@ -244,7 +246,6 @@ def generate_module_init_file(config: Dict[str, Any]) -> str:
 
 def generate_doc_file(config: Dict[str, Any]) -> str:
     """Tạo file tài liệu Markdown (tùy chọn)"""
-    # (Không thay đổi)
     template = _load_template("doc_file.md.template")
     
     return template.format(

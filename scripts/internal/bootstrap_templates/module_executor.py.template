@@ -23,9 +23,11 @@ def execute_{module_name}_action(logger: logging.Logger, result: Dict[str, Any])
     # (TODO: Thêm logic thực thi ở đây)
     # (Đây là ví dụ in kết quả)
     if result.get('status') == 'ok':
-        data = result.get('data', {{}})
+        data = result.get('data', {{}}) # (Escaped braces)
         for key, value in data.items():
-            logger.info(f"   -> {key}: {value}")
+            # --- MODIFIED: Escaped f-string braces ---
+            logger.info(f"   -> {{key}}: {{value}}")
+            # --- END MODIFIED ---
     else:
         logger.error("Core logic failed, executor aborted.")
     
