@@ -2,21 +2,21 @@
 # Path: scripts/check_path.py
 
 import sys
-import argparse # (Vẫn cần thiết cho logic core)
+import argparse 
 import logging
 from pathlib import Path
-from typing import List, Optional # <-- Thêm Optional
+from typing import List, Optional
 import shlex
 
-# --- NEW: Import Typer ---
+# --- MODIFIED: Import Typer trực tiếp ---
 import typer
-# --- END NEW ---
+# --- END MODIFIED ---
 
 # Common utilities
 from utils.logging_config import setup_logging
 from utils.core import parse_comma_list, is_git_repository, find_git_root
 
-# Module Imports (từ gateway, không đổi)
+# Module Imports
 from modules.path_checker import (
     process_path_updates,
     handle_results,
@@ -26,23 +26,18 @@ from modules.path_checker import (
 # --- CONSTANTS ---
 THIS_SCRIPT_PATH = Path(__file__).resolve()
 
-# --- NEW: Khởi tạo Typer App ---
-app = typer.Typer(
-    help="Check for (and optionally fix) '# Path:' comments in source files.",
-    add_completion=False,
-    context_settings={"help_option_names": ["--help", "-h"]}
-)
-# --- END NEW ---
+# --- REMOVED: Typer App definition ---
+# (Đã xóa app = typer.Typer(...))
+# --- END REMOVED ---
 
-# --- MODIFIED: Chuyển main thành Typer callback ---
-@app.callback(invoke_without_command=True)
+# --- MODIFIED: Chuyển main thành hàm bình thường, không callback ---
 def main(
     target_directory: Optional[Path] = typer.Argument(
         None, 
         help="Directory to scan (default: current working directory, respects .gitignore).",
         exists=True,
         resolve_path=True,
-        file_okay=False, # Chỉ chấp nhận thư mục
+        file_okay=False,
         dir_okay=True
     ),
     extensions: str = typer.Option(
@@ -62,24 +57,20 @@ def main(
     )
 ):
     """
-    Main orchestration function.
-    Parses args, calls core analysis, and calls executor to handle results.
+    Check for (and optionally fix) '# Path:' comments in source files.
     """
     
     # 1. Setup Logging
     logger = setup_logging(script_name="CPath")
     logger.debug("CPath script started.")
 
-    # --- Xác định thư mục gốc ---
-    # (Logic này được đơn giản hóa vì Typer đã kiểm tra exists/resolve)
+    # --- Xác định thư mục gốc (Logic không đổi) ---
     if target_directory:
         scan_root = target_directory
     else:
         scan_root = Path.cwd()
     
-    # (Không cần kiểm tra scan_root.exists() nữa)
-
-    # --- Logic gợi ý Git Root (Không thay đổi) ---
+    # --- Logic gợi ý Git Root (Logic không đổi) ---
     git_warning_str = ""
     effective_scan_root = scan_root
     
@@ -105,11 +96,9 @@ def main(
     
     # --- END Logic gợi ý Git Root ---
 
-    # --- MODIFIED: Sử dụng biến 'fix' từ Typer ---
     check_mode = not fix
-    # --- END MODIFIED ---
 
-    # --- Xây dựng lệnh "fix" (Không thay đổi) ---
+    # --- Xây dựng lệnh "fix" (Logic không đổi) ---
     original_args = sys.argv[1:]
     filtered_args = []
     for arg in original_args:
@@ -118,26 +107,23 @@ def main(
     filtered_args.append('--fix')
     fix_command_str = "cpath " + " ".join(filtered_args)
 
-    # --- MODIFIED: Sử dụng biến 'extensions' và 'ignore' từ Typer ---
+    # --- Chuẩn bị args cho core (Logic không đổi) ---
     extensions_to_scan = [ext.strip() for ext in extensions.split(',') if ext.strip()]
     cli_ignore_patterns = parse_comma_list(ignore)
-    # --- END MODIFIED ---
 
     try:
-        # 3. Run the core logic
+        # 3. Run the core logic (Logic không đổi)
         files_to_fix = process_path_updates(
             logger=logger,
             project_root=effective_scan_root,
-            # --- MODIFIED: Truyền đường dẫn (hoặc None) ---
             target_dir_str=str(target_directory) if target_directory else None,
-            # --- END MODIFIED ---
             extensions=extensions_to_scan,
             cli_ignore=cli_ignore_patterns,
             script_file_path=THIS_SCRIPT_PATH,
             check_mode=check_mode
         )
 
-        # 4. Handle Results (Không thay đổi)
+        # 4. Handle Results (Logic không đổi)
         handle_results(
             logger=logger,
             files_to_fix=files_to_fix,
@@ -155,8 +141,8 @@ def main(
 
 if __name__ == "__main__":
     try:
-        # --- MODIFIED: Chạy Typer app ---
-        app()
+        # --- MODIFIED: Chạy typer.run(main) ---
+        typer.run(main)
         # --- END MODIFIED ---
     except KeyboardInterrupt:
         print("\n\n❌ [Stop Command] Path checking stopped.")
