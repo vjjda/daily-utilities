@@ -16,11 +16,11 @@
 
   // 3. Xử lý các lỗi liên quan đến Dynamic Import và Globals()
 
-  // Giảm cảnh báo/lỗi False Positive (Pylance không hiểu logic globals())
-  "reportUnknownMemberType": "warning",
 
   // Tắt cảnh báo về các biến được thêm vào globals() nhưng không được sử dụng
   // (Vì chúng được sử dụng qua cơ chế re-export của gateway)
+  "reportUnknownArgumentType": "none", // Lỗi khi dùng trong .join(), .union()
+  "reportUnknownMemberType": "none", // Lỗi khi gọi .append(), .add()
   "reportUnusedImport": "none",
   "reportUnsupportedDunderAll": "none", // Tắt cảnh báo này cho toàn bộ dự án
   "reportPossiblyUnboundVariable": "none", // <--- THÊM DÒNG NÀY
