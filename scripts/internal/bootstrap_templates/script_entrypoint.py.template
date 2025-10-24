@@ -16,7 +16,7 @@ try:
     from utils.logging_config import setup_logging, log_success
     
     # --- CONFIG DEFAULTS ---
-{config_imports}
+    {config_imports}
     # --- END CONFIG DEFAULTS ---
     
     # --- MODULE IMPORTS (SRP) ---
