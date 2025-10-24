@@ -3,7 +3,7 @@
 from pathlib import Path
 import logging 
 import configparser
-import argparse
+import argparse # <-- Vẫn giữ để type hint cho args object
 from typing import Set, Optional, Dict, Any 
 try:
     import pathspec
@@ -34,12 +34,13 @@ def load_and_merge_config(
     """
     
     # 1. Check for Full View Override
+    # (Logic này không đổi, cờ True sẽ override mọi thứ)
     if args.full_view:
         logger.info("⚡ Full View mode enabled. Bypassing all filters and limits.")
         return {
             "max_level": None,
             "ignore_list": set(),
-            "submodules": set(),  # <-- MODIFIED: Trả về Set[Path] rỗng
+            "submodules": set(),
             "prune_list": set(),
             "dirs_only_list": set(),
             "is_in_dirs_only_zone": False,
@@ -50,7 +51,7 @@ def load_and_merge_config(
                 "ignore": set(),
                 "prune": set(),
                 "dirs_only": set(),
-                "submodules": set() # <-- Set[str] rỗng cho header
+                "submodules": set()
             }
         }
 
@@ -79,22 +80,31 @@ def load_and_merge_config(
         config.add_section(CONFIG_SECTION_NAME)
         logger.debug(f"Added empty '{CONFIG_SECTION_NAME}' section for safe fallback.")
 
-    # 3. Merge Configs (CLI > File > Default)
+    # --- 3. Merge Configs (CLI > File > Default) ---
     
-    # Level (Không thay đổi)
+    # Level (Logic không đổi)
     level_from_config_file = config.getint(CONFIG_SECTION_NAME, 'level', fallback=DEFAULT_MAX_LEVEL)
     final_level = args.level if args.level is not None else level_from_config_file
     
-    # Submodules (Không thay đổi logic)
-    show_submodules = args.show_submodules if args.show_submodules is not None else \
+    # --- MODIFIED: Submodules ---
+    # Logic cũ: args.show_submodules is not None (chờ (None | True))
+    # Logic mới: Typer trả về (False | True).
+    # Nếu args.show_submodules là True (CLI flag) => Dùng True
+    # Nếu args.show_submodules là False (Default) => Dùng config
+    show_submodules = args.show_submodules if args.show_submodules else \
                       config.getboolean(CONFIG_SECTION_NAME, 'show-submodules', fallback=FALLBACK_SHOW_SUBMODULES)
+    # --- END MODIFIED ---
 
-    # Gitignore Logic (Không thay đổi)
+    # --- MODIFIED: Gitignore Logic ---
+    # (Logic này đã đúng, cờ True sẽ override)
     use_gitignore_from_config = config.getboolean(
         CONFIG_SECTION_NAME, 'use-gitignore', 
         fallback=FALLBACK_USE_GITIGNORE
     )
+    # Nếu args.no_gitignore là True => final là False
+    # Nếu args.no_gitignore là False (Default) => final là config
     final_use_gitignore = False if args.no_gitignore else use_gitignore_from_config
+    # --- END MODIFIED ---
     
     gitignore_spec: Optional['pathspec.PathSpec'] = None
     if is_git_repo and final_use_gitignore:
@@ -115,7 +125,7 @@ def load_and_merge_config(
     prune_file = parse_comma_list(config.get(CONFIG_SECTION_NAME, 'prune', fallback=None))
     final_prune_list = DEFAULT_PRUNE.union(prune_file).union(prune_cli)
 
-    # Dirs Only List (Không thay đổi)
+    # Dirs Only List (Logic không đổi)
     dirs_only_cli = args.dirs_only
     dirs_only_file = config.get(CONFIG_SECTION_NAME, 'dirs-only', fallback=None)
     final_dirs_only_mode = dirs_only_cli if dirs_only_cli is not None else dirs_only_file
@@ -126,38 +136,34 @@ def load_and_merge_config(
         dirs_only_list_custom = parse_comma_list(final_dirs_only_mode)
     final_dirs_only_list = DEFAULT_DIRS_ONLY_LOGIC.union(dirs_only_list_custom)
     
-    # --- MODIFIED: Calculate Submodule Paths (Set[Path]) vs Names (Set[str]) ---
+    # Submodule Paths (Không thay đổi)
     submodule_paths: Set[Path] = set()
     submodule_names: Set[str] = set()
     if not show_submodules: 
-        # Lấy Set[Path] (đã resolve)
         submodule_paths = get_submodule_paths(start_dir, logger=logger)
-        # Lấy Set[str] (chỉ tên)
         submodule_names = {p.name for p in submodule_paths}
-    # --- END MODIFIED ---
 
-    # --- 4. Return a dict of processed settings ---
+    # 4. Return a dict (Không thay đổi)
     return {
         "max_level": final_level,
         "ignore_list": final_ignore_list,
-        "submodules": submodule_paths, # <-- MODIFIED: Truyền Set[Path] cho logic
+        "submodules": submodule_paths,
         "prune_list": final_prune_list,
         "dirs_only_list": final_dirs_only_list,
         "is_in_dirs_only_zone": global_dirs_only,
         "gitignore_spec": gitignore_spec,
         "using_gitignore": is_git_repo and final_use_gitignore and (gitignore_spec is not None),
-        
         "global_dirs_only_flag": global_dirs_only,
         "filter_lists": {
             "ignore": final_ignore_list,
             "prune": final_prune_list,
             "dirs_only": final_dirs_only_list,
-            "submodules": submodule_names # <-- MODIFIED: Truyền Set[str] cho header
+            "submodules": submodule_names
         }
     }
 
+
 # --- CONFIG TEMPLATE CONTENT (Không thay đổi) ---
-# ...
 try:
     _CURRENT_DIR = Path(__file__).parent
     _TEMPLATE_PATH = _CURRENT_DIR / "tree.ini.template"

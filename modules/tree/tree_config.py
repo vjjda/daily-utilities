@@ -7,22 +7,17 @@ Configuration constants for the Tree (ctree) module.
 
 from typing import Set, Optional
 
-# --- NEW: __all__ definition ---
+# --- MODIFIED: __all__ definition ---
 __all__ = [
     # Logic Fallbacks
     "DEFAULT_IGNORE", "DEFAULT_PRUNE", "DEFAULT_DIRS_ONLY_LOGIC",
     "FALLBACK_SHOW_SUBMODULES", "DEFAULT_MAX_LEVEL",
     "FALLBACK_USE_GITIGNORE",
     
-    # Argparse Defaults
-    "DEFAULT_MAX_LEVEL_ARG", "DEFAULT_SHOW_SUBMODULES_ARG",
-    "DEFAULT_DIRS_ONLY_ARG", "DEFAULT_NO_GITIGNORE_ARG",
-    "DEFAULT_FULL_VIEW_ARG",
-    
     # Config File Names
     "CONFIG_FILENAME", "PROJECT_CONFIG_FILENAME", "CONFIG_SECTION_NAME"
 ]
-# --- END NEW ---
+# --- END MODIFIED ---
 
 
 # --- 1. Logic Fallback Defaults ---
@@ -41,22 +36,9 @@ DEFAULT_MAX_LEVEL: Optional[int] = None
 FALLBACK_USE_GITIGNORE: bool = True
 # --- END NEW ---
 
-# --- 2. Argparse Defaults ---
-# Các giá trị `None` này rất quan trọng để kích hoạt
-# logic ưu tiên 3 tầng (CLI > .ini > Fallback).
-DEFAULT_MAX_LEVEL_ARG: Optional[int] = DEFAULT_MAX_LEVEL
-DEFAULT_SHOW_SUBMODULES_ARG: Optional[bool] = None
-DEFAULT_DIRS_ONLY_ARG: Optional[str] = None
-
-# --- NEW: Gitignore Argparse Default ---
-# Cờ --no-gitignore. Mặc định là None (nghĩa là 'False' 
-# nếu 'action=store_true' không được kích hoạt)
-DEFAULT_NO_GITIGNORE_ARG: Optional[bool] = None
-# --- END NEW ---
-
-# --- NEW: Full View Argparse Default ---
-DEFAULT_FULL_VIEW_ARG: Optional[bool] = None
-# --- END NEW ---
+# --- REMOVED: Argparse Defaults ---
+# (Toàn bộ section 2 đã bị xóa)
+# --- END REMOVED ---
 
 # --- 3. Config File Names ---
 CONFIG_FILENAME: str = ".tree.ini"

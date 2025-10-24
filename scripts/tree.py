@@ -1,43 +1,49 @@
+#!/usr/bin/env python3
 # Path: scripts/tree.py
 
 import sys
-import argparse
+import argparse # Cần cho Namespace
 import logging
 from pathlib import Path
+from typing import Optional
+
+import typer
 
 # Common utilities
 from utils.logging_config import setup_logging, log_success
 from utils.core import run_command, is_git_repository
 
-# Module Imports (Không thay đổi sau Bước 0)
+# Module Imports
 from modules.tree import (
     CONFIG_TEMPLATE, 
     load_and_merge_config,
     generate_tree,
-    CONFIG_FILENAME,
-    DEFAULT_MAX_LEVEL_ARG,
-    DEFAULT_SHOW_SUBMODULES_ARG,
-    DEFAULT_DIRS_ONLY_ARG,
-    DEFAULT_NO_GITIGNORE_ARG,
-    DEFAULT_FULL_VIEW_ARG
+    CONFIG_FILENAME
 )
 
-# handle_init_command (Không thay đổi)
-# ... (giữ nguyên) ...
-def handle_init_command(logger: logging.Logger) -> None:
-    """Handles the logic for the --init flag."""
+# Khởi tạo Typer App
+app = typer.Typer(
+    help="A smart directory tree generator with support for a .treeconfig.ini file.",
+    add_completion=False
+)
+
+# Command 'init' (Không thay đổi)
+@app.command(
+    name="init",
+    help="Create a sample .tree.ini file and open it."
+)
+def init_command():
+    """Handles the logic for the 'init' command."""
+    
+    logger = setup_logging(script_name="CTree")
     config_file_path = Path.cwd() / CONFIG_FILENAME
     file_existed = config_file_path.exists()
     
     should_write = False
     
     if file_existed:
-        overwrite = input(f"'{CONFIG_FILENAME}' already exists. Overwrite? (y/n): ").lower() 
-        if overwrite == 'y':
-            should_write = True
-            logger.debug(f"User chose to overwrite '{CONFIG_FILENAME}'.")
-        else:
-            logger.info(f"Skipped overwrite for existing '{CONFIG_FILENAME}'.")
+        should_write = typer.confirm(f"'{CONFIG_FILENAME}' already exists. Overwrite?", abort=True)
+        logger.debug(f"User chose to overwrite '{CONFIG_FILENAME}'.")
     else:
         should_write = True
         logger.debug(f"Creating new '{CONFIG_FILENAME}'.")
@@ -48,88 +54,118 @@ def handle_init_command(logger: logging.Logger) -> None:
                 f.write(CONFIG_TEMPLATE)
             
             log_msg = f"Successfully created '{CONFIG_FILENAME}'."
-            if file_existed: # This means it was an overwrite
+            if file_existed:
                 log_msg = f"Successfully overwrote '{CONFIG_FILENAME}'."
             log_success(logger, log_msg)
             
         except IOError as e:
             logger.error(f"❌ Failed to write file '{config_file_path}': {e}")
-            return # Don't try to open if write failed
+            raise typer.Exit(code=1)
     
-    # Open the file
     try:
         logger.info(f"Opening '{config_file_path.name}' in default editor...")
-        success, output = run_command(
-            ["open", str(config_file_path)], 
-            logger, 
-            description=f"Opening {CONFIG_FILENAME}"
-        )
-        if not success:
-            logger.warning(f"⚠️ Could not automatically open file. Please open it manually.")
-            logger.debug(f"Error opening file: {output}")
+        typer.launch(str(config_file_path))
             
     except Exception as e:
         logger.error(f"❌ An unexpected error occurred while trying to open the file: {e}")
+        logger.warning(f"⚠️ Could not automatically open file. Please open it manually.")
 
 
-def main():
-    """Main orchestration function: Parses args, calls config processing, and runs the tree."""
+# Command chính (mặc định)
+@app.callback(invoke_without_command=True)
+def main(
+    ctx: typer.Context,
+    start_path: Path = typer.Argument(
+        Path("."), 
+        help="Starting path (file or directory).",
+        exists=True,
+        resolve_path=True
+    ),
+    level: Optional[int] = typer.Option(
+        None, "-L", "--level", 
+        help="Limit the display depth.",
+        min=1
+    ),
+    ignore: Optional[str] = typer.Option(
+        None, "-I", "--ignore", 
+        help="Comma-separated list of patterns to ignore."
+    ),
+    prune: Optional[str] = typer.Option(
+        None, "-P", "--prune", 
+        help="Comma-separated list of patterns to prune."
+    ),
     
-    parser = argparse.ArgumentParser(description="A smart directory tree generator with support for a .treeconfig.ini file.")
-    # (Args parse không thay đổi)
-    # ... (giữ nguyên) ...
-    parser.add_argument("start_path", nargs='?', 
-                        default=".", help="Starting path (file or directory).") 
-    parser.add_argument("-L", "--level", type=int, default=DEFAULT_MAX_LEVEL_ARG, help="Limit the display depth.")
-    parser.add_argument("-I", "--ignore", type=str, help="Comma-separated list of patterns to ignore.")
-    parser.add_argument("-P", "--prune", type=str, help="Comma-separated list of patterns to prune.")
-    parser.add_argument("-d", "--dirs-only", nargs='?', const='_ALL_', default=DEFAULT_DIRS_ONLY_ARG, type=str, help="Show directories only.")
-    parser.add_argument("-s", "--show-submodules", action='store_true', default=DEFAULT_SHOW_SUBMODULES_ARG, help="Show the contents of submodules.")
+    # --- MODIFIED: Sửa lỗi cờ -d ---
+    all_dirs: bool = typer.Option(
+        False, "-d", "--dirs-only", # <-- Gán -d và --dirs-only cho cờ boolean này
+        help="Show directories only for the entire tree."
+    ),
+    dirs_patterns: Optional[str] = typer.Option(
+        None, "--dirs-patterns", # <-- Tạo cờ dài mới cho pattern
+        help="Show sub-directories only for specific patterns (e.g., 'assets')."
+    ),
+    # --- END MODIFIED ---
     
-    parser.add_argument(
-        "--no-gitignore", 
-        action='store_true', 
-        default=DEFAULT_NO_GITIGNORE_ARG, 
+    show_submodules: bool = typer.Option(
+        False, "-s", "--show-submodules", 
+        help="Show the contents of submodules."
+    ),
+    no_gitignore: bool = typer.Option(
+        False, "--no-gitignore", 
         help="Do not respect .gitignore files."
+    ),
+    full_view: bool = typer.Option(
+        False, "-f", "--full-view",
+        help="Bypass all filters (.gitignore, rules, level) and show all files."
     )
+):
+    """
+    Main orchestration function: Parses args, calls config processing, and runs the tree.
+    """
     
-    parser.add_argument(
-        "-f", "--full-view",
-        action='store_true', 
-        default=DEFAULT_FULL_VIEW_ARG, 
-        help="Bypass all filters (.gitignore, ignore/prune rules, level limit) and show all files."
-    )
-    
-    parser.add_argument("--init", action='store_true', help="Create a sample .treeconfig.ini file and open it.")
-    args = parser.parse_args()
+    if ctx.invoked_subcommand:
+        return
 
-    # 1. Setup Logging (Không thay đổi)
+    # 1. Setup Logging
     logger = setup_logging(script_name="CTree")
-    logger.debug(f"Received start path: {args.start_path}")
+    logger.debug(f"Received start path: {start_path}")
     
-    # 2. Handle --init flag (Không thay đổi)
-    if args.init: 
-        handle_init_command(logger)
-        return
+    # --- 2. Xây dựng 'args' object giả lập ---
+    
+    # --- MODIFIED: Cập nhật logic dirs_only ---
+    cli_dirs_only = None
+    if all_dirs: # (Kết nối với -d)
+        cli_dirs_only = "_ALL_"
+    elif dirs_patterns: # (Kết nối với --dirs-patterns)
+        cli_dirs_only = dirs_patterns
+    # --- END MODIFIED ---
 
-    # 3. Process Start Path (Không thay đổi)
-    initial_path = Path(args.start_path).resolve() 
-    if not initial_path.exists():
-        logger.error(f"❌ Path does not exist: '{args.start_path}'")
-        return
+    args = argparse.Namespace(
+        level=level,
+        ignore=ignore,
+        prune=prune,
+        dirs_only=cli_dirs_only, # <-- Sử dụng logic đã xử lý
+        show_submodules=show_submodules,
+        no_gitignore=no_gitignore,
+        full_view=full_view,
+        init=False, 
+        start_path=str(start_path)
+    )
+
+    # 3. Process Start Path
+    initial_path: Path = start_path
     start_dir = initial_path.parent if initial_path.is_file() else initial_path
     is_git_repo = is_git_repository(start_dir)
     
-    # 4. Load and Merge Configuration (Không thay đổi)
+    # 4. Load and Merge Configuration
     try:
         config_params = load_and_merge_config(args, start_dir, logger, is_git_repo)
     except Exception as e:
         logger.error(f"❌ Critical error during config processing: {e}")
         logger.debug("Traceback:", exc_info=True)
-        return
+        raise typer.Exit(code=1)
 
-    # 5. Print Status Header
-    # --- MODIFIED: Cải thiện logic header ---
+    # 5. Print Status Header (Không thay đổi)
     is_truly_full_view = not any(config_params["filter_lists"].values()) and \
                          not config_params["using_gitignore"] and \
                          config_params["max_level"] is None
@@ -147,15 +183,13 @@ def main():
         elif args.no_gitignore:
              git_info = ", Git project (.gitignore disabled by flag)"
         else:
-             git_info = ", Git project" # (ví dụ: config file tắt, hoặc không tìm thấy .gitignore)
+             git_info = ", Git project"
     
     print(f"{start_dir.name}/ [{filter_info}, {level_info}{mode_info}{git_info}]")
-    # --- END MODIFIED ---
 
-    # 6. Run Recursive Logic (Executor logic)
+    # 6. Run Recursive Logic
     counters = {'dirs': 0, 'files': 0}
     
-    # --- MODIFIED: Truyền tham số gitignore_spec ---
     generate_tree(
         start_dir, 
         start_dir, 
@@ -164,20 +198,19 @@ def main():
         ignore_list=config_params["ignore_list"],
         submodules=config_params["submodules"],
         prune_list=config_params["prune_list"],
-        gitignore_spec=config_params["gitignore_spec"], # <-- Mới
+        gitignore_spec=config_params["gitignore_spec"],
         dirs_only_list=config_params["dirs_only_list"],
         is_in_dirs_only_zone=config_params["is_in_dirs_only_zone"]
     )
-    # --- END MODIFIED ---
 
-    # 7. Print Final Result (Không thay đổi)
+    # 7. Print Final Result
     files_info = "0 files (hidden)" if config_params["global_dirs_only_flag"] and counters['files'] == 0 else \
                  f"{counters['files']} files" 
     print(f"\n{counters['dirs']} directories, {files_info}")
     
 if __name__ == "__main__":
     try:
-        main()
+        app()
     except KeyboardInterrupt:
         print("\n\n❌ [Stop Command] Stop generating tree.")
         sys.exit(1)
