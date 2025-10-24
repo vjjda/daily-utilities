@@ -19,7 +19,9 @@ from .tree_config import (
     FALLBACK_USE_GITIGNORE
 )
 
+# --- MODIFIED: Thêm CONFIG_TEMPLATE vào __all__ ---
 __all__ = ["load_and_merge_config", "CONFIG_TEMPLATE"]
+# --- END MODIFIED ---
 
 
 def load_and_merge_config(
@@ -163,7 +165,6 @@ def load_and_merge_config(
     }
 
 
-# --- CONFIG TEMPLATE CONTENT (Không thay đổi) ---
 try:
     _CURRENT_DIR = Path(__file__).parent
     _TEMPLATE_PATH = _CURRENT_DIR / "tree.ini.template"

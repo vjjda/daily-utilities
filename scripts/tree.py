@@ -4,7 +4,9 @@ import sys
 import argparse 
 import logging
 from pathlib import Path
-from typing import Optional
+# --- MODIFIED: Thêm 'Set' ---
+from typing import Optional, Set
+# --- END MODIFIED ---
 
 import typer
 
@@ -13,12 +15,22 @@ from utils.logging_config import setup_logging, log_success
 from utils.core import run_command, is_git_repository
 
 # Module Imports
+# --- MODIFIED: Thay đổi Imports ---
 from modules.tree import (
-    CONFIG_TEMPLATE, 
+    CONFIG_TEMPLATE, # (Thêm lại)
     load_and_merge_config,
     generate_tree,
-    CONFIG_FILENAME
+    CONFIG_FILENAME,
+    # (Giữ nguyên các hằng số default)
+    DEFAULT_IGNORE,
+    DEFAULT_PRUNE,
+    DEFAULT_DIRS_ONLY_LOGIC,
+    FALLBACK_SHOW_SUBMODULES,
+    DEFAULT_MAX_LEVEL,
+    FALLBACK_USE_GITIGNORE,
+    CONFIG_SECTION_NAME
 )
+# --- END MODIFIED ---
 
 # Khởi tạo Typer App
 app = typer.Typer(
@@ -27,13 +39,13 @@ app = typer.Typer(
     context_settings={"help_option_names": ["--help", "-h"]}
 )
 
-# Command 'init' (Không thay đổi)
+# Command 'init' (Thay đổi logic)
 @app.command(
     name="init",
     help="Create a sample .tree.ini file and open it."
 )
 def init_command():
-    # ... (logic này giữ nguyên) ...
+    # ... (logger setup giữ nguyên) ...
     logger = setup_logging(script_name="CTree")
     config_file_path = Path.cwd() / CONFIG_FILENAME
     file_existed = config_file_path.exists()
@@ -44,14 +56,59 @@ def init_command():
     else:
         should_write = True
         logger.debug(f"Creating new '{CONFIG_FILENAME}'.")
+        
+    # --- NEW: Helper function to format sets (Giữ nguyên) ---
+    def _format_set_to_ini(value_set: Set[str]) -> str:
+        """Helper to convert a set to a comma-separated INI string."""
+        if not value_set:
+            return "" # Trả về chuỗi rỗng nếu set rỗng
+        return ", ".join(sorted(list(value_set)))
+    # --- END NEW ---
+    
+    # --- MODIFIED: Build dynamic template from file ---
+    
+    # Format các giá trị sang chuẩn INI (Giữ nguyên logic)
+    ini_level = (
+        f"level = {DEFAULT_MAX_LEVEL}" 
+        if DEFAULT_MAX_LEVEL is not None 
+        else f"; level = "
+    )
+    ini_show_submodules = str(FALLBACK_SHOW_SUBMODULES).lower()
+    ini_use_gitignore = str(FALLBACK_USE_GITIGNORE).lower()
+    ini_ignore = _format_set_to_ini(DEFAULT_IGNORE)
+    ini_prune = _format_set_to_ini(DEFAULT_PRUNE)
+    ini_dirs_only = _format_set_to_ini(DEFAULT_DIRS_ONLY_LOGIC)
+
+    # Tạo nội dung file .ini bằng cách format template
+    try:
+        dynamic_template = CONFIG_TEMPLATE.format(
+            config_section_name=CONFIG_SECTION_NAME,
+            ini_level=ini_level,
+            ini_show_submodules=ini_show_submodules,
+            ini_use_gitignore=ini_use_gitignore,
+            ini_ignore=ini_ignore,
+            ini_prune=ini_prune,
+            ini_dirs_only=ini_dirs_only
+        )
+    except KeyError as e:
+        logger.error(f"❌ Fatal Error: Template key mismatch: {e}")
+        logger.error("   The 'modules/tree/tree.ini.template' file is missing a placeholder.")
+        raise typer.Exit(code=1)
+    # --- END MODIFIED ---
+        
     if should_write:
         try:
-            with open(config_file_path, 'w', encoding='utf-8') as f: f.write(CONFIG_TEMPLATE)
+            # --- MODIFIED: Ghi template động ---
+            with open(config_file_path, 'w', encoding='utf-8') as f:
+                f.write(dynamic_template)
+            # --- END MODIFIED ---
             log_msg = f"Successfully created '{CONFIG_FILENAME}'." if not file_existed else f"Successfully overwrote '{CONFIG_FILENAME}'."
             log_success(logger, log_msg)
         except IOError as e:
             logger.error(f"❌ Failed to write file '{config_file_path}': {e}")
             raise typer.Exit(code=1)
+    
+    # ... (logic 'typer.launch' giữ nguyên) ...
     try:
         logger.info(f"Opening '{config_file_path.name}' in default editor...")
         typer.launch(str(config_file_path))
