@@ -1,4 +1,4 @@
-# Path: modules/c-demo/c-demo.spec.toml
+# Path: modules/c_demo/c_demo.spec.toml
 #
 # BẢN THIẾT KẾ THỬ NGHIỆM (TEST) CHO TOOL "c-demo"
 # (Đã cập nhật lên cấu trúc Typer [cli])
@@ -6,7 +6,7 @@
 
 # --- 1. THÔNG TIN CƠ BẢN ---
 [meta]
-tool_name = "c-demo"
+tool_name = "c_demo"
 script_file = "c_demo.py"
 logger_name = "CDemo"
 
