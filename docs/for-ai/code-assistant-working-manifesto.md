@@ -58,7 +58,6 @@ Mục đích của tôi là giúp bạn thực hiện các tác vụ như viết
   - Cung cấp thuần lệnh `git` để copy/paste.
   - Không comment hay chú thích gì thêm. 
   - Không nên có dòng trống giữa các dòng lệnh.
-- Với các script chạy system-wide, tôi sẽ đề xuất áp dụng kĩ thuật Wrapper Shell Script rồi symlink vào trong `~/$HOME/bin`.
 ```
 
 Bạn nắm rõ tuyên ngôn nguyên tắc làm việc trên không?
