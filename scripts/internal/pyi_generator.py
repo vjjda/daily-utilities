@@ -40,7 +40,7 @@ def _get_ast_tree(path: Path) -> Optional[ast.Module]:
         # Đảm bảo sử dụng encoding chính xác (fallback là utf-8)
         encoding = 'utf-8' 
         return ast.parse(content.decode(encoding))
-    except (UnicodeDecodeError, FileNotFoundError, SyntaxError, OSError) as e:
+    except (UnicodeDecodeError, FileNotFoundError, SyntaxError, OSError): 
         return None
 
 def _extract_module_list(init_path: Path, list_name: str = 'modules_to_export') -> List[str]:
@@ -56,7 +56,7 @@ def _extract_module_list(init_path: Path, list_name: str = 'modules_to_export') 
             node.targets[0].id == list_name and
             isinstance(node.value, ast.List)):
             
-            module_names = []
+            module_names: List[str] = []
             for element in node.value.elts:
                 if isinstance(element, ast.Constant) and isinstance(element.value, str):
                     module_names.append(element.value)
@@ -76,7 +76,7 @@ def _extract_all_symbols(module_path: Path) -> Set[str]:
             node.targets[0].id == '__all__' and
             isinstance(node.value, ast.List)):
             
-            symbols = set()
+            symbols: Set[str] = set()
             for element in node.value.elts:
                 if isinstance(element, ast.Constant) and isinstance(element.value, str):
                     symbols.add(element.value)
@@ -117,7 +117,7 @@ def generate_stub_content(
         return "", set()
 
     # 3. Build the .pyi content
-    stub_lines = []
+    stub_lines: List[str] = []
     
     # Header
     rel_path = init_path.relative_to(project_root).as_posix()
