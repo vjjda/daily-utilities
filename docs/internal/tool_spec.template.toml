@@ -48,13 +48,13 @@ allow_interspersed_args = true
 # Tên biến (ví dụ: target_path)
 name = "target_path"
 # (Bắt buộc) Kiểu dữ liệu Python (str, int, bool, Path)
-type = "Path" 
+type = "Path"
 # (Tùy chọn) Giá trị mặc định. Nếu bỏ trống, nó sẽ là bắt buộc.
 default = "."
 # (Bắt buộc) Text trợ giúp
 help = "Đường dẫn (file hoặc thư mục) để bắt đầu."
 # (Tùy chọn) Đánh dấu là Argument (vị trí) thay vì Option (cờ)
-is_argument = true 
+is_argument = true
 
 #
 # --- MẪU 2: Cờ Option (ví dụ: cpath --fix) ---
