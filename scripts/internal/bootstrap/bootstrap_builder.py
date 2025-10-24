@@ -19,7 +19,7 @@ __all__ = [
 
 def build_config_constants(config: Dict[str, Any]) -> str:
     """Tạo mã Python cho các hằng số DEFAULT_..."""
-    code_lines = []
+    code_lines: List[str] = []
     
     # --- MODIFIED: Áp dụng filter mới: phải có default VÀ type KHÔNG phải là bool ---
     default_args = [
@@ -49,7 +49,7 @@ def build_config_all_list(config: Dict[str, Any]) -> str:
     if not default_args:
         return "" 
         
-    const_names = []
+    const_names: List[str] = []
     for arg in default_args:
         const_name = f"DEFAULT_{arg['name'].upper()}"
         const_names.append(f'"{const_name}"') 
@@ -68,7 +68,7 @@ def build_config_imports(module_name: str, config: Dict[str, Any]) -> str:
     if not default_args:
         return "# (No default constants to import)"
         
-    const_names = []
+    const_names: List[str] = []
     for arg in default_args:
         const_name = f"DEFAULT_{arg['name'].upper()}"
         const_names.append(const_name)
@@ -105,7 +105,7 @@ def build_typer_app_code(config: Dict[str, Any]) -> str:
 
 def build_typer_path_expands(config: Dict[str, Any]) -> str:
     # (Hàm này giữ nguyên)
-    code_lines = []
+    code_lines: List[str] = []
     path_args = [arg for arg in get_cli_args(config) if arg.get('type') == 'Path']
     if not path_args:
         code_lines.append("# (No Path arguments to expand)")
@@ -121,7 +121,7 @@ def build_typer_path_expands(config: Dict[str, Any]) -> str:
 
 def build_typer_args_pass_to_core(config: Dict[str, Any]) -> str:
     # (Hàm này giữ nguyên)
-    code_lines = []
+    code_lines: List[str] = []
     args = get_cli_args(config)
     if not args:
         code_lines.append("            # (No CLI args to pass)")
@@ -137,7 +137,7 @@ def build_typer_args_pass_to_core(config: Dict[str, Any]) -> str:
 
 def build_typer_main_signature(config: Dict[str, Any]) -> str:
     # (Hàm này giữ nguyên)
-    code_lines = [
+    code_lines: List[str] = [
         f"def main(",
         f"    ctx: typer.Context,"
     ]
