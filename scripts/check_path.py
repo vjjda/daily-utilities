@@ -62,22 +62,54 @@ def main(
         raise typer.Exit(code=1)
     # --- END NEW ---
     
-    # --- Logic gợi ý Git Root (Không thay đổi) ---
+    # --- Logic gợi ý Git Root ---
     git_warning_str = ""
     effective_scan_root = scan_root
     if not is_git_repository(scan_root):
-        # ... (logic này giữ nguyên) ...
         suggested_root = find_git_root(scan_root.parent)
+        
+        # --- MODIFIED: Triển khai logic 3 lựa chọn (R/C/Q) ---
         if suggested_root:
             logger.warning(f"⚠️ Current directory '{scan_root.name}/' is not a Git root.")
             logger.warning(f"   Git root found at: {suggested_root.as_posix()}")
-            try: confirmation = input("   Do you want to run the scan from the Git root? (Y/n): ")
-            except EOFError: confirmation = 'n'
-            if confirmation.lower() in ('y', ''):
+            logger.warning("   Please choose an option:")
+            logger.warning("     [R] Run from Git Root (Recommended)")
+            logger.warning(f"     [C] Run from Current Directory ({scan_root.name}/)")
+            logger.warning("     [Q] Quit / Cancel")
+            
+            choice = ""
+            while choice not in ('r', 'c', 'q'):
+                try:
+                    choice = input("   Enter your choice (R/C/Q): ").lower().strip()
+                except (EOFError, KeyboardInterrupt):
+                    choice = 'q' # Mặc định là Quit khi nhấn Ctrl+C
+            
+            if choice == 'r':
                 effective_scan_root = suggested_root
                 logger.info(f"✅ Scanning moved to Git root: {effective_scan_root.as_posix()}")
-            else: git_warning_str = f"⚠️ Warning: Running from non-Git root '{scan_root.name}/'. .gitignore rules might be incomplete."
-        else: git_warning_str = f"⚠️ Warning: '{scan_root.name}/' does not contain a '.git' directory. Ensure this is the correct project root."
+            elif choice == 'c':
+                effective_scan_root = scan_root
+                logger.info(f"✅ Scanning from current directory: {scan_root.as_posix()}")
+                git_warning_str = f"⚠️ Warning: Running from non-Git root '{scan_root.name}/'. .gitignore rules might be incomplete."
+            elif choice == 'q':
+                logger.error("❌ Operation cancelled by user.")
+                raise typer.Exit(code=0)
+        # --- END MODIFIED ---
+        else:
+            # (Giữ nguyên logic xác nhận an toàn (y/N) khi không tìm thấy .git nào)
+            logger.warning(f"⚠️ No '.git' directory found in '{scan_root.name}/' or its parents.")
+            logger.warning(f"   Scanning from a non-project directory (like $HOME) can be slow or unsafe.")
+            try:
+                confirmation = input(f"   Are you sure you want to scan '{scan_root.as_posix()}'? (y/N): ")
+            except (EOFError, KeyboardInterrupt):
+                confirmation = 'n' # Tự động hủy nếu nhấn Ctrl+C
+            
+            if confirmation.lower() == 'y':
+                logger.info(f"✅ Proceeding with scan at non-Git root: {scan_root.as_posix()}")
+                git_warning_str = f"⚠️ Warning: Running from non-Git root '{scan_root.name}/'. .gitignore rules might be incomplete."
+            else:
+                logger.error("❌ Operation cancelled by user.")
+                raise typer.Exit(code=0) # Thoát an toàn
     # --- END Logic gợi ý Git Root ---
 
     check_mode = not fix
@@ -96,9 +128,11 @@ def main(
         # 3. Run the core logic
         files_to_fix = process_path_updates(
             logger=logger, project_root=effective_scan_root,
-            # (Truyền đường dẫn *gốc* (chưa expand) nếu có, 
-            #  vì logic core đã được thiết kế để xử lý 'None')
-            target_dir_str=str(target_directory_arg) if target_directory_arg else None,
+            # --- MODIFIED: Sửa logic target_dir_str ---
+            # Luôn truyền 'None' nếu chúng ta chọn Git root,
+            # để đảm bảo core logic quét toàn bộ project.
+            target_dir_str=str(target_directory_arg) if effective_scan_root == scan_root and target_directory_arg else None,
+            # --- END MODIFIED ---
             extensions=extensions_to_scan, cli_ignore=cli_ignore_patterns,
             script_file_path=THIS_SCRIPT_PATH, check_mode=check_mode
         )
