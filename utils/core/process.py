@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Path: utils/_process.py
+# Path: utils/core/process.py
 
 """
 Process Execution Utilities
@@ -20,14 +20,7 @@ Logger = logging.Logger
 def run_command(command: Union[str, List[str]], logger: Logger, description: str = "Execute shell command") -> Tuple[bool, str]:
     """
     Executes a shell/system command and logs the result.
-
-    Args:
-        command: The command to execute (string or list of command parts).
-        logger: The configured logger instance.
-        description: A user-friendly description for the command (used in logs).
-
-    Returns:
-        Tuple (success - True/False, output/error message).
+    (Code moved from utils/core.py)
     """
     
     # Ensure command is a list for safer subprocess.run
