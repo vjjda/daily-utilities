@@ -4,9 +4,7 @@ import sys
 import argparse 
 import logging
 from pathlib import Path
-# --- MODIFIED: Thêm 'Set' ---
 from typing import Optional, Set
-# --- END MODIFIED ---
 
 import typer
 
@@ -15,13 +13,11 @@ from utils.logging_config import setup_logging, log_success
 from utils.core import run_command, is_git_repository
 
 # Module Imports
-# --- MODIFIED: Thay đổi Imports ---
 from modules.tree import (
-    CONFIG_TEMPLATE, # (Thêm lại)
+    CONFIG_TEMPLATE, 
     load_and_merge_config,
     generate_tree,
     CONFIG_FILENAME,
-    # (Giữ nguyên các hằng số default)
     DEFAULT_IGNORE,
     DEFAULT_PRUNE,
     DEFAULT_DIRS_ONLY_LOGIC,
@@ -30,7 +26,6 @@ from modules.tree import (
     FALLBACK_USE_GITIGNORE,
     CONFIG_SECTION_NAME
 )
-# --- END MODIFIED ---
 
 # Khởi tạo Typer App
 app = typer.Typer(
@@ -39,13 +34,17 @@ app = typer.Typer(
     context_settings={"help_option_names": ["--help", "-h"]}
 )
 
-# Command 'init' (Thay đổi logic)
+# Command 'init' (Không thay đổi)
 @app.command(
     name="init",
     help="Create a sample .tree.ini file and open it."
 )
 def init_command():
-    # ... (logger setup giữ nguyên) ...
+    """
+    (Hàm này giữ nguyên toàn bộ logic tạo template động)
+    """
+    
+    # 1. Setup Logging (sớm)
     logger = setup_logging(script_name="CTree")
     config_file_path = Path.cwd() / CONFIG_FILENAME
     file_existed = config_file_path.exists()
@@ -57,7 +56,7 @@ def init_command():
         should_write = True
         logger.debug(f"Creating new '{CONFIG_FILENAME}'.")
         
-    # --- NEW: Helper function to format sets (Giữ nguyên) ---
+    # --- NEW: Helper function to format sets ---
     def _format_set_to_ini(value_set: Set[str]) -> str:
         """Helper to convert a set to a comma-separated INI string."""
         if not value_set:
@@ -65,9 +64,7 @@ def init_command():
         return ", ".join(sorted(list(value_set)))
     # --- END NEW ---
     
-    # --- MODIFIED: Build dynamic template from file ---
-    
-    # Format các giá trị sang chuẩn INI (Giữ nguyên logic)
+    # --- NEW: Build dynamic template ---
     ini_level = (
         f"level = {DEFAULT_MAX_LEVEL}" 
         if DEFAULT_MAX_LEVEL is not None 
@@ -79,7 +76,6 @@ def init_command():
     ini_prune = _format_set_to_ini(DEFAULT_PRUNE)
     ini_dirs_only = _format_set_to_ini(DEFAULT_DIRS_ONLY_LOGIC)
 
-    # Tạo nội dung file .ini bằng cách format template
     try:
         dynamic_template = CONFIG_TEMPLATE.format(
             config_section_name=CONFIG_SECTION_NAME,
@@ -94,21 +90,17 @@ def init_command():
         logger.error(f"❌ Fatal Error: Template key mismatch: {e}")
         logger.error("   The 'modules/tree/tree.ini.template' file is missing a placeholder.")
         raise typer.Exit(code=1)
-    # --- END MODIFIED ---
+    # --- END NEW ---
         
     if should_write:
         try:
-            # --- MODIFIED: Ghi template động ---
             with open(config_file_path, 'w', encoding='utf-8') as f:
                 f.write(dynamic_template)
-            # --- END MODIFIED ---
             log_msg = f"Successfully created '{CONFIG_FILENAME}'." if not file_existed else f"Successfully overwrote '{CONFIG_FILENAME}'."
             log_success(logger, log_msg)
         except IOError as e:
             logger.error(f"❌ Failed to write file '{config_file_path}': {e}")
             raise typer.Exit(code=1)
-    
-    # ... (logic 'typer.launch' giữ nguyên) ...
     try:
         logger.info(f"Opening '{config_file_path.name}' in default editor...")
         typer.launch(str(config_file_path))
@@ -121,13 +113,9 @@ def init_command():
 @app.callback(invoke_without_command=True)
 def main(
     ctx: typer.Context,
-    start_path_arg: Path = typer.Argument( # <-- Đổi tên biến tạm thời
+    start_path_arg: Path = typer.Argument( 
         Path("."), 
         help="Starting path (file or directory). Use '~' for home directory.",
-        # --- FIX: Đã xóa resolve_path=True và exists=True ---
-        # exists=True,
-        # resolve_path=True,
-        # --- END FIX ---
     ),
     level: Optional[int] = typer.Option( None, "-L", "--level", help="Limit the display depth.", min=1 ),
     ignore: Optional[str] = typer.Option( None, "-I", "--ignore", help="Comma-separated list of patterns to ignore." ),
@@ -141,22 +129,36 @@ def main(
     """ Main orchestration function: Parses args, calls config processing, and runs the tree. """
     if ctx.invoked_subcommand: return
 
+    # --- MODIFIED: Thêm logic kiểm tra xung đột 'init' LÊN ĐẦU ---
+    # Đây là trường hợp Typer hiểu 'init' là 'start_path_arg'
+    # thay vì là một lệnh con (do có default=Path('.'))
+    if str(start_path_arg) == "init":
+        # Gọi thẳng hàm 'init' để thực thi
+        init_command()
+        # Thoát hàm 'main' sau khi 'init' chạy xong
+        return 
+    # --- END MODIFIED ---
+
     # --- 1. Setup Logging (sớm) ---
     logger = setup_logging(script_name="CTree")
     
     # --- 2. Mở rộng `~` thủ công ---
     start_path = start_path_arg.expanduser()
-    # --- END NEW ---
     
     # --- 3. KIỂM TRA TỒN TẠI (thủ công) ---
     if not start_path.exists():
+        # (Đã xóa khối 'if str(start_path_arg) == "init":'
+        #  vì nó đã được xử lý ở trên)
+            
+        # Nếu không phải 'init', đây là lỗi thật
         logger.error(f"❌ Lỗi: Đường dẫn bắt đầu không tồn tại (sau khi expanduser): {start_path}")
         raise typer.Exit(code=1)
-    # --- END NEW ---
+    # --- END ---
 
     logger.debug(f"Received start path: {start_path}")
     
     # 4. Xây dựng 'args' object giả lập
+    # (Toàn bộ logic còn lại của hàm main giữ nguyên)
     cli_dirs_only = "_ALL_" if all_dirs else dirs_patterns
     args = argparse.Namespace(
         level=level, ignore=ignore, prune=prune, dirs_only=cli_dirs_only,
