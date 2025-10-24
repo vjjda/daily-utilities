@@ -7,9 +7,16 @@ This file defines which file types are supported and which
 commenting rules they use.
 """
 
-# --- MODIFIED: Thêm Set ---
 from typing import Dict, Any, Set
-# --- END MODIFIED ---
+
+# --- NEW: __all__ definition ---
+__all__ = [
+    "DEFAULT_IGNORE",
+    "DEFAULT_EXTENSIONS_STRING",
+    "COMMENT_RULES",
+    "COMMENT_RULES_BY_EXT"
+]
+# --- END NEW ---
 
 # --- NEW: Thêm DEFAULT_IGNORE ---
 # Các pattern mặc định luôn bị bỏ qua khi quét
@@ -43,8 +50,7 @@ COMMENT_RULES: Dict[str, Dict[str, Any]] = {
     },
     "md_block": {
         "type": "block",
-        "comment_prefix": "<!--",
-        "comment_suffix": "-->",
+        "comment_prefix": "",
         "padding": True, 
     }
 }

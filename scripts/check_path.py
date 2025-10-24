@@ -10,16 +10,15 @@ import shlex
 
 # Common utilities
 from utils.logging_config import setup_logging
-# --- MODIFIED: Import find_git_root và is_git_repository ---
 from utils.core import parse_comma_list, is_git_repository, find_git_root
-# --- END MODIFIED ---
 
-# Import the main logic
-from modules.path_checker.path_checker_core import process_path_updates
-from modules.path_checker.path_checker_executor import handle_results
-# --- NEW: Import DEFAULT_EXTENSIONS_STRING ---
-from modules.path_checker.path_checker_config import DEFAULT_EXTENSIONS_STRING
-# --- END NEW ---
+# --- MODIFIED: Import from module gateway ---
+from modules.path_checker import (
+    process_path_updates,
+    handle_results,
+    DEFAULT_EXTENSIONS_STRING
+)
+# --- END MODIFIED ---
 
 # --- CONSTANTS ---
 THIS_SCRIPT_PATH = Path(__file__).resolve()
@@ -43,10 +42,8 @@ def main():
     )
     parser.add_argument(
         "-e", "--extensions", 
-        # --- MODIFIED: Sử dụng hằng số ---
         default=DEFAULT_EXTENSIONS_STRING, 
         help=f"File extensions to scan (default: '{DEFAULT_EXTENSIONS_STRING}')."
-        # --- END MODIFIED ---
     )
     parser.add_argument(
         "-I", "--ignore", 
@@ -130,9 +127,7 @@ def main():
         # 3. Run the core logic
         files_to_fix = process_path_updates(
             logger=logger,
-            # --- MODIFIED: Sử dụng effective_scan_root ---
             project_root=effective_scan_root,
-            # --- END MODIFIED ---
             target_dir_str=args.target_directory,
             extensions=extensions_to_scan,
             cli_ignore=cli_ignore_patterns,
@@ -146,9 +141,7 @@ def main():
             files_to_fix=files_to_fix,
             check_mode=check_mode,
             fix_command_str=fix_command_str,
-            # --- MODIFIED: Sử dụng effective_scan_root ---
             scan_root=effective_scan_root, 
-            # --- END MODIFIED ---
             git_warning_str=git_warning_str
         )
 

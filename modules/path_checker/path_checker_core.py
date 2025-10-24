@@ -1,7 +1,7 @@
 # Path: modules/path_checker/path_checker_core.py
 
 import logging
-import os  # <-- THÊM IMPORT
+import os
 from pathlib import Path
 from typing import List, Set, Optional, Dict, Any
 
@@ -10,6 +10,10 @@ from .path_checker_config import COMMENT_RULES_BY_EXT
 from .path_checker_rules import apply_line_comment_rule, apply_block_comment_rule
 # --- NEW: Import scanner mới ---
 from .path_checker_scanner import scan_for_files
+# --- END NEW ---
+
+# --- NEW: __all__ definition ---
+__all__ = ["process_path_updates"]
 # --- END NEW ---
 
 

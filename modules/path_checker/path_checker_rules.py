@@ -9,6 +9,10 @@ path comment rule (e.g., line comments, block comments).
 
 from typing import List, Dict, Any
 
+# --- NEW: __all__ definition ---
+__all__ = ["apply_line_comment_rule", "apply_block_comment_rule"]
+# --- END NEW ---
+
 def apply_line_comment_rule(
     lines: List[str], 
     correct_path_comment: str, 

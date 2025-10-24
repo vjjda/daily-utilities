@@ -12,7 +12,9 @@ from typing import List, Dict, Any
 # Import logger helpers
 from utils.logging_config import log_success
 
-# --- MODIFIED: Thêm tham số git_warning_str ---
+# --- NEW: __all__ definition ---
+__all__ = ["handle_results"]
+# --- END NEW ---
 
 
 def handle_results(
@@ -21,9 +23,8 @@ def handle_results(
     check_mode: bool,
     fix_command_str: str,
     scan_root: Path,
-    git_warning_str: str,  # <-- New parameter
+    git_warning_str: str,
 ) -> None:
-    # --- END MODIFIED ---
     """
     Handles the list of files needing fixes.
     """
@@ -59,10 +60,8 @@ def handle_results(
         if check_mode:
             # --- Chế độ "check" (mặc định) ---
 
-            # --- MODIFIED: In Git warning trước lệnh fix ---
             if git_warning_str:
                 logger.warning(f"\n{git_warning_str}")
-            # --- END MODIFIED ---
 
             logger.warning("-> To fix these files, run:")
             logger.warning(f"\n{fix_command_str}\n")
@@ -70,10 +69,8 @@ def handle_results(
         else:
             # --- Chế độ "--fix" ---
 
-            # --- MODIFIED: In Git warning trước khi hỏi xác nhận ---
             if git_warning_str:
                 logger.warning(f"\n{git_warning_str}")
-            # --- END MODIFIED ---
 
             try:
                 confirmation = input("\nProceed to fix these files? (y/n): ")
@@ -107,10 +104,8 @@ def handle_results(
 
     else:
         # 0 file cần sửa
-        # --- MODIFIED: Vẫn in Git warning nếu không có gì để sửa ---
         if git_warning_str:
             logger.warning(f"\n{git_warning_str}")
-        # --- END MODIFIED ---
 
         log_success(
             logger,
