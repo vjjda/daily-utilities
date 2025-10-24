@@ -65,6 +65,10 @@ def main(
         help="Ghi đè file output nếu đã tồn tại."
     )
 ):
+    """
+    Tạo một wrapper Zsh cho một script Python, tự động quản lý venv và PYTHONPATH.
+    """
+    
     # --- 1. Setup Logging (sớm) ---
     logger = setup_logging(script_name="Zrap")
     logger.debug("Zrap script started.")
@@ -82,7 +86,10 @@ def main(
     if not script_path.is_file():
         logger.error(f"❌ Lỗi: Đường dẫn script không phải là file: {script_path}")
         raise typer.Exit(code=1)
-    # ... (Kiểm tra root giữ nguyên) ...
+        
+    if root and not root.exists():
+        logger.error(f"❌ Lỗi: Thư mục root chỉ định không tồn tại (sau khi expanduser): {root}")
+        raise typer.Exit(code=1)
     if root and not root.is_dir():
         logger.error(f"❌ Lỗi: Đường dẫn root không phải là thư mục: {root}")
         raise typer.Exit(code=1)
@@ -128,7 +135,7 @@ def main(
     try:
         result = process_zsh_wrapper_logic( logger=logger, args=args_for_core )
 
-        # --- NEW: Logic xử lý Fallback (3 Lựa chọn) ---
+        # --- NEW: Logic xử lý Fallback (3 Lựa chọn S/I/Q) ---
         if result and result.get("status") == "fallback_required":
             
             fallback_path: Path = result["fallback_path"]
@@ -138,21 +145,22 @@ def main(
             logger.warning(f"   Please select the Project Root for this wrapper:")
             
             while selected_root is None:
-                # 1. Hiển thị các lựa chọn
-                print(f"     [1] Use Suggested Root: {fallback_path.as_posix()} (Script Parent Directory)")
-                print("     [2] Input Custom Path")
+                # 1. Hiển thị các lựa chọn mới
+                print(f"     [S] Use Suggested Root: {fallback_path.as_posix()} (Script Parent Directory)")
+                print("     [I] Input Custom Path")
                 print("     [Q] Quit / Cancel")
 
                 try:
-                    choice = input("   Enter your choice (1/2/Q): ").lower().strip()
+                    # Chấp nhận S, I, Q (case-insensitive)
+                    choice = input("   Enter your choice (S/I/Q): ").lower().strip()
                 except (EOFError, KeyboardInterrupt):
                     choice = 'q'
                 
-                if choice == '1':
+                if choice == 's':
                     selected_root = fallback_path
-                    logger.info(f"✅ Option 1 selected. Using suggested root.")
+                    logger.info(f"✅ Option [S] selected. Using suggested root.")
                     
-                elif choice == '2':
+                elif choice == 'i':
                     while True:
                         try:
                             # Chờ input đường dẫn tùy chỉnh
@@ -169,7 +177,7 @@ def main(
                                 continue
                             
                             selected_root = custom_path
-                            logger.info(f"✅ Option 2 selected. Using custom root: {selected_root.as_posix()}")
+                            logger.info(f"✅ Option [I] selected. Using custom root: {selected_root.as_posix()}")
                             break
                         except Exception as e:
                             logger.error(f"❌ Lỗi khi xử lý đường dẫn: {e}")
@@ -179,7 +187,7 @@ def main(
                     sys.exit(0) 
                     
                 else:
-                    print("   Lựa chọn không hợp lệ. Vui lòng nhập 1, 2, hoặc Q.")
+                    print("   Lựa chọn không hợp lệ. Vui lòng nhập S, I, hoặc Q.")
             
             # --- Tái xử lý với Root đã chọn ---
             if selected_root:
