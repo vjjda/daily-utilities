@@ -29,5 +29,7 @@ from .git import is_git_repository, find_git_root, get_submodule_paths
 # Từ utils/core/parsing.py
 from .parsing import parse_comma_list
 
-# Từ utils/core/filter.py (Logic này sẽ được thay thế ở Giai đoạn 1)
-from .filter import is_path_matched, parse_gitignore
+# --- MODIFIED: (Giai đoạn 1) ---
+# Xóa các hàm filter cũ và export class PathFilter mới
+from .filter import PathFilter
+# --- END MODIFIED ---
