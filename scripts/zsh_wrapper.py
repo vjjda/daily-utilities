@@ -18,10 +18,13 @@ try:
     from modules.zsh_wrapper import (
         DEFAULT_MODE, 
         DEFAULT_VENV, 
-        DEFAULT_WRAPPER_RELATIVE_DIR,
-        DEFAULT_WRAPPER_ABSOLUTE_PATH,
+        # --- MODIFIED: Chỉ giữ lại các hằng số cần thiết ---
         process_zsh_wrapper_logic,
-        execute_zsh_wrapper_action
+        execute_zsh_wrapper_action,
+        # --- NEW: Import helpers ---
+        resolve_output_path_interactively,
+        resolve_root_interactively
+        # --- END NEW ---
     )
     
 except ImportError as e:
@@ -71,116 +74,33 @@ def main(
     logger = setup_logging(script_name="Zrap")
     logger.debug("Zrap script started.")
 
-    # --- 2. Mở rộng `~` thủ công cho tất cả Path ---
+    # --- 2. Mở rộng `~` thủ công cho tất cả Path & Validation ---
+    # Cần expanduser cho các tham số Path
     script_path = script_path_arg.expanduser()
     output = output_arg.expanduser() if output_arg else None
     root = root_arg.expanduser() if root_arg else None
-    # --- END ---
-
-    # --- 3. KIỂM TRA TỒN TẠI (thủ công) ---
-    if not script_path.exists():
-        logger.error(f"❌ Lỗi: File script không tồn tại (sau khi expanduser): {script_path}")
-        raise typer.Exit(code=1)
-    if not script_path.is_file():
-        logger.error(f"❌ Lỗi: Đường dẫn script không phải là file: {script_path}")
-        raise typer.Exit(code=1)
-        
-    if root and not root.exists():
-        logger.error(f"❌ Lỗi: Thư mục root chỉ định không tồn tại (sau khi expanduser): {root}")
-        raise typer.Exit(code=1)
-    if root and not root.is_dir():
-        logger.error(f"❌ Lỗi: Đường dẫn root không phải là thư mục: {root}")
-        raise typer.Exit(code=1)
-    # --- KẾT THÚC KIỂM TRA ---
-
     
-    # --- 4. Xử lý output mặc định + Xác nhận (MODIFIED to S/I/Q) ---
-    final_output_path: Optional[Path] = output
-    if final_output_path is None:
-        
-        script_name_without_ext = script_path.stem
-        
-        default_output_path: Path
-        # Tính toán đường dẫn mặc định
-        if mode == "absolute":
-            default_output_path = DEFAULT_WRAPPER_ABSOLUTE_PATH / script_name_without_ext
-            logger.warning(f"⚠️  Output path (-o) not specified for 'absolute' mode.")
-        else:
-            default_output_path = PROJECT_ROOT / DEFAULT_WRAPPER_RELATIVE_DIR / script_name_without_ext
-            logger.warning("⚠️  Output path (-o) not specified.")
-
-        
-        # --- NEW S/I/Q selection logic for Output Path ---
-        selected_output: Optional[Path] = None
-        
-        logger.warning(f"\n⚠️ Output Path (-o) was not specified.")
-        logger.warning(f"   Please select the destination for the Zsh wrapper:")
-        
-        while selected_output is None:
-            # 1. Hiển thị các lựa chọn
-            print(f"     [S] Use Suggested Path: {default_output_path.as_posix()}")
-            print("     [I] Input Custom Path")
-            print("     [Q] Quit / Cancel")
-
-            try:
-                # Chấp nhận S, I, Q (case-insensitive)
-                choice = input("   Enter your choice (S/I/Q): ").lower().strip()
-            except (EOFError, KeyboardInterrupt):
-                choice = 'q'
-            
-            if choice == 's':
-                selected_output = default_output_path
-                logger.info(f"✅ Option [S] selected. Using suggested path: {selected_output.as_posix()}")
-                
-            elif choice == 'i':
-                while True:
-                    try:
-                        # Chờ input đường dẫn tùy chỉnh
-                        custom_path_str = input("   Enter custom Output path (absolute or relative): ").strip()
-                        if not custom_path_str:
-                            print("   Lỗi: Đường dẫn không được để trống.")
-                            continue
-
-                        # Mở rộng user path và resolve tuyệt đối
-                        custom_path = Path(custom_path_str).expanduser().resolve()
-                        
-                        # Kiểm tra thư mục cha có tồn tại không và là thư mục
-                        parent_dir = custom_path.parent
-                        if not parent_dir.exists():
-                            logger.error(f"❌ Lỗi: Thư mục cha của đường dẫn Output không tồn tại: {parent_dir.as_posix()}")
-                            continue
-                        if not parent_dir.is_dir():
-                            logger.error(f"❌ Lỗi: Đường dẫn cha không phải là thư mục: {parent_dir.as_posix()}")
-                            continue
-
-                        selected_output = custom_path
-                        logger.info(f"✅ Option [I] selected. Using custom path: {selected_output.as_posix()}")
-                        break
-                    except Exception as e:
-                        logger.error(f"❌ Lỗi khi xử lý đường dẫn: {e}")
-                        
-            elif choice == 'q':
-                logger.error("❌ Operation cancelled by user.")
-                sys.exit(0) 
-                
-            else:
-                print("   Lựa chọn không hợp lệ. Vui lòng nhập S, I, hoặc Q.")
-                
-        final_output_path = selected_output
-    # --- END Xử lý output mặc định + Xác nhận ---
-
-    # --- 5. Tạo 'args' object giả lập cho core logic (Lần 1) ---
+    # --- 3. Xử lý output mặc định + Xác nhận (via Helper) ---
+    final_output_path: Path = resolve_output_path_interactively(
+        logger=logger, 
+        script_path=script_path, 
+        output_arg=output, 
+        mode=mode,
+        project_root=PROJECT_ROOT 
+    )
+    # Helper sẽ tự động thoát nếu người dùng chọn 'Q'
+    
+    # --- 4. Tạo 'args' object giả lập cho core logic (Lần 1) ---
     args_for_core = argparse.Namespace(
         script_path=str(script_path), 
         output=str(final_output_path), 
         mode=mode,
-        root=str(root) if root else None,
+        root=str(root) if root else None, 
         venv=venv,
         force=force
     )
-    # --- END ---
 
-    # 6. Execute Core Logic & Handle Fallback (Project Root S/I/Q - Giữ nguyên)
+    # 5. Execute Core Logic & Handle Fallback (Project Root S/I/Q - via Helper)
     try:
         result = process_zsh_wrapper_logic( logger=logger, args=args_for_core )
 
@@ -188,71 +108,27 @@ def main(
         if result and result.get("status") == "fallback_required":
             
             fallback_path: Path = result["fallback_path"]
-            selected_root: Optional[Path] = None
-
-            logger.warning(f"\n⚠️ Project Root (Git Root) was not found automatically.")
-            logger.warning(f"   Please select the Project Root for this wrapper:")
             
-            while selected_root is None:
-                # 1. Hiển thị các lựa chọn
-                print(f"     [S] Use Suggested Root: {fallback_path.as_posix()} (Script Parent Directory)")
-                print("     [I] Input Custom Path")
-                print("     [Q] Quit / Cancel")
-
-                try:
-                    choice = input("   Enter your choice (S/I/Q): ").lower().strip()
-                except (EOFError, KeyboardInterrupt):
-                    choice = 'q'
-                
-                if choice == 's':
-                    selected_root = fallback_path
-                    logger.info(f"✅ Option [S] selected. Using suggested root.")
-                    
-                elif choice == 'i':
-                    while True:
-                        try:
-                            custom_path_str = input("   Enter custom Project Root path (absolute or relative): ").strip()
-                            if not custom_path_str:
-                                print("   Lỗi: Đường dẫn không được để trống.")
-                                continue
-
-                            custom_path = Path(custom_path_str).expanduser().resolve()
-
-                            if not custom_path.exists() or not custom_path.is_dir():
-                                logger.error(f"❌ Lỗi: Đường dẫn nhập không tồn tại hoặc không phải là thư mục: {custom_path.as_posix()}")
-                                continue
-                            
-                            selected_root = custom_path
-                            logger.info(f"✅ Option [I] selected. Using custom root: {selected_root.as_posix()}")
-                            break
-                        except Exception as e:
-                            logger.error(f"❌ Lỗi khi xử lý đường dẫn: {e}")
-                            
-                elif choice == 'q':
-                    logger.error("❌ Operation cancelled by user.")
-                    sys.exit(0) 
-                    
-                else:
-                    print("   Lựa chọn không hợp lệ. Vui lòng nhập S, I, hoặc Q.")
+            # --- NEW: Gọi helper cho tương tác root ---
+            selected_root: Path = resolve_root_interactively(
+                logger=logger,
+                fallback_path=fallback_path
+            )
+            # Helper sẽ tự động thoát nếu người dùng chọn 'Q'
             
             # --- Tái xử lý với Root đã chọn ---
-            if selected_root:
-                args_for_core = argparse.Namespace(
-                    script_path=str(result["script_path"]), 
-                    output=str(result["output_path"]),
-                    mode=result["mode"],
-                    root=str(selected_root),
-                    venv=result["venv"],
-                    force=result["force"]
-                )
-                
-                result = process_zsh_wrapper_logic( logger=logger, args=args_for_core )
-            else:
-                 logger.error("❌ Operation cancelled or selection failed unexpectedly.")
-                 sys.exit(1)
-        # --- END Project Root Fallback ---
+            args_for_core_2 = argparse.Namespace(
+                script_path=str(result["script_path"]), 
+                output=str(result["output_path"]),
+                mode=result["mode"],
+                root=str(selected_root), # <-- SỬ DỤNG ROOT MỚI ĐÃ CHỌN
+                venv=result["venv"],
+                force=result["force"]
+            )
+            
+            result = process_zsh_wrapper_logic( logger=logger, args=args_for_core_2 )
 
-        # 7. Execute Action (Chỉ chạy nếu status là 'ok')
+        # 6. Execute Action (Chỉ chạy nếu status là 'ok')
         if result and result.get("status") == "ok": 
             execute_zsh_wrapper_action( logger=logger, result=result )
             log_success(logger, "Hoàn thành.")

@@ -16,7 +16,10 @@ current_dir = Path(__file__).parent
 modules_to_export: List[str] = [
     "zsh_wrapper_config",
     "zsh_wrapper_core",
-    "zsh_wrapper_executor"
+    "zsh_wrapper_executor",
+    # --- MODIFIED ---
+    "zsh_wrapper_helpers" 
+    # --- END MODIFIED ---
 ]
 
 # (This list is for Mypy/linters, but the main logic is globals())
