@@ -11,6 +11,9 @@ import configparser
 from pathlib import Path
 from typing import Set, Optional
 
+# --- NEW: Export list ---
+__all__ = ["is_git_repository", "find_git_root", "get_submodule_paths"]
+
 # ----------------------------------------------------------------------
 # FILE SYSTEM & CONFIG UTILITIES
 # ----------------------------------------------------------------------

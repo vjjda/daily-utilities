@@ -14,6 +14,9 @@ import os
 from pathlib import Path
 from typing import Set
 
+# --- NEW: Export list ---
+__all__ = ["is_path_matched", "parse_gitignore"]
+
 def is_path_matched(path: Path, patterns: Set[str], start_dir: Path) -> bool:
     """
     Checks if a path matches any pattern (using fnmatch for name or relative path).

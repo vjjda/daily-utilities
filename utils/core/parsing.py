@@ -8,6 +8,11 @@ String Parsing Utilities
 
 from typing import Union, Set
 
+# --- NEW: Export list ---
+__all__ = ["parse_comma_list"]
+
+from typing import Union, Set
+
 def parse_comma_list(value: Union[str, None]) -> Set[str]:
     """
     Converts a comma-separated string into a set of stripped items.

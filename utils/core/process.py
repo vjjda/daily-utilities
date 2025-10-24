@@ -10,8 +10,9 @@ import subprocess
 import logging
 from typing import List, Tuple, Union
 
-# Type hint for logger
 Logger = logging.Logger
+
+__all__ = ["run_command"]
 
 # ----------------------------------------------------------------------
 # PROCESS EXECUTION

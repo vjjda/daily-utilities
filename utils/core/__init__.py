@@ -21,13 +21,13 @@ Logger = logging.Logger
 # --- Tái xuất (Re-export) từ các module "anh em" ---
 
 # Từ utils/core/process.py
-from .process import run_command
+from .process import * # MODIFIED
 
 # Từ utils/core/git.py
-from .git import is_git_repository, find_git_root, get_submodule_paths
+from .git import * # MODIFIED
 
 # Từ utils/core/parsing.py
-from .parsing import parse_comma_list
+from .parsing import * # MODIFIED
 
 # Từ utils/core/filter.py (Logic này sẽ được thay thế ở Giai đoạn 1)
-from .filter import is_path_matched, parse_gitignore
+from .filter import * # MODIFIED
