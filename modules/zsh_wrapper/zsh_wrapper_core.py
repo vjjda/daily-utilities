@@ -101,34 +101,41 @@ def process_zsh_wrapper_logic(
 ) -> Dict[str, Any]:
     """
     Hàm logic chính, phân tích, tính toán và tạo nội dung wrapper.
+    
+    Nếu args.output là None, chỉ chạy logic xác định Project Root.
     """
     
     # 1. Lấy và kiểm tra các đường dẫn cơ bản
     script_path = Path(args.script_path).resolve()
-    output_path = Path(args.output).resolve()
     
-    if not script_path.exists() or not script_path.is_file():
-        logger.error(f"❌ Lỗi: File script không tồn tại: {args.script_path}")
-        raise FileNotFoundError(f"File không tìm thấy: {script_path}")
-    
-    # 2. Xác định các đường dẫn (Project, Venv)
+    # 2. Xác định Project Root
     project_root, is_fallback = _find_project_root(logger, script_path, args.root)
 
     # 2.5. Nếu cần fallback VÀ người dùng CHƯA chỉ định root tường minh
-    if is_fallback:
+    if is_fallback and args.root is None: # Thêm kiểm tra args.root is None để chỉ chạy khi tự động tìm thấy
         # Trả về đối tượng báo hiệu cho entry point (scripts/zsh_wrapper.py)
         # để nó tiến hành hỏi người dùng.
         return {
             "status": "fallback_required",
             "fallback_path": project_root, # Đường dẫn dự phòng
             "script_path": script_path,
-            "output_path": output_path,
+            "output_path": None, # Chưa có
             "venv": args.venv,
             "mode": args.mode,
             "force": args.force,
         }
     
-    # (Tiếp tục xử lý nếu Project Root đã được xác định hợp lệ)
+    # --- NEW: BƯỚC THOÁT SỚM (Chỉ chạy để xác định Project Root) ---
+    if args.output is None:
+        return {
+            "status": "ok",
+            "project_root_abs": project_root.resolve(), # Trả về Root đã resolve/tìm được
+            # Không có final_content/output_path
+        }
+    # --- END NEW ---
+
+    # (Tiếp tục xử lý nếu Project Root đã được xác định hợp lệ VÀ args.output đã có)
+    output_path = Path(args.output).resolve()
     venv_path = project_root / args.venv
     
     paths = {
@@ -142,6 +149,7 @@ def process_zsh_wrapper_logic(
     final_content = ""
 
     # 3. Xử lý theo mode
+    # ... (Phần này không đổi: Tạo final_content) ...
     if args.mode == "absolute":
         logger.info("Chế độ 'absolute': Tạo wrapper với đường dẫn tuyệt đối.")
         template = _load_template("absolute.zsh.template")
@@ -151,12 +159,13 @@ def process_zsh_wrapper_logic(
         logger.info("Chế độ 'relative': Tạo wrapper với đường dẫn tương đối.")
         template = _load_template("relative.zsh.template")
         final_content = _prepare_relative_mode(logger, template, paths)
-    
+
     # 4. Trả về kết quả cho executor
     return {
         "status": "ok",
         "final_content": final_content,
         "output_path": output_path,
-        "force": args.force
+        "force": args.force,
+        "project_root_abs": project_root.resolve(), # Giữ lại để nhất quán
     }
 # --- END MODIFIED ---
