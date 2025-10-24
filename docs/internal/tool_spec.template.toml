@@ -27,7 +27,10 @@ description = "Mô tả về công dụng của tool này."
 
 # (Tùy chọn) Đoạn text hiển thị ở cuối --help
 epilog = "Ví dụ sử dụng: c-new-tool --fix /path/to/scan"
-
+# --- NEW: Cấu hình cho Typer context_settings ---
+# allow_interspersed_args: Cho phép đối số vị trí (Argument) và tùy chọn (Option)
+# được đặt xen kẽ nhau (e.g., c_demo . --fix thay vì c_demo --fix .).
+allow_interspersed_args = true
 
 # --- 3. DANH SÁCH ARGUMENTS (TYPER) ---
 # (MỚI: Cấu trúc đơn giản hơn)

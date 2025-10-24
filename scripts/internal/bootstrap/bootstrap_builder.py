@@ -65,17 +65,26 @@ def build_config_imports(module_name: str, config: Dict[str, Any]) -> str:
 # --- END MODIFIED ---
 
 def build_typer_app_code(config: Dict[str, Any]) -> str:
-    # (Hàm này giữ nguyên)
+    """Tạo code khởi tạo Typer App."""
     help_config = config.get('cli', {}).get('help', {})
     desc = help_config.get('description', f"Mô tả cho {config['meta']['tool_name']}.")
     epilog = help_config.get('epilog', "")
+    
+    # --- MODIFIED: Get allow_interspersed_args setting ---
+    # Đọc giá trị từ spec, mặc định là False (nếu không có trong file spec)
+    allow_interspersed = help_config.get('allow_interspersed_args', False)
+    allow_interspersed_str = str(allow_interspersed) # Chuyển True/False thành chuỗi "True"/"False"
+    # --- END MODIFIED ---
     
     code_lines = [
         f"app = typer.Typer(",
         f"    help=\"{desc}\",",
         f"    epilog=\"{epilog}\",",
         f"    add_completion=False,",
-        f"    context_settings={{'help_option_names': ['--help', '-h']}}",
+        f"    context_settings={{",
+        f"        'help_option_names': ['--help', '-h'],",
+        f"        'allow_interspersed_args': {allow_interspersed_str}" , # <--- CHỈNH SỬA
+        f"    }}",
         f")"
     ]
     return "\n".join(code_lines)
