@@ -167,9 +167,6 @@ def main(
                 print("   Lựa chọn không hợp lệ. Vui lòng nhập S, I, hoặc Q.")
                 
         final_output_path = selected_output
-        if final_output_path is None: 
-            logger.error("❌ Output path was not set due to unexpected error.")
-            sys.exit(1)
     # --- END Xử lý output mặc định + Xác nhận ---
 
     # --- 5. Tạo 'args' object giả lập cho core logic (Lần 1) ---
