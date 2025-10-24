@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # Path: modules/{module_name}/__init__.py
 
 """
@@ -24,11 +23,12 @@ modules_to_export: List[str] = [
 # (This list is for Mypy/linters, but the main logic is globals())
 __all__: List[str] = []
 
-for submodule_stem in modules_to_export: # <-- Đã đổi tên biến lặp
+for submodule_stem in modules_to_export:
     try:
         # 1. Import the module object
-        module = import_module(f".{submodule_stem}", package=__name__) # <-- Dùng submodule_stem
-   
+        # Sử dụng submodule_stem để import submodule
+        module = import_module(f".{submodule_stem}", package=__name__)
+        
         # 2. Check if __all__ is defined and add its contents
         if hasattr(module, '__all__'):
             public_symbols = getattr(module, '__all__')
@@ -43,12 +43,13 @@ for submodule_stem in modules_to_export: # <-- Đã đổi tên biến lặp
         
     except ImportError as e:
         # Handle cases where a submodule might fail to import
-        # --- MODIFIED: Escaped braces {{e}} ---
-        print(f"Warning: Could not import symbols from {submodule_stem}: {{e}}") # <-- Dùng submodule_stem
-        # --- END MODIFIED ---
+        # {{e}} được escape để bootstrap_tool.py không thay thế nó
+        # f-string sẽ thay thế {submodule_stem} và {e} khi code chạy
+        print(f"Warning: Could not import symbols from {submodule_stem}: {{e}}")
 
 # Clean up temporary variables
-del Path, import_module, List, current_dir, modules_to_export, submodule_stem # <-- Đã cập nhật biến xóa
+# Xóa biến submodule_stem mới
+del Path, import_module, List, current_dir, modules_to_export, submodule_stem
 if 'module' in locals():
     del module
 if 'public_symbols' in locals():
