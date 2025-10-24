@@ -70,7 +70,17 @@ def resolve_output_path_interactively(
         elif choice == 'i':
             while True:
                 try:
-                    custom_path_str = input("   Enter custom Output path (absolute or relative): ").strip()
+                    # --- MODIFIED: Thêm thông tin về mode vào prompt ---
+                    if mode == "relative":
+                        prompt_mode_info = " (Mode: relative -> path relative to Project Root/absolute)"
+                    elif mode == "absolute":
+                        prompt_mode_info = " (Mode: absolute -> full path required)"
+                    else:
+                        prompt_mode_info = ""
+                        
+                    custom_path_str = input(f"   Enter custom Output path{prompt_mode_info}: ").strip()
+                    # --- END MODIFIED ---
+
                     if not custom_path_str:
                         print("   Error: Path cannot be empty.")
                         continue
