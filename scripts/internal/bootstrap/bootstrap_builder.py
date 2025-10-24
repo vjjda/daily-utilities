@@ -18,9 +18,15 @@ __all__ = [
 
 
 def build_config_constants(config: Dict[str, Any]) -> str:
-    # (Hàm này giữ nguyên)
+    """Tạo mã Python cho các hằng số DEFAULT_..."""
     code_lines = []
-    default_args = [arg for arg in get_cli_args(config) if 'default' in arg]
+    
+    # --- MODIFIED: Áp dụng filter mới: phải có default VÀ type KHÔNG phải là bool ---
+    default_args = [
+        arg for arg in get_cli_args(config) 
+        if 'default' in arg and arg.get('type') != 'bool'
+    ]
+    # --- END MODIFIED ---
     
     if not default_args:
         code_lines.append("# (No default constants defined in tool.spec.toml)")
@@ -34,8 +40,12 @@ def build_config_constants(config: Dict[str, Any]) -> str:
     return "\n".join(code_lines)
 
 def build_config_all_list(config: Dict[str, Any]) -> str:
-    # (Hàm này giữ nguyên)
-    default_args = [arg for arg in get_cli_args(config) if 'default' in arg]
+    """Tạo chuỗi cho __all__ trong file config."""
+    # --- MODIFIED: Áp dụng filter mới: phải có default VÀ type KHÔNG phải là bool ---
+    default_args = [
+        arg for arg in get_cli_args(config) 
+        if 'default' in arg and arg.get('type') != 'bool'
+    ]
     if not default_args:
         return "" 
         
@@ -49,7 +59,11 @@ def build_config_all_list(config: Dict[str, Any]) -> str:
 # --- MODIFIED: Hoàn tác lại logic cũ ---
 def build_config_imports(module_name: str, config: Dict[str, Any]) -> str:
     """Tạo code Python cho các (import) hằng số default."""
-    default_args = [arg for arg in get_cli_args(config) if 'default' in arg]
+    # --- MODIFIED: Áp dụng filter mới: phải có default VÀ type KHÔNG phải là bool ---
+    default_args = [
+        arg for arg in get_cli_args(config) 
+        if 'default' in arg and arg.get('type') != 'bool'
+    ]
     
     if not default_args:
         return "# (No default constants to import)"
@@ -139,7 +153,14 @@ def build_typer_main_signature(config: Dict[str, Any]) -> str:
         type_hint = py_type 
 
         if 'default' in arg:
-            default_const = f"DEFAULT_{name.upper()}"
+            # --- MODIFIED LOGIC START ---
+            if py_type == 'bool':
+                # Cờ boolean dùng giá trị mặc định trực tiếp (VD: False)
+                # str().capitalize() đảm bảo True/False được viết hoa chữ cái đầu
+                default_const = str(arg['default']).capitalize() 
+            else:
+                # Các kiểu dữ liệu khác dùng hằng số đã được import
+                default_const = f"DEFAULT_{name.upper()}"
         else:
             if py_type == 'bool':
                 default_const = "False"
