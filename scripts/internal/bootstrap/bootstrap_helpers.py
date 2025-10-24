@@ -1,0 +1,31 @@
+# Path: scripts/internal/bootstrap/bootstrap_helpers.py
+
+"""
+Helper utilities for the Bootstrap module.
+(Loading templates, parsing config)
+"""
+
+import logging
+from pathlib import Path
+from typing import Dict, Any, List
+
+from .bootstrap_config import TEMPLATE_DIR
+
+__all__ = ["load_template", "get_cli_args"]
+
+
+def load_template(template_name: str) -> str:
+    """Helper: Đọc nội dung từ một file template."""
+    try:
+        template_path = TEMPLATE_DIR / template_name
+        return template_path.read_text(encoding='utf-8')
+    except FileNotFoundError:
+        logging.error(f"Lỗi nghiêm trọng: Không tìm thấy template '{template_name}'")
+        raise
+    except Exception as e:
+        logging.error(f"Lỗi khi đọc template '{template_name}': {e}")
+        raise
+
+def get_cli_args(config: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """Helper: Lấy danh sách [[cli.args]] từ config."""
+    return config.get('cli', {}).get('args', [])
