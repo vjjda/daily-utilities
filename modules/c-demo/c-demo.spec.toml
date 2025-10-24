@@ -1,0 +1,55 @@
+# Path: modules/c-demo/c-demo.spec.toml
+#
+# BẢN THIẾT KẾ THỬ NGHIỆM (TEST) CHO TOOL "c-demo"
+# (Đã cập nhật lên cấu trúc Typer [cli])
+#
+
+# --- 1. THÔNG TIN CƠ BẢN ---
+[meta]
+tool_name = "c-demo"
+script_file = "c_demo.py"
+logger_name = "CDemo"
+
+# --- 2. CẤU HÌNH CLI (TYPER) ---
+[cli.help]
+description = "Một công cụ demo để thử nghiệm hệ thống bootstrap mới (Typer + SRP)."
+epilog = "Ví dụ: c-demo /path/to/dir -f -L 3 --format json"
+
+# --- 3. DANH SÁCH ARGUMENTS (TYPER) ---
+
+# --- TEST 1: Positional Argument (Path, bắt buộc) ---
+[[cli.args]]
+name = "target_dir"
+type = "Path" 
+# (Không có 'default', nên sẽ là bắt buộc)
+help = "Thư mục mục tiêu để chạy demo."
+is_argument = true 
+
+# --- TEST 2: Flag (bool, có default) ---
+[[cli.args]]
+name = "fix"
+short = "-f"
+type = "bool"
+default = false
+help = "Áp dụng các thay đổi (thay vì chỉ báo cáo)."
+# (is_argument = false là mặc định)
+
+# --- TEST 3: Option có giá trị (int, không default) ---
+[[cli.args]]
+name = "level"
+short = "-L"
+type = "int"
+# (Không có 'default', type hint sẽ là Optional[int])
+help = "Giới hạn độ sâu xử lý."
+
+# --- TEST 4: Option có giá trị (str, có default, không short) ---
+[[cli.args]]
+name = "format"
+type = "str"
+default = "text"
+help = "Định dạng đầu ra."
+
+# --- 4. TÀI LIỆU ---
+[docs]
+enabled = true
+short_description = "Một công cụ demo để kiểm tra bootstrap (Typer + SRP)."
