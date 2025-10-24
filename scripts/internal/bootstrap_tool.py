@@ -108,7 +108,7 @@ def main():
 
     # --- (3. Load TOML giữ nguyên) ---
     try:
-        with open(spec_file_path, 'rb') as f:
+        with open(spec_file_path, 'r') as f:
             config = tomllib.load(f)
     except Exception as e:
         logger.error(f"❌ Lỗi khi đọc file TOML: {e}")
