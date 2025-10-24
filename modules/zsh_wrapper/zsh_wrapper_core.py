@@ -12,6 +12,10 @@ from typing import Dict, Any, List, Optional
 # Import từ utils
 from utils.core import find_git_root
 
+# --- NEW: __all__ definition ---
+__all__ = ["process_zsh_wrapper_logic"]
+# --- END NEW ---
+
 # Thư mục chứa template của module này
 TEMPLATE_DIR = Path(__file__).parent / "templates"
 

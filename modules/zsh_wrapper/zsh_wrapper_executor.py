@@ -10,6 +10,10 @@ import os
 from pathlib import Path
 from typing import Dict, Any, List, Optional
 
+# --- NEW: __all__ definition ---
+__all__ = ["execute_zsh_wrapper_action"]
+# --- END NEW ---
+
 def execute_zsh_wrapper_action(
     logger: logging.Logger, 
     result: Dict[str, Any]

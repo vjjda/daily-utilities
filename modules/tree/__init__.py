@@ -2,12 +2,7 @@
 
 """
 Module Gateway (Facade) for the Tree (ctree) module.
-
-This facade dynamically imports and re-exports all public symbols
-(defined in __all__) from its internal modules (_config, _core, _executor).
-
-External consumers (like scripts/tree.py) should *only* import from here:
-from modules.tree import generate_tree, load_and_merge_config
+(Logic updated to match utils/core/__init__.py)
 """
 
 from pathlib import Path
@@ -24,7 +19,7 @@ modules_to_export: List[str] = [
     "tree_executor"
 ]
 
-# This will hold all public symbols
+# (This list is for Mypy/linters, but the main logic is globals())
 __all__: List[str] = []
 
 for module_name in modules_to_export:
@@ -41,7 +36,7 @@ for module_name in modules_to_export:
                 # Add it to the namespace of this __init__.py
                 globals()[name] = obj
             
-            # Add names to this module's __all__
+            # Add to __all__ for linters
             __all__.extend(public_symbols)
         
     except ImportError as e:
@@ -50,4 +45,12 @@ for module_name in modules_to_export:
 
 # Clean up temporary variables
 del Path, import_module, List, current_dir, modules_to_export, module_name
-del module, public_symbols, name, obj
+# Check if loop ran at all before deleting
+if 'module' in locals():
+    del module
+if 'public_symbols' in locals():
+    del public_symbols
+if 'name' in locals():
+    del name
+if 'obj' in locals():
+    del obj

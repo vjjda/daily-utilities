@@ -12,17 +12,16 @@ sys.path.append(str(PROJECT_ROOT))
 try:
     from utils.logging_config import setup_logging, log_success
     
-    # --- CONFIG DEFAULTS ---
-    # (Tự động import các giá trị default từ _config.py)
-    # --- MODIFIED: Thêm DEFAULT_WRAPPER_DIR ---
-    from modules.zsh_wrapper.zsh_wrapper_config import DEFAULT_MODE, DEFAULT_VENV, DEFAULT_WRAPPER_DIR
+    # --- MODIFIED: Import từ module gateway ---
+    from modules.zsh_wrapper import (
+        DEFAULT_MODE, 
+        DEFAULT_VENV, 
+        DEFAULT_WRAPPER_DIR,
+        process_zsh_wrapper_logic,
+        execute_zsh_wrapper_action
+    )
     # --- END MODIFIED ---
-    # --- END CONFIG DEFAULTS ---
     
-    # --- MODULE IMPORTS ---
-    from modules.zsh_wrapper.zsh_wrapper_core import process_zsh_wrapper_logic
-    from modules.zsh_wrapper.zsh_wrapper_executor import execute_zsh_wrapper_action
-    # ----------------------
 except ImportError as e:
     print(f"Lỗi: Không thể import utils/modules: {e}", file=sys.stderr)
     sys.exit(1)
@@ -43,9 +42,7 @@ def main():
     )
 
     parser.add_argument("script_path", help="Đường dẫn đến file Python cần wrap.")
-    # --- MODIFIED: Bỏ required=True, thêm default=None ---
-    parser.add_argument("-o", "--output", default=None, help="Đường dẫn để tạo file wrapper Zsh. [Mặc định: {DEFAULT_WRAPPER_DIR}/{tên_script}]")
-    # --- END MODIFIED ---
+    parser.add_argument("-o", "--output", default=None, help=f"Đường dẫn để tạo file wrapper Zsh. [Mặc định: {DEFAULT_WRAPPER_DIR}/{{tên_script}}]")
     parser.add_argument("-m", "--mode", choices=["relative", "absolute"], default=DEFAULT_MODE, help="Loại wrapper: 'relative' (project di chuyển được) hoặc 'absolute' (wrapper di chuyển được).")
     parser.add_argument("-r", "--root", help="Chỉ định Project Root. Mặc định: tự động tìm (find_git_root() từ file script).")
     parser.add_argument("-v", "--venv", default=DEFAULT_VENV, help="Tên thư mục virtual environment.")
@@ -57,14 +54,12 @@ def main():
     logger = setup_logging(script_name="Zrap")
     logger.debug("Zrap script started.")
     
-    # --- NEW: Xử lý output mặc định + Xác nhận ---
+    # --- Xử lý output mặc định + Xác nhận ---
     if args.output is None:
         try:
             # Tính toán đường dẫn mặc định
             script_name_without_ext = Path(args.script_path).stem
-            # --- MODIFIED: Sử dụng hằng số DEFAULT_WRAPPER_DIR ---
             default_output_path = PROJECT_ROOT / DEFAULT_WRAPPER_DIR / script_name_without_ext
-            # --- END MODIFIED ---
             
             # Thông báo cho người dùng
             logger.warning("⚠️  Output path (-o) not specified.")
@@ -88,7 +83,7 @@ def main():
             # Đã xử lý ở __main__, nhưng thêm vào đây cho an toàn
             print("\n\n❌ [Lệnh dừng] Hoạt động của tool đã bị dừng.")
             sys.exit(1)
-    # --- END NEW ---
+    # --- END ---
 
     # 3. Execute Core Logic
     try:

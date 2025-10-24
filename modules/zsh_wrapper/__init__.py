@@ -1,8 +1,8 @@
-# Path: modules/path_checker/__init__.py
+# Path: modules/zsh_wrapper/__init__.py
 
 """
-Module Gateway (Facade) for the Path Checker (cpath) module.
-(Logic updated to match utils/core/__init__.py)
+Module Gateway (Facade) for the Zsh Wrapper (zrap) module.
+(Logic copied from utils/core/__init__.py to fix syntax error)
 """
 
 from pathlib import Path
@@ -14,9 +14,9 @@ current_dir = Path(__file__).parent
 
 # Define the explicit order of internal modules to load
 modules_to_export: List[str] = [
-    "path_checker_config",
-    "path_checker_core",
-    "path_checker_executor"
+    "zsh_wrapper_config",
+    "zsh_wrapper_core",
+    "zsh_wrapper_executor"
 ]
 
 # (This list is for Mypy/linters, but the main logic is globals())
@@ -24,7 +24,7 @@ __all__: List[str] = []
 
 for module_name in modules_to_export:
     try:
-        # 1. Import the module object (e.g., .path_checker_config)
+        # 1. Import the module object (e.g., .zsh_wrapper_config)
         module = import_module(f".{module_name}", package=__name__)
         
         # 2. Check if __all__ is defined and add its contents

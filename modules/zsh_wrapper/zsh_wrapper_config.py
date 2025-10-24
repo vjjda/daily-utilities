@@ -8,6 +8,10 @@ import os
 from pathlib import Path
 from typing import Dict, Any
 
+# --- NEW: __all__ definition ---
+__all__ = ["DEFAULT_MODE", "DEFAULT_VENV", "DEFAULT_WRAPPER_DIR"]
+# --- END NEW ---
+
 # --- Constants generated from tool.spec.toml ---
 DEFAULT_MODE = "relative"
 DEFAULT_VENV = ".venv"
