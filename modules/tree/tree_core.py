@@ -82,7 +82,7 @@ def merge_config_sources(
     )
     final_use_gitignore = False if args.no_gitignore else use_gitignore_from_config
     
-    gitignore_spec: Optional['pathspec.PathSpec'] = None
+    gitignore_spec: Optional['pathspec.PathSpec'] = None # type: ignore[reportUnknownMemberType, reportInvalidTypeForm]
     if is_git_repo and final_use_gitignore:
         logger.debug("Git repository detected. Loading .gitignore patterns via pathspec.")
         gitignore_spec = parse_gitignore(start_dir)
@@ -107,7 +107,7 @@ def merge_config_sources(
     final_dirs_only_mode = dirs_only_cli if dirs_only_cli is not None else dirs_only_file
     
     global_dirs_only = final_dirs_only_mode == '_ALL_'
-    dirs_only_list_custom = set()
+    dirs_only_list_custom: Set[str] = set()
     if final_dirs_only_mode is not None and not global_dirs_only:
         dirs_only_list_custom = parse_comma_list(final_dirs_only_mode)
     final_dirs_only_list = DEFAULT_DIRS_ONLY_LOGIC.union(dirs_only_list_custom)
