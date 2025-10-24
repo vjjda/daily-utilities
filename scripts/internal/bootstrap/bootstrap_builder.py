@@ -18,7 +18,7 @@ __all__ = [
 
 
 def build_config_constants(config: Dict[str, Any]) -> str:
-    """Tạo code Python cho các hằng số default."""
+    # (Hàm này giữ nguyên)
     code_lines = []
     default_args = [arg for arg in get_cli_args(config) if 'default' in arg]
     
@@ -34,7 +34,7 @@ def build_config_constants(config: Dict[str, Any]) -> str:
     return "\n".join(code_lines)
 
 def build_config_all_list(config: Dict[str, Any]) -> str:
-    """Tạo danh sách __all__ cho file config."""
+    # (Hàm này giữ nguyên)
     default_args = [arg for arg in get_cli_args(config) if 'default' in arg]
     if not default_args:
         return "" 
@@ -46,6 +46,7 @@ def build_config_all_list(config: Dict[str, Any]) -> str:
             
     return ", ".join(const_names)
 
+# --- MODIFIED: Hoàn tác lại logic cũ ---
 def build_config_imports(module_name: str, config: Dict[str, Any]) -> str:
     """Tạo code Python cho các (import) hằng số default."""
     default_args = [arg for arg in get_cli_args(config) if 'default' in arg]
@@ -59,10 +60,12 @@ def build_config_imports(module_name: str, config: Dict[str, Any]) -> str:
         const_names.append(const_name)
         
     import_list = ", ".join(const_names)
+    # (Sử dụng lại logic cũ, dùng trực tiếp module_name)
     return f"from modules.{module_name}.{module_name}_config import {import_list}"
+# --- END MODIFIED ---
 
 def build_typer_app_code(config: Dict[str, Any]) -> str:
-    """Tạo code Typer App() từ [cli.help]."""
+    # (Hàm này giữ nguyên)
     help_config = config.get('cli', {}).get('help', {})
     desc = help_config.get('description', f"Mô tả cho {config['meta']['tool_name']}.")
     epilog = help_config.get('epilog', "")
@@ -78,7 +81,7 @@ def build_typer_app_code(config: Dict[str, Any]) -> str:
     return "\n".join(code_lines)
 
 def build_typer_path_expands(config: Dict[str, Any]) -> str:
-    """Tạo code .expanduser() cho các tham số Path."""
+    # (Hàm này giữ nguyên)
     code_lines = []
     path_args = [arg for arg in get_cli_args(config) if arg.get('type') == 'Path']
     if not path_args:
@@ -94,7 +97,7 @@ def build_typer_path_expands(config: Dict[str, Any]) -> str:
     return "\n".join(code_lines)
 
 def build_typer_args_pass_to_core(config: Dict[str, Any]) -> str:
-    """Tạo các kwargs để truyền vào hàm core_logic."""
+    # (Hàm này giữ nguyên)
     code_lines = []
     args = get_cli_args(config)
     if not args:
@@ -110,7 +113,7 @@ def build_typer_args_pass_to_core(config: Dict[str, Any]) -> str:
     return "\n".join(code_lines)
 
 def build_typer_main_signature(config: Dict[str, Any]) -> str:
-    """Tạo chữ ký hàm def main(...) cho Typer."""
+    # (Hàm này giữ nguyên)
     code_lines = [
         f"def main(",
         f"    ctx: typer.Context,"

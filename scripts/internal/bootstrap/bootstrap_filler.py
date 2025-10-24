@@ -21,7 +21,7 @@ __all__ = [
 
 
 def generate_bin_wrapper(config: Dict[str, Any]) -> str:
-    """Tạo nội dung cho file wrapper Zsh trong /bin/"""
+    # (Hàm này giữ nguyên)
     template = load_template("bin_wrapper.zsh.template")
     return template.format(
         tool_name=config['meta']['tool_name'],
@@ -32,22 +32,27 @@ def generate_script_entrypoint(config: Dict[str, Any]) -> str:
     """Tạo nội dung cho file entrypoint Python trong /scripts/"""
     template = load_template("script_entrypoint.py.template")
     
+    # --- MODIFIED: Hoàn tác logic, truyền module_name (thay vì config) ---
     config_imports_code = build_config_imports(config['module_name'], config)
+    # --- END MODIFIED ---
+    
     typer_app_code = build_typer_app_code(config)
     typer_main_sig = build_typer_main_signature(config)
     typer_path_expands = build_typer_path_expands(config)
     typer_args_pass = build_typer_args_pass_to_core(config)
 
+    # --- MODIFIED: Hoàn tác, dùng 'module_name' (thay vì python_module_name) ---
     return template.format(
         script_file=config['meta']['script_file'],
         logger_name=config['meta']['logger_name'],
-        module_name=config['module_name'],
+        module_name=config['module_name'], # <--- Hoàn tác
         config_imports=config_imports_code,
         typer_app_code=typer_app_code,
         typer_main_function_signature=typer_main_sig,
         typer_path_expands=typer_path_expands,
         typer_args_pass_to_core=typer_args_pass
     )
+    # --- END MODIFIED ---
 
 def generate_module_file(config: Dict[str, Any], file_type: str) -> str:
     """Tạo nội dung cho các file _config, _core, _executor, _loader"""
@@ -60,7 +65,9 @@ def generate_module_file(config: Dict[str, Any], file_type: str) -> str:
     template_name = template_name_map[file_type]
     template = load_template(template_name)
     
-    format_dict = {"module_name": config['module_name']}
+    # --- MODIFIED: Hoàn tác, dùng 'module_name' (thay vì python_module_name) ---
+    format_dict = {"module_name": config['module_name']} # <--- Hoàn tác
+    # --- END MODIFIED ---
     
     if file_type == "config":
         config_constants_code = build_config_constants(config)
@@ -73,10 +80,12 @@ def generate_module_file(config: Dict[str, Any], file_type: str) -> str:
 def generate_module_init_file(config: Dict[str, Any]) -> str:
     """Tạo file gateway __init__.py."""
     template = load_template("module_init.py.template")
-    return template.format(module_name=config['module_name'])
+    # --- MODIFIED: Hoàn tác, dùng 'module_name' (thay vì python_module_name) ---
+    return template.format(module_name=config['module_name']) # <--- Hoàn tác
+    # --- END MODIFIED ---
 
 def generate_doc_file(config: Dict[str, Any]) -> str:
-    """Tạo file tài liệu Markdown (tùy chọn)"""
+    # (Hàm này giữ nguyên)
     template = load_template("doc_file.md.template")
     
     return template.format(
