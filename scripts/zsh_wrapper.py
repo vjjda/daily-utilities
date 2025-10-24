@@ -65,10 +65,7 @@ def main(
         help="Ghi đè file output nếu đã tồn tại."
     )
 ):
-    """
-    Tạo một wrapper Zsh cho một script Python, tự động quản lý venv và PYTHONPATH.
-    """
-    
+    # --- 1. Setup Logging (sớm) ---
     logger = setup_logging(script_name="Zrap")
     logger.debug("Zrap script started.")
 
@@ -78,42 +75,35 @@ def main(
     root = root_arg.expanduser() if root_arg else None
     # --- END ---
 
-    # --- 3. KIỂM TRA TỒN TẠI (thủ công) ---
+    # --- 3. KIỂM TRA TỒN TẠI (thủ công) (Giữ nguyên) ---
     if not script_path.exists():
         logger.error(f"❌ Lỗi: File script không tồn tại (sau khi expanduser): {script_path}")
         raise typer.Exit(code=1)
     if not script_path.is_file():
         logger.error(f"❌ Lỗi: Đường dẫn script không phải là file: {script_path}")
         raise typer.Exit(code=1)
-        
-    if root and not root.exists():
-        logger.error(f"❌ Lỗi: Thư mục root chỉ định không tồn tại (sau khi expanduser): {root}")
-        raise typer.Exit(code=1)
+    # ... (Kiểm tra root giữ nguyên) ...
     if root and not root.is_dir():
         logger.error(f"❌ Lỗi: Đường dẫn root không phải là thư mục: {root}")
         raise typer.Exit(code=1)
     # --- KẾT THÚC KIỂM TRA ---
 
     
-    # --- 4. Xử lý output mặc định + Xác nhận ---
-    final_output_path = output # Sử dụng biến đã expand
+    # --- 4. Xử lý output mặc định + Xác nhận (Giữ nguyên) ---
+    final_output_path = output
     if final_output_path is None:
         try:
             script_name_without_ext = script_path.stem
             
-            # --- MODIFIED: Logic mặc định dựa trên config ---
             default_output_path: Path
             if mode == "absolute":
-                # Mặc định cho 'absolute' từ config
                 default_output_path = DEFAULT_WRAPPER_ABSOLUTE_PATH / script_name_without_ext
                 logger.warning(f"⚠️  Output path (-o) not specified for 'absolute' mode.")
                 logger.info(f"   Defaulting to: {default_output_path.as_posix()}")
             else:
-                # Mặc định cho 'relative' từ config
                 default_output_path = PROJECT_ROOT / DEFAULT_WRAPPER_RELATIVE_DIR / script_name_without_ext
                 logger.warning("⚠️  Output path (-o) not specified.")
                 logger.info(f"   Defaulting to: {default_output_path.relative_to(PROJECT_ROOT).as_posix()}")
-            # --- END MODIFIED ---
 
             logger.info("   (You can use -o <path> to specify a custom name)")
             if not typer.confirm("   Proceed with this default path?", abort=True): pass 
@@ -126,40 +116,79 @@ def main(
     # --- 5. Tạo 'args' object giả lập cho core logic (Lần 1) ---
     args_for_core = argparse.Namespace(
         script_path=str(script_path), 
-        output=str(final_output_path), # Sử dụng biến đã expand/default 
+        output=str(final_output_path),
         mode=mode,
-        root=str(root) if root else None, # Sử dụng biến đã expand
+        root=str(root) if root else None,
         venv=venv,
         force=force
     )
     # --- END ---
 
-    # --- 6. Execute Core Logic & Handle Fallback (MODIFIED) ---
+    # 6. Execute Core Logic & Handle Fallback (MODIFIED)
     try:
         result = process_zsh_wrapper_logic( logger=logger, args=args_for_core )
 
-        # --- NEW: Logic xử lý Fallback ---
+        # --- NEW: Logic xử lý Fallback (3 Lựa chọn) ---
         if result and result.get("status") == "fallback_required":
+            
             fallback_path: Path = result["fallback_path"]
+            selected_root: Optional[Path] = None
+
+            logger.warning(f"\n⚠️ Project Root (Git Root) was not found automatically.")
+            logger.warning(f"   Please select the Project Root for this wrapper:")
             
-            logger.warning(f"\n⚠️ Project Root (Git Root) không tìm thấy.")
-            logger.warning(f"   Đề xuất sử dụng thư mục cha của script: {fallback_path.as_posix()}")
-            
-            try:
-                confirmation = typer.confirm("   Bạn có muốn sử dụng đường dẫn này làm Project Root không?", abort=True)
-            except (typer.Abort, KeyboardInterrupt):
-                logger.error("❌ Operation cancelled by user.")
-                sys.exit(0)
-            
-            if confirmation:
-                logger.info(f"✅ Đã xác nhận. Bắt đầu lại xử lý với Project Root đã chọn.")
+            while selected_root is None:
+                # 1. Hiển thị các lựa chọn
+                print(f"     [1] Use Suggested Root: {fallback_path.as_posix()} (Script Parent Directory)")
+                print("     [2] Input Custom Path")
+                print("     [Q] Quit / Cancel")
+
+                try:
+                    choice = input("   Enter your choice (1/2/Q): ").lower().strip()
+                except (EOFError, KeyboardInterrupt):
+                    choice = 'q'
                 
+                if choice == '1':
+                    selected_root = fallback_path
+                    logger.info(f"✅ Option 1 selected. Using suggested root.")
+                    
+                elif choice == '2':
+                    while True:
+                        try:
+                            # Chờ input đường dẫn tùy chỉnh
+                            custom_path_str = input("   Enter custom Project Root path (absolute or relative): ").strip()
+                            if not custom_path_str:
+                                print("   Lỗi: Đường dẫn không được để trống.")
+                                continue
+
+                            # Mở rộng user path và resolve tuyệt đối
+                            custom_path = Path(custom_path_str).expanduser().resolve()
+
+                            if not custom_path.exists() or not custom_path.is_dir():
+                                logger.error(f"❌ Lỗi: Đường dẫn nhập không tồn tại hoặc không phải là thư mục: {custom_path.as_posix()}")
+                                continue
+                            
+                            selected_root = custom_path
+                            logger.info(f"✅ Option 2 selected. Using custom root: {selected_root.as_posix()}")
+                            break
+                        except Exception as e:
+                            logger.error(f"❌ Lỗi khi xử lý đường dẫn: {e}")
+                            
+                elif choice == 'q':
+                    logger.error("❌ Operation cancelled by user.")
+                    sys.exit(0) 
+                    
+                else:
+                    print("   Lựa chọn không hợp lệ. Vui lòng nhập 1, 2, hoặc Q.")
+            
+            # --- Tái xử lý với Root đã chọn ---
+            if selected_root:
                 # Tạo một args mới, đặt root tường minh để bỏ qua tìm kiếm Git
                 args_for_core = argparse.Namespace(
                     script_path=str(result["script_path"]), 
                     output=str(result["output_path"]),
                     mode=result["mode"],
-                    root=str(fallback_path), # <-- Ghi đè root tường minh
+                    root=str(selected_root), # <-- Ghi đè root tường minh
                     venv=result["venv"],
                     force=result["force"]
                 )
@@ -167,8 +196,8 @@ def main(
                 # Chạy lại core logic lần 2
                 result = process_zsh_wrapper_logic( logger=logger, args=args_for_core )
             else:
-                logger.error("❌ Operation cancelled by user.")
-                sys.exit(0) 
+                 logger.error("❌ Operation cancelled or selection failed unexpectedly.")
+                 sys.exit(1)
         # --- END NEW ---
 
         # 7. Execute Action (Chỉ chạy nếu status là 'ok')
