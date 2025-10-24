@@ -15,6 +15,11 @@ from .tree_config import (
 )
 # ------------------------------------------
 
+# --- NEW: __all__ definition ---
+__all__ = ["generate_tree"]
+# --- END NEW ---
+
+
 # --- MAIN RECURSIVE LOGIC (MOVED FROM CORE) ---
 def generate_tree(
     directory: Path, 

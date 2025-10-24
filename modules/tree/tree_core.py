@@ -15,6 +15,10 @@ from .tree_config import (
     FALLBACK_USE_GITIGNORE
 )
 
+# --- NEW: __all__ definition ---
+__all__ = ["load_and_merge_config", "CONFIG_TEMPLATE"]
+# --- END NEW ---
+
 def load_and_merge_config(
     args: argparse.Namespace, 
     start_dir: Path, 

@@ -7,6 +7,24 @@ Configuration constants for the Tree (ctree) module.
 
 from typing import Set, Optional
 
+# --- NEW: __all__ definition ---
+__all__ = [
+    # Logic Fallbacks
+    "DEFAULT_IGNORE", "DEFAULT_PRUNE", "DEFAULT_DIRS_ONLY_LOGIC",
+    "FALLBACK_SHOW_SUBMODULES", "DEFAULT_MAX_LEVEL",
+    "FALLBACK_USE_GITIGNORE",
+    
+    # Argparse Defaults
+    "DEFAULT_MAX_LEVEL_ARG", "DEFAULT_SHOW_SUBMODULES_ARG",
+    "DEFAULT_DIRS_ONLY_ARG", "DEFAULT_NO_GITIGNORE_ARG",
+    "DEFAULT_FULL_VIEW_ARG",
+    
+    # Config File Names
+    "CONFIG_FILENAME", "PROJECT_CONFIG_FILENAME", "CONFIG_SECTION_NAME"
+]
+# --- END NEW ---
+
+
 # --- 1. Logic Fallback Defaults ---
 # Đây là giá trị mặc định "thực sự" của tool nếu không
 # có cờ CLI hoặc file .ini nào được cấu hình.

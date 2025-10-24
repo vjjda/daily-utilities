@@ -10,14 +10,11 @@ from utils.logging_config import setup_logging, log_success
 from utils.core import run_command, is_git_repository
 
 # --- MODULE IMPORTS ---
-# --- MODIFIED: Split imports for core and executor ---
-from modules.tree.tree_core import (
-    CONFIG_TEMPLATE, load_and_merge_config
-)
-from modules.tree.tree_executor import generate_tree
-# --- END MODIFIED ---
-# --- MODIFIED: Import hằng số mới ---
-from modules.tree.tree_config import (
+# --- MODIFIED: Import directly from the 'tree' module gateway ---
+from modules.tree import (
+    CONFIG_TEMPLATE, 
+    load_and_merge_config,
+    generate_tree,
     CONFIG_FILENAME,
     DEFAULT_MAX_LEVEL_ARG,
     DEFAULT_SHOW_SUBMODULES_ARG,
