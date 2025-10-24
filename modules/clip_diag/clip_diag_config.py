@@ -7,7 +7,14 @@ Defines paths for output, external tools, and viewing applications.
 
 import os
 from pathlib import Path
-from typing import Dict, Any, Optional # <-- Thêm Optional
+from typing import Dict, Any, Optional
+
+# --- NEW: __all__ definition ---
+__all__ = [
+    "DEFAULT_OUTPUT_DIR", "DOT_PATH", "MMC_PATH", "APP_CONFIG",
+    "GRAPHVIZ_PREFIX", "MERMAID_PREFIX", "DEFAULT_TO_ARG"
+]
+# --- END NEW ---
 
 # --- CẤU HÌNH ĐƯỜNG DẪN CỐ ĐỊNH ---
 # Thư mục mặc định để lưu file diagram.

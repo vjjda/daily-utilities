@@ -9,12 +9,13 @@ from pathlib import Path
 from utils.logging_config import setup_logging
 
 # --- MODULE IMPORTS ---
-# Kết nối các module core và executor
-from modules.clip_diag.clip_diag_core import process_clipboard_content
-from modules.clip_diag.clip_diag_executor import execute_diagram_generation
-# --- NEW: Import argparse default ---
-from modules.clip_diag.clip_diag_config import DEFAULT_TO_ARG
-# --- END NEW ---
+# --- MODIFIED: Import from module gateway ---
+from modules.clip_diag import (
+    process_clipboard_content,
+    execute_diagram_generation,
+    DEFAULT_TO_ARG
+)
+# --- END MODIFIED ---
 # ----------------------
 
 # --- CONSTANTS ---
@@ -34,9 +35,7 @@ def main():
     parser.add_argument(
         '-t', '--to',
         choices=['svg', 'png'],
-        # --- MODIFIED: Sử dụng hằng số ---
         default=DEFAULT_TO_ARG,
-        # --- END MODIFIED ---
         help='Convert source code to an image file (svg or png) and open it.'
     )
     parser.add_argument(

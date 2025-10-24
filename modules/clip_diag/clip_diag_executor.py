@@ -17,6 +17,10 @@ from .clip_diag_config import (
 )
 # ----------------------
 
+# --- NEW: __all__ definition ---
+__all__ = ["execute_diagram_generation"]
+# --- END NEW ---
+
 def _get_app_to_open(result_type: str) -> str:
     """Lấy tên ứng dụng dựa trên loại file muốn mở."""
     if result_type == 'dot':

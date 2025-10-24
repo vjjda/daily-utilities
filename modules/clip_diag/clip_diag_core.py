@@ -19,11 +19,14 @@ from .clip_diag_config import (
 )
 # ----------------------
 
+__all__ = ["process_clipboard_content"]
+
+
 # --- TYPING FOR RESULT ---
 DiagramResult = Dict[str, Any]
 
-# --- HÀM 1: NHẬN DIỆN LOẠI BIỂU ĐỒ (Detect Diagram Type) ---
-
+# --- (Các hàm internal _detect_diagram_type, _remove_comments, _filter_emoji, _trim_leading_comments_and_whitespace không thay đổi) ---
+# ...
 def _detect_diagram_type(content: str) -> Optional[str]:
     """Nhận diện loại biểu đồ (graphviz hoặc mermaid)."""
     # --- MODIFIED: strip() được gọi ở đây để đảm bảo ---
@@ -55,8 +58,6 @@ def _detect_diagram_type(content: str) -> Optional[str]:
         
     return None
 
-# --- HÀM 2: LỌC BỎ COMMENT (Remove Comments) ---
-
 def _remove_comments(content: str, diagram_type: str) -> str:
     """Lọc bỏ các comment khỏi mã nguồn Graphviz hoặc Mermaid."""
     if diagram_type == 'graphviz':
@@ -83,8 +84,6 @@ def _remove_comments(content: str, diagram_type: str) -> str:
     cleaned_lines = [line for line in content.splitlines() if line.strip()]
     return '\n'.join(cleaned_lines)
 
-# --- HÀM 3: LỌC BỎ EMOJI (Filter Emoji) ---
-
 def _filter_emoji(content: str, logger: logging.Logger) -> str:
     """Lọc bỏ emoji khỏi nội dung clipboard."""
     logger.info("🔍 Filtering emoji...")
@@ -97,8 +96,6 @@ def _filter_emoji(content: str, logger: logging.Logger) -> str:
         "]+", flags=re.UNICODE
     )
     return emoji_pattern.sub(r'', content)
-
-# --- NEW: HÀM 4: LỌC COMMENT/DÒNG TRẮNG ĐẦU VÀO ---
 
 def _trim_leading_comments_and_whitespace(content: str) -> str:
     """
@@ -131,7 +128,6 @@ def _trim_leading_comments_and_whitespace(content: str) -> str:
     # Trả về nội dung từ dòng code đầu tiên trở đi
     return '\n'.join(lines[first_code_line_index:])
 
-# --- END NEW ---
 
 # --- HÀM ĐIỀU PHỐI CHÍNH (Orchestrator) ---
 
@@ -153,19 +149,21 @@ def process_clipboard_content(
         logger.error(f"❌ Error reading clipboard: {e}")
         return None
 
-    processed_content = clipboard_content
+    # --- NEW: Chuẩn hóa Non-Breaking Spaces ---
+    # Thay thế ký tự U+00A0 (non-breaking space) bằng dấu cách (space) chuẩn (U+0020)
+    # Đây là bước quan trọng để .strip() và regex hoạt động đúng.
+    processed_content = clipboard_content.replace(u"\xa0", " ")
+    # --- END NEW ---
     
     # 2. Lọc Emoji (nếu được yêu cầu)
     if filter_emoji:
         processed_content = _filter_emoji(processed_content, logger)
 
-    # --- NEW: 2.5 Lọc comment/dòng trắng ở ĐẦU vào ---
+    # --- 2.5 Lọc comment/dòng trắng ở ĐẦU vào ---
     logger.info("🧹 Trimming leading comments/whitespace...")
     processed_content = _trim_leading_comments_and_whitespace(processed_content)
-    # --- END NEW ---
 
     if not processed_content.strip():
-        # --- MODIFIED: Cập nhật thông báo ---
         logger.info("Content is empty after filtering and trimming.")
         return None
 
