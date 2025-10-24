@@ -1,6 +1,6 @@
 # Path: utils/logging_config.py
 
-import logging
+import logging # <--- KHÔI PHỤC: Cần thiết cho các lệnh gọi logging.*
 import sys
 from pathlib import Path
 # --- MODIFIED: Import các hằng số mới ---
@@ -10,8 +10,8 @@ from .constants import LOG_DIR_PATH, FILE_LOG_LEVEL, CONSOLE_LOG_LEVEL
 # Cấp độ logging tùy chỉnh cho console:
 # ...
 
-# --- MODIFIED: Đơn giản hóa chữ ký hàm ---
-def setup_logging(script_name: str, console_level_str: str = CONSOLE_LOG_LEVEL):
+# --- MODIFIED: Đơn giản hóa chữ ký hàm và dùng logging.Logger ---
+def setup_logging(script_name: str, console_level_str: str = CONSOLE_LOG_LEVEL) -> logging.Logger:
 # --- END MODIFIED ---
     """
     Cấu hình logging cho script.
@@ -62,11 +62,11 @@ def setup_logging(script_name: str, console_level_str: str = CONSOLE_LOG_LEVEL):
 # Hàm Helper để tạo đầu ra console thân thiện
 # ----------------------------------------------------------------------
 
-def log_start(logger, message: str):
+def log_start(logger: logging.Logger, message: str): # <--- Dùng logging.Logger
     """Logs start message with emoji to INFO level (visible on console)."""
     logger.info(f"🚀 {message}")
 
-def log_success(logger, message: str):
+def log_success(logger: logging.Logger, message: str): # <--- Dùng logging.Logger
     """Logs success message with emoji to INFO level (visible on console)."""
     logger.info(f"✅ {message}")
     
