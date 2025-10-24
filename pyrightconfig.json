@@ -24,6 +24,7 @@
   "reportUnusedImport": "none",
   "reportUnsupportedDunderAll": "none", // Tắt cảnh báo này cho toàn bộ dự án
   "reportPossiblyUnboundVariable": "none", // <--- THÊM DÒNG NÀY
+  "reportUnknownVariableType": "none", // <--- THÊM/CẬP NHẬT CẢNH BÁO NÀY
   // Tùy chọn: Thêm các thư mục cần kiểm tra
   "include": ["utils", "modules", "scripts"],
   "exclude": [
