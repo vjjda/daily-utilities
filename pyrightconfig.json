@@ -31,6 +31,6 @@
     "**/.venv",
     "**/venv",
     "**/node_modules",
-    "scripts/internal/bootstrap_templates"
+    "/scripts/internal/bootstrap_templates/*"
   ]
 }
