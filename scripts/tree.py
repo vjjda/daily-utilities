@@ -21,11 +21,15 @@ from modules.tree import (
     CONFIG_FILENAME
 )
 
-# Khởi tạo Typer App
+# --- MODIFIED: Khởi tạo Typer App ---
 app = typer.Typer(
     help="A smart directory tree generator with support for a .treeconfig.ini file.",
-    add_completion=False
+    add_completion=False,
+    # --- NEW: Thêm lại cờ -h cho help ---
+    context_settings={"help_option_names": ["--help", "-h"]}
+    # --- END NEW ---
 )
+# --- END MODIFIED ---
 
 # Command 'init' (Không thay đổi)
 @app.command(
@@ -71,7 +75,7 @@ def init_command():
         logger.warning(f"⚠️ Could not automatically open file. Please open it manually.")
 
 
-# Command chính (mặc định)
+# Command chính (mặc định) (Không thay đổi)
 @app.callback(invoke_without_command=True)
 def main(
     ctx: typer.Context,
@@ -94,18 +98,14 @@ def main(
         None, "-P", "--prune", 
         help="Comma-separated list of patterns to prune."
     ),
-    
-    # --- MODIFIED: Sửa lỗi cờ -d ---
     all_dirs: bool = typer.Option(
-        False, "-d", "--dirs-only", # <-- Gán -d và --dirs-only cho cờ boolean này
+        False, "-d", "--dirs-only",
         help="Show directories only for the entire tree."
     ),
     dirs_patterns: Optional[str] = typer.Option(
-        None, "--dirs-patterns", # <-- Tạo cờ dài mới cho pattern
+        None, "--dirs-patterns",
         help="Show sub-directories only for specific patterns (e.g., 'assets')."
     ),
-    # --- END MODIFIED ---
-    
     show_submodules: bool = typer.Option(
         False, "-s", "--show-submodules", 
         help="Show the contents of submodules."
@@ -130,21 +130,18 @@ def main(
     logger = setup_logging(script_name="CTree")
     logger.debug(f"Received start path: {start_path}")
     
-    # --- 2. Xây dựng 'args' object giả lập ---
-    
-    # --- MODIFIED: Cập nhật logic dirs_only ---
+    # 2. Xây dựng 'args' object giả lập
     cli_dirs_only = None
-    if all_dirs: # (Kết nối với -d)
+    if all_dirs:
         cli_dirs_only = "_ALL_"
-    elif dirs_patterns: # (Kết nối với --dirs-patterns)
+    elif dirs_patterns:
         cli_dirs_only = dirs_patterns
-    # --- END MODIFIED ---
 
     args = argparse.Namespace(
         level=level,
         ignore=ignore,
         prune=prune,
-        dirs_only=cli_dirs_only, # <-- Sử dụng logic đã xử lý
+        dirs_only=cli_dirs_only,
         show_submodules=show_submodules,
         no_gitignore=no_gitignore,
         full_view=full_view,
@@ -165,7 +162,7 @@ def main(
         logger.debug("Traceback:", exc_info=True)
         raise typer.Exit(code=1)
 
-    # 5. Print Status Header (Không thay đổi)
+    # 5. Print Status Header
     is_truly_full_view = not any(config_params["filter_lists"].values()) and \
                          not config_params["using_gitignore"] and \
                          config_params["max_level"] is None
