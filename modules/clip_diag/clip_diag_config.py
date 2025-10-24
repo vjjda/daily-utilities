@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # Path: modules/clip_diag/clip_diag_config.py
 
 """

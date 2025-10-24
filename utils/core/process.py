@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # Path: utils/core/process.py
 
 """
