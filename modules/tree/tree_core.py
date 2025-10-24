@@ -4,25 +4,20 @@ from pathlib import Path
 import logging 
 import configparser
 import argparse
-# --- MODIFIED: Thêm pathspec ---
 from typing import Set, Optional, Dict, Any 
 try:
     import pathspec
 except ImportError:
     pathspec = None
-# --- END MODIFIED ---
 
 from utils.core import get_submodule_paths, parse_comma_list, parse_gitignore
 
-# (Import from .tree_config unchanged)
-# --- MODIFIED: Bỏ import Set từ tree_config, nó không còn ở đó ---
 from .tree_config import (
     DEFAULT_IGNORE, DEFAULT_PRUNE, DEFAULT_DIRS_ONLY_LOGIC,
     DEFAULT_MAX_LEVEL, CONFIG_FILENAME, PROJECT_CONFIG_FILENAME,
     CONFIG_SECTION_NAME, FALLBACK_SHOW_SUBMODULES,
     FALLBACK_USE_GITIGNORE
 )
-# --- END MODIFIED ---
 
 __all__ = ["load_and_merge_config", "CONFIG_TEMPLATE"]
 
@@ -38,31 +33,28 @@ def load_and_merge_config(
     (This function is pure logic, no side-effects)
     """
     
-    # 1. Check for Full View Override (Không thay đổi)
+    # 1. Check for Full View Override
     if args.full_view:
         logger.info("⚡ Full View mode enabled. Bypassing all filters and limits.")
-        # --- MODIFIED: Thêm gitignore_spec: None ---
         return {
             "max_level": None,
             "ignore_list": set(),
-            "submodules": set(),
+            "submodules": set(),  # <-- MODIFIED: Trả về Set[Path] rỗng
             "prune_list": set(),
             "dirs_only_list": set(),
             "is_in_dirs_only_zone": False,
             "global_dirs_only_flag": False,
-            "gitignore_spec": None, # <-- Thêm
-            "using_gitignore": False, # <-- Thêm
+            "gitignore_spec": None,
+            "using_gitignore": False,
             "filter_lists": {
                 "ignore": set(),
                 "prune": set(),
                 "dirs_only": set(),
-                "submodules": set()
+                "submodules": set() # <-- Set[str] rỗng cho header
             }
         }
-        # --- END MODIFIED ---
 
     # 2. Read Config from Files (Không thay đổi)
-    # ... (giữ nguyên) ...
     config = configparser.ConfigParser()
     
     tree_config_path = start_dir / CONFIG_FILENAME
@@ -87,17 +79,17 @@ def load_and_merge_config(
         config.add_section(CONFIG_SECTION_NAME)
         logger.debug(f"Added empty '{CONFIG_SECTION_NAME}' section for safe fallback.")
 
-    # --- 3. Merge Configs (CLI > File > Default) ---
+    # 3. Merge Configs (CLI > File > Default)
     
     # Level (Không thay đổi)
     level_from_config_file = config.getint(CONFIG_SECTION_NAME, 'level', fallback=DEFAULT_MAX_LEVEL)
     final_level = args.level if args.level is not None else level_from_config_file
     
-    # Submodules (Không thay đổi)
+    # Submodules (Không thay đổi logic)
     show_submodules = args.show_submodules if args.show_submodules is not None else \
                       config.getboolean(CONFIG_SECTION_NAME, 'show-submodules', fallback=FALLBACK_SHOW_SUBMODULES)
 
-    # --- MODIFIED: Gitignore Logic ---
+    # Gitignore Logic (Không thay đổi)
     use_gitignore_from_config = config.getboolean(
         CONFIG_SECTION_NAME, 'use-gitignore', 
         fallback=FALLBACK_USE_GITIGNORE
@@ -107,19 +99,16 @@ def load_and_merge_config(
     gitignore_spec: Optional['pathspec.PathSpec'] = None
     if is_git_repo and final_use_gitignore:
         logger.debug("Git repository detected. Loading .gitignore patterns via pathspec.")
-        gitignore_spec = parse_gitignore(start_dir) # <-- Gọi hàm mới
+        gitignore_spec = parse_gitignore(start_dir)
     elif is_git_repo and not final_use_gitignore:
         logger.debug("Git repository detected, but skipping .gitignore (due to flag or config).")
     else:
         logger.debug("Not a Git repository. Skipping .gitignore.")
-    # --- END MODIFIED ---
 
-    # --- MODIFIED: Ignore List ---
-    # (Không còn gộp gitignore_patterns)
+    # Ignore List (Không thay đổi)
     ignore_cli = parse_comma_list(args.ignore)
     ignore_file = parse_comma_list(config.get(CONFIG_SECTION_NAME, 'ignore', fallback=None))
     final_ignore_list = DEFAULT_IGNORE.union(ignore_file).union(ignore_cli)
-    # --- END MODIFIED ---
 
     # Prune List (Không thay đổi)
     prune_cli = parse_comma_list(args.prune) 
@@ -137,36 +126,38 @@ def load_and_merge_config(
         dirs_only_list_custom = parse_comma_list(final_dirs_only_mode)
     final_dirs_only_list = DEFAULT_DIRS_ONLY_LOGIC.union(dirs_only_list_custom)
     
-    # Calculate Submodule Names (Không thay đổi)
+    # --- MODIFIED: Calculate Submodule Paths (Set[Path]) vs Names (Set[str]) ---
+    submodule_paths: Set[Path] = set()
     submodule_names: Set[str] = set()
     if not show_submodules: 
+        # Lấy Set[Path] (đã resolve)
         submodule_paths = get_submodule_paths(start_dir, logger=logger)
+        # Lấy Set[str] (chỉ tên)
         submodule_names = {p.name for p in submodule_paths}
+    # --- END MODIFIED ---
 
     # --- 4. Return a dict of processed settings ---
-    # --- MODIFIED: Thêm gitignore_spec và using_gitignore ---
     return {
         "max_level": final_level,
         "ignore_list": final_ignore_list,
-        "submodules": submodule_names,
+        "submodules": submodule_paths, # <-- MODIFIED: Truyền Set[Path] cho logic
         "prune_list": final_prune_list,
         "dirs_only_list": final_dirs_only_list,
         "is_in_dirs_only_zone": global_dirs_only,
-        "gitignore_spec": gitignore_spec, # <-- Mới
-        "using_gitignore": is_git_repo and final_use_gitignore and (gitignore_spec is not None), # <-- Mới
-        # Add other info for user printing
+        "gitignore_spec": gitignore_spec,
+        "using_gitignore": is_git_repo and final_use_gitignore and (gitignore_spec is not None),
+        
         "global_dirs_only_flag": global_dirs_only,
         "filter_lists": {
             "ignore": final_ignore_list,
             "prune": final_prune_list,
             "dirs_only": final_dirs_only_list,
-            "submodules": submodule_names
+            "submodules": submodule_names # <-- MODIFIED: Truyền Set[str] cho header
         }
     }
-    # --- END MODIFIED ---
 
 # --- CONFIG TEMPLATE CONTENT (Không thay đổi) ---
-# ... (giữ nguyên) ...
+# ...
 try:
     _CURRENT_DIR = Path(__file__).parent
     _TEMPLATE_PATH = _CURRENT_DIR / "tree.ini.template"
