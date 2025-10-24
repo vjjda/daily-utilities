@@ -12,19 +12,22 @@ from typing import List
 # --- Dynamic Re-export ---
 current_dir = Path(__file__).parent
 
+# --- MODIFIED: Thêm 'tree_loader' ---
 # Define the explicit order of internal modules to load
 modules_to_export: List[str] = [
     "tree_config",
+    "tree_loader",
     "tree_core",
     "tree_executor"
 ]
+# --- END MODIFIED ---
 
 # (This list is for Mypy/linters, but the main logic is globals())
 __all__: List[str] = []
 
 for module_name in modules_to_export:
     try:
-        # 1. Import the module object (e.g., .tree_config)
+        # 1. Import the module object
         module = import_module(f".{module_name}", package=__name__)
         
         # 2. Check if __all__ is defined and add its contents

@@ -1,8 +1,13 @@
 # Path: modules/tree/tree_executor.py
 
+"""
+Execution logic for the Tree (ctree) module.
+(Responsible for all side-effects: print, write I/O)
+"""
+
 from pathlib import Path
 import logging 
-from typing import List, Set, Optional, Dict
+from typing import List, Set, Optional, Dict, Any
 
 try:
     import pathspec
@@ -10,13 +15,89 @@ except ImportError:
     pathspec = None
 
 from utils.core import is_path_matched
+from utils.logging_config import log_success
 
+# (Import config defaults only for type hinting, not logic)
 from .tree_config import (
     DEFAULT_IGNORE, DEFAULT_PRUNE, DEFAULT_DIRS_ONLY_LOGIC,
-    DEFAULT_MAX_LEVEL
+    DEFAULT_MAX_LEVEL, CONFIG_FILENAME
 )
 
-__all__ = ["generate_tree"]
+__all__ = [
+    "generate_tree", 
+    "print_status_header", 
+    "print_final_result",
+    "write_config_file"
+]
+
+
+def print_status_header(
+    config_params: Dict[str, Any], 
+    start_dir: Path, 
+    is_git_repo: bool,
+    cli_no_gitignore: bool
+) -> None:
+    """
+    Prints the status header before running the tree.
+    (Side-effect: print)
+    """
+    is_truly_full_view = (
+        not any(config_params["filter_lists"].values()) and 
+        not config_params["using_gitignore"] and 
+        config_params["max_level"] is None
+    )
+    
+    filter_info = "Full view" if is_truly_full_view else "Filtered view"
+    level_info = "full depth" if config_params["max_level"] is None else f"depth limit: {config_params['max_level']}"
+    mode_info = ", directories only" if config_params["global_dirs_only_flag"] else ""
+    git_info = ""
+    if is_git_repo: 
+        git_info = (
+            ", Git project (.gitignore enabled)" if config_params["using_gitignore"] 
+            else (", Git project (.gitignore disabled by flag)" if cli_no_gitignore 
+                  else ", Git project")
+        )
+        
+    print(f"{start_dir.name}/ [{filter_info}, {level_info}{mode_info}{git_info}]")
+
+
+def print_final_result(
+    counters: Dict[str, int], 
+    global_dirs_only: bool
+) -> None:
+    """
+    Prints the final result counters.
+    (Side-effect: print)
+    """
+    files_info = (
+        "0 files (hidden)" if global_dirs_only and counters['files'] == 0 
+        else f"{counters['files']} files"
+    )
+    print(f"\n{counters['dirs']} directories, {files_info}")
+
+
+def write_config_file(
+    config_path: Path, 
+    content: str, 
+    logger: logging.Logger,
+    file_existed: bool
+) -> None:
+    """
+    Writes the config template content to the specified path.
+    (Side-effect: write I/O)
+    """
+    try:
+        with open(config_path, 'w', encoding='utf-8') as f:
+            f.write(content)
+        log_msg = (
+            f"Successfully created '{CONFIG_FILENAME}'." if not file_existed 
+            else f"Successfully overwrote '{CONFIG_FILENAME}'."
+        )
+        log_success(logger, log_msg)
+    except IOError as e:
+        logger.error(f"❌ Failed to write file '{config_path}': {e}")
+        # Re-raise to be caught by the entry point
+        raise 
 
 
 def generate_tree(
@@ -26,9 +107,7 @@ def generate_tree(
     level: int = 0, 
     max_level: Optional[int] = DEFAULT_MAX_LEVEL, 
     ignore_list: Set[str] = DEFAULT_IGNORE, 
-    # --- MODIFIED: Thay đổi Type Hint từ Set[str] sang Set[Path] ---
     submodules: Set[Path] = None, 
-    # --- END MODIFIED ---
     prune_list: Set[str] = DEFAULT_PRUNE,
     gitignore_spec: Optional['pathspec.PathSpec'] = None,
     dirs_only_list: Set[str] = DEFAULT_DIRS_ONLY_LOGIC, 
@@ -37,12 +116,11 @@ def generate_tree(
 ):
     """
     Recursive function to generate and print the directory tree.
-    (This function has side-effects: print())
+    (Side-effect: print)
+    (This function's logic is unchanged)
     """
-    # --- MODIFIED: Khởi tạo Set rỗng nếu là None để so sánh an toàn ---
     if submodules is None:
         submodules = set()
-    # --- END MODIFIED ---
     
     if max_level is not None and level >= max_level: 
         return
@@ -53,7 +131,6 @@ def generate_tree(
         return
         
     def is_ignored(path: Path) -> bool:
-        # (Logic is_ignored không thay đổi)
         if is_path_matched(path, ignore_list, start_dir):
             return True
         
@@ -95,12 +172,8 @@ def generate_tree(
         else: 
             counters['files'] += 1
 
-        # --- MODIFIED: So sánh đường dẫn tuyệt đối (resolve) ---
         is_submodule = path.is_dir() and path.resolve() in submodules
-        # --- END MODIFIED ---
-        
         is_pruned = path.is_dir() and is_path_matched(path, prune_list, start_dir)
-        
         is_dirs_only_entry = (
             path.is_dir() and 
             is_path_matched(path, dirs_only_list, start_dir) and 
@@ -120,10 +193,8 @@ def generate_tree(
 
         if path.is_dir() and not is_submodule and not is_pruned:
             extension = "│   " if pointer == "├── " else "    " 
-            
             next_is_in_dirs_only_zone = is_in_dirs_only_zone or is_dirs_only_entry
             
-            # --- MODIFIED: Truyền Set[Path] (submodules) đệ quy ---
             generate_tree(
                 path, start_dir, prefix + extension, level + 1, max_level, 
                 ignore_list, submodules, prune_list, 
@@ -131,4 +202,3 @@ def generate_tree(
                 dirs_only_list, 
                 next_is_in_dirs_only_zone, counters
             )
-            # --- END MODIFIED ---
