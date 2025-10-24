@@ -5,6 +5,7 @@ Bộ não tạo code cho bootstrap_tool.py.
 
 Chịu trách nhiệm load template từ thư mục /bootstrap_templates/
 và điền dữ liệu từ config TOML vào.
+(Đã refactor cho Typer và SRP)
 """
 
 import logging
@@ -13,6 +14,11 @@ from typing import Dict, Any, List
 
 # Đường dẫn đến thư mục chứa các file .template
 TEMPLATE_DIR = Path(__file__).parent / "bootstrap_templates"
+# Ánh xạ type TOML sang Python type hint
+TYPE_HINT_MAP = {"int": "int", "str": "str", "bool": "bool", "Path": "Path"}
+# Các type cần import từ 'typing'
+TYPING_IMPORTS = {"Optional", "List"}
+
 
 def _load_template(template_name: str) -> str:
     """Helper: Đọc nội dung từ một file template."""
@@ -26,21 +32,16 @@ def _load_template(template_name: str) -> str:
         logging.error(f"Lỗi khi đọc template '{template_name}': {e}")
         raise
 
-# --- NEW: Helper functions ---
+# --- Helper functions (Đã viết lại) ---
 
-def _get_default_args(argparse_config: Dict[str, Any]) -> List[Dict[str, Any]]:
-    """Helper to filter args that have a 'default' and are not 'store_true'."""
-    default_args = []
-    args_list = argparse_config.get('args', [])
-    for arg in args_list:
-        if 'default' in arg and arg.get('action') != 'store_true':
-            default_args.append(arg)
-    return default_args
+def _get_cli_args(config: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """Helper: Lấy danh sách [[cli.args]] từ config."""
+    return config.get('cli', {}).get('args', [])
 
-def _build_config_constants(argparse_config: Dict[str, Any]) -> str:
+def _build_config_constants(config: Dict[str, Any]) -> str:
     """Tạo code Python cho các hằng số default."""
     code_lines = []
-    default_args = _get_default_args(argparse_config)
+    default_args = [arg for arg in _get_cli_args(config) if 'default' in arg]
     
     if not default_args:
         code_lines.append("# (No default constants defined in tool.spec.toml)")
@@ -54,9 +55,22 @@ def _build_config_constants(argparse_config: Dict[str, Any]) -> str:
             
     return "\n".join(code_lines)
 
-def _build_config_imports(module_name: str, argparse_config: Dict[str, Any]) -> str:
+def _build_config_all_constants(config: Dict[str, Any]) -> str:
+    """Tạo danh sách __all__ cho file config."""
+    default_args = [arg for arg in _get_cli_args(config) if 'default' in arg]
+    if not default_args:
+        return "" # Trả về rỗng
+        
+    const_names = []
+    for arg in default_args:
+        const_name = f"DEFAULT_{arg['name'].upper()}"
+        const_names.append(f'"{const_name}"') # Thêm dấu ngoặc kép
+            
+    return ", ".join(const_names)
+
+def _build_config_imports(module_name: str, config: Dict[str, Any]) -> str:
     """Tạo code Python cho các (import) hằng số default."""
-    default_args = _get_default_args(argparse_config)
+    default_args = [arg for arg in _get_cli_args(config) if 'default' in arg]
     
     if not default_args:
         return "# (No default constants to import)"
@@ -69,78 +83,111 @@ def _build_config_imports(module_name: str, argparse_config: Dict[str, Any]) -> 
     import_list = ", ".join(const_names)
     return f"from modules.{module_name}.{module_name}_config import {import_list}"
 
-def _build_argparse_code(argparse_config: Dict[str, Any]) -> str:
-    """
-    Tạo code Python cho phần parser.add_argument().
-    """
-    code_lines = []
+def _build_typer_app_code(config: Dict[str, Any]) -> str:
+    """Tạo code Typer App() từ [cli.help]."""
+    help_config = config.get('cli', {}).get('help', {})
+    desc = help_config.get('description', f"Mô tả cho {config['meta']['tool_name']}.")
+    epilog = help_config.get('epilog', "")
     
-    desc = argparse_config.get('description', "Mô tả cho tool mới.")
-    epilog = argparse_config.get('epilog', "")
-    
-    code_lines.append(f'    parser = argparse.ArgumentParser(')
-    code_lines.append(f'        description="{desc}",')
-    code_lines.append(f'        epilog="{epilog}"')
-    code_lines.append(f'    )')
-    code_lines.append(f'')
-    
-    TYPE_MAP = {"int": "int", "float": "float", "str": "str"}
-    
-    args_list = argparse_config.get('args', [])
-    if not args_list:
-        code_lines.append("    # (Chưa có argument nào được định nghĩa trong tool.spec.toml)")
-        
-    for arg in args_list:
-        # Tạo bản sao để pop an toàn
-        arg_copy = arg.copy()
-        
-        name_or_flags = []
-        kwargs_str = []
-        name = arg_copy.pop('name')
-        
-        if arg_copy.pop('positional', False):
-            name_or_flags.append(f'"{name}"')
-        else:
-            if 'short' in arg_copy: name_or_flags.append(f'"{arg_copy.pop("short")}"')
-            if 'long' in arg_copy: name_or_flags.append(f'"{arg_copy.pop("long")}"')
-        
-        if 'type' in arg_copy and arg_copy['type'] in TYPE_MAP:
-            kwargs_str.append(f"type={TYPE_MAP[arg_copy.pop('type')]}")
-            
-        if 'action' in arg_copy:
-            kwargs_str.append(f'action="store_true"')
-            arg_copy.pop('action')
-            # Không xử lý default nếu là store_true
-            if 'default' in arg_copy:
-                arg_copy.pop('default')
-            
-        if 'choices' in arg_copy:
-            kwargs_str.append(f"choices={arg_copy.pop('choices')}")
-            
-        # --- MODIFIED LOGIC: Sử dụng hằng số cho default ---
-        if 'default' in arg_copy:
-            const_name = f"DEFAULT_{name.upper()}"
-            kwargs_str.append(f"default={const_name}")
-            arg_copy.pop('default')
-        # --- END MODIFIED LOGIC ---
-            
-        # Xử lý các key còn lại (ví dụ: help, nargs)
-        for key, value in arg_copy.items():
-            kwargs_str.append(f'{key}="{value}"' if isinstance(value, str) else f'{key}={value}')
-            
-        args_joined = ", ".join(name_or_flags)
-        kwargs_joined = ", ".join(kwargs_str)
-        code_lines.append(f"    parser.add_argument({args_joined}, {kwargs_joined})")
-
-
-    code_lines.append(f"")
-    code_lines.append(f"    args = parser.parse_args()")
+    code_lines = [
+        f"app = typer.Typer(",
+        f"    help=\"{desc}\",",
+        f"    epilog=\"{epilog}\",",
+        f"    add_completion=False,",
+        f"    context_settings={{'help_option_names': ['--help', '-h']}}",
+        f")"
+    ]
     return "\n".join(code_lines)
+
+def _build_typer_path_expands(config: Dict[str, Any]) -> str:
+    """Tạo code .expanduser() cho các tham số Path."""
+    code_lines = []
+    path_args = [arg for arg in _get_cli_args(config) if arg.get('type') == 'Path']
+    if not path_args:
+        code_lines.append("# (No Path arguments to expand)")
+        
+    for arg in path_args:
+        name = arg['name']
+        # Tạo biến mới với suffix _expanded
+        code_lines.append(f"    {name}_expanded = {name}.expanduser() if {name} else None")
+            
+    return "\n".join(code_lines)
+
+def _build_typer_args_pass_to_core(config: Dict[str, Any]) -> str:
+    """Tạo các kwargs để truyền vào hàm core_logic."""
+    code_lines = []
+    args = _get_cli_args(config)
+    if not args:
+        code_lines.append("            # (No CLI args to pass)")
+        
+    for arg in args:
+        name = arg['name']
+        # Nếu là Path, truyền biến _expanded
+        if arg.get('type') == 'Path':
+            code_lines.append(f"            {name}={name}_expanded,")
+        else:
+            code_lines.append(f"            {name}={name},")
+            
+    return "\n".join(code_lines)
+
+def _build_typer_main_function_signature(config: Dict[str, Any]) -> str:
+    """Tạo chữ ký hàm def main(...) cho Typer."""
+    code_lines = [
+        f"def main(",
+        f"    ctx: typer.Context,"
+    ]
+    
+    args = _get_cli_args(config)
+    
+    for arg in args:
+        name = arg['name']
+        py_type = TYPE_HINT_MAP.get(arg['type'], 'str')
+        help_str = arg.get('help', f"The {name} argument.")
+        
+        # Xử lý default và Optional
+        if 'default' in arg:
+            default_const = f"DEFAULT_{name.upper()}"
+            type_hint = py_type # "int"
+        else:
+            # Không có default (trừ bool)
+            if py_type == 'bool':
+                # Cờ bool không có default là False
+                default_const = "False"
+                type_hint = "bool"
+            else:
+                default_const = "None"
+                type_hint = f"Optional[{py_type}]"
+        
+        # Xử lý Argument vs Option
+        if arg.get('is_argument', False):
+            # Đây là Positional Argument
+            code_lines.append(f"    {name}: {type_hint} = typer.Argument(")
+            code_lines.append(f"        {default_const},")
+            code_lines.append(f"        help=\"{help_str}\"")
+            code_lines.append(f"    ),")
+        else:
+            # Đây là Option (flag)
+            code_lines.append(f"    {name}: {type_hint} = typer.Option(")
+            code_lines.append(f"        {default_const},")
+            
+            # Thêm cờ ngắn (ví dụ: "-L")
+            if 'short' in arg:
+                code_lines.append(f"        \"{arg['short']}\",")
+                
+            # Thêm cờ dài (ví dụ: "--level")
+            code_lines.append(f"        \"--{name}\",")
+            code_lines.append(f"        help=\"{help_str}\"")
+            code_lines.append(f"    ),")
+
+    code_lines.append(f"):")
+    return "\n".join(code_lines)
+
 
 # --- CÁC HÀM GENERATE CHÍNH ---
 
 def generate_bin_wrapper(config: Dict[str, Any]) -> str:
     """Tạo nội dung cho file wrapper Zsh trong /bin/"""
+    # (Không thay đổi)
     template = _load_template("bin_wrapper.zsh.template")
     return template.format(
         tool_name=config['meta']['tool_name'],
@@ -150,43 +197,54 @@ def generate_bin_wrapper(config: Dict[str, Any]) -> str:
 def generate_script_entrypoint(config: Dict[str, Any]) -> str:
     """Tạo nội dung cho file entrypoint Python trong /scripts/"""
     template = _load_template("script_entrypoint.py.template")
-    argparse_code = _build_argparse_code(config['argparse'])
-    # --- NEW ---
-    config_imports_code = _build_config_imports(config['module_name'], config['argparse'])
-    # --- END NEW ---
     
+    # (Gọi các hàm generator mới)
+    config_imports_code = _build_config_imports(config['module_name'], config)
+    typer_app_code = _build_typer_app_code(config)
+    typer_main_sig = _build_typer_main_function_signature(config)
+    typer_path_expands = _build_typer_path_expands(config)
+    typer_args_pass = _build_typer_args_pass_to_core(config)
+
     return template.format(
         script_file=config['meta']['script_file'],
         logger_name=config['meta']['logger_name'],
         module_name=config['module_name'],
-        argparse_code=argparse_code,
-        config_imports=config_imports_code # <-- Pass new placeholder
+        config_imports=config_imports_code,
+        typer_app_code=typer_app_code,
+        typer_main_function_signature=typer_main_sig,
+        typer_path_expands=typer_path_expands,
+        typer_args_pass_to_core=typer_args_pass
     )
 
 def generate_module_file(config: Dict[str, Any], file_type: str) -> str:
-    """Tạo nội dung cho các file _config, _core, _executor"""
+    """Tạo nội dung cho các file _config, _core, _executor, _loader"""
     template_name_map = {
         "config": "module_config.py.template",
         "core": "module_core.py.template",
-        "executor": "module_executor.py.template"
+        "executor": "module_executor.py.template",
+        "loader": "module_loader.py.template", # (Mới)
     }
     template_name = template_name_map[file_type]
     template = _load_template(template_name)
     
-    # --- NEW: Thêm hằng số vào placeholder ---
     format_dict = {"module_name": config['module_name']}
     
     if file_type == "config":
-        config_constants_code = _build_config_constants(config['argparse'])
+        config_constants_code = _build_config_constants(config)
+        config_all_code = _build_config_all_constants(config)
         format_dict["config_constants"] = config_constants_code
-    # --- END NEW ---
-
-    # Dùng **kwargs để các template khác (core, executor)
-    # bỏ qua placeholder 'config_constants' một cách an toàn
+        format_dict["config_all_constants"] = config_all_code
+    
     return template.format(**format_dict)
+
+def generate_module_init_file(config: Dict[str, Any]) -> str:
+    """Tạo file gateway __init__.py."""
+    template = _load_template("module_init.py.template")
+    return template.format(module_name=config['module_name'])
 
 def generate_doc_file(config: Dict[str, Any]) -> str:
     """Tạo file tài liệu Markdown (tùy chọn)"""
+    # (Không thay đổi)
     template = _load_template("doc_file.md.template")
     
     return template.format(

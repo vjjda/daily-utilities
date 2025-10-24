@@ -1,0 +1,28 @@
+#!/usr/bin/env python3
+# Path: modules/{module_name}/{module_name}_loader.py
+
+"""
+File Loading logic for {module_name}.
+(Responsible for all read I/O)
+"""
+
+import logging
+from pathlib import Path
+from typing import Dict, Any, List, Optional
+
+__all__ = ["load_data"] # (Example, user can change)
+
+def load_data(logger: logging.Logger, target_path: Path) -> Any:
+    """
+    (Example) Loads data from the target path.
+    """
+    logger.info(f"Loader running on: {target_path}")
+    
+    # (TODO: Thêm logic đọc file (read I/O) ở đây)
+    # Ví dụ:
+    # if not target_path.exists():
+    #    logger.error("Target path does not exist.")
+    #    return None
+    # return target_path.read_text()
+    
+    return f"Data from {target_path.name}"

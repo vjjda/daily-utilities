@@ -2,9 +2,11 @@
 # Path: scripts/{script_file}
 
 import sys
-import argparse
 import logging
 from pathlib import Path
+from typing import Optional, List # (Import các type phổ biến)
+
+import typer # (Sử dụng Typer)
 
 # --- Thêm PROJECT_ROOT vào sys.path để import utils/modules ---
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -14,12 +16,16 @@ try:
     from utils.logging_config import setup_logging, log_success
     
     # --- CONFIG DEFAULTS ---
-    {config_imports}
+{config_imports}
     # --- END CONFIG DEFAULTS ---
     
-    # --- MODULE IMPORTS ---
-    # (Tự động thêm import khi cần)
-    # from modules.{module_name}.{module_name}_core import ...
+    # --- MODULE IMPORTS (SRP) ---
+    from modules.{module_name} import (
+        # (Ví dụ: Import các hàm đã được export)
+        # load_data, 
+        process_{module_name}_logic,
+        execute_{module_name}_action
+    )
     # ----------------------
 except ImportError:
     print(f"Lỗi: Không thể import utils/modules. Đảm bảo PROJECT_ROOT đúng: {{PROJECT_ROOT}}", file=sys.stderr)
@@ -28,41 +34,48 @@ except ImportError:
 # --- CONSTANTS ---
 THIS_SCRIPT_PATH = Path(__file__).resolve()
 
-def main():
+# --- TYPER APP ---
+{typer_app_code}
+
+@app.callback(invoke_without_command=True)
+{typer_main_function_signature}
     """
     Main orchestration function.
-    Parses args, 
-sets up logging, and calls core logic.
+    Parses args, sets up logging, and calls core logic.
     """
-    
-    # --- 1. Phân tích đối số (Parse args) ---
-{argparse_code}
+    if ctx.invoked_subcommand: return
 
-    # 2. Setup Logging
+    # 1. Setup Logging
     logger = setup_logging(script_name="{logger_name}")
     logger.debug("{logger_name} script started.")
     
-    # 3. Execute Core Logic
+    # --- NEW: Mở rộng `~` thủ công cho các tham số Path ---
+{typer_path_expands}
+    # --- END NEW ---
+
+    # 2. Execute Core Logic (SRP)
     try:
-        logger.info("Tool đang được phát triển...")
-        #
-        # --- TODO: GỌI LOGIC TỪ MODULES ---
-   
-     #
-        # result = process_..._logic(
-        #     logger=logger,
-        #     args=args
-        # )
-        #
-        # execute_..._action(
-        #     logger=logger,
-        #     result=result
-      
-  # )
-        #
-        # --------------------------------
+        # (Đây là ví dụ, bạn cần tùy chỉnh luồng)
         
-        log_success(logger, "Hoàn thành (placeholder).")
+        # 2.1. Load (từ _loader)
+        # (Ví dụ: data = load_data(logger, target_path_expanded))
+        
+        # 2.2. Process (từ _core)
+        # (Truyền các tham số Typer vào logic core)
+        result = process_{module_name}_logic(
+            logger=logger,
+{typer_args_pass_to_core}
+            # (Ví dụ: data=data)
+        )
+        
+        # 2.3. Execute (từ _executor)
+        if result:
+            execute_{module_name}_action(
+                logger=logger,
+                result=result
+            )
+        
+        log_success(logger, "Hoàn thành.")
             
     except Exception as e:
         logger.error(f"❌ Đã xảy ra lỗi không mong muốn: {{e}}")
@@ -72,8 +85,7 @@ sets up logging, and calls core logic.
 
 if __name__ == "__main__":
     try:
-  
-      main()
+        app() # (Sử dụng Typer runner)
     except KeyboardInterrupt:
-        print("\\n\\n❌ [Lệnh dừng] Hoạt động của tool đã bị dừng.")
+        print("\n\n❌ [Lệnh dừng] Hoạt động của tool đã bị dừng.")
         sys.exit(1)

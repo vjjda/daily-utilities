@@ -2,12 +2,7 @@
 
 """
 Script nội bộ để bootstrap (khởi tạo) một tool utility mới.
-
-File này chỉ làm nhiệm vụ "điều phối":
-1. Đọc args (đường dẫn module)
-2. Load file .toml
-3. Gọi các hàm từ `bootstrap_generator.py`
-4. Ghi file ra đĩa (I/O)
+(Đã refactor cho Typer và SRP)
 """
 
 import sys
@@ -17,7 +12,7 @@ import os
 from pathlib import Path
 from typing import Dict, Any, List, Optional
 
-# --- Tương thích TOML cho Python < 3.11 ---
+# --- (tomllib import giữ nguyên) ---
 try:
     import tomllib
 except ImportError:
@@ -27,24 +22,27 @@ except ImportError:
         print("Lỗi: Cần gói 'toml'. Chạy 'pip install toml' (cho Python < 3.11)", file=sys.stderr)
         sys.exit(1)
 
-# --- Thêm PROJECT_ROOT vào sys.path để import utils ---
+# --- (sys.path import giữ nguyên) ---
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.append(str(PROJECT_ROOT))
 
 try:
     from utils.logging_config import setup_logging, log_success
     # Import "bộ não" generator
+    # --- MODIFIED: Import hàm generator mới ---
     from scripts.internal.bootstrap_generator import (
         generate_bin_wrapper,
         generate_script_entrypoint,
         generate_module_file,
-        generate_doc_file
+        generate_doc_file,
+        generate_module_init_file # (MỚI)
     )
+    # --- END MODIFIED ---
 except ImportError as e:
     print(f"Lỗi: Không thể import utils hoặc generator: {e}", file=sys.stderr)
     sys.exit(1)
 
-# --- Định nghĩa các thư mục gốc ---
+# --- (Định nghĩa thư mục giữ nguyên) ---
 BIN_DIR = PROJECT_ROOT / "bin"
 SCRIPTS_DIR = PROJECT_ROOT / "scripts"
 MODULES_DIR = PROJECT_ROOT / "modules"
@@ -58,7 +56,7 @@ def main():
     logger = setup_logging(script_name="Bootstrap", console_level_str="INFO")
     logger.debug("Bootstrap script started.")
 
-    # 1. Phân tích đối số
+    # --- (1. Phân tích đối số giữ nguyên) ---
     parser = argparse.ArgumentParser(description="Bootstrap (khởi tạo) một tool utility mới từ file *.spec.toml.")
     parser.add_argument(
         "target_path_str", 
@@ -67,16 +65,14 @@ def main():
     )
     args = parser.parse_args()
 
-    # 2. Load và xác thực đường dẫn (LOGIC MỚI)
+    # --- (2. Load và xác thực đường dẫn giữ nguyên) ---
     target_path = Path(args.target_path_str).resolve()
     module_path: Optional[Path] = None
     spec_file_path: Optional[Path] = None
 
     if target_path.is_dir():
-        # User truyền vào thư mục (ví dụ: modules/zsh_wrapper)
         module_path = target_path
         try:
-            # Tự động tìm file spec BẤT KỲ trong đó
             spec_file_path = next(module_path.glob("*.spec.toml"))
             logger.debug(f"Phát hiện mode thư mục. Đã tìm thấy file spec: {spec_file_path.name}")
         except StopIteration:
@@ -85,7 +81,6 @@ def main():
             sys.exit(1)
             
     elif target_path.is_file():
-        # User truyền vào file (ví dụ: modules/zsh_wrapper/zsh_wrapper.spec.toml)
         if target_path.name.endswith(".spec.toml"):
             module_path = target_path.parent
             spec_file_path = target_path
@@ -95,20 +90,17 @@ def main():
             sys.exit(1)
             
     else:
-        # Đường dẫn không tồn tại -> Giả định user muốn tạo module MỚI
-        # và path đó là thư mục module
         module_path = target_path
         spec_file_path = module_path / "tool.spec.toml" # Mặc định cho tool mới
         logger.warning(f"Đường dẫn '{module_path.name}' không tồn tại. Giả định đây là module mới.")
 
-    # (Log xác nhận)
     logger.info(f"🚀 Bắt đầu bootstrap:")
     logger.info(f"   Thư mục Module: {module_path.relative_to(PROJECT_ROOT).as_posix()}")
     logger.info(f"   File Spec:      {spec_file_path.name}")
 
     if not module_path.is_dir():
         logger.warning(f"Thư mục module '{module_path.name}' chưa tồn tại. Đang tạo...")
-        module_path.mkdir(parents=True, exist_ok=True) # <-- An toàn
+        module_path.mkdir(parents=True, exist_ok=True)
     
     if not spec_file_path.exists():
         logger.error(f"❌ Không tìm thấy file spec: {spec_file_path.name}")
@@ -116,7 +108,7 @@ def main():
         logger.error(f"Vui lòng tạo file spec trước khi chạy (tham khảo: docs/internal/tool_spec.template.toml)")
         sys.exit(1)
 
-    # 3. Load TOML
+    # --- (3. Load TOML giữ nguyên) ---
     try:
         with open(spec_file_path, 'rb') as f:
             config = tomllib.load(f)
@@ -124,9 +116,9 @@ def main():
         logger.error(f"❌ Lỗi khi đọc file TOML: {e}")
         sys.exit(1)
 
-    # 4. Xác thực config và chuẩn bị dữ liệu
+    # --- 4. Xác thực config và chuẩn bị dữ liệu ---
     try:
-        config['module_name'] = module_path.name # <-- Lấy tên từ thư mục cha
+        config['module_name'] = module_path.name 
         tool_name = config['meta']['tool_name']
         script_file = config['meta']['script_file']
         
@@ -136,27 +128,29 @@ def main():
     except KeyError as e:
         logger.error(f"❌ File spec '{spec_file_path.name}' thiếu key bắt buộc trong [meta]: {e}")
         sys.exit(1)
-    if 'argparse' not in config:
-        logger.error(f"❌ File spec '{spec_file_path.name}' thiếu section [argparse] bắt buộc.")
-        sys.exit(1)
+        
+    # --- (Xóa check [argparse]) ---
 
-    # 5. Tạo nội dung (gọi generator)
-    # ... (giữ nguyên) ...
+    # --- 5. Tạo nội dung (gọi generator) ---
     try:
         generated_content = {
             "bin": generate_bin_wrapper(config),
             "script": generate_script_entrypoint(config),
             "config": generate_module_file(config, "config"),
+            "loader": generate_module_file(config, "loader"), # (MỚI)
             "core": generate_module_file(config, "core"),
             "executor": generate_module_file(config, "executor"),
+            "init": generate_module_init_file(config), # (MỚI)
         }
         
         target_paths = {
             "bin": BIN_DIR / tool_name,
             "script": SCRIPTS_DIR / script_file,
             "config": module_path / f"{config['module_name']}_config.py",
+            "loader": module_path / f"{config['module_name']}_loader.py", # (MỚI)
             "core": module_path / f"{config['module_name']}_core.py",
             "executor": module_path / f"{config['module_name']}_executor.py",
+            "init": module_path / "__init__.py", # (MỚI)
         }
         
         if config.get('docs', {}).get('enabled', False):
@@ -168,7 +162,7 @@ def main():
         logger.debug("Traceback:", exc_info=True)
         sys.exit(1)
 
-    # 6. KIỂM TRA AN TOÀN (Không đổi)
+    # --- (6. KIỂM TRA AN TOÀN giữ nguyên) ---
     existing_files = [p for p in target_paths.values() if p.exists()]
     if existing_files:
         logger.error(f"❌ Dừng lại! Các file sau đã tồn tại. Sẽ không ghi đè:")
@@ -176,10 +170,12 @@ def main():
             logger.error(f"   -> {p.relative_to(PROJECT_ROOT).as_posix()}")
         sys.exit(1)
 
-    # 7. GHI FILE (I/O)
+    # --- (7. GHI FILE (I/O) giữ nguyên) ---
     try:
         for key, path in target_paths.items():
             content = generated_content[key]
+            # Đảm bảo thư mục cha tồn tại (cho __init__.py và docs)
+            path.parent.mkdir(parents=True, exist_ok=True) 
             path.write_text(content, encoding='utf-8')
             
             relative_path = path.relative_to(PROJECT_ROOT).as_posix()

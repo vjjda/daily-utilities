@@ -7,7 +7,12 @@ Configuration constants for {module_name}.
 
 import os
 from pathlib import Path
-from typing import Dict, Any
+# (Thêm Type Hint)
+from typing import Dict, Any, Optional, List
+
+# --- NEW: __all__ definition ---
+__all__ = [{config_all_constants}] # (Auto-generated)
+# --- END NEW ---
 
 # --- Constants generated from tool.spec.toml ---
 {config_constants}
