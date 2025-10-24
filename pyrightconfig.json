@@ -1,0 +1,36 @@
+// Path: pyrightconfig.json
+{
+  // 1. Cấu hình môi trường thực thi để Pyright hiểu PYTHONPATH
+  "executionEnvironments": [
+    {
+      "root": ".",
+      "pythonVersion": "3.14", // Hoặc phiên bản Python bạn đang sử dụng
+
+      // Khai báo các thư mục nên được coi là thư viện cấp cao nhất (top-level packages)
+      "extraPaths": ["modules", "utils", "scripts"]
+    }
+  ],
+
+  // 2. Chế độ kiểm tra (nên để nghiêm ngặt để tuân thủ Type Hinting)
+  "typeCheckingMode": "strict",
+
+  // 3. Xử lý các lỗi liên quan đến Dynamic Import và Globals()
+
+  // Giảm cảnh báo/lỗi False Positive (Pylance không hiểu logic globals())
+  "reportUnknownMemberType": "warning",
+
+  // Tắt cảnh báo về các biến được thêm vào globals() nhưng không được sử dụng
+  // (Vì chúng được sử dụng qua cơ chế re-export của gateway)
+  "reportUnusedImport": "none",
+  "reportUnsupportedDunderAll": "none", // Tắt cảnh báo này cho toàn bộ dự án
+  "reportPossiblyUnboundVariable": "none", // <--- THÊM DÒNG NÀY
+  // Tùy chọn: Thêm các thư mục cần kiểm tra
+  "include": ["utils", "modules", "scripts"],
+  "exclude": [
+    "**/__pycache__",
+    "**/.venv",
+    "**/venv",
+    "**/node_modules",
+    "scripts/internal/bootstrap_templates"
+  ]
+}

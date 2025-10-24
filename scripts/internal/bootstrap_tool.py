@@ -27,7 +27,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.append(str(PROJECT_ROOT))
 
 try:
-    from utils.logging_config import setup_logging, log_success
+    from utils.logging_config import setup_logging, log_success # type: ignore[reportUnknownVariableType]
     
     # --- (Import gateway giữ nguyên) ---
     from scripts.internal.bootstrap import (
@@ -108,8 +108,8 @@ def main():
 
     # --- (3. Load TOML giữ nguyên) ---
     try:
-        with open(spec_file_path, 'r') as f:
-            config = tomllib.load(f)
+        with open(spec_file_path, 'rb') as f:
+            config = tomllib.load(f) # type: ignore[reportArgumentType]
     except Exception as e:
         logger.error(f"❌ Lỗi khi đọc file TOML: {e}")
         sys.exit(1)
