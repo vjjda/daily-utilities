@@ -8,10 +8,19 @@ Git and Filesystem Utilities
 import logging
 import configparser
 from pathlib import Path
-from typing import Set, Optional
+# --- MODIFIED: Thêm imports ---
+from typing import Set, Optional, List
+try:
+    import pathspec
+except ImportError:
+    print("Warning: 'pathspec' library not found. .gitignore parsing will be basic.")
+    print("Please run 'pip install pathspec' for full .gitignore support.")
+    pathspec = None
+# --- END MODIFIED ---
 
-# --- NEW: Export list ---
-__all__ = ["is_git_repository", "find_git_root", "get_submodule_paths"]
+# --- MODIFIED: Thêm parse_gitignore ---
+__all__ = ["is_git_repository", "find_git_root", "get_submodule_paths", "parse_gitignore"]
+# --- END MODIFIED ---
 
 # ----------------------------------------------------------------------
 # FILE SYSTEM & CONFIG UTILITIES
@@ -60,3 +69,30 @@ def get_submodule_paths(root: Path, logger: Optional[logging.Logger] = None) -> 
             else:
                 print(f"Warning: {warning_msg}") 
     return submodule_paths
+
+# --- NEW: Nâng cấp parse_gitignore với pathspec ---
+def parse_gitignore(root: Path) -> Optional['pathspec.PathSpec']:
+    """
+    Parses a .gitignore file using 'pathspec' and returns a compiled spec.
+    """
+    if pathspec is None:
+        return None # Trả về None nếu thư viện không được cài đặt
+
+    gitignore_path = root / ".gitignore"
+    if not gitignore_path.exists():
+        return None # Không có file .gitignore
+
+    try:
+        with open(gitignore_path, 'r', encoding='utf-8') as f:
+            lines = f.readlines()
+        
+        # Thêm các quy tắc mặc định mà Git luôn áp dụng
+        lines.append(".git")
+            
+        spec = pathspec.PathSpec.from_lines('gitwildmatch', lines)
+        return spec
+        
+    except Exception as e:
+        print(f"Warning: Could not read or compile .gitignore file: {e}")
+        return None
+# --- END NEW ---

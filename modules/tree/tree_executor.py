@@ -4,6 +4,13 @@ from pathlib import Path
 import logging 
 from typing import List, Set, Optional, Dict
 
+# --- MODIFIED: Thêm pathspec ---
+try:
+    import pathspec
+except ImportError:
+    pathspec = None
+# --- END MODIFIED ---
+
 # --- IMPORT UTILITIES FROM CENTRAL LOCATION ---
 from utils.core import is_path_matched
 # --------------------------------------------
@@ -15,9 +22,7 @@ from .tree_config import (
 )
 # ------------------------------------------
 
-# --- NEW: __all__ definition ---
 __all__ = ["generate_tree"]
-# --- END NEW ---
 
 
 # --- MAIN RECURSIVE LOGIC (MOVED FROM CORE) ---
@@ -30,6 +35,9 @@ def generate_tree(
     ignore_list: Set[str] = DEFAULT_IGNORE, 
     submodules: Set[str] = None, 
     prune_list: Set[str] = DEFAULT_PRUNE,
+    # --- MODIFIED: Thêm gitignore_spec ---
+    gitignore_spec: Optional['pathspec.PathSpec'] = None,
+    # --- END MODIFIED ---
     dirs_only_list: Set[str] = DEFAULT_DIRS_ONLY_LOGIC, 
     is_in_dirs_only_zone: bool = False, 
     counters: Dict[str, int] = None
@@ -42,24 +50,52 @@ def generate_tree(
         return
     
     try: 
-        # Get contents, ignoring hidden files/folders (starting with '.')
         contents = [path for path in directory.iterdir() if not path.name.startswith('.')]
     except (FileNotFoundError, NotADirectoryError): 
         return
         
-    # Filter directories: exclude items in ignore_list
+    # --- NEW: Helper function for combined filtering ---
+    def is_ignored(path: Path) -> bool:
+        # 1. Check fnmatch list (từ .tree.ini)
+        if is_path_matched(path, ignore_list, start_dir):
+            return True
+        
+        # 2. Check pathspec list (từ .gitignore)
+        if gitignore_spec:
+            try:
+                rel_path = path.relative_to(start_dir)
+                # pathspec cần POSIX path
+                rel_path_str = rel_path.as_posix()
+                
+                # pathspec xử lý thư mục tốt hơn nếu có dấu /
+                if path.is_dir() and not rel_path_str.endswith('/'):
+                    rel_path_str += '/'
+                
+                if rel_path_str == './': # Bỏ qua thư mục gốc
+                    return False
+
+                return gitignore_spec.match_file(rel_path_str)
+            except Exception:
+                # Bỏ qua lỗi nếu không thể lấy đường dẫn tương đối
+                # (ví dụ: pathspec không xử lý tốt path='.')
+                return False
+                
+        return False
+    # --- END NEW ---
+        
+    # --- MODIFIED: Sử dụng hàm is_ignored ---
     dirs = sorted(
-        [d for d in contents if d.is_dir() and not is_path_matched(d, ignore_list, start_dir)], 
+        [d for d in contents if d.is_dir() and not is_ignored(d)], 
         key=lambda p: p.name.lower()
     )
     
     files: List[Path] = []
-    # Filter files: only show if NOT in a dirs-only zone
     if not is_in_dirs_only_zone: 
         files = sorted(
-            [f for f in contents if f.is_file() and not is_path_matched(f, ignore_list, start_dir)], 
+            [f for f in contents if f.is_file() and not is_ignored(f)], 
             key=lambda p: p.name.lower()
         )
+    # --- END MODIFIED ---
         
     items_to_print = dirs + files
     pointers = ["├── "] * (len(items_to_print) - 1) + ["└── "]
@@ -73,7 +109,6 @@ def generate_tree(
         is_submodule = path.is_dir() and path.name in submodules
         is_pruned = path.is_dir() and is_path_matched(path, prune_list, start_dir)
         
-        # Check if this directory is the start of a dirs-only rule
         is_dirs_only_entry = (
             path.is_dir() and 
             is_path_matched(path, dirs_only_list, start_dir) and 
@@ -82,7 +117,6 @@ def generate_tree(
         
         line = f"{prefix}{pointer}{path.name}{'/' if path.is_dir() else ''}"
         
-        # Add suffixes
         if is_submodule: 
             line += " [submodule]"
         elif is_pruned: 
@@ -92,16 +126,17 @@ def generate_tree(
         
         print(line)
 
-        # Recurse condition: is a directory AND not a submodule AND not pruned
         if path.is_dir() and not is_submodule and not is_pruned:
             extension = "│   " if pointer == "├── " else "    " 
             
-            # Update flag: If already in a dirs-only zone OR this is a new dirs-only entry
             next_is_in_dirs_only_zone = is_in_dirs_only_zone or is_dirs_only_entry
             
-            # Recurse
+            # --- MODIFIED: Truyền gitignore_spec đệ quy ---
             generate_tree(
                 path, start_dir, prefix + extension, level + 1, max_level, 
-                ignore_list, submodules, prune_list, dirs_only_list, 
+                ignore_list, submodules, prune_list, 
+                gitignore_spec, # <-- Tham số mới
+                dirs_only_list, 
                 next_is_in_dirs_only_zone, counters
             )
+            # --- END MODIFIED ---

@@ -9,8 +9,7 @@ from pathlib import Path
 from utils.logging_config import setup_logging, log_success
 from utils.core import run_command, is_git_repository
 
-# --- MODULE IMPORTS ---
-# --- MODIFIED: Import directly from the 'tree' module gateway ---
+# Module Imports (Không thay đổi sau Bước 0)
 from modules.tree import (
     CONFIG_TEMPLATE, 
     load_and_merge_config,
@@ -22,9 +21,9 @@ from modules.tree import (
     DEFAULT_NO_GITIGNORE_ARG,
     DEFAULT_FULL_VIEW_ARG
 )
-# --- END MODIFIED ---
-# ---------------------
 
+# handle_init_command (Không thay đổi)
+# ... (giữ nguyên) ...
 def handle_init_command(logger: logging.Logger) -> None:
     """Handles the logic for the --init flag."""
     config_file_path = Path.cwd() / CONFIG_FILENAME
@@ -72,10 +71,13 @@ def handle_init_command(logger: logging.Logger) -> None:
     except Exception as e:
         logger.error(f"❌ An unexpected error occurred while trying to open the file: {e}")
 
+
 def main():
     """Main orchestration function: Parses args, calls config processing, and runs the tree."""
     
     parser = argparse.ArgumentParser(description="A smart directory tree generator with support for a .treeconfig.ini file.")
+    # (Args parse không thay đổi)
+    # ... (giữ nguyên) ...
     parser.add_argument("start_path", nargs='?', 
                         default=".", help="Starting path (file or directory).") 
     parser.add_argument("-L", "--level", type=int, default=DEFAULT_MAX_LEVEL_ARG, help="Limit the display depth.")
@@ -91,28 +93,26 @@ def main():
         help="Do not respect .gitignore files."
     )
     
-    # --- NEW: Thêm cờ --full-view ---
     parser.add_argument(
         "-f", "--full-view",
         action='store_true', 
         default=DEFAULT_FULL_VIEW_ARG, 
         help="Bypass all filters (.gitignore, ignore/prune rules, level limit) and show all files."
     )
-    # --- END NEW ---
     
     parser.add_argument("--init", action='store_true', help="Create a sample .treeconfig.ini file and open it.")
     args = parser.parse_args()
 
-    # 1. Setup Logging
+    # 1. Setup Logging (Không thay đổi)
     logger = setup_logging(script_name="CTree")
     logger.debug(f"Received start path: {args.start_path}")
     
-    # 2. Handle --init flag (separated function)
+    # 2. Handle --init flag (Không thay đổi)
     if args.init: 
         handle_init_command(logger)
-        return # Exit after --init
+        return
 
-    # 3. Process Start Path
+    # 3. Process Start Path (Không thay đổi)
     initial_path = Path(args.start_path).resolve() 
     if not initial_path.exists():
         logger.error(f"❌ Path does not exist: '{args.start_path}'")
@@ -120,33 +120,42 @@ def main():
     start_dir = initial_path.parent if initial_path.is_file() else initial_path
     is_git_repo = is_git_repository(start_dir)
     
-    # 4. Load and Merge Configuration (Core logic)
+    # 4. Load and Merge Configuration (Không thay đổi)
     try:
-        # --- (Không thay đổi) ---
-        # Logic của -f sẽ được xử lý bên trong hàm này
         config_params = load_and_merge_config(args, start_dir, logger, is_git_repo)
-        # --- END ---
     except Exception as e:
         logger.error(f"❌ Critical error during config processing: {e}")
         logger.debug("Traceback:", exc_info=True)
         return
 
     # 5. Print Status Header
-    is_truly_full_view = not any(config_params["filter_lists"].values())
+    # --- MODIFIED: Cải thiện logic header ---
+    is_truly_full_view = not any(config_params["filter_lists"].values()) and \
+                         not config_params["using_gitignore"] and \
+                         config_params["max_level"] is None
+
     filter_info = "Full view" if is_truly_full_view else "Filtered view"
     
     level_info = "full depth" if config_params["max_level"] is None else \
                  f"depth limit: {config_params['max_level']}"
     mode_info = ", directories only" if config_params["global_dirs_only_flag"] else ""
     
-    git_info = ", Git project" if is_git_repo else ""
+    git_info = ""
+    if is_git_repo:
+        if config_params["using_gitignore"]:
+             git_info = ", Git project (.gitignore enabled)"
+        elif args.no_gitignore:
+             git_info = ", Git project (.gitignore disabled by flag)"
+        else:
+             git_info = ", Git project" # (ví dụ: config file tắt, hoặc không tìm thấy .gitignore)
     
     print(f"{start_dir.name}/ [{filter_info}, {level_info}{mode_info}{git_info}]")
+    # --- END MODIFIED ---
 
     # 6. Run Recursive Logic (Executor logic)
     counters = {'dirs': 0, 'files': 0}
     
-    # Use the processed config dict to pass parameters
+    # --- MODIFIED: Truyền tham số gitignore_spec ---
     generate_tree(
         start_dir, 
         start_dir, 
@@ -155,11 +164,13 @@ def main():
         ignore_list=config_params["ignore_list"],
         submodules=config_params["submodules"],
         prune_list=config_params["prune_list"],
+        gitignore_spec=config_params["gitignore_spec"], # <-- Mới
         dirs_only_list=config_params["dirs_only_list"],
         is_in_dirs_only_zone=config_params["is_in_dirs_only_zone"]
     )
+    # --- END MODIFIED ---
 
-    # 7. Print Final Result
+    # 7. Print Final Result (Không thay đổi)
     files_info = "0 files (hidden)" if config_params["global_dirs_only_flag"] and counters['files'] == 0 else \
                  f"{counters['files']} files" 
     print(f"\n{counters['dirs']} directories, {files_info}")

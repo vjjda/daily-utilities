@@ -4,8 +4,8 @@
 File Filtering and Path Matching Utilities
 (Internal module, imported by utils/core.py)
 
-GIAI ĐOẠN 0: Chứa logic fnmatch cũ.
-GIAI ĐOẠN 1: Sẽ được thay thế bằng gitignore-parser.
+GIAI ĐOẠN 1: Chỉ chứa logic fnmatch.
+(Logic gitignore đã được chuyển sang git.py)
 """
 
 import fnmatch
@@ -13,8 +13,9 @@ import os
 from pathlib import Path
 from typing import Set
 
-# --- NEW: Export list ---
-__all__ = ["is_path_matched", "parse_gitignore"]
+# --- MODIFIED: __all__ ---
+__all__ = ["is_path_matched"]
+# --- END MODIFIED ---
 
 def is_path_matched(path: Path, patterns: Set[str], start_dir: Path) -> bool:
     """
@@ -41,28 +42,6 @@ def is_path_matched(path: Path, patterns: Set[str], start_dir: Path) -> bool:
             
     return False
 
-def parse_gitignore(root: Path) -> Set[str]:
-    """
-    Parses a .gitignore file and returns a set of non-empty, non-comment patterns.
-    (Code moved from utils/core.py)
-    """
-    gitignore_path = root / ".gitignore"
-    patterns = set()
-    if gitignore_path.exists():
-        try:
-            with open(gitignore_path, 'r', encoding='utf-8') as f:
-                for line in f:
-                    stripped_line = line.strip()
-                    
-                    if not stripped_line or stripped_line.startswith('#'):
-                        continue
-
-                    if stripped_line.startswith('/'):
-                        stripped_line = stripped_line[1:]
-
-                    if stripped_line:
-                        patterns.add(stripped_line)
-                        
-        except Exception as e:
-            print(f"Warning: Could not read .gitignore file: {e}")
-    return patterns
+# --- REMOVED: parse_gitignore ---
+# (Logic này đã được chuyển sang utils/core/git.py và nâng cấp)
+# --- END REMOVED ---
