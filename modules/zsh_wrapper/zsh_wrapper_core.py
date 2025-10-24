@@ -7,14 +7,14 @@ Core logic for zsh_wrapper (zrap).
 import logging
 import os
 from pathlib import Path
-from typing import Dict, Any, List, Optional
+# --- MODIFIED: Thêm Tuple vào import ---
+from typing import Dict, Any, List, Optional, Tuple
+# --- END MODIFIED ---
 
 # Import từ utils
 from utils.core import find_git_root
 
-# --- NEW: __all__ definition ---
 __all__ = ["process_zsh_wrapper_logic"]
-# --- END NEW ---
 
 # Thư mục chứa template của module này
 TEMPLATE_DIR = Path(__file__).parent / "templates"
@@ -26,22 +26,28 @@ def _load_template(template_name: str) -> str:
         raise FileNotFoundError(f"Không tìm thấy template: {template_name}")
     return path.read_text(encoding='utf-8')
 
-def _find_project_root(logger: logging.Logger, script_path: Path, root_arg: Optional[str]) -> Path:
-    """Tìm Project Root, ưu tiên --root, sau đó là find_git_root."""
+# --- MODIFIED: Thay đổi hàm để trả về Tuple[Path, bool] ---
+def _find_project_root(logger: logging.Logger, script_path: Path, root_arg: Optional[str]) -> Tuple[Path, bool]:
+    """
+    Tìm Project Root, ưu tiên --root, sau đó là find_git_root.
+    Trả về (project_root, is_fallback_required).
+    """
     if root_arg:
         logger.debug(f"Sử dụng Project Root được chỉ định: {root_arg}")
-        return Path(root_arg).resolve()
+        return Path(root_arg).resolve(), False
     
     logger.debug(f"Đang tự động tìm Project Root (Git) từ: {script_path.parent}")
     # Chúng ta dùng find_git_root từ utils/core.py
     git_root = find_git_root(script_path.parent) 
     if git_root:
         logger.debug(f"Đã tìm thấy Git root: {git_root}")
-        return git_root
+        return git_root, False
     
-    # Fallback
-    logger.warning(f"Không tìm thấy Git root. Sử dụng thư mục cha của script làm Project Root.")
-    return script_path.parent.resolve()
+    # Fallback case (Git root not found)
+    fallback_path = script_path.parent.resolve()
+    logger.warning(f"Không tìm thấy Git root. Đề xuất Project Root dự phòng: {fallback_path}")
+    return fallback_path, True # <-- Trả về đường dẫn dự phòng VÀ cờ True
+# --- END MODIFIED ---
 
 def _prepare_absolute_mode(
     template_content: str, 
@@ -62,7 +68,6 @@ def _prepare_relative_mode(
     """Điền template cho mode 'relative'."""
     
     # 1. Path từ thư mục output -> project root
-    # (ví dụ: từ 'bin/' đi lên 'project/' -> '../')
     output_dir = paths["output_path"].parent
     try:
         project_root_rel_to_output = os.path.relpath(
@@ -74,7 +79,6 @@ def _prepare_relative_mode(
         raise
     
     # 2. Path từ project root -> script
-    # (ví dụ: từ 'project/' đi xuống 'scripts/foo.py')
     script_path_rel_to_project = paths["script_path"].relative_to(paths["project_root"])
     
     # 3. Path từ project root -> venv
@@ -90,6 +94,7 @@ def _prepare_relative_mode(
         output_path_rel_to_project=output_path_rel_to_project.as_posix()
     )
 
+# --- MODIFIED: Cập nhật hàm chính để trả về trạng thái fallback ---
 def process_zsh_wrapper_logic(
     logger: logging.Logger, 
     args: Any
@@ -107,7 +112,23 @@ def process_zsh_wrapper_logic(
         raise FileNotFoundError(f"File không tìm thấy: {script_path}")
     
     # 2. Xác định các đường dẫn (Project, Venv)
-    project_root = _find_project_root(logger, script_path, args.root)
+    project_root, is_fallback = _find_project_root(logger, script_path, args.root)
+
+    # 2.5. Nếu cần fallback VÀ người dùng CHƯA chỉ định root tường minh
+    if is_fallback:
+        # Trả về đối tượng báo hiệu cho entry point (scripts/zsh_wrapper.py)
+        # để nó tiến hành hỏi người dùng.
+        return {
+            "status": "fallback_required",
+            "fallback_path": project_root, # Đường dẫn dự phòng
+            "script_path": script_path,
+            "output_path": output_path,
+            "venv": args.venv,
+            "mode": args.mode,
+            "force": args.force,
+        }
+    
+    # (Tiếp tục xử lý nếu Project Root đã được xác định hợp lệ)
     venv_path = project_root / args.venv
     
     paths = {
@@ -138,3 +159,4 @@ def process_zsh_wrapper_logic(
         "output_path": output_path,
         "force": args.force
     }
+# --- END MODIFIED ---

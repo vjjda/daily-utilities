@@ -69,7 +69,6 @@ def main(
     Tạo một wrapper Zsh cho một script Python, tự động quản lý venv và PYTHONPATH.
     """
     
-    # --- 1. Setup Logging (sớm) ---
     logger = setup_logging(script_name="Zrap")
     logger.debug("Zrap script started.")
 
@@ -124,7 +123,7 @@ def main(
         except KeyboardInterrupt: print("\n\n❌ [Lệnh dừng] Hoạt động của tool đã bị dừng."); sys.exit(1)
     # --- END ---
 
-    # --- 5. Tạo 'args' object giả lập cho core logic ---
+    # --- 5. Tạo 'args' object giả lập cho core logic (Lần 1) ---
     args_for_core = argparse.Namespace(
         script_path=str(script_path), 
         output=str(final_output_path), # Sử dụng biến đã expand/default 
@@ -135,11 +134,51 @@ def main(
     )
     # --- END ---
 
-    # 6. Execute Core Logic 
+    # --- 6. Execute Core Logic & Handle Fallback (MODIFIED) ---
     try:
         result = process_zsh_wrapper_logic( logger=logger, args=args_for_core )
-        if result: execute_zsh_wrapper_action( logger=logger, result=result )
-        log_success(logger, "Hoàn thành.")
+
+        # --- NEW: Logic xử lý Fallback ---
+        if result and result.get("status") == "fallback_required":
+            fallback_path: Path = result["fallback_path"]
+            
+            logger.warning(f"\n⚠️ Project Root (Git Root) không tìm thấy.")
+            logger.warning(f"   Đề xuất sử dụng thư mục cha của script: {fallback_path.as_posix()}")
+            
+            try:
+                confirmation = typer.confirm("   Bạn có muốn sử dụng đường dẫn này làm Project Root không?", abort=True)
+            except (typer.Abort, KeyboardInterrupt):
+                logger.error("❌ Operation cancelled by user.")
+                sys.exit(0)
+            
+            if confirmation:
+                logger.info(f"✅ Đã xác nhận. Bắt đầu lại xử lý với Project Root đã chọn.")
+                
+                # Tạo một args mới, đặt root tường minh để bỏ qua tìm kiếm Git
+                args_for_core = argparse.Namespace(
+                    script_path=str(result["script_path"]), 
+                    output=str(result["output_path"]),
+                    mode=result["mode"],
+                    root=str(fallback_path), # <-- Ghi đè root tường minh
+                    venv=result["venv"],
+                    force=result["force"]
+                )
+                
+                # Chạy lại core logic lần 2
+                result = process_zsh_wrapper_logic( logger=logger, args=args_for_core )
+            else:
+                logger.error("❌ Operation cancelled by user.")
+                sys.exit(0) 
+        # --- END NEW ---
+
+        # 7. Execute Action (Chỉ chạy nếu status là 'ok')
+        if result and result.get("status") == "ok": 
+            execute_zsh_wrapper_action( logger=logger, result=result )
+            log_success(logger, "Hoàn thành.")
+        elif result and result.get("status") != "fallback_required":
+             logger.error("❌ Core logic failed with unknown status.")
+             sys.exit(1)
+             
     except Exception as e:
         logger.error(f"❌ Đã xảy ra lỗi không mong muốn: {e}")
         logger.debug("Traceback:", exc_info=True)
