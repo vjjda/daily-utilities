@@ -15,7 +15,7 @@ except ImportError:
     pathspec = None
 
 from utils.core import is_path_matched
-from utils.logging_config import log_success
+from utils.logging_config import log_success # type: ignore[reportUnknownVariableType]
 
 # (Import config defaults only for type hinting, not logic)
 from .tree_config import (
@@ -107,12 +107,12 @@ def generate_tree(
     level: int = 0, 
     max_level: Optional[int] = DEFAULT_MAX_LEVEL, 
     ignore_list: Set[str] = DEFAULT_IGNORE, 
-    submodules: Set[Path] = None, 
+    submodules: Optional[Set[Path]] = None, 
     prune_list: Set[str] = DEFAULT_PRUNE,
-    gitignore_spec: Optional['pathspec.PathSpec'] = None,
+    gitignore_spec: Optional['pathspec.PathSpec'] = None, # type: ignore[reportUnknownParameterType, reportInvalidTypeForm, reportUnknownMemberType]
     dirs_only_list: Set[str] = DEFAULT_DIRS_ONLY_LOGIC, 
     is_in_dirs_only_zone: bool = False, 
-    counters: Dict[str, int] = None
+    counters: Optional[Dict[str, int]] = None
 ):
     """
     Recursive function to generate and print the directory tree.
@@ -121,6 +121,10 @@ def generate_tree(
     """
     if submodules is None:
         submodules = set()
+    
+    # Thêm kiểm tra phòng thủ cho counters (mặc dù caller chính xử lý)
+    if counters is None:
+        counters = {'dirs': 0, 'files': 0}
     
     if max_level is not None and level >= max_level: 
         return
@@ -145,7 +149,7 @@ def generate_tree(
                 if rel_path_str == './':
                     return False
 
-                return gitignore_spec.match_file(rel_path_str)
+                return gitignore_spec.match_file(rel_path_str) # type: ignore[reportUnknownMemberType] 
             except Exception:
                 return False
                 
