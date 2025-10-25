@@ -1,3 +1,4 @@
+# Path: scripts/internal/pyi_generator.py
 import sys
 import argparse
 import logging

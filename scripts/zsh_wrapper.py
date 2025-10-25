@@ -1,3 +1,4 @@
+# Path: scripts/zsh_wrapper.py
 import sys
 import argparse 
 import logging
