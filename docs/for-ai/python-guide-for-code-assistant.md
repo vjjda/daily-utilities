@@ -63,7 +63,7 @@ Khi viết/chỉnh sửa mã, bạn phải tuân thủ nghiêm ngặt các nguy�
 
 *(Nguyên tắc định dạng từ Code Assistant Manifesto)*
 
-1. **Path Comment:** Mọi file code phải bắt đầu bằng dòng Path Comment theo định dạng phù hợp với ngôn ngữ (ví dụ: `# Path: relative/path/from/project/root`).
+1. **Path Comment:** Mọi file code phải bắt đầu bằng dòng Path Comment theo định dạng phù hợp với ngôn ngữ (ví dụ: `# Path: relative/path/from/project/root`). Không thêm path comment này vào file `md`.
 2. **Shebang:** Nếu script là executable, phải thêm Shebang trước dòng Path Comment.
 
 ---
