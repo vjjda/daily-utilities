@@ -10,8 +10,6 @@ import ast
 from pathlib import Path
 from typing import Dict, Any, List, Optional, Set, Tuple, Final
 
-from utils.core import Logger # Type hint cho Logger
-
 # Import Configs
 from .stubgen_config import (
     AST_MODULE_LIST_NAME, 
@@ -163,7 +161,7 @@ def _generate_stub_content(init_path: Path, project_root: Path, submodule_stems:
 
 # --- MAIN ORCHESTRATOR ---
 def process_stubgen_logic(
-    logger: Logger, 
+    logger: logging.Logger, 
     scan_root: Path,
     cli_ignore: Set[str],
     cli_restrict: Set[str],

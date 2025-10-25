@@ -12,7 +12,6 @@ from typing import Dict, Any, List
 
 import typer
 
-from utils.core import Logger
 from utils.logging_config import log_success
 
 # --- Type Hint cho Result ---
@@ -21,7 +20,7 @@ StubResult = Dict[str, Any]
 __all__ = ["execute_stubgen_action"]
 
 def execute_stubgen_action(
-    logger: Logger, 
+    logger: logging.Logger, 
     results: List[StubResult],
     force: bool
 ) -> None:

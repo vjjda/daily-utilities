@@ -10,7 +10,6 @@ from typing import List, Set, Final
 
 # Tái sử dụng các tiện ích Git, Filtering
 from utils.core import get_submodule_paths, parse_gitignore, is_path_matched
-from utils.core import Logger # Type hint cho Logger
 
 # Import Configs
 from .stubgen_config import DEFAULT_IGNORE, SCAN_ROOTS, DYNAMIC_IMPORT_INDICATORS
@@ -28,7 +27,7 @@ def _is_dynamic_gateway(path: Path) -> bool:
         return False
         
 def find_gateway_files(
-    logger: Logger, 
+    logger: logging.Logger, 
     scan_root: Path,
     cli_ignore: Set[str],
     cli_restrict: Set[str],
