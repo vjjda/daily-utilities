@@ -21,7 +21,8 @@ from utils.core import run_command, is_git_repository
 from modules.tree import (
     # --- Configs & Constants ---
     CONFIG_FILENAME,
-    PROJECT_CONFIG_FILENAME, # <--- NEW
+    PROJECT_CONFIG_FILENAME,
+    CONFIG_SECTION_NAME, # <--- NEW
     
     # --- Loader Functions ---
     load_config_files,
