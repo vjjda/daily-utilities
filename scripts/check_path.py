@@ -12,14 +12,12 @@ import typer
 
 # Common utilities
 from utils.logging_config import setup_logging, log_success
-# --- MODIFIED: Import hàm config I/O từ utils.core ---
 from utils.core import (
     parse_comma_list, is_git_repository, find_git_root,
     load_config_template, generate_dynamic_config,
     overwrite_or_append_project_config_section,
-    load_project_config_section # <-- Đổi tên hàm load
+    load_project_config_section
 )
-# --- END MODIFIED ---
 
 # Module Imports
 from modules.path_checker import (
@@ -27,16 +25,14 @@ from modules.path_checker import (
     handle_results,
     DEFAULT_EXTENSIONS_STRING,
     DEFAULT_IGNORE,
-    PROJECT_CONFIG_FILENAME, # Vẫn cần tên file/section
+    PROJECT_CONFIG_FILENAME,
     CONFIG_SECTION_NAME,
-    # load_config_files # <-- Không cần nữa, dùng load_project_config_section
-    # Các hàm IO khác đã chuyển sang utils.core
 )
 
 # --- CONSTANTS ---
 THIS_SCRIPT_PATH = Path(__file__).resolve()
-MODULE_DIR = THIS_SCRIPT_PATH.parent.parent / "modules" / "path_checker" # Path đến thư mục module cpath
-TEMPLATE_FILENAME = "cpath.toml.template" # Tên file template
+MODULE_DIR = THIS_SCRIPT_PATH.parent.parent / "modules" / "path_checker"
+TEMPLATE_FILENAME = "cpath.toml.template"
 
 app = typer.Typer(
     help="Kiểm tra (và tùy chọn sửa) các comment '# Path:' trong file nguồn.",
@@ -48,15 +44,17 @@ app = typer.Typer(
 def main(
     ctx: typer.Context,
 
-    # --- MODIFIED: Quay lại Optional[str] và thêm callback ---
+    # --- PHỤC HỒI: Quay lại 'callback' ---
+    # Đây là logic gốc trong file của bạn.
+    # Nó xử lý trường hợp "-c" (không có giá trị) bằng cách
+    # nhận một chuỗi rỗng "" và chuyển nó thành "project".
     config: Optional[str] = typer.Option(
         None, "-c", "--config",
         help="Khởi tạo/cập nhật .project.toml. Gõ '-c' không kèm giá trị sẽ mặc định là scope 'project'.",
         show_default=False,
-        # Callback để xử lý trường hợp '-c' không có giá trị
         callback=lambda value: 'project' if value == "" else value,
     ),
-    # --- END MODIFIED ---
+    # --- KẾT THÚC PHỤC HỒI ---
 
     target_directory_arg: Optional[Path] = typer.Argument(
         None,
@@ -79,16 +77,15 @@ def main(
     logger = setup_logging(script_name="CPath")
     logger.debug("CPath script started.")
 
-    # --- Logic cho cờ --config (Đã cập nhật để dùng hàm utils) ---
-    if config: # Bây giờ config sẽ là 'project' nếu gõ -c, hoặc giá trị khác nếu gõ -c value
+    # --- Logic cho cờ --config ---
+    if config:
+        # config sẽ là 'project' (nếu gõ -c) hoặc giá trị người dùng nhập (ví dụ: -c project)
         scope = config.lower()
         if scope != 'project':
-            logger.error(f"❌ Lỗi: Scope '{config}' không được hỗ trợ. cpath chỉ hỗ trợ '--config project' hoặc chỉ '-c'.")
+            logger.error(f"❌ Lỗi: Scope '{config}' không được hỗ trợ. cpath chỉ hỗ trợ '--config' (hoặc '-c').")
             raise typer.Exit(code=1)
 
-        # ... (phần còn lại của logic xử lý config file giữ nguyên) ...
         config_file_path = Path.cwd() / PROJECT_CONFIG_FILENAME
-        # ... (try/except block) ...
         try:
             template_str = load_config_template(MODULE_DIR, TEMPLATE_FILENAME, logger)
             cpath_defaults = {
@@ -106,7 +103,6 @@ def main(
             logger.error(f"❌ Đã xảy ra lỗi khi thao tác file config: {e}")
             raise typer.Exit(code=1)
 
-        # ... (mở file) ...
         try:
             logger.info(f"Đang mở '{config_file_path.name}'...")
             typer.launch(str(config_file_path))
@@ -114,12 +110,9 @@ def main(
             logger.error(f"❌ Lỗi khi mở file: {e}")
             logger.warning(f"⚠️ Không thể tự động mở file.")
 
-
         raise typer.Exit(code=0)
 
-
-    # (Logic xác định scan_root và kiểm tra Git giữ nguyên)
-    # ... (code xác định effective_scan_root) ...
+    # (Logic xác định scan_root và kiểm tra Git)
     if target_directory_arg:
         scan_root = target_directory_arg.expanduser()
     else:
@@ -134,11 +127,10 @@ def main(
 
     git_warning_str = ""
     effective_scan_root = scan_root
-    # ... (toàn bộ logic R/C/Q và xác nhận y/N giữ nguyên) ...
+
     if not is_git_repository(scan_root):
         suggested_root = find_git_root(scan_root.parent)
         if suggested_root:
-            # ... (logic R/C/Q)
             logger.warning(f"⚠️ Thư mục hiện tại '{scan_root.name}/' không phải là gốc Git.")
             logger.warning(f"   Đã tìm thấy gốc Git tại: {suggested_root.as_posix()}")
             logger.warning("   Vui lòng chọn một tùy chọn:")
@@ -162,7 +154,6 @@ def main(
                 logger.error("❌ Hoạt động bị hủy bởi người dùng.")
                 raise typer.Exit(code=0)
         else:
-            # ... (logic y/N)
              logger.warning(f"⚠️ Không tìm thấy thư mục '.git' trong '{scan_root.name}/' hoặc các thư mục cha.")
              logger.warning(f"   Quét từ một thư mục không phải dự án (như $HOME) có thể chậm hoặc không an toàn.")
              try:
@@ -178,7 +169,7 @@ def main(
 
     check_mode = dry_run
 
-    # --- Tải và Merge Cấu hình (Đã cập nhật để dùng hàm utils) ---
+    # --- Tải và Merge Cấu hình ---
     project_config_path = effective_scan_root / PROJECT_CONFIG_FILENAME
     file_config_data = load_project_config_section(project_config_path, CONFIG_SECTION_NAME, logger)
 
@@ -200,8 +191,6 @@ def main(
     file_ignore_set = set(file_config_data.get('ignore', []))
     final_ignore_set = DEFAULT_IGNORE.union(file_ignore_set).union(cli_ignore_set)
     logger.debug(f"Danh sách 'ignore' cuối cùng (đã merge): {sorted(list(final_ignore_set))}")
-    # --- END Tải và Merge ---
-
 
     # Xây dựng lệnh "fix"
     original_args = sys.argv[1:]
@@ -217,7 +206,7 @@ def main(
             logger=logger, project_root=effective_scan_root,
             target_dir_str=str(target_directory_arg) if effective_scan_root == scan_root and target_directory_arg else None,
             extensions=final_extensions_list,
-            ignore_set=final_ignore_set, # Đã đổi tên ở lần trước
+            ignore_set=final_ignore_set,
             script_file_path=THIS_SCRIPT_PATH,
             check_mode=check_mode
         )
