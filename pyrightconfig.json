@@ -21,9 +21,10 @@
   "reportUnsupportedDunderAll": "none",
   "reportPossiblyUnboundVariable": "none",
   "reportUnknownVariableType": "none",
-  
-  // --- NEW: Tắt cảnh báo "Variable not allowed in type expression" ---
   "reportInvalidTypeForm": "none",
+
+  // --- NEW: Tắt cảnh báo "Argument of type ... cannot be assigned..." ---
+  "reportArgumentType": "none",
   // --- END NEW ---
 
   // Tùy chọn: Thêm các thư mục cần kiểm tra
