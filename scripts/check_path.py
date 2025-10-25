@@ -1,32 +1,30 @@
-#!/usr/bin/env python3
 # Path: scripts/check_path.py
 
 import sys
 import argparse 
 import logging
 from pathlib import Path
-from typing import List, Optional, Set # <-- Thêm Set
+from typing import List, Optional, Set 
 import shlex
 
 import typer
 
-# Common utilities
+# (Các import khác giữ nguyên)
 from utils.logging_config import setup_logging, log_success
 from utils.core import parse_comma_list, is_git_repository, find_git_root
 
-# Module Imports
 from modules.path_checker import (
     process_path_updates,
     handle_results,
     DEFAULT_EXTENSIONS_STRING,
-    DEFAULT_IGNORE, # <-- NEW: Import default
+    DEFAULT_IGNORE, 
     
     PROJECT_CONFIG_FILENAME,
     CONFIG_SECTION_NAME,
     load_config_template,
     generate_dynamic_config,
     overwrite_or_append_project_config_section,
-    load_config_files # <-- NEW: Import loader
+    load_config_files 
 )
 
 # --- CONSTANTS ---
@@ -199,8 +197,10 @@ def main(
         files_to_fix = process_path_updates(
             logger=logger, project_root=effective_scan_root,
             target_dir_str=str(target_directory_arg) if effective_scan_root == scan_root and target_directory_arg else None,
-            extensions=final_extensions_list, # <-- MODIFIED
-            cli_ignore=final_ignore_set, # <-- MODIFIED
+            extensions=final_extensions_list, 
+            # --- MODIFIED: Thay đổi tên keyword argument ---
+            ignore_set=final_ignore_set, # (Thay vì 'cli_ignore')
+            # --- END MODIFIED ---
             script_file_path=THIS_SCRIPT_PATH, 
             check_mode=check_mode 
         )

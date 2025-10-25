@@ -1,5 +1,25 @@
 # Path: modules/path_checker/path_checker_scanner.py
-# (Chỉ cập nhật hàm scan_for_files)
+
+"""
+File Scanning logic for the Path Checker module.
+...
+"""
+
+import logging
+from pathlib import Path
+from typing import List, Set, Optional, TYPE_CHECKING
+
+try:
+    import pathspec
+except ImportError:
+    pathspec = None
+
+if TYPE_CHECKING:
+    import pathspec
+
+
+# Import utilities used for scanning
+from utils.core import get_submodule_paths, parse_gitignore, is_path_matched
 
 __all__ = ["scan_for_files"]
 
@@ -8,7 +28,9 @@ def scan_for_files(
     project_root: Path,
     target_dir_str: Optional[str],
     extensions: List[str],
-    cli_ignore: Set[str], # <-- GIỮ TÊN CŨ (cli_ignore) để core.py không bị lỗi
+    # --- MODIFIED: Thay đổi tên tham số ---
+    ignore_set: Set[str], # (Thay vì 'cli_ignore')
+    # --- END MODIFIED ---
     script_file_path: Path,
     check_mode: bool
 ) -> List[Path]:
@@ -34,9 +56,8 @@ def scan_for_files(
     else:
         logger.info(f"Chế độ đường dẫn cụ thể: Không dùng .gitignore cho '{target_dir_str}'.")
 
-    # --- MODIFIED: Không merge với DEFAULT_IGNORE ---
-    # fnmatch_patterns chỉ chứa các pattern đã được merge từ entrypoint
-    fnmatch_patterns = cli_ignore
+    # --- MODIFIED: Gán từ tham số mới ---
+    fnmatch_patterns = ignore_set
     # --- END MODIFIED ---
     
     if check_mode:
@@ -51,6 +72,8 @@ def scan_for_files(
         all_files.extend(scan_path.rglob(f"*.{ext}"))
     
     files_to_process = []
+    # (Nội dung lọc file giữ nguyên)
+    # ...
     for file_path in all_files:
         abs_file_path = file_path.resolve()
 
