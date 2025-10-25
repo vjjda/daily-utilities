@@ -12,11 +12,12 @@ is_git_repository: Any
 is_path_matched: Any
 load_config_template: Any
 load_project_config_section: Any
-overwrite_or_append_project_config_section: Any
+load_toml_file: Any
+merge_config_sections: Any
 parse_comma_list: Any
 parse_gitignore: Any
 run_command: Any
-write_config_file: Any
+write_toml_file: Any
 
 # Static declaration of exported symbols (for Pylance)
-__all__: List[str] = ['Logger', 'find_git_root', 'generate_dynamic_config', 'get_submodule_paths', 'is_git_repository', 'is_path_matched', 'load_config_template', 'load_project_config_section', 'overwrite_or_append_project_config_section', 'parse_comma_list', 'parse_gitignore', 'run_command', 'write_config_file']
+__all__: List[str] = ['Logger', 'find_git_root', 'generate_dynamic_config', 'get_submodule_paths', 'is_git_repository', 'is_path_matched', 'load_config_template', 'load_project_config_section', 'load_toml_file', 'merge_config_sections', 'parse_comma_list', 'parse_gitignore', 'run_command', 'write_toml_file']
