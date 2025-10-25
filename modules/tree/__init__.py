@@ -18,7 +18,8 @@ modules_to_export: List[str] = [
     "tree_config",
     "tree_loader",
     "tree_core",
-    "tree_executor"
+    "tree_executor",
+    "tree_config_io" # <--- THÊM
 ]
 # --- END MODIFIED ---
 

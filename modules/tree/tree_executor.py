@@ -27,7 +27,6 @@ __all__ = [
     "generate_tree", 
     "print_status_header", 
     "print_final_result",
-    "write_config_file"
 ]
 
 
@@ -74,30 +73,6 @@ def print_final_result(
         else f"{counters['files']} files"
     )
     print(f"\n{counters['dirs']} directories, {files_info}")
-
-
-def write_config_file(
-    config_path: Path, 
-    content: str, 
-    logger: logging.Logger,
-    file_existed: bool
-) -> None:
-    """
-    Writes the config template content to the specified path.
-    (Side-effect: write I/O)
-    """
-    try:
-        with open(config_path, 'w', encoding='utf-8') as f:
-            f.write(content)
-        log_msg = (
-            f"Successfully created '{CONFIG_FILENAME}'." if not file_existed 
-            else f"Successfully overwrote '{CONFIG_FILENAME}'."
-        )
-        log_success(logger, log_msg)
-    except IOError as e:
-        logger.error(f"❌ Failed to write file '{config_path}': {e}")
-        # Re-raise to be caught by the entry point
-        raise 
 
 
 def generate_tree(
