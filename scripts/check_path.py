@@ -5,13 +5,13 @@ import sys
 import argparse 
 import logging
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Set # <-- Thêm Set
 import shlex
 
 import typer
 
 # Common utilities
-from utils.logging_config import setup_logging, log_success # <-- Import log_success
+from utils.logging_config import setup_logging, log_success
 from utils.core import parse_comma_list, is_git_repository, find_git_root
 
 # Module Imports
@@ -19,13 +19,14 @@ from modules.path_checker import (
     process_path_updates,
     handle_results,
     DEFAULT_EXTENSIONS_STRING,
-    # --- NEW: Import Config IO ---
+    DEFAULT_IGNORE, # <-- NEW: Import default
+    
     PROJECT_CONFIG_FILENAME,
     CONFIG_SECTION_NAME,
     load_config_template,
     generate_dynamic_config,
-    overwrite_or_append_project_config_section
-    # --- END NEW ---
+    overwrite_or_append_project_config_section,
+    load_config_files # <-- NEW: Import loader
 )
 
 # --- CONSTANTS ---
@@ -41,13 +42,11 @@ app = typer.Typer(
 def main(
     ctx: typer.Context, 
     
-    # --- NEW: Cờ Config ---
     config: Optional[str] = typer.Option(
         None, "-c", "--config",
         help="Khởi tạo hoặc cập nhật file .project.toml (chỉ hỗ trợ scope 'project').",
         case_sensitive=False
     ),
-    # --- END NEW ---
 
     target_directory_arg: Optional[Path] = typer.Argument( 
         None, 
@@ -55,16 +54,16 @@ def main(
         file_okay=False,
         dir_okay=True,
     ),
-    extensions: str = typer.Option( DEFAULT_EXTENSIONS_STRING, "-e", "--extensions", help=f"Các đuôi file để quét (mặc định: '{DEFAULT_EXTENSIONS_STRING}')." ),
-    ignore: Optional[str] = typer.Option( None, "-I", "--ignore", help="Danh sách pattern (phân cách bởi dấu phẩy) để bỏ qua." ),
+    # --- MODIFIED: Bỏ default, default sẽ được xử lý khi merge ---
+    extensions: Optional[str] = typer.Option( None, "-e", "--extensions", help=f"Các đuôi file để quét (ghi đè .project.toml)." ),
+    ignore: Optional[str] = typer.Option( None, "-I", "--ignore", help="Danh sách pattern (phân cách bởi dấu phẩy) để bỏ qua (thêm vào .project.toml)." ),
+    # --- END MODIFIED ---
     
-    # --- MODIFIED: Đổi tên thành 'dry_run' ---
     dry_run: bool = typer.Option( 
         False, 
         "-d", "--dry-run", 
         help="Chỉ chạy ở chế độ 'dry-run' (chạy thử). Mặc định là chạy 'fix' (có hỏi xác nhận)." 
     )
-    # --- END MODIFIED ---
 ):
     """ Hàm chính (callback của Typer) """
     if ctx.invoked_subcommand: return
@@ -73,8 +72,9 @@ def main(
     logger = setup_logging(script_name="CPath")
     logger.debug("CPath script started.")
 
-    # --- NEW: Logic cho cờ --config ---
+    # (Logic --config giữ nguyên)
     if config:
+        # ... (logic xử lý config)
         scope = config.lower()
         if scope != 'project':
             logger.error(f"❌ Lỗi: Scope '{config}' không được hỗ trợ. cpath chỉ hỗ trợ '--config project'.")
@@ -96,7 +96,6 @@ def main(
             logger.error(f"❌ Đã xảy ra lỗi khi thao tác file: {e}")
             raise typer.Exit(code=1)
         
-        # Mở file
         try:
             logger.info(f"Đang mở '{config_file_path.name}' trong trình soạn thảo mặc định...")
             typer.launch(str(config_file_path))
@@ -104,11 +103,9 @@ def main(
             logger.error(f"❌ Đã xảy ra lỗi không mong muốn khi mở file: {e}")
             logger.warning(f"⚠️ Không thể tự động mở file. Vui lòng mở thủ công.")
             
-        raise typer.Exit(code=0) # Dừng lại sau khi chạy config
-    # --- END NEW LOGIC ---
+        raise typer.Exit(code=0) 
 
-
-    # (Các logic xác định scan_root và kiểm tra Git giữ nguyên)
+    # (Logic xác định scan_root và kiểm tra Git giữ nguyên)
     if target_directory_arg:
         scan_root = target_directory_arg.expanduser()
     else:
@@ -123,9 +120,9 @@ def main(
     
     git_warning_str = ""
     effective_scan_root = scan_root
+    # ... (toàn bộ logic R/C/Q và xác nhận y/N giữ nguyên) ...
     if not is_git_repository(scan_root):
         suggested_root = find_git_root(scan_root.parent)
-        
         if suggested_root:
             logger.warning(f"⚠️ Thư mục hiện tại '{scan_root.name}/' không phải là gốc Git.")
             logger.warning(f"   Đã tìm thấy gốc Git tại: {suggested_root.as_posix()}")
@@ -133,14 +130,12 @@ def main(
             logger.warning("     [R] Chạy từ Gốc Git (Khuyên dùng)")
             logger.warning(f"     [C] Chạy từ Thư mục Hiện tại ({scan_root.name}/)")
             logger.warning("     [Q] Thoát / Hủy")
-            
             choice = ""
             while choice not in ('r', 'c', 'q'):
                 try:
                     choice = input("   Nhập lựa chọn của bạn (R/C/Q): ").lower().strip()
                 except (EOFError, KeyboardInterrupt):
                     choice = 'q' 
-            
             if choice == 'r':
                 effective_scan_root = suggested_root
                 logger.info(f"✅ Di chuyển quét đến gốc Git: {effective_scan_root.as_posix()}")
@@ -158,7 +153,6 @@ def main(
                 confirmation = input(f"   Bạn có chắc muốn quét '{scan_root.as_posix()}'? (y/N): ")
             except (EOFError, KeyboardInterrupt):
                 confirmation = 'n' 
-            
             if confirmation.lower() == 'y':
                 logger.info(f"✅ Tiếp tục quét tại thư mục không phải gốc Git: {scan_root.as_posix()}")
                 git_warning_str = f"⚠️ Cảnh báo: Đang chạy từ thư mục không phải gốc Git ('{scan_root.name}/'). Quy tắc .gitignore có thể không đầy đủ."
@@ -166,31 +160,52 @@ def main(
                 logger.error("❌ Hoạt động bị hủy bởi người dùng.")
                 raise typer.Exit(code=0) 
 
-    # --- MODIFIED: Cập nhật logic check_mode ---
-    check_mode = dry_run # Giá trị bool từ cờ --dry-run
-    # --- END MODIFIED ---
+    check_mode = dry_run 
 
-    # --- MODIFIED: Cập nhật logic xây dựng lệnh "fix" ---
+    # --- NEW: Tải và Merge Cấu hình ---
+    
+    # 1. Tải cấu hình từ file .project.toml
+    file_config_data = load_config_files(effective_scan_root, logger)
+
+    # 2. Merge Extensions (CLI > File > Default)
+    extensions_str: str
+    if extensions: # Ưu tiên 1: CLI
+        extensions_str = extensions
+    elif 'extensions' in file_config_data: # Ưu tiên 2: File
+        extensions_str = file_config_data['extensions']
+    else: # Ưu tiên 3: Default
+        extensions_str = DEFAULT_EXTENSIONS_STRING
+        
+    final_extensions_list = [ext.strip() for ext in extensions_str.split(',') if ext.strip()]
+
+    # 3. Merge Ignore (CLI + File + Default)
+    cli_ignore_set = parse_comma_list(ignore)
+    file_ignore_set = set(file_config_data.get('ignore', [])) # TOML đọc ra list
+    
+    final_ignore_set = DEFAULT_IGNORE.union(file_ignore_set).union(cli_ignore_set)
+    # --- END NEW: Tải và Merge ---
+
+
+    # Xây dựng lệnh "fix"
     original_args = sys.argv[1:]
     filtered_args = [
         shlex.quote(arg) for arg in original_args 
-        if arg not in ('-d', '--dry-run', '--fix', '-c', '--config') # Lọc cả cờ config và cờ cũ
+        if arg not in ('-d', '--dry-run', '--fix', '-c', '--config') 
     ]
     fix_command_str = "cpath " + " ".join(filtered_args)
-    # --- END MODIFIED ---
-
-    extensions_to_scan = [ext.strip() for ext in extensions.split(',') if ext.strip()]
-    cli_ignore_patterns = parse_comma_list(ignore)
 
     try:
+        # 3. Run the core logic (Truyền config đã merge)
         files_to_fix = process_path_updates(
             logger=logger, project_root=effective_scan_root,
             target_dir_str=str(target_directory_arg) if effective_scan_root == scan_root and target_directory_arg else None,
-            extensions=extensions_to_scan, cli_ignore=cli_ignore_patterns,
+            extensions=final_extensions_list, # <-- MODIFIED
+            cli_ignore=final_ignore_set, # <-- MODIFIED
             script_file_path=THIS_SCRIPT_PATH, 
             check_mode=check_mode 
         )
 
+        # 4. Handle Results (Không thay đổi)
         handle_results(
             logger=logger, files_to_fix=files_to_fix, check_mode=check_mode,
             fix_command_str=fix_command_str, scan_root=effective_scan_root, 

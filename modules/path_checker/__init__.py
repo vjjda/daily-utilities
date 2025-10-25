@@ -15,9 +15,10 @@ current_dir = Path(__file__).parent
 # Define the explicit order of internal modules to load
 modules_to_export: List[str] = [
     "path_checker_config",
+    "path_checker_loader", # <-- NEW
     "path_checker_core",
     "path_checker_executor",
-    "path_checker_config_io" # <-- NEW
+    "path_checker_config_io"
 ]
 
 # (This list is for Mypy/linters, but the main logic is globals())
