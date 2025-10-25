@@ -3,9 +3,9 @@
 import sys
 import logging
 from pathlib import Path
-from typing import Optional, List # (Import các type phổ biến)
+from typing import Optional, List, Set
 
-import typer # (Sử dụng Typer)
+import typer
 
 # --- Thêm PROJECT_ROOT vào sys.path để import utils/modules ---
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -13,21 +13,17 @@ sys.path.append(str(PROJECT_ROOT))
 
 try:
     from utils.logging_config import setup_logging, log_success
-    
-    # --- CONFIG DEFAULTS ---
-    from modules.stubgen.stubgen_config import DEFAULT_TARGET_DIR
-    # --- END CONFIG DEFAULTS ---
+    from utils.core import is_git_repository, parse_comma_list
     
     # --- MODULE IMPORTS (SRP) ---
     from modules.stubgen import (
-        # (Ví dụ: Import các hàm đã được export)
-        # load_data, 
         process_stubgen_logic,
         execute_stubgen_action
     )
     # ----------------------
-except ImportError:
-    print(f"Lỗi: Không thể import utils/modules. Đảm bảo PROJECT_ROOT đúng: {PROJECT_ROOT}", file=sys.stderr)
+except ImportError as e:
+    # Log error tiếng Anh theo quy tắc.
+    print(f"Error: Could not import project utilities/modules. Ensure PROJECT_ROOT is correct: {PROJECT_ROOT}. Error: {e}", file=sys.stderr)
     sys.exit(1)
 
 # --- CONSTANTS ---
@@ -48,31 +44,27 @@ app = typer.Typer(
 def main(
     ctx: typer.Context,
     target_dir: Path = typer.Argument(
-        DEFAULT_TARGET_DIR,
+        Path("."),
         help="Đường dẫn thư mục để bắt đầu quét (base directory). Mặc định là thư mục hiện tại (.)."
     ),
     force: bool = typer.Option(
         False,
-        "-f",
-        "--force",
+        "-f", "--force",
         help="Ghi đè file .pyi nếu đã tồn tại (không hỏi xác nhận)."
     ),
     ignore: Optional[str] = typer.Option(
         None,
-        "-I",
-        "--ignore",
+        "-I", "--ignore",
         help="Danh sách pattern (fnmatch) ngăn cách bởi dấu phẩy để bỏ qua."
     ),
     restrict: Optional[str] = typer.Option(
         None,
-        "-R",
-        "--restrict",
+        "-R", "--restrict",
         help="Danh sách thư mục con (so với target_dir) ngăn cách bởi dấu phẩy để giới hạn quét. Mặc định là SCAN_ROOTS."
     ),
 ):
     """
-    Main orchestration function.
-    Parses args, sets up logging, and calls core logic.
+    Main orchestration function. Parses args, sets up logging, and calls core logic.
     """
     if ctx.invoked_subcommand: return
 
@@ -80,46 +72,72 @@ def main(
     logger = setup_logging(script_name="SGen")
     logger.debug("SGen script started.")
     
-    # --- NEW: Mở rộng `~` thủ công cho các tham số Path ---
-    target_dir_expanded = target_dir.expanduser() if target_dir else None
-    # --- END NEW ---
+    # Mở rộng `~` và resolve đường dẫn tuyệt đối
+    scan_root = target_dir.expanduser().resolve()
 
-    # 2. Execute Core Logic (SRP)
+    if not scan_root.exists() or not scan_root.is_dir():
+        logger.error(f"❌ Error: Target directory does not exist or is not a directory: {scan_root.as_posix()}")
+        raise typer.Exit(code=1)
+
+    # 2. Git Check & Confirmation (if not force)
+    if not force:
+        if not is_git_repository(scan_root):
+            logger.warning(f"⚠️ Target directory '{scan_root.name}/' is not a Git repository.")
+            logger.warning("   Scanning a non-project directory may lead to unexpected results.")
+            try:
+                confirmation = input("   Are you sure you want to proceed? (y/N): ")
+            except (EOFError, KeyboardInterrupt):
+                confirmation = 'n'
+            
+            if confirmation.lower() != 'y':
+                logger.error("❌ Operation cancelled by user.")
+                raise typer.Exit(code=0)
+            else:
+                logger.info("✅ Proceeding with scan in non-Git repository.")
+        else:
+            logger.info("✅ Git repository detected. Proceeding with scan.")
+
+    # 3. Prepare Args for Core
+    cli_ignore_patterns: Set[str] = parse_comma_list(ignore)
+    cli_restrict_patterns: Set[str] = parse_comma_list(restrict)
+    
+    # 4. Execute Core Logic
     try:
-        # (Đây là ví dụ, bạn cần tùy chỉnh luồng)
-        
-        # 2.1. Load (từ _loader)
-        # (Ví dụ: data = load_data(logger, target_path_expanded))
-        
-        # 2.2. Process (từ _core)
-        # (Truyền các tham số Typer vào logic core)
-        result = process_stubgen_logic(
+        # Core logic sẽ thực hiện quét, phân tích và tạo nội dung stub.
+        results = process_stubgen_logic(
             logger=logger,
-            target_dir=target_dir_expanded,
-            force=force,
-            ignore=ignore,
-            restrict=restrict,
-            # (Ví dụ: data=data)
+            scan_root=scan_root,
+            cli_ignore=cli_ignore_patterns,
+            cli_restrict=cli_restrict_patterns,
+            script_file_path=THIS_SCRIPT_PATH # Cần loại trừ chính nó
         )
         
-        # 2.3. Execute (từ _executor)
-        if result:
+        # 5. Execute Action
+        if results:
             execute_stubgen_action(
                 logger=logger,
-                result=result
+                results=results,
+                force=force
             )
-        
-        log_success(logger, "Hoàn thành.")
+        else:
+            log_success(logger, "No dynamic module gateways found to process.")
+       
+        # Log_success cuối cùng được thực hiện bởi executor nếu có file được xử lý.
+        if not results:
+            log_success(logger, "Operation completed.")
             
+    except typer.Exit:
+        # Typer.Exit đã được xử lý (khi user chọn Quit trong Git check hoặc action)
+        pass
     except Exception as e:
-        logger.error(f"❌ Đã xảy ra lỗi không mong muốn: {e}")
+        logger.error(f"❌ An unexpected error occurred: {e}")
         logger.debug("Traceback:", exc_info=True)
         sys.exit(1)
 
 
 if __name__ == "__main__":
     try:
-        app() # (Sử dụng Typer runner)
+        app()
     except KeyboardInterrupt:
-        print("\n\n❌ [Lệnh dừng] Hoạt động của tool đã bị dừng.")
+        print("\n\n❌ [Stop Command] Stub generation operation stopped.")
         sys.exit(1)
