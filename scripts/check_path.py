@@ -49,8 +49,8 @@ def main(
     # --- MODIFIED: Đảo ngược logic 'fix' thành 'check' ---
     check: bool = typer.Option( 
         False, 
-        "-c", "--check", 
-        help="Chỉ chạy ở chế độ 'check' (dry-run). Mặc định là chạy 'fix' (có hỏi xác nhận)." 
+        "-d", "--dry-run", # <-- Đã thay đổi -c, --check
+        help="Chỉ chạy ở chế độ 'dry-run' (chạy thử). Mặc định là chạy 'fix' (có hỏi xác nhận)." 
     )
     # --- END MODIFIED ---
 ):
@@ -129,7 +129,7 @@ def main(
     # Lọc bỏ cờ -c, --check, và cờ --fix cũ (để an toàn)
     filtered_args = [
         shlex.quote(arg) for arg in original_args 
-        if arg not in ('-c', '--check', '--fix')
+        if arg not in ('-d', '--dry-run', '--fix') # <-- Đã thay đổi -c, --check
     ]
     # Lệnh fix bây giờ chỉ là cpath + các đối số còn lại
     fix_command_str = "cpath " + " ".join(filtered_args)
