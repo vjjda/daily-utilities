@@ -39,7 +39,7 @@ Khi viết/chỉnh sửa mã, bạn phải tuân thủ nghiêm ngặt các nguy�
 
 *(Nguyên tắc về cách ứng dụng được khởi chạy)*
 
-* Sử dụng **Typer** (mặc định) để xây dựng CLI, tận dụng Type Hinting để tự động hóa việc phân tích đối số.
+* Sử dụng **ArgParse** (mặc định) để xây dựng CLI.
 * Khối **`if __name__ == "__main__":`** chỉ được phép xuất hiện trong file entry point (ví dụ: `cli.py`, `main.py`).
 
 ### 6. Đặt tên File để Tránh Xung đột Ngữ cảnh (Context Collision Naming)
