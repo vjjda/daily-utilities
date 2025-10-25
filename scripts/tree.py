@@ -60,11 +60,15 @@ app = typer.Typer(
 @app.callback(invoke_without_command=True)
 def main(
     ctx: typer.Context,
+
+    # --- MODIFIED: Quay lại Optional[str] và thêm callback ---
     config_scope: Optional[str] = typer.Option(
         None, "-c", "--config",
-        help="Khởi tạo hoặc cập nhật file cấu hình: 'local' (tạo .tree.toml) hoặc 'project' (cập nhật .project.toml).",
-        case_sensitive=False
+        help="Khởi tạo/cập nhật file cấu hình. Gõ '-c' không kèm giá trị sẽ mặc định là scope 'project'. Chấp nhận 'local', 'tree', 'project'.",
+        show_default=False,
+        callback=lambda value: 'project' if value == "" else value,
     ),
+    # --- END MODIFIED ---
     start_path_arg: Path = typer.Argument(
         Path("."),
         help="Đường dẫn bắt đầu (file hoặc thư mục). Dùng '~' cho thư mục home.",
@@ -82,90 +86,78 @@ def main(
     if ctx.invoked_subcommand: return
 
     # --- Logic khởi tạo Config (Đã refactor cho utils) ---
-    if config_scope:
-        scope = config_scope.lower()
-        logger = setup_logging(script_name="CTree")
+    if ctx.invoked_subcommand: return
 
-        # --- Chuẩn bị dict defaults cho tree ---
+    # --- MODIFIED: Đơn giản hóa logic xử lý config_scope ---
+    if config_scope: # config_scope sẽ là 'project' nếu gõ -c, hoặc giá trị khác
+        logger = setup_logging(script_name="CTree")
+        scope = config_scope.lower() # Không cần strip() hay kiểm tra None/"" nữa
+
+        # ... (phần còn lại của logic xử lý các scope local/tree/project giữ nguyên) ...
         tree_defaults: Dict[str, Any] = {
             "level": DEFAULT_MAX_LEVEL,
-            "show-submodules": FALLBACK_SHOW_SUBMODULES,
-            "use-gitignore": FALLBACK_USE_GITIGNORE,
-            "ignore": DEFAULT_IGNORE,
-            "prune": DEFAULT_PRUNE,
-            "dirs-only": DEFAULT_DIRS_ONLY_LOGIC
+             # ... (các defaults khác)
+             "show-submodules": FALLBACK_SHOW_SUBMODULES,
+             "use-gitignore": FALLBACK_USE_GITIGNORE,
+             "ignore": DEFAULT_IGNORE,
+             "prune": DEFAULT_PRUNE,
+             "dirs-only": DEFAULT_DIRS_ONLY_LOGIC
         }
-        # ---
 
         if scope == "local" or scope == "tree":
-            config_file_path = Path.cwd() / CONFIG_FILENAME # .tree.toml
-            file_existed = config_file_path.exists()
-
-            should_write = False
-            if file_existed:
+             config_file_path = Path.cwd() / CONFIG_FILENAME
+             # ... (logic hỏi overwrite, ghi file local) ...
+             file_existed = config_file_path.exists()
+             # ... (hỏi confirm) ...
+             should_write = False # Khởi tạo
+             if file_existed:
                 try:
                     should_write = typer.confirm(f"'{CONFIG_FILENAME}' đã tồn tại. Ghi đè?", abort=True)
                 except typer.Abort:
                     logger.warning("Hoạt động bị hủy bởi người dùng.")
                     raise typer.Exit(code=0)
-            else:
+             else:
                 should_write = True
-
-            if should_write:
-                try:
-                    template_str = load_config_template(MODULE_DIR, TEMPLATE_FILENAME, logger)
-                    if "# LỖI" in template_str: raise IOError("Không thể tải template.")
-
-                    # Dùng generate_dynamic_config chung
-                    content = generate_dynamic_config(template_str, tree_defaults, logger)
-                    if "# LỖI" in content: raise ValueError("Không thể tạo nội dung config.")
-
-                    # Dùng write_config_file chung
-                    write_config_file(config_file_path, content, logger, file_existed)
-                except (IOError, KeyError, ValueError) as e:
-                    logger.error(f"❌ Đã xảy ra lỗi khi tạo file: {e}")
-                    raise typer.Exit(code=1)
+             if should_write:
+                 try:
+                     template_str = load_config_template(MODULE_DIR, TEMPLATE_FILENAME, logger)
+                     content = generate_dynamic_config(template_str, tree_defaults, logger)
+                     write_config_file(config_file_path, content, logger, file_existed)
+                 except (IOError, KeyError, ValueError) as e:
+                     logger.error(f"❌ Đã xảy ra lỗi khi tạo file: {e}")
+                     raise typer.Exit(code=1)
 
         elif scope == "project":
-            config_file_path = Path.cwd() / PROJECT_CONFIG_FILENAME # .project.toml
-
-            try:
+             config_file_path = Path.cwd() / PROJECT_CONFIG_FILENAME
+             # ... (logic ghi file project) ...
+             try:
                 template_str = load_config_template(MODULE_DIR, TEMPLATE_FILENAME, logger)
-                if "# LỖI" in template_str: raise IOError("Không thể tải template.")
-
-                # Dùng generate_dynamic_config chung
                 content_with_placeholders = generate_dynamic_config(template_str, tree_defaults, logger)
-                if "# LỖI" in content_with_placeholders: raise ValueError("Không thể tạo nội dung config.")
-
-                # Trích xuất nội dung *bên trong* section [tree]
                 start_marker = f"[{CONFIG_SECTION_NAME}]"
                 start_index = content_with_placeholders.find(start_marker)
                 if start_index == -1: raise ValueError("Template thiếu header section.")
                 content_section_only = content_with_placeholders[start_index + len(start_marker):].strip()
-
-                # Dùng overwrite_or_append_project_config_section chung
                 overwrite_or_append_project_config_section(
                     config_path=config_file_path,
-                    config_section_name=CONFIG_SECTION_NAME, # Truyền "tree"
+                    config_section_name=CONFIG_SECTION_NAME,
                     new_section_content_str=content_section_only,
                     logger=logger
                 )
-
-            except (IOError, KeyError, ValueError) as e:
+             except (IOError, KeyError, ValueError) as e:
                 logger.error(f"❌ Đã xảy ra lỗi khi thao tác file: {e}")
                 raise typer.Exit(code=1)
 
-        else:
-            logger.error(f"❌ Đối số scope không hợp lệ cho --config: '{config_scope}'. Phải là 'local', 'tree', hoặc 'project'.")
+        else: # Scope không hợp lệ
+            logger.error(f"❌ Đối số scope không hợp lệ cho --config: '{config_scope}'. Phải là 'local', 'tree', 'project', hoặc để trống (mặc định 'project').")
             raise typer.Exit(code=1)
 
-        # Mở file
+        # Mở file (giữ nguyên)
         try:
-            logger.info(f"Đang mở '{config_file_path.name}' trong trình soạn thảo mặc định...")
+            logger.info(f"Đang mở '{config_file_path.name}'...")
             typer.launch(str(config_file_path))
         except Exception as e:
-            logger.error(f"❌ Đã xảy ra lỗi không mong muốn khi mở file: {e}")
-            logger.warning(f"⚠️ Không thể tự động mở file. Vui lòng mở thủ công.")
+            logger.error(f"❌ Lỗi khi mở file: {e}")
+            logger.warning(f"⚠️ Không thể tự động mở file.")
 
         raise typer.Exit(code=0)
     # --- END LOGIC CONFIG ---

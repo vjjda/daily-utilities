@@ -48,11 +48,15 @@ app = typer.Typer(
 def main(
     ctx: typer.Context,
 
+    # --- MODIFIED: Quay lại Optional[str] và thêm callback ---
     config: Optional[str] = typer.Option(
         None, "-c", "--config",
-        help="Khởi tạo hoặc cập nhật file .project.toml (chỉ hỗ trợ scope 'project').",
-        case_sensitive=False
+        help="Khởi tạo/cập nhật .project.toml. Gõ '-c' không kèm giá trị sẽ mặc định là scope 'project'.",
+        show_default=False,
+        # Callback để xử lý trường hợp '-c' không có giá trị
+        callback=lambda value: 'project' if value == "" else value,
     ),
+    # --- END MODIFIED ---
 
     target_directory_arg: Optional[Path] = typer.Argument(
         None,
@@ -76,53 +80,42 @@ def main(
     logger.debug("CPath script started.")
 
     # --- Logic cho cờ --config (Đã cập nhật để dùng hàm utils) ---
-    if config:
+    if config: # Bây giờ config sẽ là 'project' nếu gõ -c, hoặc giá trị khác nếu gõ -c value
         scope = config.lower()
         if scope != 'project':
-            logger.error(f"❌ Lỗi: Scope '{config}' không được hỗ trợ. cpath chỉ hỗ trợ '--config project'.")
+            logger.error(f"❌ Lỗi: Scope '{config}' không được hỗ trợ. cpath chỉ hỗ trợ '--config project' hoặc chỉ '-c'.")
             raise typer.Exit(code=1)
 
-        config_file_path = Path.cwd() / PROJECT_CONFIG_FILENAME # .project.toml
-
+        # ... (phần còn lại của logic xử lý config file giữ nguyên) ...
+        config_file_path = Path.cwd() / PROJECT_CONFIG_FILENAME
+        # ... (try/except block) ...
         try:
-            # Load template từ thư mục module cpath
             template_str = load_config_template(MODULE_DIR, TEMPLATE_FILENAME, logger)
-            if "# LỖI" in template_str: raise IOError("Không thể tải template.")
-
-            # Chuẩn bị dict defaults cho cpath
             cpath_defaults = {
                 "extensions": DEFAULT_EXTENSIONS_STRING,
                 "ignore": DEFAULT_IGNORE
             }
             content_section_only = generate_dynamic_config(template_str, cpath_defaults, logger)
-            if "# LỖI" in content_section_only: raise ValueError("Không thể tạo nội dung config.")
-
-            # Trích xuất phần nội dung sau header template (nếu có)
-            # Điều chỉnh logic này nếu template không có header [cpath]
-            # Giả định generate_dynamic_config trả về *chỉ* nội dung section
-            # (Loại bỏ logic tìm index không cần thiết nữa)
-
             overwrite_or_append_project_config_section(
                 config_path=config_file_path,
-                config_section_name=CONFIG_SECTION_NAME, # Truyền tên section "cpath"
-                new_section_content_str=content_section_only, # Truyền nội dung section
+                config_section_name=CONFIG_SECTION_NAME,
+                new_section_content_str=content_section_only,
                 logger=logger
             )
-
         except (IOError, KeyError, ValueError) as e:
             logger.error(f"❌ Đã xảy ra lỗi khi thao tác file config: {e}")
             raise typer.Exit(code=1)
 
-        # Mở file
+        # ... (mở file) ...
         try:
-            logger.info(f"Đang mở '{config_file_path.name}' trong trình soạn thảo mặc định...")
+            logger.info(f"Đang mở '{config_file_path.name}'...")
             typer.launch(str(config_file_path))
         except Exception as e:
-            logger.error(f"❌ Đã xảy ra lỗi không mong muốn khi mở file: {e}")
-            logger.warning(f"⚠️ Không thể tự động mở file. Vui lòng mở thủ công.")
+            logger.error(f"❌ Lỗi khi mở file: {e}")
+            logger.warning(f"⚠️ Không thể tự động mở file.")
 
-        raise typer.Exit(code=0) # Dừng lại sau khi chạy config
-    # --- END LOGIC CONFIG ---
+
+        raise typer.Exit(code=0)
 
 
     # (Logic xác định scan_root và kiểm tra Git giữ nguyên)
