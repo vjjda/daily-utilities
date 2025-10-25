@@ -4,6 +4,7 @@
 from typing import Any, List, Optional, Set, Dict, Union
 from pathlib import Path
 
+Logger: Any
 find_git_root: Any
 get_submodule_paths: Any
 is_git_repository: Any
@@ -13,4 +14,4 @@ parse_gitignore: Any
 run_command: Any
 
 # Static declaration of exported symbols (for Pylance)
-__all__: List[str] = ['find_git_root', 'get_submodule_paths', 'is_git_repository', 'is_path_matched', 'parse_comma_list', 'parse_gitignore', 'run_command']
+__all__: List[str] = ['Logger', 'find_git_root', 'get_submodule_paths', 'is_git_repository', 'is_path_matched', 'parse_comma_list', 'parse_gitignore', 'run_command']
