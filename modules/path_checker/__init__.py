@@ -2,7 +2,6 @@
 
 """
 Module Gateway (Facade) for the Path Checker (cpath) module.
-(Logic updated to match utils/core/__init__.py)
 """
 
 from pathlib import Path
@@ -13,46 +12,34 @@ from typing import List
 current_dir = Path(__file__).parent
 
 # Define the explicit order of internal modules to load
+# --- MODIFIED: Xóa config_io ---
 modules_to_export: List[str] = [
     "path_checker_config",
-    "path_checker_loader", # <-- NEW
+    "path_checker_loader",
     "path_checker_core",
     "path_checker_executor",
-    "path_checker_config_io"
+    # "path_checker_config_io" # <-- Đã xóa
 ]
+# --- END MODIFIED ---
 
-# (This list is for Mypy/linters, but the main logic is globals())
 __all__: List[str] = []
 
+# (Logic import giữ nguyên)
 for module_name in modules_to_export:
     try:
-        # 1. Import the module object (e.g., .path_checker_config)
         module = import_module(f".{module_name}", package=__name__)
-        
-        # 2. Check if __all__ is defined and add its contents
         if hasattr(module, '__all__'):
             public_symbols = getattr(module, '__all__')
             for name in public_symbols:
-                # Get the actual function/class/constant
                 obj = getattr(module, name)
-                # Add it to the namespace of this __init__.py
                 globals()[name] = obj
-            
-            # Add to __all__ for linters
             __all__.extend(public_symbols)
-        
     except ImportError as e:
-        # Handle cases where a submodule might fail to import
         print(f"Warning: Could not import symbols from {module_name}: {e}")
 
-# Clean up temporary variables
+# (Cleanup giữ nguyên)
 del Path, import_module, List, current_dir, modules_to_export, module_name
-# Check if loop ran at all before deleting
-if 'module' in locals():
-    del module
-if 'public_symbols' in locals():
-    del public_symbols
-if 'name' in locals():
-    del name
-if 'obj' in locals():
-    del obj
+if 'module' in locals(): del module
+if 'public_symbols' in locals(): del public_symbols
+if 'name' in locals(): del name
+if 'obj' in locals(): del obj
