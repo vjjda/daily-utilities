@@ -38,25 +38,38 @@ def _get_ast_tree(path: Path) -> Optional[ast.Module]:
         return None
 
 def _extract_module_list(init_path: Path) -> List[str]:
-    """Extracts the list of submodules from an __init__.py file using AST."""
+    """Extracts the list of submodules from an __init__.py file using AST, with heuristic fallback."""
     tree = _get_ast_tree(init_path)
-    if not tree:
-        return []
+    
+    module_names: List[str] = []
 
-    for node in ast.walk(tree):
-        # Tìm kiếm: modules_to_export = [...]
-        if (isinstance(node, ast.Assign) and 
-            len(node.targets) == 1 and 
-            isinstance(node.targets[0], ast.Name) and 
-            node.targets[0].id == AST_MODULE_LIST_NAME and
-            isinstance(node.value, ast.List)):
-            
-            module_names: List[str] = []
-            for element in node.value.elts:
-                if isinstance(element, ast.Constant) and isinstance(element.value, str):
-                    module_names.append(element.value)
-            return module_names
-    return []
+    if tree:
+        for node in ast.walk(tree):
+            # Tìm kiếm: modules_to_export = [...]
+            if (isinstance(node, ast.Assign) and 
+                len(node.targets) == 1 and 
+                isinstance(node.targets[0], ast.Name) and 
+                node.targets[0].id == AST_MODULE_LIST_NAME and
+                isinstance(node.value, ast.List)):
+                
+                # Trích xuất từ AST (Dùng cho module/clip_diag, module/zsh_wrapper, ...)
+                for element in node.value.elts:
+                    if isinstance(element, ast.Constant) and isinstance(element.value, str):
+                        module_names.append(element.value)
+                return module_names # Trả về ngay nếu thành công
+
+    # --- HEURISTIC FALLBACK ---
+    # Nếu không tìm thấy biến modules_to_export rõ ràng, hãy thử quét thư mục.
+    # Logic này bao gồm utils/core/__init__.py và các trường hợp tương tự.
+    parent_dir = init_path.parent
+    module_names = [
+        f.stem for f in parent_dir.iterdir() 
+        if f.is_file() and f.suffix == '.py' and f.name != '__init__.py'
+    ]
+    # Logic này an toàn vì các file này sau đó sẽ được kiểm tra __all__
+    # --- END HEURISTIC ---
+
+    return module_names
 
 def _extract_all_symbols(module_path: Path) -> Set[str]:
     """Extracts symbols from the __all__ list of a submodule."""
