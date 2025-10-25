@@ -36,7 +36,7 @@ THIS_SCRIPT_PATH = Path(__file__).resolve()
 # --- TYPER APP ---
 app = typer.Typer(
     help="Automatically generates .pyi stub files for dynamic module gateways.",
-    epilog="Ví dụ: sgen /path/to/scan -f",
+    epilog="Ví dụ: sgen . -f -R modules/auth,utils/core",
     add_completion=False,
     context_settings={
         'help_option_names': ['--help', '-h'],
@@ -49,13 +49,25 @@ def main(
     ctx: typer.Context,
     target_dir: Path = typer.Argument(
         DEFAULT_TARGET_DIR,
-        help="Đường dẫn thư mục để bắt đầu quét. Mặc định là thư mục hiện tại (.)."
+        help="Đường dẫn thư mục để bắt đầu quét (base directory). Mặc định là thư mục hiện tại (.)."
     ),
     force: bool = typer.Option(
         False,
         "-f",
         "--force",
         help="Ghi đè file .pyi nếu đã tồn tại (không hỏi xác nhận)."
+    ),
+    ignore: Optional[str] = typer.Option(
+        None,
+        "-I",
+        "--ignore",
+        help="Danh sách pattern (fnmatch) ngăn cách bởi dấu phẩy để bỏ qua."
+    ),
+    restrict: Optional[str] = typer.Option(
+        None,
+        "-R",
+        "--restrict",
+        help="Danh sách thư mục con (so với target_dir) ngăn cách bởi dấu phẩy để giới hạn quét. Mặc định là SCAN_ROOTS."
     ),
 ):
     """
@@ -85,6 +97,8 @@ def main(
             logger=logger,
             target_dir=target_dir_expanded,
             force=force,
+            ignore=ignore,
+            restrict=restrict,
             # (Ví dụ: data=data)
         )
         
