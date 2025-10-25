@@ -50,7 +50,7 @@ TEMPLATE_FILENAME = "cpath.toml.template"
 app = typer.Typer(
     help="Kiểm tra (và tùy chọn sửa) các comment '# Path:' trong file nguồn.",
     add_completion=False,
-    rich_markup_mode=None, 
+    # rich_markup_mode=None, 
     context_settings={"help_option_names": ["--help", "-h"]}
 )
 
