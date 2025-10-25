@@ -1,16 +1,32 @@
 # Path: modules/tree/tree_config_io.py
 
 """
-Execution logic for Config File operations in the Tree (ctree) module.
-(Handles writing to .tree.ini and complex manipulation of .project.ini)
+Logic thực thi cho các hoạt động File Config trong module Tree (ctree).
+(Xử lý việc ghi file .tree.toml và .project.toml)
 """
 
 import logging
-import configparser
+import sys
 from pathlib import Path
 from typing import Dict, Any, List
 
 import typer
+
+# --- MODIFIED: Imports cho TOML ---
+try:
+    import tomllib 
+except ImportError:
+    try:
+        import toml as tomllib
+    except ImportError:
+        tomllib = None
+
+try:
+    import tomli_w # Thư viện để *ghi* TOML
+except ImportError:
+    print("Lỗi: Cần 'tomli-w'. Chạy 'pip install tomli-w'", file=sys.stderr)
+    tomli_w = None
+# --- END MODIFIED ---
 
 from utils.logging_config import log_success
 from .tree_config import (
@@ -30,96 +46,93 @@ def write_config_file(
     file_existed: bool
 ) -> None:
     """
-    Writes the config template content to the specified path (used for .tree.ini).
-    (Moved from tree_executor.py)
+    Ghi nội dung template cấu hình vào đường dẫn (dùng cho .tree.toml).
     """
     try:
         with open(config_path, 'w', encoding='utf-8') as f:
             f.write(content)
         log_msg = (
-            f"Successfully created '{CONFIG_FILENAME}'." if not file_existed 
-            else f"Successfully overwrote '{CONFIG_FILENAME}'."
+            f"Đã tạo thành công '{CONFIG_FILENAME}'." if not file_existed 
+            else f"Đã ghi đè thành công '{CONFIG_FILENAME}'."
         )
         log_success(logger, log_msg)
     except IOError as e:
-        logger.error(f"❌ Failed to write file '{config_path}': {e}")
-        # Re-raise to be caught by the entry point
+        logger.error(f"❌ Lỗi khi ghi file '{config_path}': {e}")
         raise 
 
 
 def overwrite_or_append_project_config_section(
     config_path: Path, 
-    new_section_content: str, 
+    new_section_content_str: str, # Đây là string TOML (ví dụ: "key = val")
     logger: logging.Logger
 ) -> None:
     """
-    Reads the .project.ini file, overwrites the [tree] section if it exists 
-    and is confirmed by the user, or appends it otherwise.
-    (This is the new complex logic for 'ctree init project').
+    Đọc file .project.toml, ghi đè section [tree] nếu tồn tại 
+    (và được xác nhận), hoặc nối thêm section [tree] vào.
     """
-    
-    # 1. Khởi tạo và đọc config hiện tại
-    config = configparser.ConfigParser(allow_no_value=True)
+    if tomllib is None or tomli_w is None:
+        logger.error("❌ Thiếu thư viện 'tomli' hoặc 'tomli-w'. Không thể ghi .project.toml.")
+        raise typer.Exit(code=1)
+
+    # 1. Đọc config hiện tại (nếu có)
+    config_data: Dict[str, Any] = {}
     file_existed = config_path.exists()
     
     if file_existed:
         try:
-            config.read(config_path)
-            logger.debug(f"Read existing project config from: {config_path.name}")
+            with open(config_path, 'rb') as f:
+                config_data = tomllib.load(f)
+            logger.debug(f"Đã đọc file config dự án: {config_path.name}")
         except Exception as e:
-            logger.error(f"❌ Error reading project config file: {e}")
+            logger.error(f"❌ Lỗi đọc file config dự án: {e}")
             raise typer.Exit(code=1)
     
     # 2. Phân tích nội dung section mới (từ template)
-    # Tạm thời tạo một configparser từ nội dung mới để lấy [section]
-    new_config = configparser.ConfigParser(allow_no_value=True)
     try:
-        # Giả định new_section_content là một chuỗi INI hợp lệ
-        new_config.read_string(f"[{CONFIG_SECTION_NAME}]\n{new_section_content}")
+        # Chúng ta parse string (ví dụ: "level = 5\nignore = []")
+        # bằng cách thêm header section tạm thời
+        full_toml_string = f"[{CONFIG_SECTION_NAME}]\n{new_section_content_str}"
+        new_data = tomllib.loads(full_toml_string)
+        new_tree_section_dict = new_data.get(CONFIG_SECTION_NAME, {})
+        
+        if not new_tree_section_dict:
+             raise ValueError("Nội dung section mới bị rỗng.")
+             
     except Exception as e:
-        logger.error(f"❌ Internal Error: Cannot parse new tree section content: {e}")
+        logger.error(f"❌ Lỗi nội bộ: Không thể parse nội dung section [tree] mới: {e}")
         raise typer.Exit(code=1)
 
     # 3. Xử lý logic overwrite/append
-    if CONFIG_SECTION_NAME in config:
-        # Section đã tồn tại, hỏi người dùng
-        logger.warning(f"⚠️ Section [{CONFIG_SECTION_NAME}] already exists in '{PROJECT_CONFIG_FILENAME}'.")
+    if CONFIG_SECTION_NAME in config_data:
+        logger.warning(f"⚠️ Section [{CONFIG_SECTION_NAME}] đã tồn tại trong '{PROJECT_CONFIG_FILENAME}'.")
         try:
-            should_overwrite = typer.confirm("   Overwrite this existing section?", abort=True)
+            should_overwrite = typer.confirm("   Ghi đè section hiện tại?", abort=True)
         except typer.Abort:
-            logger.warning("Operation cancelled by user.")
+            logger.warning("Hoạt động bị hủy bởi người dùng.")
             raise typer.Exit(code=0)
             
         if not should_overwrite:
-            logger.info("Section was not overwritten. Exiting.")
+            logger.info("Section không bị ghi đè. Đang thoát.")
             raise typer.Exit(code=0)
-            
-        # Xóa section cũ và thay thế bằng section mới
-        config.remove_section(CONFIG_SECTION_NAME)
         
+        logger.debug("Đang ghi đè section [tree]...")
     else:
-        # Section chưa tồn tại, append.
-        pass
+        logger.debug("Đang thêm mới section [tree]...")
 
-    # 4. Thêm section mới vào config object
-    config.add_section(CONFIG_SECTION_NAME)
-    for option, value in new_config.items(CONFIG_SECTION_NAME):
-        # Value sẽ là None cho các option không có giá trị
-        config.set(CONFIG_SECTION_NAME, option, value)
+    # 4. Thêm/Cập nhật section vào config data
+    config_data[CONFIG_SECTION_NAME] = new_tree_section_dict
 
-    # 5. Ghi config object trở lại file
+    # 5. Ghi config data trở lại file (dùng 'wb' cho tomli_w)
     try:
-        with open(config_path, 'w', encoding='utf-8') as f:
-            config.write(f)
+        with open(config_path, 'wb') as f:
+            tomli_w.dump(config_data, f)
             
         log_msg = (
-            f"✅ Successfully created '{PROJECT_CONFIG_FILENAME}' with section [{CONFIG_SECTION_NAME}]." if not file_existed
-            else f"✅ Successfully updated '{PROJECT_CONFIG_FILENAME}'."
+            f"✅ Đã tạo thành công '{PROJECT_CONFIG_FILENAME}' với section [{CONFIG_SECTION_NAME}]." if not file_existed
+            else f"✅ Đã cập nhật thành công '{PROJECT_CONFIG_FILENAME}'."
         )
         log_success(logger, log_msg)
         
     except IOError as e:
-        logger.error(f"❌ Failed to write project config file: {e}")
+        logger.error(f"❌ Lỗi khi ghi file config dự án: {e}")
         raise
-
-# ... (Hết file)

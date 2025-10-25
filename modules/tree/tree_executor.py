@@ -1,8 +1,8 @@
 # Path: modules/tree/tree_executor.py
 
 """
-Execution logic for the Tree (ctree) module.
-(Responsible for all side-effects: print, write I/O)
+Logic thực thi cho module Tree (ctree).
+(Chịu trách nhiệm cho các side-effect: print, I/O ghi file)
 """
 
 from pathlib import Path
@@ -15,9 +15,8 @@ except ImportError:
     pathspec = None
 
 from utils.core import is_path_matched
-from utils.logging_config import log_success # type: ignore[reportUnknownVariableType]
+from utils.logging_config import log_success 
 
-# (Import config defaults only for type hinting, not logic)
 from .tree_config import (
     DEFAULT_IGNORE, DEFAULT_PRUNE, DEFAULT_DIRS_ONLY_LOGIC,
     DEFAULT_MAX_LEVEL, CONFIG_FILENAME
@@ -37,7 +36,7 @@ def print_status_header(
     cli_no_gitignore: bool
 ) -> None:
     """
-    Prints the status header before running the tree.
+    In tiêu đề trạng thái trước khi chạy tạo cây.
     (Side-effect: print)
     """
     is_truly_full_view = (
@@ -46,15 +45,15 @@ def print_status_header(
         config_params["max_level"] is None
     )
     
-    filter_info = "Full view" if is_truly_full_view else "Filtered view"
-    level_info = "full depth" if config_params["max_level"] is None else f"depth limit: {config_params['max_level']}"
-    mode_info = ", directories only" if config_params["global_dirs_only_flag"] else ""
+    filter_info = "Xem đầy đủ" if is_truly_full_view else "Xem đã lọc"
+    level_info = "toàn bộ độ sâu" if config_params["max_level"] is None else f"giới hạn độ sâu: {config_params['max_level']}"
+    mode_info = ", chỉ thư mục" if config_params["global_dirs_only_flag"] else ""
     git_info = ""
     if is_git_repo: 
         git_info = (
-            ", Git project (.gitignore enabled)" if config_params["using_gitignore"] 
-            else (", Git project (.gitignore disabled by flag)" if cli_no_gitignore 
-                  else ", Git project")
+            ", Dự án Git (.gitignore bật)" if config_params["using_gitignore"] 
+            else (", Dự án Git (.gitignore tắt do cờ)" if cli_no_gitignore 
+                  else ", Dự án Git")
         )
         
     print(f"{start_dir.name}/ [{filter_info}, {level_info}{mode_info}{git_info}]")
@@ -65,14 +64,14 @@ def print_final_result(
     global_dirs_only: bool
 ) -> None:
     """
-    Prints the final result counters.
+    In kết quả thống kê cuối cùng.
     (Side-effect: print)
     """
     files_info = (
-        "0 files (hidden)" if global_dirs_only and counters['files'] == 0 
-        else f"{counters['files']} files"
+        "0 file (bị ẩn)" if global_dirs_only and counters['files'] == 0 
+        else f"{counters['files']} file"
     )
-    print(f"\n{counters['dirs']} directories, {files_info}")
+    print(f"\n{counters['dirs']} thư mục, {files_info}")
 
 
 def generate_tree(
@@ -84,20 +83,18 @@ def generate_tree(
     ignore_list: Set[str] = DEFAULT_IGNORE, 
     submodules: Optional[Set[Path]] = None, 
     prune_list: Set[str] = DEFAULT_PRUNE,
-    gitignore_spec: Optional['pathspec.PathSpec'] = None, # type: ignore[reportUnknownParameterType, reportInvalidTypeForm, reportUnknownMemberType]
+    gitignore_spec: Optional['pathspec.PathSpec'] = None,
     dirs_only_list: Set[str] = DEFAULT_DIRS_ONLY_LOGIC, 
     is_in_dirs_only_zone: bool = False, 
     counters: Optional[Dict[str, int]] = None
 ):
     """
-    Recursive function to generate and print the directory tree.
+    Hàm đệ quy để tạo và in cây thư mục.
     (Side-effect: print)
-    (This function's logic is unchanged)
     """
     if submodules is None:
         submodules = set()
     
-    # Thêm kiểm tra phòng thủ cho counters (mặc dù caller chính xử lý)
     if counters is None:
         counters = {'dirs': 0, 'files': 0}
     
@@ -124,7 +121,7 @@ def generate_tree(
                 if rel_path_str == './':
                     return False
 
-                return gitignore_spec.match_file(rel_path_str) # type: ignore[reportUnknownMemberType] 
+                return gitignore_spec.match_file(rel_path_str) 
             except Exception:
                 return False
                 

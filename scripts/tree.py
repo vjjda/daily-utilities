@@ -4,7 +4,7 @@ import sys
 import argparse 
 import logging
 from pathlib import Path
-from typing import Optional, Set # (Giữ lại Set để type hint)
+from typing import Optional, Set 
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.append(str(PROJECT_ROOT))
@@ -12,91 +12,81 @@ sys.path.append(str(PROJECT_ROOT))
 
 import typer
 
-# Common utilities
 from utils.logging_config import setup_logging, log_success
 from utils.core import run_command, is_git_repository
 
 # Module Imports
-# --- MODIFIED: Import API đã refactor ---
 from modules.tree import (
-    # --- Configs & Constants ---
     CONFIG_FILENAME,
     PROJECT_CONFIG_FILENAME,
-    CONFIG_SECTION_NAME, # <--- NEW
+    CONFIG_SECTION_NAME, 
     
-    # --- Loader Functions ---
     load_config_files,
     load_config_template,
     
-    # --- Core Functions ---
     merge_config_sources,
     generate_dynamic_config,
     
-    # --- Executor Functions ---
     generate_tree,
     print_status_header,
     print_final_result,
 
-    # --- Config I/O Functions ---
     write_config_file,
     overwrite_or_append_project_config_section
 )
-# --- END MODIFIED ---
 
 # Khởi tạo Typer App
 app = typer.Typer(
-    help="A smart directory tree generator with support for a .treeconfig.ini file.",
+    help="Một công cụ tạo cây thư mục thông minh hỗ trợ file cấu hình .tree.toml.",
     add_completion=False,
     context_settings={"help_option_names": ["--help", "-h"]}
 )
 
-# Command chính (mặc định) (Đã refactor)
+# Command chính (mặc định)
 @app.callback(invoke_without_command=True)
 def main(
     ctx: typer.Context,
-    # --- NEW: Config Flag (-c, --config) ---
     config_scope: Optional[str] = typer.Option(
         None, "-c", "--config",
-        help="Initialize or update config files: 'local' (creates .tree.ini) or 'project' (updates .project.ini).",
+        help="Khởi tạo hoặc cập nhật file cấu hình: 'local' (tạo .tree.toml) hoặc 'project' (cập nhật .project.toml).",
         case_sensitive=False
     ),
     start_path_arg: Path = typer.Argument( 
         Path("."), 
-        help="Starting path (file or directory). Use '~' for home directory.",
+        help="Đường dẫn bắt đầu (file hoặc thư mục). Dùng '~' cho thư mục home.",
     ),
-    level: Optional[int] = typer.Option( None, "-L", "--level", help="Limit the display depth.", min=1 ),
-    ignore: Optional[str] = typer.Option( None, "-I", "--ignore", help="Comma-separated list of patterns to ignore." ),
-    prune: Optional[str] = typer.Option( None, "-P", "--prune", help="Comma-separated list of patterns to prune." ),
-    all_dirs: bool = typer.Option( False, "-d", "--dirs-only", help="Show directories only for the entire tree." ),
-    dirs_patterns: Optional[str] = typer.Option( None, "--dirs-patterns", help="Show sub-directories only for specific patterns (e.g., 'assets')." ),
-    show_submodules: bool = typer.Option( False, "-s", "--show-submodules", help="Show the contents of submodules." ),
-    no_gitignore: bool = typer.Option( False, "--no-gitignore", help="Do not respect .gitignore files." ),
-    full_view: bool = typer.Option( False, "-f", "--full-view", help="Bypass all filters (.gitignore, rules, level) and show all files." )
+    level: Optional[int] = typer.Option( None, "-L", "--level", help="Giới hạn độ sâu hiển thị.", min=1 ),
+    ignore: Optional[str] = typer.Option( None, "-I", "--ignore", help="Danh sách pattern (phân cách bởi dấu phẩy) để bỏ qua." ),
+    prune: Optional[str] = typer.Option( None, "-P", "--prune", help="Danh sách pattern (phân cách bởi dấu phẩy) để cắt tỉa (prune)." ),
+    all_dirs: bool = typer.Option( False, "-d", "--dirs-only", help="Chỉ hiển thị thư mục cho toàn bộ cây." ),
+    dirs_patterns: Optional[str] = typer.Option( None, "--dirs-patterns", help="Chỉ hiển thị thư mục con cho các pattern cụ thể (ví dụ: 'assets')." ),
+    show_submodules: bool = typer.Option( False, "-s", "--show-submodules", help="Hiển thị nội dung của các submodule." ),
+    no_gitignore: bool = typer.Option( False, "--no-gitignore", help="Không tôn trọng file .gitignore." ),
+    full_view: bool = typer.Option( False, "-f", "--full-view", help="Bỏ qua tất cả bộ lọc (.gitignore, rules, level) và hiển thị tất cả." )
 ):
-    """ Main orchestration function: Parses args, calls config processing, and runs the tree. """
-    # --- FIX 1: Loại bỏ logic xung đột init cũ ---
+    """ Hàm điều phối chính: Phân tích đối số, gọi xử lý config, và chạy tạo cây. """
     if ctx.invoked_subcommand: return
 
-    # --- NEW: Logic Config Initialization (Thay thế init_command) ---
+    # --- Logic khởi tạo Config (Đã refactor cho TOML) ---
     if config_scope:
         scope = config_scope.lower()
         logger = setup_logging(script_name="CTree")
         
-        if scope == "local" or scope == "tree": # Thêm alias 'tree' theo yêu cầu
-            config_file_path = Path.cwd() / CONFIG_FILENAME # .tree.ini
+        if scope == "local" or scope == "tree": 
+            config_file_path = Path.cwd() / CONFIG_FILENAME # .tree.toml
             file_existed = config_file_path.exists()
             
             should_write = False
             if file_existed:
                 try:
-                    should_write = typer.confirm(f"'{CONFIG_FILENAME}' already exists. Overwrite?", abort=True)
-                    logger.debug(f"User chose to overwrite '{CONFIG_FILENAME}'.")
+                    should_write = typer.confirm(f"'{CONFIG_FILENAME}' đã tồn tại. Ghi đè?", abort=True)
+                    logger.debug(f"Người dùng chọn ghi đè '{CONFIG_FILENAME}'.")
                 except typer.Abort:
-                    logger.warning("Operation cancelled by user.")
+                    logger.warning("Hoạt động bị hủy bởi người dùng.")
                     raise typer.Exit(code=0)
             else:
                 should_write = True
-                logger.debug(f"Creating new '{CONFIG_FILENAME}'.")
+                logger.debug(f"Đang tạo mới '{CONFIG_FILENAME}'.")
                 
             if should_write:
                 try:
@@ -104,16 +94,17 @@ def main(
                     content = generate_dynamic_config(template_str)
                     write_config_file(config_file_path, content, logger, file_existed)
                 except (IOError, KeyError) as e:
-                    logger.error(f"❌ An error occurred during file creation: {e}")
+                    logger.error(f"❌ Đã xảy ra lỗi khi tạo file: {e}")
                     raise typer.Exit(code=1)
                     
         elif scope == "project":
-            config_file_path = Path.cwd() / PROJECT_CONFIG_FILENAME # .project.ini
+            config_file_path = Path.cwd() / PROJECT_CONFIG_FILENAME # .project.toml
             
             try:
                 template_str = load_config_template()
                 content_with_placeholders = generate_dynamic_config(template_str)
-                # Dùng .strip() để loại bỏ các dòng comment/khoảng trắng thừa ở đầu
+                
+                # Trích xuất nội dung *bên trong* section [tree]
                 start_index = content_with_placeholders.find(f"[{CONFIG_SECTION_NAME}]") + len(f"[{CONFIG_SECTION_NAME}]")
                 content_section_only = content_with_placeholders[start_index:].strip()
                 
@@ -124,36 +115,35 @@ def main(
                 )
                 
             except (IOError, KeyError) as e:
-                logger.error(f"❌ An error occurred during file operation: {e}")
+                logger.error(f"❌ Đã xảy ra lỗi khi thao tác file: {e}")
                 raise typer.Exit(code=1)
                 
         else:
-            logger.error(f"❌ Invalid scope argument for --config: '{config_scope}'. Must be 'local', 'tree', or 'project'.")
+            logger.error(f"❌ Đối số scope không hợp lệ cho --config: '{config_scope}'. Phải là 'local', 'tree', hoặc 'project'.")
             raise typer.Exit(code=1)
 
         # Mở file
         try:
-            logger.info(f"Opening '{config_file_path.name}' in default editor...")
+            logger.info(f"Đang mở '{config_file_path.name}' trong trình soạn thảo mặc định...")
             typer.launch(str(config_file_path))
         except Exception as e:
-            logger.error(f"❌ An unexpected error occurred while trying to open the file: {e}")
-            logger.warning(f"⚠️ Could not automatically open file. Please open it manually.")
+            logger.error(f"❌ Đã xảy ra lỗi không mong muốn khi mở file: {e}")
+            logger.warning(f"⚠️ Không thể tự động mở file. Vui lòng mở thủ công.")
             
-        # Dừng script sau khi config file đã được tạo
         raise typer.Exit(code=0)
-    # --- END NEW LOGIC ---
+    # --- END LOGIC CONFIG ---
 
     # --- 2. Setup & Validate ---
     logger = setup_logging(script_name="CTree")
     start_path = start_path_arg.expanduser()
     
     if not start_path.exists():
-        logger.error(f"❌ Lỗi: Đường dẫn bắt đầu không tồn tại (sau khi expanduser): {start_path}")
+        logger.error(f"❌ Lỗi: Đường dẫn bắt đầu không tồn tại: {start_path}")
         raise typer.Exit(code=1)
 
-    logger.debug(f"Received start path: {start_path}")
+    logger.debug(f"Đã nhận đường dẫn: {start_path}")
     
-    # --- 3. Build 'args' object (Giữ nguyên) ---
+    # 3. Build 'args' object (Namespace)
     cli_dirs_only = "_ALL_" if all_dirs else dirs_patterns
     args = argparse.Namespace(
         level=level, ignore=ignore, prune=prune, dirs_only=cli_dirs_only,
@@ -161,17 +151,17 @@ def main(
         init=False, start_path=str(start_path) 
     )
 
-    # --- 4. Process Path & Git ---
+    # 4. Process Path & Git
     initial_path: Path = start_path
     start_dir = initial_path.parent if initial_path.is_file() else initial_path
     is_git_repo = is_git_repository(start_dir)
     
-    # --- 5. Orchestrate Module Calls ---
+    # 5. Orchestrate Module Calls
     try: 
-        # 5.1 Load (từ loader)
+        # 5.1 Load (từ loader, trả về Dict)
         file_config = load_config_files(start_dir, logger)
         
-        # 5.2 Process (từ core)
+        # 5.2 Process (từ core, nhận Dict)
         config_params = merge_config_sources(
             args=args, 
             file_config=file_config,
@@ -206,11 +196,11 @@ def main(
         )
         
     except Exception as e:
-        logger.error(f"❌ An unexpected error occurred: {e}")
+        logger.error(f"❌ Đã xảy ra lỗi không mong muốn: {e}")
         logger.debug("Traceback:", exc_info=True)
         raise typer.Exit(code=1)
 
     
 if __name__ == "__main__":
     try: app()
-    except KeyboardInterrupt: print("\n\n❌ [Stop Command] Stop generating tree."); sys.exit(1)
+    except KeyboardInterrupt: print("\n\n❌ [Lệnh dừng] Đã dừng tạo cây."); sys.exit(1)

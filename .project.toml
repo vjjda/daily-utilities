@@ -1,0 +1,8 @@
+# Path: .project.toml
+# (Đã chuyển đổi từ .project.ini)
+[tree]
+show-submodules = false
+use-gitignore = true
+ignore = [".git", ".venv", "__pycache__", "node_modules", "venv"]
+prune = ["build", "dist"]
+dirs-only = []

@@ -1,13 +1,12 @@
 # Path: modules/tree/tree_core.py
 
 """
-Core business logic for the Tree (ctree) module.
-(Pure functions, no I/O or side-effects)
+Logic nghiệp vụ cốt lõi cho module Tree (ctree).
+(Các hàm thuần túy, không có I/O hoặc side-effect)
 """
 
 from pathlib import Path
 import logging 
-import configparser
 import argparse
 from typing import Set, Optional, Dict, Any 
 
@@ -16,10 +15,8 @@ try:
 except ImportError:
     pathspec = None
 
-# Import utilities
 from utils.core import get_submodule_paths, parse_comma_list, parse_gitignore
 
-# Import defaults
 from .tree_config import (
     DEFAULT_IGNORE, DEFAULT_PRUNE, DEFAULT_DIRS_ONLY_LOGIC,
     DEFAULT_MAX_LEVEL, CONFIG_SECTION_NAME, 
@@ -31,19 +28,17 @@ __all__ = ["merge_config_sources", "generate_dynamic_config"]
 
 def merge_config_sources(
     args: argparse.Namespace, 
-    file_config: configparser.ConfigParser,
+    file_config: Dict[str, Any], # <-- MODIFIED: Nhận Dict
     start_dir: Path, 
     logger: logging.Logger,
     is_git_repo: bool
 ) -> Dict[str, Any]:
     """
-    Merges configuration from defaults, files, and CLI arguments.
-    (Pure logic, moved from old load_and_merge_config)
+    Hợp nhất cấu hình từ các nguồn: mặc định, file, và đối số CLI.
     """
     
-    # 1. Check for Full View Override
     if args.full_view:
-        logger.info("⚡ Full View mode enabled. Bypassing all filters and limits.")
+        logger.info("⚡ Chế độ xem đầy đủ. Bỏ qua mọi bộ lọc và giới hạn.")
         return {
             "max_level": None,
             "ignore_list": set(),
@@ -62,55 +57,60 @@ def merge_config_sources(
             }
         }
 
-    # 2. Get config section (already loaded by loader)
-    config_section = file_config[CONFIG_SECTION_NAME]
-
     # --- 3. Merge Configs (CLI > File > Default) ---
     
     # Level
-    level_from_config_file = config_section.getint('level', fallback=DEFAULT_MAX_LEVEL)
+    # --- MODIFIED: Dùng .get() trên Dict ---
+    level_from_config_file = file_config.get('level', DEFAULT_MAX_LEVEL)
     final_level = args.level if args.level is not None else level_from_config_file
     
     # Submodules
     show_submodules = args.show_submodules if args.show_submodules else \
-                      config_section.getboolean('show-submodules', fallback=FALLBACK_SHOW_SUBMODULES)
+                      file_config.get('show-submodules', FALLBACK_SHOW_SUBMODULES)
 
     # Gitignore Logic
-    use_gitignore_from_config = config_section.getboolean(
+    use_gitignore_from_config = file_config.get(
         'use-gitignore', 
-        fallback=FALLBACK_USE_GITIGNORE
+        FALLBACK_USE_GITIGNORE
     )
+    # --- END MODIFIED ---
     final_use_gitignore = False if args.no_gitignore else use_gitignore_from_config
     
-    gitignore_spec: Optional['pathspec.PathSpec'] = None # type: ignore[reportUnknownMemberType, reportInvalidTypeForm]
+    gitignore_spec: Optional['pathspec.PathSpec'] = None 
     if is_git_repo and final_use_gitignore:
-        logger.debug("Git repository detected. Loading .gitignore patterns via pathspec.")
+        logger.debug("Phát hiện kho Git. Đang tải .gitignore qua pathspec.")
         gitignore_spec = parse_gitignore(start_dir)
     elif is_git_repo and not final_use_gitignore:
-        logger.debug("Git repository detected, but skipping .gitignore (due to flag or config).")
+        logger.debug("Phát hiện kho Git, nhưng bỏ qua .gitignore (do cờ hoặc cấu hình).")
     else:
-        logger.debug("Not a Git repository. Skipping .gitignore.")
+        logger.debug("Không phải kho Git. Bỏ qua .gitignore.")
 
+    # --- MODIFIED: Đọc list từ TOML (file_config.get trả về list) ---
     # Ignore List
-    ignore_cli = parse_comma_list(args.ignore)
-    ignore_file = parse_comma_list(config_section.get('ignore', fallback=None))
+    ignore_cli = parse_comma_list(args.ignore) # CLI vẫn dùng comma_list
+    ignore_file = set(file_config.get('ignore', [])) # File config là list
     final_ignore_list = DEFAULT_IGNORE.union(ignore_file).union(ignore_cli)
 
     # Prune List
     prune_cli = parse_comma_list(args.prune) 
-    prune_file = parse_comma_list(config_section.get('prune', fallback=None))
+    prune_file = set(file_config.get('prune', []))
     final_prune_list = DEFAULT_PRUNE.union(prune_file).union(prune_cli)
 
     # Dirs Only List
     dirs_only_cli = args.dirs_only
-    dirs_only_file = config_section.get('dirs-only', fallback=None)
+    dirs_only_file = file_config.get('dirs-only', None) # Có thể là list hoặc string "_ALL_"
     final_dirs_only_mode = dirs_only_cli if dirs_only_cli is not None else dirs_only_file
     
     global_dirs_only = final_dirs_only_mode == '_ALL_'
     dirs_only_list_custom: Set[str] = set()
-    if final_dirs_only_mode is not None and not global_dirs_only:
+    
+    if isinstance(final_dirs_only_mode, list): # Nếu là list từ TOML
+        dirs_only_list_custom = set(final_dirs_only_mode)
+    elif final_dirs_only_mode is not None and not global_dirs_only: # Nếu là string từ CLI
         dirs_only_list_custom = parse_comma_list(final_dirs_only_mode)
+        
     final_dirs_only_list = DEFAULT_DIRS_ONLY_LOGIC.union(dirs_only_list_custom)
+    # --- END MODIFIED ---
     
     # Submodule Paths
     submodule_paths: Set[Path] = set()
@@ -141,40 +141,43 @@ def merge_config_sources(
 
 def generate_dynamic_config(template_content: str) -> str:
     """
-    Injects default values into the .ini template string.
-    (Pure logic, moved from scripts/tree.py)
+    Chèn các giá trị mặc định vào chuỗi template .toml.
     """
     
-    def _format_set_to_ini(value_set: Set[str]) -> str:
-        """Helper to convert a set to a comma-separated INI string."""
+    # --- MODIFIED: Helper mới cho TOML array ---
+    def _format_set_to_toml_array(value_set: Set[str]) -> str:
+        """Helper: Chuyển set thành chuỗi mảng TOML."""
         if not value_set:
-            return "" # Return empty string if set is empty
-        return ", ".join(sorted(list(value_set)))
+            return "[]" # Mảng rỗng
+        # Dùng repr() để tạo list string chuẩn: ['a', 'b']
+        return repr(sorted(list(value_set)))
+    # --- END MODIFIED ---
 
-    # Format values for INI
-    ini_level = (
+    # Format values for TOML
+    toml_level = (
         f"level = {DEFAULT_MAX_LEVEL}" 
         if DEFAULT_MAX_LEVEL is not None 
-        else f"; level = "
+        else f"# level = 3" # (Commented out)
     )
-    ini_show_submodules = str(FALLBACK_SHOW_SUBMODULES).lower()
-    ini_use_gitignore = str(FALLBACK_USE_GITIGNORE).lower()
-    ini_ignore = _format_set_to_ini(DEFAULT_IGNORE)
-    ini_prune = _format_set_to_ini(DEFAULT_PRUNE)
-    ini_dirs_only = _format_set_to_ini(DEFAULT_DIRS_ONLY_LOGIC)
+    toml_show_submodules = str(FALLBACK_SHOW_SUBMODULES).lower()
+    toml_use_gitignore = str(FALLBACK_USE_GITIGNORE).lower()
+    toml_ignore = _format_set_to_toml_array(DEFAULT_IGNORE)
+    toml_prune = _format_set_to_toml_array(DEFAULT_PRUNE)
+    toml_dirs_only = _format_set_to_toml_array(DEFAULT_DIRS_ONLY_LOGIC)
 
     # Format the template string
     try:
+        # --- MODIFIED: Dùng placeholder của TOML ---
         dynamic_template = template_content.format(
             config_section_name=CONFIG_SECTION_NAME,
-            ini_level=ini_level,
-            ini_show_submodules=ini_show_submodules,
-            ini_use_gitignore=ini_use_gitignore,
-            ini_ignore=ini_ignore,
-            ini_prune=ini_prune,
-            ini_dirs_only=ini_dirs_only
+            toml_level=toml_level,
+            toml_show_submodules=toml_show_submodules,
+            toml_use_gitignore=toml_use_gitignore,
+            toml_ignore=toml_ignore,
+            toml_prune=toml_prune,
+            toml_dirs_only=toml_dirs_only
         )
         return dynamic_template
     except KeyError as e:
-        print(f"FATAL ERROR: Template key mismatch: {e}")
-        return "; ERROR: Template file is missing a placeholder."
+        print(f"LỖI NGHIÊM TRỌNG: Template key không khớp: {e}")
+        return "# LỖI: File template thiếu placeholder."

@@ -41,6 +41,8 @@ FALLBACK_USE_GITIGNORE: bool = True
 # --- END REMOVED ---
 
 # --- 3. Config File Names ---
-CONFIG_FILENAME: str = ".tree.ini"
-PROJECT_CONFIG_FILENAME: str = ".project.ini"
+# --- MODIFIED: Chuyển sang .toml ---
+CONFIG_FILENAME: str = ".tree.toml"
+PROJECT_CONFIG_FILENAME: str = ".project.toml"
+# --- END MODIFIED ---
 CONFIG_SECTION_NAME: str = "tree"
