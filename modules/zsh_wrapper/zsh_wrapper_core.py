@@ -158,8 +158,6 @@ def process_zsh_wrapper_logic(
     elif args.mode == "relative":
         logger.info("Chế độ 'relative': Tạo wrapper với đường dẫn tương đối.")
         template = _load_template("relative.zsh.template")
-        final_content = _prepare_relative_mode(logger, template, paths)
-
         try:
             final_content = _prepare_relative_mode(logger, template, paths)
         except ValueError:
