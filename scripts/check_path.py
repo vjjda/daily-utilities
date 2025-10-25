@@ -8,7 +8,6 @@ from pathlib import Path
 from typing import List, Optional, Set, Dict, Any
 import shlex
 
-# --- THÊM TOMLLIB ---
 try:
     import tomllib 
 except ImportError:
@@ -16,22 +15,21 @@ except ImportError:
         import toml as tomllib
     except ImportError:
         tomllib = None
-# --- KẾT THÚC THÊM ---
 
 import typer
 
 # Common utilities
 from utils.logging_config import setup_logging, log_success
-# --- MODIFIED: Import hàm config I/O từ utils.core ---
 from utils.core import (
     parse_comma_list, is_git_repository, find_git_root,
     load_config_template, 
-    # generate_dynamic_config, # <-- ĐÃ XÓA
-    format_value_to_toml,    # <-- ĐÃ THÊM
+    format_value_to_toml,
     load_project_config_section, 
     load_toml_file,
     write_toml_file
 )
+# --- MODIFIED: Thêm import utils.cli ---
+from utils.cli import prompt_config_overwrite, launch_editor
 # --- END MODIFIED ---
 
 # Module Imports
@@ -59,12 +57,11 @@ app = typer.Typer(
 @app.callback(invoke_without_command=True)
 def main(
     ctx: typer.Context,
-
+    # (Các tham số Typer giữ nguyên)
     config_project: bool = typer.Option(
         False, "-c", "--config",
         help="Khởi tạo/cập nhật section [cpath] trong .project.toml. (Tương đương --config project)",
     ),
-
     target_directory_arg: Optional[Path] = typer.Argument(
         None,
         help="Thư mục để quét (mặc định: thư mục làm việc hiện tại, tôn trọng .gitignore). Dùng '~' cho thư mục home.",
@@ -86,10 +83,9 @@ def main(
     logger = setup_logging(script_name="CPath")
     logger.debug("CPath script started.")
 
-    # --- Logic cho cờ --config (ĐÃ REFACTOR) ---
+    # --- Logic cho cờ --config (ĐÃ REFACTOR VỚI O/R/Q) ---
     if config_project: 
         
-        # Thêm kiểm tra tomllib
         if tomllib is None:
              logger.error("❌ Thiếu thư viện 'tomli'. Vui lòng cài đặt: 'pip install tomli tomli-w'")
              raise typer.Exit(code=1)
@@ -98,76 +94,60 @@ def main(
         config_file_path = Path.cwd() / PROJECT_CONFIG_FILENAME
         
         try:
-            # 1. Tải và tạo nội dung section mới
+            # (Logic tạo 'new_section_dict' giữ nguyên)
             template_str = load_config_template(MODULE_DIR, TEMPLATE_FILENAME, logger)
             cpath_defaults = {
                 "extensions": DEFAULT_EXTENSIONS_STRING,
                 "ignore": DEFAULT_IGNORE
             }
-            
-            # --- FIX: Tự build format_dict (giống tree.py) ---
             format_dict: Dict[str, str] = {}
-            # Template của cpath đơn giản hơn, chỉ cần lặp
             for key, value in cpath_defaults.items():
-                # key = "extensions", "ignore"
-                # placeholder = "toml_extensions", "toml_ignore"
                 format_dict[f"toml_{key}"] = format_value_to_toml(value)
-                
-            # Format template MỘT LẦN
             content_section_only = template_str.format(**format_dict)
-            # --- END FIX ---
-            
-            # 2. Parse nội dung section mới
             full_toml_string = f"[{CONFIG_SECTION_NAME}]\n{content_section_only}"
             new_section_dict = tomllib.loads(full_toml_string).get(CONFIG_SECTION_NAME, {})
             if not new_section_dict:
                     raise ValueError("Nội dung section mới bị rỗng.")
             
-            # 3. Đọc file config HIỆN TẠI (dùng toml_io)
             config_data = load_toml_file(config_file_path, logger)
             
-            # 4. Logic UI (typer.confirm)
+            should_write = True
+            
+            # --- MODIFIED: Sử dụng helper O/R/Q ---
             if CONFIG_SECTION_NAME in config_data:
-                logger.warning(f"⚠️ Section [{CONFIG_SECTION_NAME}] đã tồn tại trong '{config_file_path.name}'.")
-                try:
-                    typer.confirm("   Ghi đè section hiện tại?", abort=True)
-                except typer.Abort:
-                    logger.warning("Hoạt động bị hủy bởi người dùng.")
-                    raise typer.Exit(code=0)
+                should_write = prompt_config_overwrite(
+                    logger,
+                    config_file_path,
+                    f"Section [{CONFIG_SECTION_NAME}]"
+                )
+            # --- END MODIFIED ---
             
-            # 5. Merge data
-            config_data[CONFIG_SECTION_NAME] = new_section_dict
-            
-            # 6. Ghi file (dùng toml_io)
-            if write_toml_file(config_file_path, config_data, logger):
-                log_success(logger, f"✅ Đã tạo/cập nhật thành công '{config_file_path.name}'.")
-            else:
-                raise IOError(f"Không thể ghi file TOML: {config_file_path.name}")
+            if should_write:
+                config_data[CONFIG_SECTION_NAME] = new_section_dict
+                if write_toml_file(config_file_path, config_data, logger):
+                    log_success(logger, f"✅ Đã tạo/cập nhật thành công '{config_file_path.name}'.")
+                else:
+                    raise IOError(f"Không thể ghi file TOML: {config_file_path.name}")
 
         except (IOError, KeyError, ValueError) as e:
             logger.error(f"❌ Đã xảy ra lỗi khi thao tác file config: {e}")
             raise typer.Exit(code=1)
 
-        # Mở file
-        try:
-            logger.info(f"Đang mở '{config_file_path.name}'...")
-            typer.launch(str(config_file_path))
-        except Exception as e:
-            logger.error(f"❌ Lỗi khi mở file: {e}")
-            logger.warning(f"⚠️ Không thể tự động mở file.")
+        # --- MODIFIED: Sử dụng helper launch ---
+        launch_editor(logger, config_file_path)
+        # --- END MODIFIED ---
 
         raise typer.Exit(code=0)
     # --- KẾT THÚC LOGIC CONFIG ---
 
 
-    # --- Logic chạy tool (Không đổi) ---
-    
-    # (Logic xác định scan_root và kiểm tra Git giữ nguyên)
+    # (Logic chạy tool giữ nguyên)
+    # ...
     if target_directory_arg:
         scan_root = target_directory_arg.expanduser()
     else:
         scan_root = Path.cwd().expanduser()
-
+    
     if not scan_root.exists():
         logger.error(f"❌ Lỗi: Thư mục mục tiêu không tồn tại (sau khi expanduser): {scan_root}")
         raise typer.Exit(code=1)
@@ -177,7 +157,7 @@ def main(
 
     git_warning_str = ""
     effective_scan_root = scan_root
-    # ... (toàn bộ logic R/C/Q và xác nhận y/N giữ nguyên) ...
+    
     if not is_git_repository(scan_root):
         suggested_root = find_git_root(scan_root.parent)
         if suggested_root:
@@ -218,12 +198,10 @@ def main(
                  raise typer.Exit(code=0)
 
     check_mode = dry_run
-
-    # Tải và Merge Cấu hình (Không đổi, vì dùng 'load_project_config_section' để ĐỌC)
+    
     project_config_path = effective_scan_root / PROJECT_CONFIG_FILENAME
     file_config_data = load_project_config_section(project_config_path, CONFIG_SECTION_NAME, logger)
-
-    # Merge Extensions
+    
     extensions_str: str
     if extensions:
         extensions_str = extensions
@@ -235,14 +213,12 @@ def main(
         extensions_str = DEFAULT_EXTENSIONS_STRING
         logger.debug("Sử dụng danh sách 'extensions' mặc định.")
     final_extensions_list = [ext.strip() for ext in extensions_str.split(',') if ext.strip()]
-
-    # Merge Ignore
+    
     cli_ignore_set = parse_comma_list(ignore)
     file_ignore_set = set(file_config_data.get('ignore', []))
     final_ignore_set = DEFAULT_IGNORE.union(file_ignore_set).union(cli_ignore_set)
     logger.debug(f"Danh sách 'ignore' cuối cùng (đã merge): {sorted(list(final_ignore_set))}")
-
-    # Xây dựng lệnh "fix" (Không đổi)
+    
     original_args = sys.argv[1:]
     filtered_args = [
         shlex.quote(arg) for arg in original_args
@@ -251,7 +227,6 @@ def main(
     fix_command_str = "cpath " + " ".join(filtered_args)
 
     try:
-        # Run the core logic (Không đổi)
         files_to_fix = process_path_updates(
             logger=logger, project_root=effective_scan_root,
             target_dir_str=str(target_directory_arg) if effective_scan_root == scan_root and target_directory_arg else None,
@@ -260,8 +235,7 @@ def main(
             script_file_path=THIS_SCRIPT_PATH,
             check_mode=check_mode
         )
-
-        # Handle Results (Không đổi)
+        
         handle_results(
             logger=logger, files_to_fix=files_to_fix, check_mode=check_mode,
             fix_command_str=fix_command_str, scan_root=effective_scan_root,

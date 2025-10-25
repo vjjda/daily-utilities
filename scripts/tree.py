@@ -6,7 +6,6 @@ import logging
 from pathlib import Path
 from typing import Optional, Set, Dict, Any
 
-# --- THÊM TOMLLIB ---
 try:
     import tomllib 
 except ImportError:
@@ -14,7 +13,6 @@ except ImportError:
         import toml as tomllib
     except ImportError:
         tomllib = None
-# --- KẾT THÚC THÊM ---
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.append(str(PROJECT_ROOT))
@@ -29,8 +27,12 @@ from utils.core import (
     load_toml_file, 
     write_toml_file,
     load_config_template, 
-    format_value_to_toml # (Đã import hàm helper)
+    format_value_to_toml 
 )
+# --- MODIFIED: Thêm import utils.cli ---
+from utils.cli import prompt_config_overwrite, launch_editor
+# --- END MODIFIED ---
+
 # Module Imports
 from modules.tree import (
     CONFIG_FILENAME,
@@ -52,18 +54,16 @@ from modules.tree import (
 MODULE_DIR = PROJECT_ROOT / "modules" / "tree"
 TEMPLATE_FILENAME = "tree.toml.template"
 
-# Khởi tạo Typer App
+# (Typer app giữ nguyên)
 app = typer.Typer(
     help="Một công cụ tạo cây thư mục thông minh hỗ trợ file cấu hình .tree.toml.",
     add_completion=False,
     context_settings={"help_option_names": ["--help", "-h"]}
 )
 
-# Command chính (mặc định)
 @app.callback(invoke_without_command=True)
 def main(
     ctx: typer.Context,
-
     # (Các tham số Typer giữ nguyên)
     config_scope: Optional[str] = typer.Option(
         None, "-c", "--config",
@@ -96,67 +96,52 @@ def main(
              raise typer.Exit(code=1)
 
         scope = config_scope.lower()
-
-        tree_defaults: Dict[str, Any] = {
-            "level": DEFAULT_MAX_LEVEL,
-             "show-submodules": FALLBACK_SHOW_SUBMODULES,
-             "use-gitignore": FALLBACK_USE_GITIGNORE,
-             "ignore": DEFAULT_IGNORE,
-             "prune": DEFAULT_PRUNE,
-             "dirs-only": DEFAULT_DIRS_ONLY_LOGIC
-        }
-
-        # --- LOGIC TẠO CONFIG (ĐÃ SỬA LỖI) ---
+        
+        # (Logic tạo 'content_with_placeholders' giữ nguyên)
         try:
-            # 1. Tải template thô
             template_str = load_config_template(MODULE_DIR, TEMPLATE_FILENAME, logger)
-            
-            # 2. Chuẩn bị TOÀN BỘ dict để format
-            
-            # 2a. Xử lý toml_level (logic đặc biệt)
+            tree_defaults: Dict[str, Any] = {
+                "level": DEFAULT_MAX_LEVEL,
+                "show-submodules": FALLBACK_SHOW_SUBMODULES,
+                "use-gitignore": FALLBACK_USE_GITIGNORE,
+                "ignore": DEFAULT_IGNORE,
+                "prune": DEFAULT_PRUNE,
+                "dirs-only": DEFAULT_DIRS_ONLY_LOGIC
+            }
             toml_level_str = (
                 f"level = {tree_defaults['level']}" 
                 if tree_defaults['level'] is not None 
-                else f"# level = 3" # (Commented out)
+                else f"# level = 3"
             )
-
-            # 2b. Xây dựng dict thủ công (Map key gạch ngang -> key gạch dưới)
             format_dict: Dict[str, str] = {
                 'config_section_name': CONFIG_SECTION_NAME,
-                
                 'toml_level': toml_level_str,
-                
                 'toml_show_submodules': format_value_to_toml(tree_defaults['show-submodules']),
                 'toml_use_gitignore': format_value_to_toml(tree_defaults['use-gitignore']),
                 'toml_ignore': format_value_to_toml(tree_defaults['ignore']),
                 'toml_prune': format_value_to_toml(tree_defaults['prune']),
                 'toml_dirs_only': format_value_to_toml(tree_defaults['dirs-only'])
             }
-            # --- KẾT THÚC SỬA LỖI ---
-
-            # 3. Format template MỘT LẦN DUY NHẤT
             content_with_placeholders = template_str.format(**format_dict)
-            
-        except (KeyError, ValueError) as e:
-            # Bắt lỗi nếu template_str.format() thất bại
+        except Exception as e:
             logger.error(f"❌ Đã xảy ra lỗi nghiêm trọng khi tạo nội dung config: {e}")
-            logger.debug(f"Template keys available: {list(format_dict.keys())}")
             raise typer.Exit(code=1)
-        # --- KẾT THÚC LOGIC MỚI ---
+        
+        should_write = True 
+        config_file_path: Path = Path.cwd() 
 
         if scope == "local" or scope == "tree":
              config_file_path = Path.cwd() / CONFIG_FILENAME
              file_existed = config_file_path.exists()
-             should_write = False
              
+             # --- MODIFIED: Sử dụng helper O/R/Q ---
              if file_existed:
-                try:
-                    should_write = typer.confirm(f"'{CONFIG_FILENAME}' đã tồn tại. Ghi đè?", abort=True)
-                except typer.Abort:
-                    logger.warning("Hoạt động bị hủy bởi người dùng.")
-                    raise typer.Exit(code=0)
-             else:
-                should_write = True
+                should_write = prompt_config_overwrite(
+                    logger, 
+                    config_file_path, 
+                    f"File '{CONFIG_FILENAME}'"
+                )
+             # --- END MODIFIED ---
              
              if should_write:
                  try:
@@ -173,53 +158,45 @@ def main(
         elif scope == "project":
              config_file_path = Path.cwd() / PROJECT_CONFIG_FILENAME
              try:
-                # 1. Parse nội dung section MỚI
+                # (Logic parse 'new_section_dict' giữ nguyên)
                 start_marker = f"[{CONFIG_SECTION_NAME}]"
                 start_index = content_with_placeholders.find(start_marker)
                 if start_index == -1: raise ValueError("Template thiếu header section.")
                 content_section_only = content_with_placeholders[start_index + len(start_marker):].strip()
-                
                 full_toml_string = f"[{CONFIG_SECTION_NAME}]\n{content_section_only}"
                 new_section_dict = tomllib.loads(full_toml_string).get(CONFIG_SECTION_NAME, {})
                 if not new_section_dict:
                      raise ValueError("Nội dung section mới bị rỗng.")
 
-                # 2. Đọc file config HIỆN TẠI
                 config_data = load_toml_file(config_file_path, logger)
 
-                # 3. Logic UI
+                # --- MODIFIED: Sử dụng helper O/R/Q ---
                 if CONFIG_SECTION_NAME in config_data:
-                    logger.warning(f"⚠️ Section [{CONFIG_SECTION_NAME}] đã tồn tại trong '{config_file_path.name}'.")
-                    try:
-                        typer.confirm("   Ghi đè section hiện tại?", abort=True)
-                    except typer.Abort:
-                        logger.warning("Hoạt động bị hủy bởi người dùng.")
-                        raise typer.Exit(code=0) 
+                    should_write = prompt_config_overwrite(
+                        logger,
+                        config_file_path,
+                        f"Section [{CONFIG_SECTION_NAME}]"
+                    )
+                # --- END MODIFIED ---
                 
-                # 4. Merge data
-                config_data[CONFIG_SECTION_NAME] = new_section_dict
-                
-                # 5. Ghi file
-                if write_toml_file(config_file_path, config_data, logger):
-                    log_success(logger, f"✅ Đã tạo/cập nhật thành công '{config_file_path.name}'.")
-                else:
-                    raise IOError(f"Không thể ghi file TOML: {config_file_path.name}")
+                if should_write:
+                    config_data[CONFIG_SECTION_NAME] = new_section_dict
+                    if write_toml_file(config_file_path, config_data, logger):
+                        log_success(logger, f"✅ Đã tạo/cập nhật thành công '{config_file_path.name}'.")
+                    else:
+                        raise IOError(f"Không thể ghi file TOML: {config_file_path.name}")
 
              except (IOError, KeyError, ValueError) as e:
                 logger.error(f"❌ Đã xảy ra lỗi khi thao tác file: {e}")
                 raise typer.Exit(code=1)
 
-        else: # Scope không hợp lệ
+        else: 
             logger.error(f"❌ Đối số scope không hợp lệ cho --config: '{config_scope}'. Phải là 'local', 'tree', 'project', hoặc để trống (mặc định 'project').")
             raise typer.Exit(code=1)
 
-        # Mở file
-        try:
-            logger.info(f"Đang mở '{config_file_path.name}'...")
-            typer.launch(str(config_file_path))
-        except Exception as e:
-            logger.error(f"❌ Lỗi khi mở file: {e}")
-            logger.warning(f"⚠️ Không thể tự động mở file.")
+        # --- MODIFIED: Sử dụng helper launch ---
+        launch_editor(logger, config_file_path)
+        # --- END MODIFIED ---
 
         raise typer.Exit(code=0)
     # --- KẾT THÚC LOGIC CONFIG ---

@@ -1,0 +1,36 @@
+# Path: modules/tree/tree.toml.template
+#
+# File này được tạo tự động bởi 'ctree --config local'
+# Nó phản ánh các cài đặt mặc định *hiện tại*.
+#
+
+[tree]
+
+# --- HIỂN THỊ ---
+
+# level: Giới hạn độ sâu của cây thư mục.
+# Ví dụ: level = 3
+# level = 3
+
+# show-submodules: Hiển thị nội dung của các thư mục submodule.
+show-submodules = false
+
+# use-gitignore: Tự động đọc và áp dụng các quy tắc từ .gitignore.
+use-gitignore = true
+
+
+# --- QUY TẮC LỌC ---
+# Các Pattern hỗ trợ wildcard (ví dụ: *, ?, **).
+
+# ignore: Ẩn hoàn toàn các file/thư mục khớp với pattern.
+# Ví dụ: ignore = [".DS_Store", "*.tmp"]
+ignore = ['.git', '.venv', '__pycache__', 'node_modules', 'venv']
+
+# prune: Hiển thị thư mục nhưng không duyệt vào bên trong (hiển thị '[...]').
+# Ví dụ: prune = ["dist", "build"]
+prune = ['build', 'dist']
+
+# dirs-only: Chỉ hiển thị thư mục con bên trong các thư mục khớp với pattern.
+# Ví dụ: dirs-only = ["assets", "static"]
+# (Để bật cho toàn bộ cây, dùng "_ALL_")
+dirs-only = []
