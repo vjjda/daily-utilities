@@ -160,6 +160,18 @@ def process_zsh_wrapper_logic(
         template = _load_template("relative.zsh.template")
         final_content = _prepare_relative_mode(logger, template, paths)
 
+        try:
+            final_content = _prepare_relative_mode(logger, template, paths)
+        except ValueError:
+            logger.error("❌ ERROR: When using 'relative' mode, the output file must be INSIDE the Project Root directory.")
+            logger.error(f"   Output path: {paths['output_path'].as_posix()}")
+            logger.error(f"   Project Root: {paths['project_root'].as_posix()}")
+            logger.error("   Suggestion: Create the wrapper inside the project's 'bin' directory HOẶC sử dụng 'absolute' mode (-m absolute).")
+            return {
+                "status": "error",
+                "message": "Relative path calculation failed."
+            }
+
     # 4. Trả về kết quả cho executor
     return {
         "status": "ok",
