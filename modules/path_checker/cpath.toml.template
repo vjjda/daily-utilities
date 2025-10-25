@@ -1,0 +1,10 @@
+# Path: modules/path_checker/cpath.toml.template
+#
+# Cấu hình mặc định cho cpath (Path Checker)
+#
+
+# Các đuôi file (phân cách bởi dấu phẩy) mà cpath sẽ quét.
+extensions = {toml_extensions}
+
+# Danh sách các pattern (FNMATCH) sẽ bị bỏ qua (ngoài .gitignore).
+ignore = {toml_ignore}

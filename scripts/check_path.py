@@ -11,32 +11,44 @@ import shlex
 import typer
 
 # Common utilities
-from utils.logging_config import setup_logging
+from utils.logging_config import setup_logging, log_success # <-- Import log_success
 from utils.core import parse_comma_list, is_git_repository, find_git_root
 
 # Module Imports
 from modules.path_checker import (
     process_path_updates,
     handle_results,
-    DEFAULT_EXTENSIONS_STRING
+    DEFAULT_EXTENSIONS_STRING,
+    # --- NEW: Import Config IO ---
+    PROJECT_CONFIG_FILENAME,
+    CONFIG_SECTION_NAME,
+    load_config_template,
+    generate_dynamic_config,
+    overwrite_or_append_project_config_section
+    # --- END NEW ---
 )
 
 # --- CONSTANTS ---
 THIS_SCRIPT_PATH = Path(__file__).resolve()
 
-# --- NEW: Khởi tạo Typer App ---
-# (Việc này cho phép chúng ta thêm -h cho --help)
 app = typer.Typer(
     help="Kiểm tra (và tùy chọn sửa) các comment '# Path:' trong file nguồn.",
     add_completion=False,
     context_settings={"help_option_names": ["--help", "-h"]}
 )
-# --- END NEW ---
 
-# --- MODIFIED: Chuyển 'main' thành callback của app ---
 @app.callback(invoke_without_command=True)
 def main(
-    ctx: typer.Context, # (Thêm ctx)
+    ctx: typer.Context, 
+    
+    # --- NEW: Cờ Config ---
+    config: Optional[str] = typer.Option(
+        None, "-c", "--config",
+        help="Khởi tạo hoặc cập nhật file .project.toml (chỉ hỗ trợ scope 'project').",
+        case_sensitive=False
+    ),
+    # --- END NEW ---
+
     target_directory_arg: Optional[Path] = typer.Argument( 
         None, 
         help="Thư mục để quét (mặc định: thư mục làm việc hiện tại, tôn trọng .gitignore). Dùng '~' cho thư mục home.",
@@ -46,20 +58,55 @@ def main(
     extensions: str = typer.Option( DEFAULT_EXTENSIONS_STRING, "-e", "--extensions", help=f"Các đuôi file để quét (mặc định: '{DEFAULT_EXTENSIONS_STRING}')." ),
     ignore: Optional[str] = typer.Option( None, "-I", "--ignore", help="Danh sách pattern (phân cách bởi dấu phẩy) để bỏ qua." ),
     
-    # --- MODIFIED: Đảo ngược logic 'fix' thành 'check' ---
-    check: bool = typer.Option( 
+    # --- MODIFIED: Đổi tên thành 'dry_run' ---
+    dry_run: bool = typer.Option( 
         False, 
-        "-d", "--dry-run", # <-- Đã thay đổi -c, --check
+        "-d", "--dry-run", 
         help="Chỉ chạy ở chế độ 'dry-run' (chạy thử). Mặc định là chạy 'fix' (có hỏi xác nhận)." 
     )
     # --- END MODIFIED ---
 ):
-    """ Hàm chính (đã được chuyển thành callback của Typer) """
+    """ Hàm chính (callback của Typer) """
     if ctx.invoked_subcommand: return
     
     # 1. Setup Logging
     logger = setup_logging(script_name="CPath")
     logger.debug("CPath script started.")
+
+    # --- NEW: Logic cho cờ --config ---
+    if config:
+        scope = config.lower()
+        if scope != 'project':
+            logger.error(f"❌ Lỗi: Scope '{config}' không được hỗ trợ. cpath chỉ hỗ trợ '--config project'.")
+            raise typer.Exit(code=1)
+            
+        config_file_path = Path.cwd() / PROJECT_CONFIG_FILENAME # .project.toml
+        
+        try:
+            template_str = load_config_template()
+            content_section_only = generate_dynamic_config(template_str)
+            
+            overwrite_or_append_project_config_section(
+                config_file_path, 
+                content_section_only, 
+                logger
+            )
+            
+        except (IOError, KeyError) as e:
+            logger.error(f"❌ Đã xảy ra lỗi khi thao tác file: {e}")
+            raise typer.Exit(code=1)
+        
+        # Mở file
+        try:
+            logger.info(f"Đang mở '{config_file_path.name}' trong trình soạn thảo mặc định...")
+            typer.launch(str(config_file_path))
+        except Exception as e:
+            logger.error(f"❌ Đã xảy ra lỗi không mong muốn khi mở file: {e}")
+            logger.warning(f"⚠️ Không thể tự động mở file. Vui lòng mở thủ công.")
+            
+        raise typer.Exit(code=0) # Dừng lại sau khi chạy config
+    # --- END NEW LOGIC ---
+
 
     # (Các logic xác định scan_root và kiểm tra Git giữ nguyên)
     if target_directory_arg:
@@ -120,36 +167,30 @@ def main(
                 raise typer.Exit(code=0) 
 
     # --- MODIFIED: Cập nhật logic check_mode ---
-    check_mode = check # Giá trị bool từ cờ --check
+    check_mode = dry_run # Giá trị bool từ cờ --dry-run
     # --- END MODIFIED ---
 
     # --- MODIFIED: Cập nhật logic xây dựng lệnh "fix" ---
-    # Lệnh "fix" (mặc định) là lệnh *không* có cờ --check
     original_args = sys.argv[1:]
-    # Lọc bỏ cờ -c, --check, và cờ --fix cũ (để an toàn)
     filtered_args = [
         shlex.quote(arg) for arg in original_args 
-        if arg not in ('-d', '--dry-run', '--fix') # <-- Đã thay đổi -c, --check
+        if arg not in ('-d', '--dry-run', '--fix', '-c', '--config') # Lọc cả cờ config và cờ cũ
     ]
-    # Lệnh fix bây giờ chỉ là cpath + các đối số còn lại
     fix_command_str = "cpath " + " ".join(filtered_args)
     # --- END MODIFIED ---
 
-    # Chuẩn bị args cho core (Không thay đổi)
     extensions_to_scan = [ext.strip() for ext in extensions.split(',') if ext.strip()]
     cli_ignore_patterns = parse_comma_list(ignore)
 
     try:
-        # 3. Run the core logic
         files_to_fix = process_path_updates(
             logger=logger, project_root=effective_scan_root,
             target_dir_str=str(target_directory_arg) if effective_scan_root == scan_root and target_directory_arg else None,
             extensions=extensions_to_scan, cli_ignore=cli_ignore_patterns,
             script_file_path=THIS_SCRIPT_PATH, 
-            check_mode=check_mode # Truyền giá trị check_mode mới
+            check_mode=check_mode 
         )
 
-        # 4. Handle Results (Không thay đổi)
         handle_results(
             logger=logger, files_to_fix=files_to_fix, check_mode=check_mode,
             fix_command_str=fix_command_str, scan_root=effective_scan_root, 
@@ -163,8 +204,6 @@ def main(
 
 if __name__ == "__main__":
     try: 
-        # --- MODIFIED: Chạy app thay vì typer.run(main) ---
         app()
-        # --- END MODIFIED ---
     except KeyboardInterrupt: 
         print("\n\n❌ [Lệnh dừng] Đã dừng kiểm tra đường dẫn."); sys.exit(1)

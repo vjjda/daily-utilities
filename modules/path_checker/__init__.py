@@ -16,7 +16,8 @@ current_dir = Path(__file__).parent
 modules_to_export: List[str] = [
     "path_checker_config",
     "path_checker_core",
-    "path_checker_executor"
+    "path_checker_executor",
+    "path_checker_config_io" # <-- NEW
 ]
 
 # (This list is for Mypy/linters, but the main logic is globals())

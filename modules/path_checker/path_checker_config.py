@@ -14,20 +14,24 @@ __all__ = [
     "DEFAULT_IGNORE",
     "DEFAULT_EXTENSIONS_STRING",
     "COMMENT_RULES",
-    "COMMENT_RULES_BY_EXT"
+    "COMMENT_RULES_BY_EXT",
+    "PROJECT_CONFIG_FILENAME", # <-- NEW
+    "CONFIG_SECTION_NAME"      # <-- NEW
 ]
 # --- END NEW ---
 
-# --- NEW: Thêm DEFAULT_IGNORE ---
 # Các pattern mặc định luôn bị bỏ qua khi quét
 DEFAULT_IGNORE: Set[str] = {
     ".venv", "venv", "__pycache__", ".git", 
     "node_modules", "dist", "build", "out"
 }
-# --- END NEW ---
 
-# --- NEW: Thêm DEFAULT_EXTENSIONS_STRING ---
 DEFAULT_EXTENSIONS_STRING = "py,js,ts,css,scss,zsh,sh"
+
+
+# --- NEW: Config file constants ---
+PROJECT_CONFIG_FILENAME: str = ".project.toml"
+CONFIG_SECTION_NAME: str = "cpath"
 # --- END NEW ---
 
 
