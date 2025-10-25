@@ -6,6 +6,10 @@ import logging
 from pathlib import Path
 from typing import Optional, Set # (Giữ lại Set để type hint)
 
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+sys.path.append(str(PROJECT_ROOT))
+# --- END BOOTSTRAPPING ---
+
 import typer
 
 # Common utilities
@@ -31,6 +35,8 @@ from modules.tree import (
     generate_tree,
     print_status_header,
     print_final_result,
+
+    # --- Config I/O Functions ---
     write_config_file,
     overwrite_or_append_project_config_section
 )
@@ -49,7 +55,12 @@ app = typer.Typer(
     help="Create a sample .tree.ini file or initialize .project.ini." # <--- SỬA HELP
 )
 def init_command(
-    scope: str = typer.Argument("local", help="Scope: 'local' (creates .tree.ini) or 'project' (initializes .project.ini).") # <--- NEW ARGUMENT
+    scope: str = typer.Option(
+        "local", 
+        "-s", "--scope", # Thay đổi thành Option với short flag
+        help="Scope: 'local' (creates .tree.ini) or 'project' (initializes .project.ini).",
+        case_sensitive=False
+    )
 ):
     """
     Handles the 'init' command by calling module functions.
@@ -58,10 +69,11 @@ def init_command(
     # 1. Setup Logging
     logger = setup_logging(script_name="CTree")
     
-    if scope == "local":
+    if scope.lower() == "local":
         config_file_path = Path.cwd() / CONFIG_FILENAME # .tree.ini
         file_existed = config_file_path.exists()
         
+        # ... (Phần logic local không đổi) ...
         should_write = False
         if file_existed:
             try:
@@ -76,33 +88,22 @@ def init_command(
             
         if should_write:
             try:
-                # 2. Load (từ loader)
                 template_str = load_config_template()
-                # 3. Process (từ core)
                 content = generate_dynamic_config(template_str)
-                
-                # 4. Execute (từ tree_config_io)
                 write_config_file(config_file_path, content, logger, file_existed)
-                
             except (IOError, KeyError) as e:
-                # (Bắt lỗi từ write_config_file hoặc generate_dynamic_config)
                 logger.error(f"❌ An error occurred during file creation: {e}")
                 raise typer.Exit(code=1)
                 
-    elif scope == "project":
+    elif scope.lower() == "project":
         config_file_path = Path.cwd() / PROJECT_CONFIG_FILENAME # .project.ini
         
         try:
-            # 2. Load Template để lấy nội dung section
             template_str = load_config_template()
-            # 3. Process (từ core) - tạo section content
-            # Tách nội dung config (bỏ qua header)
             content_with_placeholders = generate_dynamic_config(template_str)
-            # Find and trim the content to just the section options
             start_index = content_with_placeholders.find(f"[{CONFIG_SECTION_NAME}]") + len(f"[{CONFIG_SECTION_NAME}]")
             content_section_only = content_with_placeholders[start_index:].strip()
             
-            # 4. Execute (từ tree_config_io) - logic ghi đè phức tạp
             overwrite_or_append_project_config_section(
                 config_file_path, 
                 content_section_only, 
