@@ -65,8 +65,7 @@ Khi viết/chỉnh sửa mã, bạn phải tuân thủ nghiêm ngặt các nguy�
 
 1. **Path Comment:** Mọi file code phải bắt đầu bằng dòng Path Comment theo định dạng phù hợp với ngôn ngữ (ví dụ: `# Path: relative/path/from/project/root`).
 2. **Shebang:** Nếu script là executable, phải thêm Shebang trước dòng Path Comment.
-3. **Ngôn ngữ Code:** Mọi thứ trong Code (Commit messages, logs, comments, print/logging output) phải là **Tiếng Anh**. Trao đổi với tôi vẫn bằng **Tiếng Việt**.
 
 ---
 
-Bạn nắm rõ hướng dẫn viết code python này không?
+Bạn hãy viết code tuân thủ theo hướng dẫn ở trên!

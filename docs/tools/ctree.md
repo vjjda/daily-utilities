@@ -1,4 +1,3 @@
-<!-- Path: docs/tools/ctree.md -->
 # Tool Guide: ctree
 
 `ctree` is a smart directory tree generator. It provides advanced filtering options via command-line arguments and configuration files, automatically ignoring clutter like `.venv` and `__pycache__`.
