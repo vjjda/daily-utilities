@@ -1,11 +1,11 @@
-# Daily Utilities - Documentation
+# Tiện Ích Hàng Ngày - Tài Liệu
 
-This directory contains the user documentation for all utilities available in this project.
+Thư mục này chứa tài liệu hướng dẫn sử dụng cho tất cả các tiện ích có sẵn trong dự án này.
 
-## Available Tools
+## Các Công Cụ Hiện Có
 
-Please select a tool below for its detailed usage guide:
+Vui lòng chọn một công cụ dưới đây để xem hướng dẫn sử dụng chi tiết:
 
-* [**ctree**](./tools/ctree.md) - A smart directory tree generator with advanced filtering.
+* [**ctree**](./tools/ctree.md) - Công cụ tạo cây thư mục thông minh với tính năng lọc nâng cao.
 * [**zrap**](./tools/zrap.md) - Công cụ tạo Zsh wrapper cho các script Python.
-* *(Future tools will be listed here)*
+* *(Các công cụ trong tương lai sẽ được liệt kê tại đây)*

@@ -11,7 +11,7 @@ logger_name = "SGen"
 
 # --- 2. CẤU HÌNH CLI (TYPER) ---
 [cli.help]
-description = "Automatically generates .pyi stub files for dynamic module gateways."
+description = "Tự động tạo file stub .pyi cho các module gateway động."
 epilog = "Ví dụ: sgen . -f -R modules/auth,utils/core" 
 allow_interspersed_args = true
 
@@ -22,7 +22,7 @@ allow_interspersed_args = true
 name = "target_dir"
 type = "Path" 
 default = "."
-help = "Đường dẫn thư mục để bắt đầu quét (base directory). Mặc định là thư mục hiện tại (.)."
+help = "Đường dẫn thư mục để bắt đầu quét (thư mục gốc). Mặc định là thư mục hiện tại (.)."
 is_argument = true 
 
 # Option 1: force (-f, --force)
@@ -45,9 +45,9 @@ help = "Danh sách pattern (fnmatch) ngăn cách bởi dấu phẩy để bỏ q
 name = "restrict"
 short = "-R"
 type = "str"
-help = "Danh sách thư mục con (so với target_dir) ngăn cách bởi dấu phẩy để giới hạn quét. Mặc định là SCAN_ROOTS." 
+help = "Danh sách thư mục con (so với target_dir) ngăn cách bởi dấu phẩy để giới hạn quét." 
 
 # --- 4. TÀI LIỆU ---
 [docs]
 enabled = true
-short_description = "A utility to generate .pyi stub files for dynamic Python module gateways."
+short_description = "Một tiện ích để tạo file stub .pyi cho các module gateway Python động."

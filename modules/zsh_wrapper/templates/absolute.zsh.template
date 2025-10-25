@@ -4,7 +4,6 @@
 # File wrapper này chứa đường dẫn tuyệt đối.
 # Nó có thể được di chuyển đến bất cứ đâu (ví dụ: ~/bin).
 # CẢNH BÁO: Nếu project gốc bị di chuyển, wrapper này sẽ hỏng.
-
 # --- PATHS (Hard-coded by zrap) ---
 PROJECT_ROOT="{project_root_abs}"
 VENV_PATH="{venv_path_abs}"
@@ -12,10 +11,11 @@ SCRIPT_TO_RUN="{script_path_abs}"
 # --- END PATHS ---
 
 # 1. Activate virtual environment
-if [ -d "$VENV_PATH" ]; then
+if [ -d "$VENV_PATH" ];
+then
     source "$VENV_PATH/bin/activate"
 else
-    echo "⚠️ Warning: No virtual environment found at $VENV_PATH."
+    echo "⚠️ Cảnh báo: Không tìm thấy môi trường ảo tại $VENV_PATH. Đang sử dụng Python hệ thống."
 fi
 
 # 2. Run the main Python script
