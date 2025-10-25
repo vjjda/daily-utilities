@@ -49,88 +49,16 @@ app = typer.Typer(
     context_settings={"help_option_names": ["--help", "-h"]}
 )
 
-# Command 'init' (Đã refactor)
-@app.command(
-    name="init",
-    help="Create a sample .tree.ini file or initialize .project.ini." # <--- SỬA HELP
-)
-def init_command(
-    scope: str = typer.Option(
-        "local", 
-        "-s", "--scope", # Thay đổi thành Option với short flag
-        help="Scope: 'local' (creates .tree.ini) or 'project' (initializes .project.ini).",
-        case_sensitive=False
-    )
-):
-    """
-    Handles the 'init' command by calling module functions.
-    """
-    
-    # 1. Setup Logging
-    logger = setup_logging(script_name="CTree")
-    
-    if scope.lower() == "local":
-        config_file_path = Path.cwd() / CONFIG_FILENAME # .tree.ini
-        file_existed = config_file_path.exists()
-        
-        # ... (Phần logic local không đổi) ...
-        should_write = False
-        if file_existed:
-            try:
-                should_write = typer.confirm(f"'{CONFIG_FILENAME}' already exists. Overwrite?", abort=True)
-                logger.debug(f"User chose to overwrite '{CONFIG_FILENAME}'.")
-            except typer.Abort:
-                logger.warning("Operation cancelled by user.")
-                raise typer.Exit(code=0)
-        else:
-            should_write = True
-            logger.debug(f"Creating new '{CONFIG_FILENAME}'.")
-            
-        if should_write:
-            try:
-                template_str = load_config_template()
-                content = generate_dynamic_config(template_str)
-                write_config_file(config_file_path, content, logger, file_existed)
-            except (IOError, KeyError) as e:
-                logger.error(f"❌ An error occurred during file creation: {e}")
-                raise typer.Exit(code=1)
-                
-    elif scope.lower() == "project":
-        config_file_path = Path.cwd() / PROJECT_CONFIG_FILENAME # .project.ini
-        
-        try:
-            template_str = load_config_template()
-            content_with_placeholders = generate_dynamic_config(template_str)
-            start_index = content_with_placeholders.find(f"[{CONFIG_SECTION_NAME}]") + len(f"[{CONFIG_SECTION_NAME}]")
-            content_section_only = content_with_placeholders[start_index:].strip()
-            
-            overwrite_or_append_project_config_section(
-                config_file_path, 
-                content_section_only, 
-                logger
-            )
-            
-        except (IOError, KeyError) as e:
-            logger.error(f"❌ An error occurred during file operation: {e}")
-            raise typer.Exit(code=1)
-            
-    else:
-        logger.error(f"❌ Invalid scope argument: '{scope}'. Must be 'local' or 'project'.")
-        raise typer.Exit(code=1)
-
-
-    # 5. Mở file (Áp dụng cho cả local và project)
-    try:
-        logger.info(f"Opening '{config_file_path.name}' in default editor...")
-        typer.launch(str(config_file_path))
-    except Exception as e:
-        logger.error(f"❌ An unexpected error occurred while trying to open the file: {e}")
-        logger.warning(f"⚠️ Could not automatically open file. Please open it manually.")
-
 # Command chính (mặc định) (Đã refactor)
 @app.callback(invoke_without_command=True)
 def main(
     ctx: typer.Context,
+    # --- NEW: Config Flag (-c, --config) ---
+    config_scope: Optional[str] = typer.Option(
+        None, "-c", "--config",
+        help="Initialize or update config files: 'local' (creates .tree.ini) or 'project' (updates .project.ini).",
+        case_sensitive=False
+    ),
     start_path_arg: Path = typer.Argument( 
         Path("."), 
         help="Starting path (file or directory). Use '~' for home directory.",
@@ -145,12 +73,74 @@ def main(
     full_view: bool = typer.Option( False, "-f", "--full-view", help="Bypass all filters (.gitignore, rules, level) and show all files." )
 ):
     """ Main orchestration function: Parses args, calls config processing, and runs the tree. """
+    # --- FIX 1: Loại bỏ logic xung đột init cũ ---
     if ctx.invoked_subcommand: return
 
-    # --- 1. Xử lý xung đột 'init' (Giữ nguyên) ---
-    if str(start_path_arg) == "init":
-        init_command()
-        return 
+    # --- NEW: Logic Config Initialization (Thay thế init_command) ---
+    if config_scope:
+        scope = config_scope.lower()
+        logger = setup_logging(script_name="CTree")
+        
+        if scope == "local" or scope == "tree": # Thêm alias 'tree' theo yêu cầu
+            config_file_path = Path.cwd() / CONFIG_FILENAME # .tree.ini
+            file_existed = config_file_path.exists()
+            
+            should_write = False
+            if file_existed:
+                try:
+                    should_write = typer.confirm(f"'{CONFIG_FILENAME}' already exists. Overwrite?", abort=True)
+                    logger.debug(f"User chose to overwrite '{CONFIG_FILENAME}'.")
+                except typer.Abort:
+                    logger.warning("Operation cancelled by user.")
+                    raise typer.Exit(code=0)
+            else:
+                should_write = True
+                logger.debug(f"Creating new '{CONFIG_FILENAME}'.")
+                
+            if should_write:
+                try:
+                    template_str = load_config_template()
+                    content = generate_dynamic_config(template_str)
+                    write_config_file(config_file_path, content, logger, file_existed)
+                except (IOError, KeyError) as e:
+                    logger.error(f"❌ An error occurred during file creation: {e}")
+                    raise typer.Exit(code=1)
+                    
+        elif scope == "project":
+            config_file_path = Path.cwd() / PROJECT_CONFIG_FILENAME # .project.ini
+            
+            try:
+                template_str = load_config_template()
+                content_with_placeholders = generate_dynamic_config(template_str)
+                # Dùng .strip() để loại bỏ các dòng comment/khoảng trắng thừa ở đầu
+                start_index = content_with_placeholders.find(f"[{CONFIG_SECTION_NAME}]") + len(f"[{CONFIG_SECTION_NAME}]")
+                content_section_only = content_with_placeholders[start_index:].strip()
+                
+                overwrite_or_append_project_config_section(
+                    config_file_path, 
+                    content_section_only, 
+                    logger
+                )
+                
+            except (IOError, KeyError) as e:
+                logger.error(f"❌ An error occurred during file operation: {e}")
+                raise typer.Exit(code=1)
+                
+        else:
+            logger.error(f"❌ Invalid scope argument for --config: '{config_scope}'. Must be 'local', 'tree', or 'project'.")
+            raise typer.Exit(code=1)
+
+        # Mở file
+        try:
+            logger.info(f"Opening '{config_file_path.name}' in default editor...")
+            typer.launch(str(config_file_path))
+        except Exception as e:
+            logger.error(f"❌ An unexpected error occurred while trying to open the file: {e}")
+            logger.warning(f"⚠️ Could not automatically open file. Please open it manually.")
+            
+        # Dừng script sau khi config file đã được tạo
+        raise typer.Exit(code=0)
+    # --- END NEW LOGIC ---
 
     # --- 2. Setup & Validate ---
     logger = setup_logging(script_name="CTree")
