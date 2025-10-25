@@ -54,7 +54,8 @@ COMMENT_RULES: Dict[str, Dict[str, Any]] = {
     },
     "md_block": {
         "type": "block",
-        "comment_prefix": "",
+        "comment_prefix": "<!--",
+        "comment_suffix": "-->",
         "padding": True, 
     }
 }
