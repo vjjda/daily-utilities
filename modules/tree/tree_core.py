@@ -8,13 +8,21 @@ Logic nghiệp vụ cốt lõi cho module Tree (ctree).
 from pathlib import Path
 import logging 
 import argparse
-from typing import Set, Optional, Dict, Any 
+# --- MODIFIED: Thêm TYPE_CHECKING ---
+from typing import Set, Optional, Dict, Any, TYPE_CHECKING 
+# --- END MODIFIED ---
 
+# --- MODIFIED: Tách biệt import cho runtime và type-checking ---
 try:
     import pathspec
 except ImportError:
     pathspec = None
 
+if TYPE_CHECKING:
+    import pathspec
+# --- END MODIFIED ---
+
+# Import utilities
 from utils.core import get_submodule_paths, parse_comma_list, parse_gitignore
 
 from .tree_config import (

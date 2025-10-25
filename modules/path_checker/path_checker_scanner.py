@@ -10,12 +10,18 @@ before they are passed to the analysis core.
 
 import logging
 from pathlib import Path
-# --- MODIFIED: Thêm pathspec ---
-from typing import List, Set, Optional
+# --- MODIFIED: Thêm TYPE_CHECKING ---
+from typing import List, Set, Optional, TYPE_CHECKING
+# --- END MODIFIED ---
+
+# --- MODIFIED: Tách biệt import cho runtime và type-checking ---
 try:
     import pathspec
 except ImportError:
     pathspec = None
+
+if TYPE_CHECKING:
+    import pathspec
 # --- END MODIFIED ---
 
 

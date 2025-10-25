@@ -7,12 +7,19 @@ Logic thực thi cho module Tree (ctree).
 
 from pathlib import Path
 import logging 
-from typing import List, Set, Optional, Dict, Any
+# --- MODIFIED: Thêm TYPE_CHECKING ---
+from typing import List, Set, Optional, Dict, Any, TYPE_CHECKING
+# --- END MODIFIED ---
 
+# --- MODIFIED: Tách biệt import cho runtime và type-checking ---
 try:
     import pathspec
 except ImportError:
     pathspec = None
+
+if TYPE_CHECKING:
+    import pathspec
+# --- END MODIFIED ---
 
 from utils.core import is_path_matched
 from utils.logging_config import log_success 

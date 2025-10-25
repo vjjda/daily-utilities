@@ -8,14 +8,20 @@ Git and Filesystem Utilities
 import logging
 import configparser
 from pathlib import Path
-# --- MODIFIED: Thêm imports ---
-from typing import Set, Optional, List
+# --- MODIFIED: Thêm TYPE_CHECKING ---
+from typing import Set, Optional, List, TYPE_CHECKING
+# --- END MODIFIED ---
+
+# --- MODIFIED: Tách biệt import cho runtime và type-checking ---
 try:
     import pathspec
 except ImportError:
     print("Warning: 'pathspec' library not found. .gitignore parsing will be basic.")
     print("Please run 'pip install pathspec' for full .gitignore support.")
     pathspec = None
+
+if TYPE_CHECKING:
+    import pathspec
 # --- END MODIFIED ---
 
 # --- MODIFIED: Thêm parse_gitignore ---
