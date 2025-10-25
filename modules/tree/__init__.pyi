@@ -18,9 +18,10 @@ generate_tree: Any
 load_config_files: Any
 load_config_template: Any
 merge_config_sources: Any
+overwrite_or_append_project_config_section: Any
 print_final_result: Any
 print_status_header: Any
 write_config_file: Any
 
 # Static declaration of exported symbols (for Pylance)
-__all__: List[str] = ['CONFIG_FILENAME', 'CONFIG_SECTION_NAME', 'DEFAULT_DIRS_ONLY_LOGIC', 'DEFAULT_IGNORE', 'DEFAULT_MAX_LEVEL', 'DEFAULT_PRUNE', 'FALLBACK_SHOW_SUBMODULES', 'FALLBACK_USE_GITIGNORE', 'PROJECT_CONFIG_FILENAME', 'generate_dynamic_config', 'generate_tree', 'load_config_files', 'load_config_template', 'merge_config_sources', 'print_final_result', 'print_status_header', 'write_config_file']
+__all__: List[str] = ['CONFIG_FILENAME', 'CONFIG_SECTION_NAME', 'DEFAULT_DIRS_ONLY_LOGIC', 'DEFAULT_IGNORE', 'DEFAULT_MAX_LEVEL', 'DEFAULT_PRUNE', 'FALLBACK_SHOW_SUBMODULES', 'FALLBACK_USE_GITIGNORE', 'PROJECT_CONFIG_FILENAME', 'generate_dynamic_config', 'generate_tree', 'load_config_files', 'load_config_template', 'merge_config_sources', 'overwrite_or_append_project_config_section', 'print_final_result', 'print_status_header', 'write_config_file']
