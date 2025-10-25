@@ -24,8 +24,19 @@ from modules.path_checker import (
 # --- CONSTANTS ---
 THIS_SCRIPT_PATH = Path(__file__).resolve()
 
+# --- NEW: Khởi tạo Typer App ---
+# (Việc này cho phép chúng ta thêm -h cho --help)
+app = typer.Typer(
+    help="Kiểm tra (và tùy chọn sửa) các comment '# Path:' trong file nguồn.",
+    add_completion=False,
+    context_settings={"help_option_names": ["--help", "-h"]}
+)
+# --- END NEW ---
 
+# --- MODIFIED: Chuyển 'main' thành callback của app ---
+@app.callback(invoke_without_command=True)
 def main(
+    ctx: typer.Context, # (Thêm ctx)
     target_directory_arg: Optional[Path] = typer.Argument( 
         None, 
         help="Thư mục để quét (mặc định: thư mục làm việc hiện tại, tôn trọng .gitignore). Dùng '~' cho thư mục home.",
@@ -34,21 +45,28 @@ def main(
     ),
     extensions: str = typer.Option( DEFAULT_EXTENSIONS_STRING, "-e", "--extensions", help=f"Các đuôi file để quét (mặc định: '{DEFAULT_EXTENSIONS_STRING}')." ),
     ignore: Optional[str] = typer.Option( None, "-I", "--ignore", help="Danh sách pattern (phân cách bởi dấu phẩy) để bỏ qua." ),
-    fix: bool = typer.Option( False, "--fix", help="Sửa file tại chỗ. (Mặc định là chế độ 'check'/chạy thử)." )
+    
+    # --- MODIFIED: Đảo ngược logic 'fix' thành 'check' ---
+    check: bool = typer.Option( 
+        False, 
+        "-c", "--check", 
+        help="Chỉ chạy ở chế độ 'check' (dry-run). Mặc định là chạy 'fix' (có hỏi xác nhận)." 
+    )
+    # --- END MODIFIED ---
 ):
-    """ Kiểm tra (và tùy chọn sửa) các comment '# Path:' trong file nguồn. """
+    """ Hàm chính (đã được chuyển thành callback của Typer) """
+    if ctx.invoked_subcommand: return
     
     # 1. Setup Logging
     logger = setup_logging(script_name="CPath")
     logger.debug("CPath script started.")
 
-    # Xác định thư mục gốc + Mở rộng ~ thủ công
+    # (Các logic xác định scan_root và kiểm tra Git giữ nguyên)
     if target_directory_arg:
         scan_root = target_directory_arg.expanduser()
     else:
         scan_root = Path.cwd().expanduser() 
 
-    # Kiểm tra tồn tại (thủ công)
     if not scan_root.exists():
         logger.error(f"❌ Lỗi: Thư mục mục tiêu không tồn tại (sau khi expanduser): {scan_root}")
         raise typer.Exit(code=1)
@@ -56,7 +74,6 @@ def main(
         logger.error(f"❌ Lỗi: Đường dẫn mục tiêu không phải là thư mục: {scan_root}")
         raise typer.Exit(code=1)
     
-    # --- Logic gợi ý Git Root (Đã Việt hóa) ---
     git_warning_str = ""
     effective_scan_root = scan_root
     if not is_git_repository(scan_root):
@@ -88,7 +105,6 @@ def main(
                 logger.error("❌ Hoạt động bị hủy bởi người dùng.")
                 raise typer.Exit(code=0)
         else:
-            # (Xác nhận an toàn (y/N) khi không tìm thấy .git nào)
             logger.warning(f"⚠️ Không tìm thấy thư mục '.git' trong '{scan_root.name}/' hoặc các thư mục cha.")
             logger.warning(f"   Quét từ một thư mục không phải dự án (như $HOME) có thể chậm hoặc không an toàn.")
             try:
@@ -102,17 +118,24 @@ def main(
             else:
                 logger.error("❌ Hoạt động bị hủy bởi người dùng.")
                 raise typer.Exit(code=0) 
-    # --- END Logic gợi ý Git Root ---
 
-    check_mode = not fix
+    # --- MODIFIED: Cập nhật logic check_mode ---
+    check_mode = check # Giá trị bool từ cờ --check
+    # --- END MODIFIED ---
 
-    # Xây dựng lệnh "fix"
+    # --- MODIFIED: Cập nhật logic xây dựng lệnh "fix" ---
+    # Lệnh "fix" (mặc định) là lệnh *không* có cờ --check
     original_args = sys.argv[1:]
-    filtered_args = [shlex.quote(arg) for arg in original_args if arg not in ('--check', '--fix')]
-    filtered_args.append('--fix')
+    # Lọc bỏ cờ -c, --check, và cờ --fix cũ (để an toàn)
+    filtered_args = [
+        shlex.quote(arg) for arg in original_args 
+        if arg not in ('-c', '--check', '--fix')
+    ]
+    # Lệnh fix bây giờ chỉ là cpath + các đối số còn lại
     fix_command_str = "cpath " + " ".join(filtered_args)
+    # --- END MODIFIED ---
 
-    # Chuẩn bị args cho core
+    # Chuẩn bị args cho core (Không thay đổi)
     extensions_to_scan = [ext.strip() for ext in extensions.split(',') if ext.strip()]
     cli_ignore_patterns = parse_comma_list(ignore)
 
@@ -122,10 +145,11 @@ def main(
             logger=logger, project_root=effective_scan_root,
             target_dir_str=str(target_directory_arg) if effective_scan_root == scan_root and target_directory_arg else None,
             extensions=extensions_to_scan, cli_ignore=cli_ignore_patterns,
-            script_file_path=THIS_SCRIPT_PATH, check_mode=check_mode
+            script_file_path=THIS_SCRIPT_PATH, 
+            check_mode=check_mode # Truyền giá trị check_mode mới
         )
 
-        # 4. Handle Results
+        # 4. Handle Results (Không thay đổi)
         handle_results(
             logger=logger, files_to_fix=files_to_fix, check_mode=check_mode,
             fix_command_str=fix_command_str, scan_root=effective_scan_root, 
@@ -138,5 +162,9 @@ def main(
         sys.exit(1)
 
 if __name__ == "__main__":
-    try: typer.run(main)
-    except KeyboardInterrupt: print("\n\n❌ [Lệnh dừng] Đã dừng kiểm tra đường dẫn."); sys.exit(1)
+    try: 
+        # --- MODIFIED: Chạy app thay vì typer.run(main) ---
+        app()
+        # --- END MODIFIED ---
+    except KeyboardInterrupt: 
+        print("\n\n❌ [Lệnh dừng] Đã dừng kiểm tra đường dẫn."); sys.exit(1)
