@@ -71,6 +71,30 @@ def _extract_module_list(init_path: Path) -> List[str]:
 
     return module_names
 
+def _extract_direct_symbols(tree: ast.Module) -> Set[str]:
+    """
+    Extracts symbols defined by simple assignment directly in the __init__.py file
+    and which are not considered private (starts with uppercase/PascalCase).
+    (Heuristic for constants/types like Logger).
+    """
+    direct_symbols: Set[str] = set()
+    for node in tree.body:
+        # Dừng lại khi gặp các khối logic phức tạp (vòng lặp for)
+        # để tránh phân tích logic dynamic re-export.
+        if isinstance(node, (ast.For, ast.While, ast.If)):
+            break
+            
+        # Capture simple assignments: Logger = logging.Logger
+        if isinstance(node, ast.Assign):
+            for target in node.targets:
+                if isinstance(target, ast.Name):
+                    symbol_name = target.id
+                    # Heuristic: Thêm vào nếu nó là Logger HOẶC bắt đầu bằng chữ hoa
+                    if symbol_name[0].isupper() or symbol_name == 'Logger':
+                        direct_symbols.add(symbol_name)
+    
+    return direct_symbols
+
 def _extract_all_symbols(module_path: Path) -> Set[str]:
     """Extracts symbols from the __all__ list of a submodule."""
     tree = _get_ast_tree(module_path)
@@ -102,7 +126,13 @@ def _generate_stub_content(init_path: Path, project_root: Path, submodule_stems:
         if submodule_path.is_file():
             symbols = _extract_all_symbols(submodule_path)
             all_exported_symbols.update(symbols)
-
+            
+    # 2. Collect symbols defined directly in __init__.py (Logger, etc.) <--- BỔ SUNG MỚI
+    init_tree = _get_ast_tree(init_path)
+    if init_tree:
+        direct_symbols = _extract_direct_symbols(init_tree)
+        all_exported_symbols.update(direct_symbols) # <-- Thêm vào danh sách tổng
+    # --- KẾT THÚC BỔ SUNG MỚI ---
     if not all_exported_symbols:
         return "", set()
 
