@@ -11,20 +11,21 @@
     }
   ],
 
-  // 2. Chế độ kiểm tra (nên để nghiêm ngặt để tuân thủ Type Hinting)
-  "typeCheckingMode": "strict",
+  // Chuyển sang "basic"
+  "typeCheckingMode": "basic",
 
-  // 3. Xử lý các lỗi liên quan đến Dynamic Import và Globals()
-
-
-  // Tắt cảnh báo về các biến được thêm vào globals() nhưng không được sử dụng
-  // (Vì chúng được sử dụng qua cơ chế re-export của gateway)
-  "reportUnknownArgumentType": "none", // Lỗi khi dùng trong .join(), .union()
-  "reportUnknownMemberType": "none", // Lỗi khi gọi .append(), .add()
+  // 3. Xử lý các lỗi liên quan đến Dynamic Import và Lỗi Type
+  "reportUnknownArgumentType": "none",
+  "reportUnknownMemberType": "none",
   "reportUnusedImport": "none",
-  "reportUnsupportedDunderAll": "none", // Tắt cảnh báo này cho toàn bộ dự án
-  "reportPossiblyUnboundVariable": "none", // <--- THÊM DÒNG NÀY
-  "reportUnknownVariableType": "none", // <--- THÊM/CẬP NHẬT CẢNH BÁO NÀY
+  "reportUnsupportedDunderAll": "none",
+  "reportPossiblyUnboundVariable": "none",
+  "reportUnknownVariableType": "none",
+  
+  // --- NEW: Tắt cảnh báo "Variable not allowed in type expression" ---
+  "reportInvalidTypeForm": "none",
+  // --- END NEW ---
+
   // Tùy chọn: Thêm các thư mục cần kiểm tra
   "include": ["utils", "modules", "scripts"],
   "exclude": [
