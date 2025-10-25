@@ -9,32 +9,38 @@ import logging
 from pathlib import Path
 from typing import Dict, Any, Set, List
 
-from .toml_io import load_toml_file # Import từ module mới
+from .toml_io import load_toml_file 
 
 __all__ = [
     "load_project_config_section",
     "load_config_template",
-    "generate_dynamic_config",
-    "merge_config_sections"
+    "merge_config_sections",
+    "format_value_to_toml"  # <-- ĐÃ THAY ĐỔI
 ]
 
-# (Hàm _format_value_to_toml giữ nguyên từ config_io.py cũ)
-def _format_value_to_toml(value: Any) -> str:
+# --- ĐÃ ĐỔI TÊN: Bỏ dấu gạch dưới, export ra ngoài ---
+def format_value_to_toml(value: Any) -> str:
     """Helper: Định dạng giá trị Python thành chuỗi TOML hợp lệ."""
     if isinstance(value, bool):
         return str(value).lower()
     elif isinstance(value, (set, list)):
         if not value:
             return "[]"
+        # Dùng repr() cho list/set đã sort để đảm bảo đúng định dạng ['a', 'b']
         return repr(sorted(list(value)))
     elif isinstance(value, (str, Path)):
+        # Dùng repr() để tự động thêm dấu ngoặc kép và escape ký tự đặc biệt
         return repr(str(value))
     elif isinstance(value, (int, float)):
         return str(value)
     elif value is None:
+        # Trả về chuỗi rỗng để .format() bỏ qua nếu key không
+        # tồn tại, hoặc trả về chuỗi comment nếu key tồn tại
         return "" 
     else:
+        # Kiểu không xác định, dùng repr() như một fallback
         return repr(value)
+# --- KẾT THÚC THAY ĐỔI ---
 
 def load_project_config_section(
     config_path: Path,
@@ -59,10 +65,9 @@ def merge_config_sections(
     """
     return {**project_section, **local_section}
 
-# (Hàm load_config_template giữ nguyên từ config_io.py cũ)
 def load_config_template(
-    module_dir: Path, 
-    template_filename: str, 
+    module_dir: Path, # Thư mục chứa template (VD: modules/tree)
+    template_filename: str, # Tên file template (VD: tree.toml.template)
     logger: logging.Logger
 ) -> str:
     """
@@ -73,34 +78,10 @@ def load_config_template(
         return template_path.read_text(encoding="utf-8")
     except FileNotFoundError:
         logger.error(f"❌ LỖI NGHIÊM TRỌNG: Không tìm thấy template '{template_filename}' trong {module_dir.name}.")
-        return f"# LỖI: File template {template_filename} bị thiếu."
+        raise # Ném lỗi để entrypoint bắt
     except Exception as e:
         logger.error(f"❌ LỖI NGHIÊM TRỌNG: Không thể đọc file template '{template_filename}': {e}")
-        return f"# LỖI: Không thể đọc file template {template_filename}."
+        raise # Ném lỗi để entrypoint bắt
 
-# (Hàm generate_dynamic_config giữ nguyên từ config_io.py cũ)
-def generate_dynamic_config(
-    template_content: str,
-    defaults_map: Dict[str, Any], 
-    logger: logging.Logger
-) -> str:
-    """
-    Chèn các giá trị mặc định (đã định dạng TOML) vào chuỗi template.
-    """
-    format_dict: Dict[str, str] = {}
-    for key, value in defaults_map.items():
-        formatted_value = _format_value_to_toml(value)
-        if formatted_value or isinstance(value, (bool, int, float)):
-             format_dict[f"toml_{key}"] = formatted_value
-        elif key in template_content: 
-             format_dict[f"toml_{key}"] = f"# {key} = ..."
-
-    try:
-        dynamic_template = template_content.format(**format_dict)
-        return dynamic_template
-    except KeyError as e:
-        logger.error(f"❌ LỖI NGHIÊM TRỌNG: Template key không khớp: Thiếu key '{e}' trong defaults_map hoặc template.")
-        return f"# LỖI: Template key '{e}' không khớp."
-    except Exception as e:
-         logger.error(f"❌ LỖI NGHIÊM TRỌNG: Lỗi khi format template: {e}")
-         return "# LỖI: Không thể format template."
+# --- ĐÃ XÓA: generate_dynamic_config ---
+# (Logic này giờ sẽ nằm trong scripts/tree.py)

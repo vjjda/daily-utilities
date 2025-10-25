@@ -22,17 +22,17 @@ import typer
 
 # Common utilities
 from utils.logging_config import setup_logging, log_success
-# --- IMPORT ĐÃ THAY ĐỔI ---
+# --- MODIFIED: Import hàm config I/O từ utils.core ---
 from utils.core import (
     parse_comma_list, is_git_repository, find_git_root,
     load_config_template, 
-    generate_dynamic_config,
-    load_project_config_section, # (Vẫn dùng hàm helper này để ĐỌC)
-    load_toml_file,              # (Dùng hàm I/O chung)
-    write_toml_file              # (Dùng hàm I/O chung)
-    # (Đã xóa: overwrite_or_append_project_config_section)
+    # generate_dynamic_config, # <-- ĐÃ XÓA
+    format_value_to_toml,    # <-- ĐÃ THÊM
+    load_project_config_section, 
+    load_toml_file,
+    write_toml_file
 )
-# --- KẾT THÚC THAY ĐỔI ---
+# --- END MODIFIED ---
 
 # Module Imports
 from modules.path_checker import (
@@ -104,7 +104,18 @@ def main(
                 "extensions": DEFAULT_EXTENSIONS_STRING,
                 "ignore": DEFAULT_IGNORE
             }
-            content_section_only = generate_dynamic_config(template_str, cpath_defaults, logger)
+            
+            # --- FIX: Tự build format_dict (giống tree.py) ---
+            format_dict: Dict[str, str] = {}
+            # Template của cpath đơn giản hơn, chỉ cần lặp
+            for key, value in cpath_defaults.items():
+                # key = "extensions", "ignore"
+                # placeholder = "toml_extensions", "toml_ignore"
+                format_dict[f"toml_{key}"] = format_value_to_toml(value)
+                
+            # Format template MỘT LẦN
+            content_section_only = template_str.format(**format_dict)
+            # --- END FIX ---
             
             # 2. Parse nội dung section mới
             full_toml_string = f"[{CONFIG_SECTION_NAME}]\n{content_section_only}"
