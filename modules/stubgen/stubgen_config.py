@@ -30,7 +30,7 @@ DEFAULT_IGNORE: Final[Set[str]] = {
 # Đây là giá trị mặc định cho cờ --restrict.
 SCAN_ROOTS: Final[List[str]] = [
     "modules", 
-    "utils/core",
+    "utils",
     "scripts/internal/bootstrap" 
 ]
 

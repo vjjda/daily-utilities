@@ -7,9 +7,11 @@ Chứa các hàm xử lý prompt (O/R/Q) và khởi chạy editor.
 
 import logging
 from pathlib import Path
-from typing import bool
+# --- FIX: Xóa 'bool' khỏi import ---
+# from typing import bool # <-- Dòng này bị xóa
+# --- END FIX ---
 
-import typer # Phụ thuộc Typer là HỢP LỆ ở đây
+import typer 
 
 __all__ = ["prompt_config_overwrite", "launch_editor"]
 
@@ -17,7 +19,7 @@ def prompt_config_overwrite(
     logger: logging.Logger, 
     item_path: Path, 
     item_name: str
-) -> bool:
+) -> bool: # <-- Type hint 'bool' vẫn hợp lệ ở đây
     """
     Hỏi người dùng (O/R/Q) khi file/section config đã tồn tại.
 
