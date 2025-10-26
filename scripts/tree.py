@@ -64,13 +64,19 @@ app = typer.Typer(
 @app.callback(invoke_without_command=True)
 def main(
     ctx: typer.Context,
-    # (Các tham số Typer giữ nguyên)
-    config_scope: Optional[str] = typer.Option(
-        None, "-c", "--config",
-        help="Khởi tạo/cập nhật file cấu hình. Gõ '-c' không kèm giá trị sẽ mặc định là scope 'project'. Chấp nhận 'local', 'tree', 'project'.",
+    
+    # --- THAY ĐỔI: Xóa config_scope cũ và thêm 2 cờ mới ---
+    config_project: bool = typer.Option(
+        False, "-c", "--config-project",
+        help="Khởi tạo/cập nhật file .project.toml (scope 'project').",
         show_default=False,
-        callback=lambda value: 'project' if value == "" else value,
     ),
+    config_local: bool = typer.Option(
+        False, "-C", "--config-local", # <-- Dùng -C (viết hoa)
+        help="Khởi tạo/cập nhật file .tree.toml (scope 'local').",
+        show_default=False,
+    ),
+    # --- KẾT THÚC THAY ĐỔI ---
     start_path_arg: Path = typer.Argument(
         Path("."),
         help="Đường dẫn bắt đầu (file hoặc thư mục). Dùng '~' cho thư mục home.",
@@ -88,14 +94,16 @@ def main(
     if ctx.invoked_subcommand: return
 
     # --- Logic khởi tạo Config ---
-    if config_scope:
+    # --- THAY ĐỔI: Kiểm tra 2 cờ mới ---
+    if config_project or config_local:
         logger = setup_logging(script_name="CTree")
         
         if tomllib is None:
              logger.error("❌ Thiếu thư viện 'tomli'. Vui lòng cài đặt: 'pip install tomli tomli-w'")
              raise typer.Exit(code=1)
 
-        scope = config_scope.lower()
+        # --- THAY ĐỔI: Xác định scope dựa trên cờ ---
+        scope = "project" if config_project else "local"
         
         # (Logic tạo 'content_with_placeholders' giữ nguyên)
         try:
@@ -130,18 +138,16 @@ def main(
         should_write = True 
         config_file_path: Path = Path.cwd() 
 
-        if scope == "local" or scope == "tree":
+        if scope == "local":
              config_file_path = Path.cwd() / CONFIG_FILENAME
              file_existed = config_file_path.exists()
              
-             # --- MODIFIED: Sử dụng helper O/R/Q ---
              if file_existed:
                 should_write = prompt_config_overwrite(
                     logger, 
                     config_file_path, 
                     f"File '{CONFIG_FILENAME}'"
                 )
-             # --- END MODIFIED ---
              
              if should_write:
                  try:
@@ -169,15 +175,13 @@ def main(
                      raise ValueError("Nội dung section mới bị rỗng.")
 
                 config_data = load_toml_file(config_file_path, logger)
-
-                # --- MODIFIED: Sử dụng helper O/R/Q ---
+                
                 if CONFIG_SECTION_NAME in config_data:
                     should_write = prompt_config_overwrite(
                         logger,
                         config_file_path,
                         f"Section [{CONFIG_SECTION_NAME}]"
                     )
-                # --- END MODIFIED ---
                 
                 if should_write:
                     config_data[CONFIG_SECTION_NAME] = new_section_dict
@@ -189,12 +193,9 @@ def main(
              except (IOError, KeyError, ValueError) as e:
                 logger.error(f"❌ Đã xảy ra lỗi khi thao tác file: {e}")
                 raise typer.Exit(code=1)
-
-        else: 
-            logger.error(f"❌ Đối số scope không hợp lệ cho --config: '{config_scope}'. Phải là 'local', 'tree', 'project', hoặc để trống (mặc định 'project').")
-            raise typer.Exit(code=1)
-
-        # --- MODIFIED: Sử dụng helper launch ---
+        
+        # --- THAY ĐỔI: Không cần khối 'else:' cho scope không hợp lệ nữa ---
+        
         launch_editor(logger, config_file_path)
         # --- END MODIFIED ---
 
