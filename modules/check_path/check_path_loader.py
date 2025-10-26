@@ -8,18 +8,21 @@ Tiện ích tải file cho module Path Checker (cpath).
 import logging
 import sys
 from pathlib import Path
-from typing import Dict, Any, List # <-- Thêm List
+from typing import Dict, Any, List
 
+# --- MODIFIED: Import helper chung ---
 try:
-    import tomllib 
+    from utils.core import load_and_merge_configs
 except ImportError:
-    # ... (fallback giữ nguyên)
-    tomllib = None
+    print("Lỗi: Không thể import utils.core. Vui lòng chạy từ gốc dự án.", file=sys.stderr)
+    sys.exit(1)
+# --- END MODIFIED ---
+
 
 from .check_path_config import (
     PROJECT_CONFIG_FILENAME, 
     CONFIG_SECTION_NAME,
-    CONFIG_FILENAME # <-- MỚI: Import file config cục bộ
+    CONFIG_FILENAME
 )
 
 __all__ = ["load_config_files"]
@@ -34,45 +37,16 @@ def load_config_files(
     trích xuất và merge section [cpath].
     
     Ưu tiên: .cpath.toml (cục bộ) sẽ ghi đè .project.toml (dự án).
+    
+    (Logic này đã được chuyển vào utils.core.load_and_merge_configs)
     """
-    if tomllib is None:
-        logger.error("❌ Thư viện 'tomli' (cho Python < 3.11) chưa được cài đặt.")
-        return {} # Trả về config rỗng
-
-    project_config_path = start_dir / PROJECT_CONFIG_FILENAME
-    local_config_path = start_dir / CONFIG_FILENAME # <-- MỚI
-
-    project_data: Dict[str, Any] = {}
-    local_data: Dict[str, Any] = {} # <-- MỚI
-    files_loaded: List[str] = [] # <-- MỚI
-
-    try:
-        if project_config_path.exists():
-            with open(project_config_path, 'rb') as f:
-                project_data = tomllib.load(f)
-            files_loaded.append(project_config_path.name)
-            
-        # --- MỚI: Đọc file .cpath.toml ---
-        if local_config_path.exists():
-            with open(local_config_path, 'rb') as f:
-                local_data = tomllib.load(f)
-            files_loaded.append(local_config_path.name)
-        # --- KẾT THÚC MỚI ---
-            
-    except Exception as e:
-        logger.warning(f"⚠️ Không thể đọc file cấu hình: {e}")
-
-    if files_loaded:
-        logger.debug(f"Đã tải cấu hình từ: {files_loaded}")
-    else:
-        logger.debug(f"Không tìm thấy file config. Dùng mặc định.")
-
-
-    # Lấy section [cpath] từ mỗi file
-    project_cpath_section = project_data.get(CONFIG_SECTION_NAME, {})
-    local_cpath_section = local_data.get(CONFIG_SECTION_NAME, {}) # <-- MỚI
-
-    # Merge: local (cục bộ) sẽ ghi đè project (dự án)
-    final_config_section = {**project_cpath_section, **local_cpath_section}
-        
-    return final_config_section
+    
+    # --- MODIFIED: Tái sử dụng logic chung ---
+    return load_and_merge_configs(
+        start_dir=start_dir,
+        logger=logger,
+        project_config_filename=PROJECT_CONFIG_FILENAME,
+        local_config_filename=CONFIG_FILENAME,
+        config_section_name=CONFIG_SECTION_NAME
+    )
+    # --- END MODIFIED ---
