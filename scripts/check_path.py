@@ -105,8 +105,16 @@ def main(
         
         if config_action_taken:
             raise typer.Exit(code=0)
-    except Exception as e:
-        logger.error(f"❌ Đã xảy ra lỗi khi khởi tạo config: {e}")
+    except typer.Exit as e: # Catch typer.Exit specifically first
+        raise e # Re-raise it to let Typer handle the exit
+    except ImportError as e: # Example: Catch specific expected errors
+        logger.error(f"❌ Lỗi thiếu thư viện khi khởi tạo config: {e}")
+        raise typer.Exit(code=1)
+    except IOError as e: # Example: Catch file writing errors
+        logger.error(f"❌ Lỗi I/O khi khởi tạo config: {e}")
+        raise typer.Exit(code=1)
+    except Exception as e: # Catch truly unexpected errors
+        logger.error(f"❌ Đã xảy ra lỗi không mong muốn khi khởi tạo config: {e}")
         logger.debug("Traceback:", exc_info=True)
         raise typer.Exit(code=1)
 
