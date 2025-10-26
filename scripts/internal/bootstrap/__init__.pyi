@@ -4,6 +4,11 @@
 from typing import Any, List, Optional, Set, Dict, Union
 from pathlib import Path
 
+CONFIG_SECTION_NAME: Any
+DEFAULT_BIN_DIR_NAME: Any
+DEFAULT_DOCS_DIR_NAME: Any
+DEFAULT_MODULES_DIR_NAME: Any
+DEFAULT_SCRIPTS_DIR_NAME: Any
 TEMPLATE_DIR: Any
 TYPE_HINT_MAP: Any
 TYPING_IMPORTS: Any
@@ -16,4 +21,4 @@ get_cli_args: Any
 load_template: Any
 
 # Static declaration of exported symbols (for Pylance)
-__all__: List[str] = ['TEMPLATE_DIR', 'TYPE_HINT_MAP', 'TYPING_IMPORTS', 'generate_bin_wrapper', 'generate_doc_file', 'generate_module_file', 'generate_module_init_file', 'generate_script_entrypoint', 'get_cli_args', 'load_template']
+__all__: List[str] = ['CONFIG_SECTION_NAME', 'DEFAULT_BIN_DIR_NAME', 'DEFAULT_DOCS_DIR_NAME', 'DEFAULT_MODULES_DIR_NAME', 'DEFAULT_SCRIPTS_DIR_NAME', 'TEMPLATE_DIR', 'TYPE_HINT_MAP', 'TYPING_IMPORTS', 'generate_bin_wrapper', 'generate_doc_file', 'generate_module_file', 'generate_module_init_file', 'generate_script_entrypoint', 'get_cli_args', 'load_template']
