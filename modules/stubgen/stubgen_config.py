@@ -11,7 +11,7 @@ from pathlib import Path
 __all__ = [
     # Defaults
     "DEFAULT_IGNORE", 
-    "SCAN_ROOTS", 
+    "DEFAULT_RESTRICT", # <-- MODIFIED: Đổi tên
     "DYNAMIC_IMPORT_INDICATORS",
     "AST_MODULE_LIST_NAME",
     "AST_ALL_LIST_NAME",
@@ -25,31 +25,28 @@ __all__ = [
 
 # --- Scanning Configuration ---
 
-# Các pattern FNMATCH mặc định luôn bị bỏ qua.
 DEFAULT_IGNORE: Final[Set[str]] = {
     "__pycache__", ".venv", "venv", "node_modules", ".git", 
     "dist", "build", "out", "*.pyc", "*.pyo"
 }
 
+# --- MODIFIED: Đổi tên SCAN_ROOTS ---
 # Các thư mục con (tương đối với scan_root) để tìm kiếm các module gateway.
-SCAN_ROOTS: Final[List[str]] = [
+DEFAULT_RESTRICT: Final[List[str]] = [
     "modules", 
     "utils",
 ]
+# --- END MODIFIED ---
 
-# Các chuỗi code dùng để xác định file __init__.py có phải là dynamic gateway không
 DYNAMIC_IMPORT_INDICATORS: Final[List[str]] = [
     "import_module", 
     "globals()[name]", 
     "globals()[name] = obj" 
 ]
 
-# Tên biến AST để trích xuất
 AST_MODULE_LIST_NAME: Final[str] = 'modules_to_export'
 AST_ALL_LIST_NAME: Final[str] = '__all__'
 
-# --- NEW: Config file constants ---
 PROJECT_CONFIG_FILENAME: Final[str] = ".project.toml"
 CONFIG_FILENAME: Final[str] = ".sgen.toml"
 CONFIG_SECTION_NAME: Final[str] = "sgen"
-# --- END NEW ---

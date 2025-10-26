@@ -22,22 +22,21 @@ from utils.core import (
     resolve_config_value, 
     resolve_config_list, 
     parse_comma_list,
-    load_text_template # <-- MỚI: Import hàm load template
+    load_text_template 
 )
 
+# --- MODIFIED: Cập nhật tên import ---
 from .stubgen_config import (
     DEFAULT_IGNORE, 
-    SCAN_ROOTS, 
+    DEFAULT_RESTRICT, # <-- MODIFIED
     DYNAMIC_IMPORT_INDICATORS,
     AST_MODULE_LIST_NAME,
     AST_ALL_LIST_NAME
 )
+# --- END MODIFIED ---
 
-# --- NEW: Định nghĩa đường dẫn template ---
 MODULE_DIR = Path(__file__).parent
 TEMPLATE_FILENAME = "pyi.py.template"
-# --- END NEW ---
-
 
 StubResult = Dict[str, Any]
 
@@ -48,16 +47,13 @@ def _format_stub_content(
     init_path: Path, 
     project_root: Path, 
     all_exported_symbols: Set[str],
-    stub_template_str: str # <-- MỚI: Nhận chuỗi template
+    stub_template_str: str 
 ) -> str:
     """Generates the content string for the .pyi file."""
     
     if not all_exported_symbols:
         return ""
 
-    # --- MODIFIED: Sử dụng Template ---
-    
-    # 1. Chuẩn bị các phần động
     sorted_symbols = sorted(list(all_exported_symbols))
     
     symbol_declarations = "\n".join(
@@ -69,14 +65,12 @@ def _format_stub_content(
     rel_path = init_path.relative_to(project_root).as_posix()
     module_name = init_path.parent.name
     
-    # 2. Format template
     return stub_template_str.format(
-        rel_path=f"{rel_path}i", # Thêm 'i' cho .pyi
+        rel_path=f"{rel_path}i", 
         module_name=module_name,
         symbol_declarations=symbol_declarations,
         all_list_repr=all_list_repr
     )
-    # --- END MODIFIED ---
 
 # --- MAIN ORCHESTRATOR ---
 def process_stubgen_logic(
@@ -88,23 +82,21 @@ def process_stubgen_logic(
 ) -> List[StubResult]:
     """
     Orchestrates the stub generation process (No I/O).
-    1. Merges configs
-    2. Loads (finds files)
-    3. Parses (analyzes AST)
-    4. Formats (generates content)
+    1. Loads template
+    2. Merges configs
+    3. Loads (finds files)
+    4. Parses (analyzes AST)
+    5. Formats (generates content)
     """
     
-    # --- 1. Tải Template (I/O) ---
     try:
         template_path = MODULE_DIR / TEMPLATE_FILENAME
         stub_template_str = load_text_template(template_path, logger)
     except Exception as e:
         logger.error(f"❌ Không thể tải PYI template: {e}")
-        # (Không thể tiếp tục nếu không có template)
         raise
-    # --- END ---
 
-    # --- 2. Merge Configs (Logic thuần túy) ---
+    # --- 2. Merge Configs ---
     final_ignore_set = resolve_config_list(
         cli_str_value=cli_config.get('ignore'),
         file_list_value=file_config.get('ignore'),
@@ -120,8 +112,10 @@ def process_stubgen_logic(
         final_restrict_list = file_config['restrict']
         logger.debug("Sử dụng danh sách 'restrict' từ file config.")
     else:
-        final_restrict_list = SCAN_ROOTS
-        logger.debug("Sử dụng danh sách 'restrict' (SCAN_ROOTS) mặc định.")
+        # --- MODIFIED: Sử dụng tên mới ---
+        final_restrict_list = DEFAULT_RESTRICT 
+        logger.debug("Sử dụng danh sách 'restrict' (DEFAULT_RESTRICT) mặc định.")
+        # --- END MODIFIED ---
 
     final_indicators = resolve_config_value(
         cli_value=None, 
@@ -140,7 +134,6 @@ def process_stubgen_logic(
     )
     # --- Kết thúc Merge Configs ---
 
-
     # 3. Load: Tìm file gateway (I/O)
     gateway_files = find_gateway_files(
         logger=logger, 
@@ -157,7 +150,6 @@ def process_stubgen_logic(
     results: List[StubResult] = []
     logger.info(f"✅ Found {len(gateway_files)} dynamic gateways to process.")
 
-    # --- (Các bước 4, 5, 6 là logic thuần túy) ---
     for init_file in gateway_files:
         
         # 4. Parse (AST)
@@ -180,7 +172,7 @@ def process_stubgen_logic(
             init_file, 
             scan_root, 
             exported_symbols,
-            stub_template_str # <-- Truyền template vào
+            stub_template_str 
         )
 
         stub_path = init_file.with_suffix(".pyi")
