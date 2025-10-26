@@ -18,8 +18,9 @@ sys.path.append(str(PROJECT_ROOT))
 try:
     from utils.logging_config import setup_logging, log_success
     from utils.core import parse_gitignore, get_submodule_paths, is_path_matched
-    # Cần import DEFAULT_IGNORE từ một file config (dùng path_checker làm nguồn chung)
-    from modules.path_checker.path_checker_config import DEFAULT_IGNORE
+    # --- MODIFIED: Import from new module location ---
+    from modules.check_path.check_path_config import DEFAULT_IGNORE
+    # --- END MODIFIED ---
 except ImportError as e:
     print(f"Error: Could not import project utilities: {e}", file=sys.stderr)
     sys.exit(1)

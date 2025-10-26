@@ -1,4 +1,4 @@
-# Path: modules/path_checker/path_checker_rules.py
+# Path: modules/check_path/check_path_rules.py
 
 """
 Rule implementation logic for the Path Checker module.

@@ -1,4 +1,4 @@
-# Path: modules/path_checker/__init__.py
+# Path: modules/check_path/__init__.py
 
 """
 Module Gateway (Facade) for the Path Checker (cpath) module.
@@ -14,11 +14,12 @@ current_dir = Path(__file__).parent
 # Define the explicit order of internal modules to load
 # --- MODIFIED: Xóa config_io ---
 modules_to_export: List[str] = [
-    "path_checker_config",
-    "path_checker_loader",
-    "path_checker_core",
-    "path_checker_executor",
-    # "path_checker_config_io" # <-- Đã xóa
+    "check_path_config",
+    "check_path_loader",
+    "check_path_core",
+    "check_path_executor",
+    "check_path_rules",
+    "check_path_scanner"
 ]
 # --- END MODIFIED ---
 

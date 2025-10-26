@@ -1,4 +1,4 @@
-# Path: modules/path_checker/path_checker_config.py
+# Path: modules/check_path/check_path_config.py
 
 """
 Configuration for the Path Checker module.
@@ -55,8 +55,7 @@ COMMENT_RULES: Dict[str, Dict[str, Any]] = {
     },
     "md_block": {
         "type": "block",
-        "comment_prefix": "<!--",
-        "comment_suffix": "-->",
+        "comment_prefix": "",
         "padding": True, 
     }
 }

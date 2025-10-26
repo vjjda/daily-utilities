@@ -1,4 +1,4 @@
-# Path: modules/path_checker/path_checker_scanner.py
+# Path: modules/check_path/check_path_scanner.py
 
 """
 File Scanning logic for the Path Checker module.

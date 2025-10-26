@@ -27,21 +27,26 @@ from utils.cli import handle_config_init_request
 # --- END MODIFIED ---
 
 # Module Imports
-from modules.path_checker import (
-    process_path_updates,
-    handle_results,
+# --- MODIFIED: Import from 'check_path' and new function names ---
+from modules.check_path import (
+    process_check_path_logic,
+    execute_check_path_action,
     DEFAULT_EXTENSIONS_STRING,
     DEFAULT_IGNORE,
     PROJECT_CONFIG_FILENAME, 
     CONFIG_SECTION_NAME,
-    CONFIG_FILENAME, # <-- BƯỚC 4: Import config cục bộ
-    load_config_files # <-- BƯỚC 5: Import loader mới
+    CONFIG_FILENAME,
+    load_config_files
 )
+# --- END MODIFIED ---
 
 # --- CONSTANTS ---
 THIS_SCRIPT_PATH = Path(__file__).resolve()
-MODULE_DIR = THIS_SCRIPT_PATH.parent.parent / "modules" / "path_checker" 
-TEMPLATE_FILENAME = "cpath.toml.template" 
+# --- MODIFIED: Updated module dir and template filename ---
+MODULE_DIR = THIS_SCRIPT_PATH.parent.parent / "modules" / "check_path" 
+TEMPLATE_FILENAME = "check_path.toml.template" 
+# --- END MODIFIED ---
+
 # --- MỚI: Định nghĩa các giá trị default cho template ---
 CPATH_DEFAULTS: Dict[str, Any] = {
     "extensions": DEFAULT_EXTENSIONS_STRING,
@@ -196,7 +201,8 @@ def main(
     fix_command_str = "cpath " + " ".join(filtered_args)
 
     try:
-        files_to_fix = process_path_updates(
+        # --- MODIFIED: Call new function name ---
+        files_to_fix = process_check_path_logic(
             logger=logger, project_root=effective_scan_root,
             target_dir_str=str(target_directory_arg) if effective_scan_root == scan_root and target_directory_arg else None,
             extensions=final_extensions_list,
@@ -205,7 +211,8 @@ def main(
             check_mode=check_mode
         )
         
-        handle_results(
+        # --- MODIFIED: Call new function name ---
+        execute_check_path_action(
             logger=logger, files_to_fix=files_to_fix, check_mode=check_mode,
             fix_command_str=fix_command_str, scan_root=effective_scan_root,
             git_warning_str=git_warning_str

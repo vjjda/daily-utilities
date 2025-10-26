@@ -1,15 +1,15 @@
-# Path: modules/path_checker/path_checker_core.py
+# Path: modules/check_path/check_path_core.py
 
 import logging
 import os
 from pathlib import Path
 from typing import List, Set, Optional, Dict, Any
 
-from .path_checker_config import COMMENT_RULES_BY_EXT
-from .path_checker_rules import apply_line_comment_rule, apply_block_comment_rule
-from .path_checker_scanner import scan_for_files
+from .check_path_config import COMMENT_RULES_BY_EXT
+from .check_path_rules import apply_line_comment_rule, apply_block_comment_rule
+from .check_path_scanner import scan_for_files
 
-__all__ = ["process_path_updates"]
+__all__ = ["process_check_path_logic"]
 
 
 # --- 1. Hàm phân tích (Analysis Function) ---
@@ -107,7 +107,7 @@ def _update_files(
 
 
 # --- 2. Hàm Điều phối (Orchestrator) ---
-def process_path_updates(
+def process_check_path_logic(
     logger: logging.Logger,
     project_root: Path,
     target_dir_str: Optional[str],

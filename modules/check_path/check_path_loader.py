@@ -1,4 +1,4 @@
-# Path: modules/path_checker/path_checker_loader.py
+# Path: modules/check_path/check_path_loader.py
 
 """
 Tiện ích tải file cho module Path Checker (cpath).
@@ -16,7 +16,7 @@ except ImportError:
     # ... (fallback giữ nguyên)
     tomllib = None
 
-from .path_checker_config import (
+from .check_path_config import (
     PROJECT_CONFIG_FILENAME, 
     CONFIG_SECTION_NAME,
     CONFIG_FILENAME # <-- MỚI: Import file config cục bộ

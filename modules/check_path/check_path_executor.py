@@ -1,4 +1,4 @@
-# Path: modules/path_checker/path_checker_executor.py
+# Path: modules/check_path/check_path_executor.py
 
 """
 Logic thực thi và báo cáo cho module Path Checker.
@@ -11,10 +11,10 @@ from typing import List, Dict, Any
 
 from utils.logging_config import log_success
 
-__all__ = ["handle_results"]
+__all__ = ["execute_check_path_action"]
 
 
-def handle_results(
+def execute_check_path_action(
     logger: logging.Logger,
     files_to_fix: List[Dict[str, Any]],
     check_mode: bool,
