@@ -26,3 +26,28 @@ ignore = [
     "out",
     "venv",
 ]
+
+[sgen]
+ignore = [
+    "*.pyc",
+    "*.pyo",
+    ".git",
+    ".venv",
+    "__pycache__",
+    "build",
+    "dist",
+    "node_modules",
+    "out",
+    "venv",
+]
+restrict = [
+    "modules",
+    "utils",
+]
+dynamic_import_indicators = [
+    "globals()[name]",
+    "globals()[name] = obj",
+    "import_module",
+]
+ast_module_list_name = "modules_to_export"
+ast_all_list_name = "__all__"
