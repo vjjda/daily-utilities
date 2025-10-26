@@ -21,13 +21,9 @@ import typer
 from utils.logging_config import setup_logging, log_success
 from utils.core import (
     parse_comma_list, is_git_repository, find_git_root,
-    load_config_template, 
-    format_value_to_toml,
-    load_toml_file,
-    write_toml_file
 )
 # --- MODIFIED: Import helper config mới ---
-from utils.cli import prompt_config_overwrite, launch_editor, handle_config_init_request
+from utils.cli import handle_config_init_request
 # --- END MODIFIED ---
 
 # Module Imports
@@ -42,7 +38,6 @@ from modules.path_checker import (
     load_config_files # <-- BƯỚC 5: Import loader mới
 )
 
-# --- CONSTANTS ---
 # --- CONSTANTS ---
 THIS_SCRIPT_PATH = Path(__file__).resolve()
 MODULE_DIR = THIS_SCRIPT_PATH.parent.parent / "modules" / "path_checker" 
