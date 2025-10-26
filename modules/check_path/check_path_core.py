@@ -5,14 +5,14 @@ import os
 from pathlib import Path
 from typing import List, Set, Optional, Dict, Any
 
-# --- NEW: Import helpers và defaults ---
-from utils.core import resolve_config_value, resolve_config_list
+# --- MODIFIED: Import hàm merge và default mới ---
+from utils.core import resolve_config_value, resolve_config_list, parse_comma_list
 from .check_path_config import (
     COMMENT_RULES_BY_EXT, 
-    DEFAULT_EXTENSIONS_STRING, 
+    DEFAULT_EXTENSIONS, # <-- Import Set mới
     DEFAULT_IGNORE
 )
-# --- END NEW ---
+# --- END MODIFIED ---
 
 from .check_path_rules import apply_line_comment_rule, apply_block_comment_rule
 from .check_path_scanner import scan_for_files
@@ -20,26 +20,21 @@ from .check_path_scanner import scan_for_files
 __all__ = ["process_check_path_logic"]
 
 
-# --- 1. Hàm phân tích (Analysis Function) ---
-# (Hàm _update_files không thay đổi)
 def _update_files(
     files_to_scan: List[Path], 
     project_root: Path, 
     logger: logging.Logger
 ) -> List[Dict[str, Any]]:
     
+    # (Nội dung hàm _update_files giữ nguyên)
     files_needing_fix: List[Dict[str, Any]] = []
-    
     if not files_to_scan:
         logger.warning("Không có file nào để xử lý (sau khi loại trừ).")
         return files_needing_fix
 
-    # (Nội dung hàm _update_files giữ nguyên)
-    # ...
     for file_path in files_to_scan:
         relative_path = file_path.relative_to(project_root)
-        
-        file_ext = file_path.suffix
+        file_ext = "".join(file_path.suffixes) # Xử lý đuôi kép như .py.template
         rule = COMMENT_RULES_BY_EXT.get(file_ext)
 
         if not rule:
@@ -57,17 +52,12 @@ def _update_files(
                 logger.error(f"Không thể đọc file {relative_path.as_posix()}: {e}")
                 continue
             
-            if not lines:
-                logger.debug(f"Bỏ qua file rỗng: {relative_path.as_posix()}")
-                continue
+            if not lines: continue
             
-            try:
-                is_executable = os.access(file_path, os.X_OK)
-            except Exception:
-                is_executable = False
+            try: is_executable = os.access(file_path, os.X_OK)
+            except Exception: is_executable = False
             
             first_line_content = lines[0].strip()
-            
             new_lines = []
             correct_comment_str = "" 
             rule_type = rule["type"]
@@ -76,13 +66,7 @@ def _update_files(
                 prefix = rule["comment_prefix"]
                 correct_comment = f"{prefix} Path: {relative_path.as_posix()}\n"
                 correct_comment_str = correct_comment 
-                new_lines = apply_line_comment_rule(
-                    lines, 
-                    correct_comment, 
-                    check_prefix=prefix,
-                    is_executable=is_executable
-                )
-            
+                new_lines = apply_line_comment_rule(lines, correct_comment, prefix, is_executable)
             elif rule_type == "block":
                 prefix = rule["comment_prefix"]
                 suffix = rule["comment_suffix"]
@@ -90,7 +74,6 @@ def _update_files(
                 correct_comment = f"{prefix}{padding}Path: {relative_path.as_posix()}{padding}{suffix}\n"
                 correct_comment_str = correct_comment 
                 new_lines = apply_block_comment_rule(lines, correct_comment, rule)
-            
             else:
                 logger.warning(f"Bỏ qua file: Kiểu quy tắc không rõ '{rule_type}' cho {relative_path.as_posix()}")
                 continue
@@ -106,23 +89,20 @@ def _update_files(
                     "new_lines": new_lines,
                     "fix_preview": fix_preview_str
                 })
-                
         except Exception as e:
             logger.error(f"Lỗi xử lý file {relative_path.as_posix()}: {e}")
             logger.debug("Traceback:", exc_info=True)
-    
+            
     return files_needing_fix
 
 
-# --- 2. Hàm Điều phối (Orchestrator) ---
-# --- MODIFIED: Thay đổi chữ ký hàm để nhận giá trị thô ---
 def process_check_path_logic(
     logger: logging.Logger,
     project_root: Path,
     target_dir_str: Optional[str],
-    cli_extensions: Optional[str],     # <-- Thay đổi
-    cli_ignore: Optional[str],         # <-- Thay đổi
-    file_config_data: Dict[str, Any],  # <-- Mới
+    cli_extensions: Optional[str],    
+    cli_ignore: Optional[str],        
+    file_config_data: Dict[str, Any], 
     script_file_path: Path,
     check_mode: bool
 ) -> List[Dict[str, Any]]: 
@@ -133,20 +113,29 @@ def process_check_path_logic(
     3. Phân tích chúng.
     """
     
-    # --- 1. Hợp nhất Cấu hình (Logic đã di chuyển về đây) ---
-    extensions_str = resolve_config_value(
-        cli_value=cli_extensions,
-        file_value=file_config_data.get('extensions'),
-        default_value=DEFAULT_EXTENSIONS_STRING
+    # --- 1. Hợp nhất Cấu hình ---
+    # --- MODIFIED: Sử dụng resolve_config_list cho extensions ---
+    # (Lưu ý: file_config_data['extensions'] có thể là list hoặc string từ TOML)
+    file_extensions_value = file_config_data.get('extensions')
+    final_extensions_set = resolve_config_list(
+        cli_str_value=cli_extensions,
+        # Nếu là string từ TOML cũ, parse nó thành list trước khi đưa vào set
+        file_list_value=(
+            list(parse_comma_list(file_extensions_value)) 
+            if isinstance(file_extensions_value, str) 
+            else file_extensions_value # Giữ nguyên nếu đã là list
+        ),
+        default_set_value=DEFAULT_EXTENSIONS
     )
     if cli_extensions:
-        logger.debug("Sử dụng danh sách 'extensions' từ CLI.")
-    elif 'extensions' in file_config_data:
-        logger.debug("Sử dụng danh sách 'extensions' từ file config.")
+        logger.debug("Sử dụng danh sách 'extensions' từ CLI (thêm vào config/default).")
+    elif file_extensions_value is not None:
+         logger.debug("Sử dụng danh sách 'extensions' từ file config (ghi đè default).")
     else:
         logger.debug("Sử dụng danh sách 'extensions' mặc định.")
-        
-    final_extensions_list = [ext.strip() for ext in extensions_str.split(',') if ext.strip()]
+    # Chuyển thành List để dùng cho scanner
+    final_extensions_list = sorted(list(final_extensions_set))
+    # --- END MODIFIED ---
 
     final_ignore_set = resolve_config_list(
         cli_str_value=cli_ignore,
@@ -156,16 +145,16 @@ def process_check_path_logic(
     logger.debug(f"Danh sách 'ignore' cuối cùng (đã merge): {sorted(list(final_ignore_set))}")
     # --- Kết thúc Hợp nhất Cấu hình ---
     
-    # 2. Quét file (Gọi file scanner.py)
+    # 2. Quét file
     files_to_process = scan_for_files(
         logger=logger,
         project_root=project_root,
         target_dir_str=target_dir_str,
-        extensions=final_extensions_list, # <-- Truyền giá trị đã xử lý
-        ignore_set=final_ignore_set,     # <-- Truyền giá trị đã xử lý
+        extensions=final_extensions_list, # <-- Truyền List đã xử lý
+        ignore_set=final_ignore_set,     
         script_file_path=script_file_path,
         check_mode=check_mode
     )
     
-    # 3. Phân tích file (Gọi hàm _update_files)
+    # 3. Phân tích file
     return _update_files(files_to_process, project_root, logger)

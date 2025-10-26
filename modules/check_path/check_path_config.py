@@ -10,7 +10,7 @@ from typing import Dict, Any, Set
 # --- MODIFIED: Thêm CONFIG_FILENAME ---
 __all__ = [
     "DEFAULT_IGNORE",
-    "DEFAULT_EXTENSIONS_STRING",
+    "DEFAULT_EXTENSIONS",
     "COMMENT_RULES",
     "COMMENT_RULES_BY_EXT",
     "PROJECT_CONFIG_FILENAME", 
@@ -25,8 +25,10 @@ DEFAULT_IGNORE: Set[str] = {
     "node_modules", "dist", "build", "out"
 }
 
-DEFAULT_EXTENSIONS_STRING = "py,js,ts,css,scss,zsh,sh,py.template,template.toml"
-
+DEFAULT_EXTENSIONS: Final[Set[str]] = {
+    "py", "js", "ts", "css", "scss", "zsh", "sh", 
+    "py.template", "template.toml"
+}
 
 # --- Config file constants ---
 PROJECT_CONFIG_FILENAME: str = ".project.toml"

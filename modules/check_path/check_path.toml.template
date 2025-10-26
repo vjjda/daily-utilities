@@ -3,12 +3,11 @@
 # Cấu hình mặc định cho cpath (Path Checker)
 #
 
-# --- MỚI: Thêm header section ---
 [{config_section_name}]
-# --- KẾT THÚC MỚI ---
 
-# Các đuôi file (phân cách bởi dấu phẩy) mà cpath sẽ quét.
-extensions = {toml_extensions}
+# Các đuôi file mà cpath sẽ quét.
+# Định dạng: Mảng các chuỗi (Array of Strings).
+extensions = {toml_extensions} # <-- Sẽ được format thành ["py", "js", ...]
 
 # Danh sách các pattern (FNMATCH) sẽ bị bỏ qua (ngoài .gitignore).
 ignore = {toml_ignore}

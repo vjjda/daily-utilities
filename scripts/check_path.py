@@ -7,45 +7,40 @@ from pathlib import Path
 from typing import List, Optional, Set, Dict, Any
 import shlex
 
-try:
-    import tomllib 
+try: import tomllib 
 except ImportError:
-    try:
-        import toml as tomllib
-    except ImportError:
-        tomllib = None
+    try: import toml as tomllib
+    except ImportError: tomllib = None
 
 import typer
 
-# Common utilities
 from utils.logging_config import setup_logging, log_success
-# --- MODIFIED: Xóa các import logic nghiệp vụ ---
-from utils.core import (
-    is_git_repository, find_git_root,
-)
-# --- END MODIFIED ---
+from utils.core import is_git_repository, find_git_root
 from utils.cli import handle_config_init_request, handle_project_root_validation
 
-# Module Imports
+# --- MODIFIED: Import hằng số mới ---
 from modules.check_path import (
     process_check_path_logic,
     execute_check_path_action,
-    DEFAULT_EXTENSIONS_STRING,
+    DEFAULT_EXTENSIONS, # <-- Import Set mới
     DEFAULT_IGNORE,
     PROJECT_CONFIG_FILENAME, 
     CONFIG_SECTION_NAME,
     CONFIG_FILENAME,
     load_config_files
 )
+# --- END MODIFIED ---
 
 # --- CONSTANTS ---
 THIS_SCRIPT_PATH = Path(__file__).resolve()
 MODULE_DIR = THIS_SCRIPT_PATH.parent.parent / "modules" / "check_path" 
 TEMPLATE_FILENAME = "check_path.toml.template" 
+# --- MODIFIED: Cập nhật CPATH_DEFAULTS ---
 CPATH_DEFAULTS: Dict[str, Any] = {
-    "extensions": DEFAULT_EXTENSIONS_STRING,
+    "extensions": DEFAULT_EXTENSIONS, # <-- Dùng Set
     "ignore": DEFAULT_IGNORE
 }
+# --- END MODIFIED ---
 
 app = typer.Typer(
     help="Kiểm tra (và tùy chọn sửa) các comment '# Path:' trong file nguồn.",
@@ -57,39 +52,22 @@ app = typer.Typer(
 def main(
     ctx: typer.Context,
     
-    # ... (Các tham số Typer giữ nguyên) ...
-    config_project: bool = typer.Option(
-        False, "-c", "--config-project",
-        help="Khởi tạo/cập nhật section [cpath] trong .project.toml.",
-    ),
-    config_local: bool = typer.Option(
-        False, "-C", "--config-local",
-        help="Khởi tạo/cập nhật file .cpath.toml (scope 'local').",
-    ),
-    target_directory_arg: Optional[Path] = typer.Argument(
-        None,
-        help="Thư mục để quét (mặc định: thư mục làm việc hiện tại, tôn trọng .gitignore). Dùng '~' cho thư mục home.",
-        file_okay=False,
-        dir_okay=True,
-    ),
-    extensions: Optional[str] = typer.Option( None, "-e", "--extensions", help=f"Các đuôi file để quét (ghi đè .project.toml)." ),
-    ignore: Optional[str] = typer.Option( None, "-I", "--ignore", help="Danh sách pattern (phân cách bởi dấu phẩy) để bỏ qua (thêm vào .project.toml)." ),
-    dry_run: bool = typer.Option(
-        False,
-        "-d", "--dry-run",
-        help="Chỉ chạy ở chế độ 'dry-run' (chạy thử). Mặc định là chạy 'fix' (có hỏi xác nhận)."
-    )
+    config_project: bool = typer.Option(False, "-c", "--config-project", help="Khởi tạo/cập nhật section [cpath] trong .project.toml."),
+    config_local: bool = typer.Option(False, "-C", "--config-local", help="Khởi tạo/cập nhật file .cpath.toml (scope 'local')."),
+    target_directory_arg: Optional[Path] = typer.Argument(None, help="Thư mục để quét (mặc định: thư mục làm việc hiện tại).", file_okay=False, dir_okay=True),
+    # --- MODIFIED: Cập nhật help text cho extensions ---
+    extensions: Optional[str] = typer.Option(None, "-e", "--extensions", help="Các đuôi file để quét (THÊM vào config/default)."),
+    # --- END MODIFIED ---
+    ignore: Optional[str] = typer.Option(None, "-I", "--ignore", help="Danh sách pattern để bỏ qua (THÊM vào config/default)."),
+    dry_run: bool = typer.Option(False, "-d", "--dry-run", help="Chỉ chạy ở chế độ 'dry-run'. Mặc định là chạy 'fix'.")
 ):
     """ Hàm chính (callback của Typer) """
     if ctx.invoked_subcommand: return
 
-    # 1. Setup Logging
     logger = setup_logging(script_name="CPath")
     logger.debug("CPath script started.")
 
-    # --- Logic khởi tạo Config (Đã REFACTOR) ---
     try:
-        # --- MODIFIED: Đơn giản hóa logic gọi ---
         config_action_taken = handle_config_init_request(
             logger=logger,
             config_project=config_project,
@@ -99,65 +77,43 @@ def main(
             config_filename=CONFIG_FILENAME,
             project_config_filename=PROJECT_CONFIG_FILENAME,
             config_section_name=CONFIG_SECTION_NAME,
-            base_defaults=CPATH_DEFAULTS # <-- Chỉ cần truyền base defaults
+            base_defaults=CPATH_DEFAULTS
         )
-        # --- END MODIFIED ---
-        
-        if config_action_taken:
-            raise typer.Exit(code=0)
-    except typer.Exit as e: # Catch typer.Exit specifically first
-        raise e # Re-raise it to let Typer handle the exit
-    except ImportError as e: # Example: Catch specific expected errors
-        logger.error(f"❌ Lỗi thiếu thư viện khi khởi tạo config: {e}")
-        raise typer.Exit(code=1)
-    except IOError as e: # Example: Catch file writing errors
-        logger.error(f"❌ Lỗi I/O khi khởi tạo config: {e}")
-        raise typer.Exit(code=1)
-    except Exception as e: # Catch truly unexpected errors
-        logger.error(f"❌ Đã xảy ra lỗi không mong muốn khi khởi tạo config: {e}")
+        if config_action_taken: raise typer.Exit(code=0)
+    except typer.Exit as e: raise e
+    except Exception as e:
+        logger.error(f"❌ Đã xảy ra lỗi khi khởi tạo config: {e}")
         logger.debug("Traceback:", exc_info=True)
         raise typer.Exit(code=1)
 
-    # --- Logic xác định scan_root (Giữ nguyên) ---
-    if target_directory_arg:
-        scan_root = target_directory_arg.expanduser()
-    else:
-        scan_root = Path.cwd().expanduser()
+    if target_directory_arg: scan_root = target_directory_arg.expanduser()
+    else: scan_root = Path.cwd().expanduser()
     
     if not scan_root.exists():
-        logger.error(f"❌ Lỗi: Thư mục mục tiêu không tồn tại (sau khi expanduser): {scan_root}")
+        logger.error(f"❌ Lỗi: Thư mục mục tiêu không tồn tại: {scan_root}")
         raise typer.Exit(code=1)
     if not scan_root.is_dir():
         logger.error(f"❌ Lỗi: Đường dẫn mục tiêu không phải là thư mục: {scan_root}")
         raise typer.Exit(code=1)
 
-    # --- Logic handle_project_root_validation (Giữ nguyên) ---
     effective_scan_root: Optional[Path]
-    effective_scan_root, git_warning_str = handle_project_root_validation(
-        logger=logger,
-        scan_root=scan_root,
-        force_silent=False 
-    )
+    effective_scan_root, git_warning_str = handle_project_root_validation(logger=logger, scan_root=scan_root, force_silent=False)
     
-    if effective_scan_root is None:
-        raise typer.Exit(code=0)
+    if effective_scan_root is None: raise typer.Exit(code=0)
 
-    check_mode = dry_run
+    # --- Sửa lỗi logic check_mode: Nếu không dry_run thì là fix mode ---
+    check_mode = dry_run # True nếu có -d, False nếu không
+    # --- End sửa lỗi ---
     
     file_config_data = load_config_files(effective_scan_root, logger)
     
-    # --- Xóa logic merge 'extensions' và 'ignore' khỏi đây ---
-    
-    # (Logic tạo fix_command_str giữ nguyên)
     original_args = sys.argv[1:]
-    filtered_args = [
-        shlex.quote(arg) for arg in original_args
-        if arg not in ('-d', '--dry-run', '--fix', '-c', '--config-project', '-C', '--config-local')
-    ]
-    fix_command_str = "cpath " + " ".join(filtered_args)
+    filtered_args = [ shlex.quote(arg) for arg in original_args if arg not in ('-d', '--dry-run', '-c', '--config-project', '-C', '--config-local')]
+    # --- Sửa lỗi tạo fix_command: Bỏ --fix nếu có ---
+    fix_command_str = "cpath " + " ".join(arg for arg in filtered_args if arg != '--fix')
+    # --- End sửa lỗi ---
 
     try:
-        # --- (Lời gọi hàm process_check_path_logic giữ nguyên như Giai đoạn 3 (làm lại) ---
         files_to_fix = process_check_path_logic(
             logger=logger, project_root=effective_scan_root,
             target_dir_str=str(target_directory_arg) if effective_scan_root == scan_root and target_directory_arg else None,
@@ -168,7 +124,6 @@ def main(
             check_mode=check_mode
         )
         
-        # (Lệnh gọi execute_check_path_action giữ nguyên)
         execute_check_path_action(
             logger=logger, files_to_fix=files_to_fix, check_mode=check_mode,
             fix_command_str=fix_command_str, scan_root=effective_scan_root,
@@ -181,7 +136,5 @@ def main(
         sys.exit(1)
 
 if __name__ == "__main__":
-    try:
-        app()
-    except KeyboardInterrupt:
-        print("\n\n❌ [Lệnh dừng] Đã dừng kiểm tra đường dẫn."); sys.exit(1)
+    try: app()
+    except KeyboardInterrupt: print("\n\n❌ [Lệnh dừng] Đã dừng kiểm tra đường dẫn."); sys.exit(1)
