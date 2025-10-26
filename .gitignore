@@ -15,5 +15,7 @@ env
 dist/
 build/
 
+/tmp
+
 # macOS
 .DS_Store
