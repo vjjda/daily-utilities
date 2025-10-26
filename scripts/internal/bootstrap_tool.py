@@ -1,4 +1,4 @@
-# Path: scripts/internal/bootstrap_tool.py
+# Path: scripts/internal/bootstrap/bootstrap_tool.py
 
 """
 Script nội bộ để bootstrap (khởi tạo) một tool utility mới.
@@ -29,23 +29,30 @@ sys.path.append(str(PROJECT_ROOT))
 try:
     from utils.logging_config import setup_logging, log_success # type: ignore[reportUnknownVariableType]
     
-    # --- (Import gateway giữ nguyên) ---
+    # --- MODIFIED: Import utils.core và các hằng số config ---
+    from utils.core import load_project_config_section # type: ignore[reportUnknownVariableType]
+    
     from scripts.internal.bootstrap import (
         generate_bin_wrapper,
         generate_script_entrypoint,
         generate_module_file,
         generate_doc_file,
-        generate_module_init_file
+        generate_module_init_file,
+        
+        # Import các hằng số config mới
+        CONFIG_SECTION_NAME,
+        DEFAULT_BIN_DIR_NAME,
+        DEFAULT_SCRIPTS_DIR_NAME,
+        DEFAULT_MODULES_DIR_NAME,
+        DEFAULT_DOCS_DIR_NAME
     )
+    # --- END MODIFIED ---
 except ImportError as e:
     print(f"Lỗi: Không thể import utils hoặc bootstrap gateway: {e}", file=sys.stderr)
     sys.exit(1)
 
-# --- (Định nghĩa thư mục giữ nguyên) ---
-BIN_DIR = PROJECT_ROOT / "bin"
-SCRIPTS_DIR = PROJECT_ROOT / "scripts"
-MODULES_DIR = PROJECT_ROOT / "modules"
-DOCS_DIR = PROJECT_ROOT / "docs"
+# --- (Định nghĩa thư mục đã bị XÓA) ---
+# (BIN_DIR, SCRIPTS_DIR, MODULES_DIR, DOCS_DIR sẽ được định nghĩa trong main())
 
 # --- HÀM MAIN (ĐIỀU PHỐI) ---
 def main():
@@ -53,6 +60,27 @@ def main():
     
     logger = setup_logging(script_name="Bootstrap", console_level_str="INFO")
     logger.debug("Bootstrap script started.")
+    
+    # --- NEW: Load Configurable Paths ---
+    # Tải cấu hình từ section [bootstrap] trong .project.toml
+    config_path = PROJECT_ROOT / ".project.toml"
+    toml_config = load_project_config_section(config_path, CONFIG_SECTION_NAME, logger)
+    
+    # Merge với defaults
+    bin_dir_name = toml_config.get("bin_dir", DEFAULT_BIN_DIR_NAME)
+    scripts_dir_name = toml_config.get("scripts_dir", DEFAULT_SCRIPTS_DIR_NAME)
+    modules_dir_name = toml_config.get("modules_dir", DEFAULT_MODULES_DIR_NAME)
+    docs_dir_name = toml_config.get("docs_dir", DEFAULT_DOCS_DIR_NAME)
+    
+    # Xây dựng các biến Path tuyệt đối
+    BIN_DIR = PROJECT_ROOT / bin_dir_name
+    SCRIPTS_DIR = PROJECT_ROOT / scripts_dir_name
+    MODULES_DIR = PROJECT_ROOT / modules_dir_name
+    DOCS_DIR = PROJECT_ROOT / docs_dir_name
+    
+    logger.debug(f"BIN_DIR set to: {BIN_DIR.as_posix()}")
+    logger.debug(f"SCRIPTS_DIR set to: {SCRIPTS_DIR.as_posix()}")
+    # --- END NEW ---
 
     # --- (1. Phân tích đối số giữ nguyên) ---
     parser = argparse.ArgumentParser(description="Bootstrap (khởi tạo) một tool utility mới từ file *.spec.toml.")
@@ -114,12 +142,9 @@ def main():
         logger.error(f"❌ Lỗi khi đọc file TOML: {e}")
         sys.exit(1)
 
-    # --- 4. Xác thực config và chuẩn bị dữ liệu (Đã Hoàn tác) ---
+    # --- (4. Xác thực config giữ nguyên) ---
     try:
         config['module_name'] = module_path.name # (ví dụ: 'c_demo')
-        
-        # --- (Đã xóa logic tạo 'python_module_name') ---
-        
         tool_name = config['meta']['tool_name']
         script_file = config['meta']['script_file']
         
@@ -130,9 +155,8 @@ def main():
         logger.error(f"❌ File spec '{spec_file_path.name}' thiếu key bắt buộc trong [meta]: {e}")
         sys.exit(1)
         
-    # --- 5. Tạo nội dung (gọi generator) (Đã Hoàn tác) ---
+    # --- (5. Tạo nội dung giữ nguyên) ---
     try:
-        # (Lấy tên module gốc)
         mod_name = config['module_name']
         
         generated_content = {
@@ -145,7 +169,7 @@ def main():
             "init": generate_module_init_file(config), 
         }
         
-        # --- MODIFIED: Hoàn tác, dùng 'mod_name' ---
+        # --- (target_paths giữ nguyên, vì nó DÙNG các biến Path đã được load động) ---
         target_paths = {
             "bin": BIN_DIR / tool_name,
             "script": SCRIPTS_DIR / script_file,
@@ -155,7 +179,6 @@ def main():
             "executor": module_path / f"{mod_name}_executor.py",
             "init": module_path / "__init__.py", 
         }
-        # --- END MODIFIED ---
         
         if config.get('docs', {}).get('enabled', False):
             generated_content["docs"] = generate_doc_file(config)
