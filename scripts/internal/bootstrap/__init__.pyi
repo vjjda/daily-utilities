@@ -7,9 +7,12 @@ from pathlib import Path
 TEMPLATE_DIR: Any
 TYPE_HINT_MAP: Any
 TYPING_IMPORTS: Any
+build_argparse_arguments: Any
+build_args_pass_to_core: Any
 build_config_all_list: Any
 build_config_constants: Any
 build_config_imports: Any
+build_path_expands: Any
 build_typer_app_code: Any
 build_typer_args_pass_to_core: Any
 build_typer_main_signature: Any
@@ -23,4 +26,4 @@ get_cli_args: Any
 load_template: Any
 
 # Static declaration of exported symbols (for Pylance)
-__all__: List[str] = ['TEMPLATE_DIR', 'TYPE_HINT_MAP', 'TYPING_IMPORTS', 'build_config_all_list', 'build_config_constants', 'build_config_imports', 'build_typer_app_code', 'build_typer_args_pass_to_core', 'build_typer_main_signature', 'build_typer_path_expands', 'generate_bin_wrapper', 'generate_doc_file', 'generate_module_file', 'generate_module_init_file', 'generate_script_entrypoint', 'get_cli_args', 'load_template']
+__all__: List[str] = ['TEMPLATE_DIR', 'TYPE_HINT_MAP', 'TYPING_IMPORTS', 'build_argparse_arguments', 'build_args_pass_to_core', 'build_config_all_list', 'build_config_constants', 'build_config_imports', 'build_path_expands', 'build_typer_app_code', 'build_typer_args_pass_to_core', 'build_typer_main_signature', 'build_typer_path_expands', 'generate_bin_wrapper', 'generate_doc_file', 'generate_module_file', 'generate_module_init_file', 'generate_script_entrypoint', 'get_cli_args', 'load_template']
