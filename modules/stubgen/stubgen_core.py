@@ -60,7 +60,11 @@ def _format_stub_content(
         f"{symbol}: Any" for symbol in sorted_symbols
     )
     
-    all_list_repr = repr(sorted_symbols)
+    quoted_symbols = [repr(symbol) for symbol in sorted_symbols]
+    all_list_body = ",\n".join(
+        f"    {symbol_repr}" for symbol_repr in quoted_symbols
+    )
+    all_list_repr = f"[\n{all_list_body}\n]"
     
     rel_path = init_path.relative_to(project_root).as_posix()
     module_name = init_path.parent.name
