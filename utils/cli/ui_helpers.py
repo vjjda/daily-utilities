@@ -1,7 +1,7 @@
 # Path: utils/cli/ui_helpers.py
 
 """
-Tiện ích UI chung cho các entry-point CLI.
+Tiện ích UI chung cho các entry-point CLI (Typer).
 Chứa các hàm xử lý prompt (O/R/Q) và khởi chạy editor.
 """
 
@@ -107,30 +107,31 @@ def handle_project_root_validation(
                 
                 if choice == 'r':
                     effective_scan_root = suggested_root
-                    logger.info(f"✅ Di chuyển quét đến gốc Git: {effective_scan_root.as_posix()}")
+                    # --- FIX (Theo gợi ý của bạn): Dùng suggested_root ---
+                    logger.info(f"✅ Di chuyển quét đến gốc Git: {suggested_root.as_posix()}")
                 elif choice == 'c':
                     effective_scan_root = scan_root
                     logger.info(f"✅ Quét từ thư mục hiện tại: {scan_root.as_posix()}")
                     git_warning_str = f"⚠️ Cảnh báo: Đang chạy từ thư mục không phải gốc Git ('{scan_root.name}/'). Quy tắc .gitignore có thể không đầy đủ."
                 elif choice == 'q':
                     logger.error("❌ Hoạt động bị hủy bởi người dùng.")
-                    # --- MODIFIED: Return None instead of raise ---
-                    effective_scan_root = None
-                    # --- END MODIFIED ---
+                    return None, ""
             
             else:
                 logger.warning(f"⚠️ Không tìm thấy thư mục '.git' trong '{scan_root.name}/' hoặc các thư mục cha.")
                 logger.warning(f"   Quét từ một thư mục không phải dự án (như $HOME) có thể chậm hoặc không an toàn.")
+                
+                # --- FIX (Như lần trước): Tách f-string khỏi input() ---
+                confirmation_prompt = f"   Bạn có chắc muốn quét '{scan_root.as_posix()}'? (y/N): "
                 try:
-                    confirmation = input(f"   Bạn có chắc muốn quét '{scan_root.as_posix()}'? (y/N): ")
+                    confirmation = input(confirmation_prompt)
+                # --- END FIX ---
                 except (EOFError, KeyboardInterrupt):
                     confirmation = 'n'
                 
                 if confirmation.lower() != 'y':
                     logger.error("❌ Hoạt động bị hủy bởi người dùng.")
-                    # --- MODIFIED: Return None instead of raise ---
-                    effective_scan_root = None
-                    # --- END MODIFIED ---
+                    return None, ""
                 else:
                     logger.info(f"✅ Tiếp tục quét tại thư mục không phải gốc Git: {scan_root.as_posix()}")
                     git_warning_str = f"⚠️ Cảnh báo: Đang chạy từ thư mục không phải gốc Git ('{scan_root.name}/'). Quy tắc .gitignore có thể không đầy đủ."
