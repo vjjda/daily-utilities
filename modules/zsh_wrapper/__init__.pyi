@@ -15,12 +15,12 @@ resolve_root_interactively: Any
 
 # Static declaration of exported symbols (for Pylance)
 __all__: List[str] = [
-'DEFAULT_MODE',
-'DEFAULT_VENV',
-'DEFAULT_WRAPPER_ABSOLUTE_PATH',
-'DEFAULT_WRAPPER_RELATIVE_DIR',
-'execute_zsh_wrapper_action',
-'process_zsh_wrapper_logic',
-'resolve_output_path_interactively',
-'resolve_root_interactively'
+    'DEFAULT_MODE',
+    'DEFAULT_VENV',
+    'DEFAULT_WRAPPER_ABSOLUTE_PATH',
+    'DEFAULT_WRAPPER_RELATIVE_DIR',
+    'execute_zsh_wrapper_action',
+    'process_zsh_wrapper_logic',
+    'resolve_output_path_interactively',
+    'resolve_root_interactively'
 ]

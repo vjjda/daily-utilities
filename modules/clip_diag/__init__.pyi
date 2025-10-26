@@ -16,13 +16,13 @@ process_clipboard_content: Any
 
 # Static declaration of exported symbols (for Pylance)
 __all__: List[str] = [
-'APP_CONFIG',
-'DEFAULT_OUTPUT_DIR',
-'DEFAULT_TO_ARG',
-'DOT_PATH',
-'GRAPHVIZ_PREFIX',
-'MERMAID_PREFIX',
-'MMC_PATH',
-'execute_diagram_generation',
-'process_clipboard_content'
+    'APP_CONFIG',
+    'DEFAULT_OUTPUT_DIR',
+    'DEFAULT_TO_ARG',
+    'DOT_PATH',
+    'GRAPHVIZ_PREFIX',
+    'MERMAID_PREFIX',
+    'MMC_PATH',
+    'execute_diagram_generation',
+    'process_clipboard_content'
 ]

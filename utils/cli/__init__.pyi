@@ -11,8 +11,8 @@ prompt_config_overwrite: Any
 
 # Static declaration of exported symbols (for Pylance)
 __all__: List[str] = [
-'handle_config_init_request',
-'handle_project_root_validation',
-'launch_editor',
-'prompt_config_overwrite'
+    'handle_config_init_request',
+    'handle_project_root_validation',
+    'launch_editor',
+    'prompt_config_overwrite'
 ]
