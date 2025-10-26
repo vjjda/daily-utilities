@@ -19,17 +19,17 @@ except ImportError:
     except ImportError:
         tomllib = None
 
-# --- Thêm PROJECT_ROOT vào sys.path để import utils/modules ---
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.append(str(PROJECT_ROOT))
 # --- END BOOTSTRAPPING ---
 
 # Common utilities
 from utils.logging_config import setup_logging, log_success
+# --- MODIFIED: Xóa load_project_config_section ---
 from utils.core import (
     is_git_repository
 )
-# (Import helper config đã được refactor)
+# --- END MODIFIED ---
 from utils.cli import handle_config_init_request
 
 # Module Imports (Tái sử dụng 100% logic của tree)
@@ -66,13 +66,12 @@ def main():
     """ Hàm điều phối chính (phiên bản Argparse) """
     
     # --- 1. Định nghĩa Argparse ---
+    # (Giữ nguyên)
     parser = argparse.ArgumentParser(
         description="Một công cụ tạo cây thư mục thông minh hỗ trợ file cấu hình .tree.toml (Phiên bản Argparse).",
         epilog="Ví dụ: aptree . -L 3 -I *.log",
         formatter_class=argparse.RawTextHelpFormatter
     )
-    
-    # --- Nhóm Config Init (Giống hệt Typer) ---
     config_group = parser.add_argument_group("Config Initialization (Chạy riêng lẻ)")
     config_group.add_argument(
         "-c", "--config-project",
@@ -84,8 +83,6 @@ def main():
         action="store_true",
         help="Khởi tạo/cập nhật file .tree.toml (scope 'local')."
     )
-    
-    # --- Nhóm Tree Options (Giống hệt Typer) ---
     tree_group = parser.add_argument_group("Tree Generation Options")
     tree_group.add_argument(
         "start_path",
@@ -96,8 +93,6 @@ def main():
     tree_group.add_argument("-L", "--level", type=int, help="Giới hạn độ sâu hiển thị.")
     tree_group.add_argument("-I", "--ignore", help="Danh sách pattern (phân cách bởi dấu phẩy) để bỏ qua.")
     tree_group.add_argument("-P", "--prune", help="Danh sách pattern (phân cách bởi dấu phẩy) để cắt tỉa (prune).")
-    
-    # (Xử lý `dirs_only` hơi khác Typer)
     dirs_only_group = tree_group.add_mutually_exclusive_group()
     dirs_only_group.add_argument(
         "-d", "--all-dirs", 
@@ -108,11 +103,9 @@ def main():
         "--dirs-patterns", 
         help="Chỉ hiển thị thư mục con cho các pattern cụ thể (ví dụ: 'assets')."
     )
-    
     tree_group.add_argument("-s", "--show-submodules", action="store_true", help="Hiển thị nội dung của các submodule.")
     tree_group.add_argument("--no-gitignore", action="store_true", help="Không tôn trọng file .gitignore.")
     tree_group.add_argument("-f", "--full-view", action="store_true", help="Bỏ qua tất cả bộ lọc (.gitignore, rules, level) và hiển thị tất cả.")
-    
     args = parser.parse_args()
     
     # --- 2. Setup Logging ---
@@ -120,7 +113,10 @@ def main():
     logger.debug("APTree script (argparse) started.")
 
     # --- 3. Xử lý Config Init (Tái sử dụng 100%) ---
+    # --- MODIFIED: Đơn giản hóa logic gọi ---
     try:
+        # Xóa logic tải .project_config_section ở đây
+        
         config_action_taken = handle_config_init_request(
             logger=logger,
             config_project=args.config_project,
@@ -130,7 +126,7 @@ def main():
             config_filename=CONFIG_FILENAME,
             project_config_filename=PROJECT_CONFIG_FILENAME,
             config_section_name=CONFIG_SECTION_NAME,
-            default_values=TREE_DEFAULTS
+            base_defaults=TREE_DEFAULTS # <-- Chỉ cần truyền base defaults
         )
         
         if config_action_taken:
@@ -140,18 +136,17 @@ def main():
         logger.error(f"❌ Đã xảy ra lỗi khi khởi tạo config: {e}")
         logger.debug("Traceback:", exc_info=True)
         sys.exit(1)
+    # --- END MODIFIED ---
 
     # --- 4. Logic chạy ctree (Giống hệt Typer) ---
+    # (Phần còn lại của file giữ nguyên)
     start_path_obj = Path(args.start_path).expanduser()
     if not start_path_obj.exists():
         logger.error(f"❌ Lỗi: Đường dẫn bắt đầu không tồn tại: {start_path_obj}")
         sys.exit(1)
     
-    # (Tái tạo logic `cli_dirs_only` từ `tree.py`)
     cli_dirs_only = "_ALL_" if args.all_dirs else args.dirs_patterns
     
-    # (Tạo một `args` namespace giả để tương thích 100% với `merge_config_sources`)
-    # Lưu ý: `args.start_path` đã được dùng, không cần truyền lại
     cli_args = argparse.Namespace(
         level=args.level, 
         ignore=args.ignore, 
@@ -169,7 +164,7 @@ def main():
     try:
         file_config = load_config_files(start_dir, logger)
         config_params = merge_config_sources(
-            args=cli_args, # <-- Dùng namespace đã chuẩn bị
+            args=cli_args,
             file_config=file_config,
             start_dir=start_dir,
             logger=logger,

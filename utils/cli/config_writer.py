@@ -24,7 +24,8 @@ from utils.core import (
     load_config_template, 
     format_value_to_toml,
     load_toml_file,
-    write_toml_file
+    write_toml_file,
+    load_project_config_section # <-- MỚI
 )
 # Import các tiện ích UI
 from .ui_helpers import prompt_config_overwrite, launch_editor
@@ -38,7 +39,9 @@ def _generate_template_content(
     module_dir: Path,
     template_filename: str,
     config_section_name: str,
-    default_values: Dict[str, Any]
+    # --- MODIFIED: Đổi tên tham số cho rõ nghĩa ---
+    effective_defaults: Dict[str, Any] 
+    # --- END MODIFIED ---
 ) -> str:
     """Tải và điền nội dung template .toml."""
     
@@ -46,8 +49,10 @@ def _generate_template_content(
     
     # 1. Xử lý các giá trị đặc biệt (ví dụ: level của ctree)
     toml_level_str = ""
-    if "level" in default_values:
-        level_val = default_values["level"]
+    # --- MODIFIED: Sử dụng effective_defaults ---
+    if "level" in effective_defaults:
+        level_val = effective_defaults["level"]
+    # --- END MODIFIED ---
         toml_level_str = (
             f"level = {level_val}" 
             if level_val is not None 
@@ -60,7 +65,9 @@ def _generate_template_content(
         'toml_level': toml_level_str, # (An toàn nếu không có)
     }
     
-    for key, value in default_values.items():
+    # --- MODIFIED: Sử dụng effective_defaults ---
+    for key, value in effective_defaults.items():
+    # --- END MODIFIED ---
         
         # Bỏ qua 'level' vì nó đã được xử lý đặc biệt ở trên
         if key == "level":
@@ -89,11 +96,12 @@ def handle_config_init_request(
     project_config_filename: str, # (ví dụ: .project.toml)
     config_section_name: str, # (ví dụ: tree)
     # Dữ liệu để điền
-    default_values: Dict[str, Any]
+    # --- MODIFIED: Đổi tên tham số ---
+    base_defaults: Dict[str, Any] # (Giá trị gốc từ _config.py)
+    # --- END MODIFIED ---
 ) -> bool:
     """
     Xử lý logic tạo config (-c / -C) cho các entrypoint.
-    ...
     """
     
     if not (config_project or config_local):
@@ -102,14 +110,33 @@ def handle_config_init_request(
     # 1. Kiểm tra thư viện
     if tomllib is None:
          logger.error("❌ Thiếu thư viện 'tomli'/'tomli-w'. Vui lòng cài đặt: 'pip install tomli tomli-w'")
-         # --- MODIFIED: Raise exception instead of typer.Exit ---
          raise ImportError("Missing tomli/tomli-w libraries")
-         # --- END MODIFIED ---
          
     scope = 'project' if config_project else 'local'
     
-    # --- MODIFIED: Removed top-level try/except ---
-    # (Cho phép exceptions (IOError, etc.) raise lên caller)
+    # --- MODIFIED: Thêm logic "Smart Default" vào đây ---
+    # 1. Xác định giá trị mặc định hiệu lực (effective defaults)
+    effective_defaults = base_defaults.copy() # Bắt đầu với DEFAULT
+    
+    if config_local:
+        # Nếu là -C (local), tải .project.toml và merge vào
+        project_config_path = Path.cwd() / project_config_filename
+        
+        # (Hàm này đã được import từ utils.core)
+        project_section = load_project_config_section(
+            project_config_path, 
+            config_section_name, 
+            logger
+        )
+        if project_section:
+            logger.debug(f"Sử dụng {project_config_filename} làm cơ sở cho template {config_filename}")
+            effective_defaults.update(project_section)
+        else:
+            logger.debug(f"Không tìm thấy {project_config_filename}, dùng DEFAULT làm cơ sở cho {config_filename}")
+    
+    # (Nếu là -c (project), effective_defaults vẫn là base_defaults)
+    # --- END MODIFIED ---
+
 
     # 2. Tạo nội dung file/section từ template
     content_with_placeholders = _generate_template_content(
@@ -117,7 +144,7 @@ def handle_config_init_request(
         module_dir,
         template_filename,
         config_section_name,
-        default_values
+        effective_defaults # <-- Truyền giá trị đã tính toán
     )
 
     should_write_result: Optional[bool] = True 
@@ -135,10 +162,8 @@ def handle_config_init_request(
                 f"File '{config_filename}'"
             )
         
-        # --- MODIFIED: Handle None (Quit) ---
         if should_write_result is None:
             return True # Báo hiệu caller thoát
-        # --- END MODIFIED ---
 
         if should_write_result:
             # Ghi file đầy đủ
@@ -147,7 +172,7 @@ def handle_config_init_request(
                 f"Đã tạo thành công '{config_file_path.name}'." if not file_existed
                 else f"Đã ghi đè thành công '{config_file_path.name}'."
             )
-            log_success(logger, log_msg) # <-- Lỗi Pylance đã được fix
+            log_success(logger, log_msg) 
 
     elif scope == "project":
         config_file_path = Path.cwd() / project_config_filename
@@ -175,18 +200,14 @@ def handle_config_init_request(
                 f"Section [{config_section_name}]"
             )
         
-        # --- MODIFIED: Handle None (Quit) ---
         if should_write_result is None:
             return True # Báo hiệu caller thoát
-        # --- END MODIFIED ---
 
         if should_write_result:
             config_data[config_section_name] = new_section_dict
             if not write_toml_file(config_file_path, config_data, logger):
                 raise IOError(f"Không thể ghi file TOML: {config_file_path.name}")
-            log_success(logger, f"✅ Đã tạo/cập nhật thành công '{config_file_path.name}'.") # <-- Lỗi Pylance đã được fix
-
-    # --- MODIFIED: Removed try/except block ---
+            log_success(logger, f"✅ Đã tạo/cập nhật thành công '{config_file_path.name}'.")
 
     # 4. Mở editor
     launch_editor(logger, config_file_path)

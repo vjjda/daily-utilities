@@ -22,12 +22,12 @@ import typer
 
 # Common utilities
 from utils.logging_config import setup_logging, log_success
+# --- MODIFIED: Xóa load_project_config_section ---
 from utils.core import (
     is_git_repository
 )
-# --- MODIFIED: Import helper config mới ---
-from utils.cli import handle_config_init_request
 # --- END MODIFIED ---
+from utils.cli import handle_config_init_request
 
 # Module Imports
 from modules.tree import (
@@ -49,7 +49,6 @@ from modules.tree import (
 # --- CONSTANTS ---
 MODULE_DIR = PROJECT_ROOT / "modules" / "tree"
 TEMPLATE_FILENAME = "tree.toml.template" 
-# --- MỚI: Định nghĩa các giá trị default cho template ---
 TREE_DEFAULTS: Dict[str, Any] = {
     "level": DEFAULT_MAX_LEVEL,
     "show-submodules": FALLBACK_SHOW_SUBMODULES,
@@ -102,8 +101,10 @@ def main(
     # --- Logic khởi tạo Config (ĐÃ REFACTOR) ---
     logger = setup_logging(script_name="CTree")
 
-    # --- MODIFIED: Bọc trong try/except ---
+    # --- MODIFIED: Đơn giản hóa logic gọi ---
     try:
+        # Xóa logic tải .project_config_section ở đây
+        
         config_action_taken = handle_config_init_request(
             logger=logger,
             config_project=config_project,
@@ -113,7 +114,7 @@ def main(
             config_filename=CONFIG_FILENAME,
             project_config_filename=PROJECT_CONFIG_FILENAME,
             config_section_name=CONFIG_SECTION_NAME,
-            default_values=TREE_DEFAULTS
+            base_defaults=TREE_DEFAULTS # <-- Chỉ cần truyền base defaults
         )
         
         if config_action_taken:
@@ -129,6 +130,7 @@ def main(
         logger.error(f"❌ Lỗi: Đường dẫn bắt đầu không tồn tại: {start_path}")
         raise typer.Exit(code=1)
     
+    # (Phần còn lại của file giữ nguyên)
     cli_dirs_only = "_ALL_" if all_dirs else dirs_patterns
     args = argparse.Namespace(
         level=level, ignore=ignore, prune=prune, dirs_only=cli_dirs_only,

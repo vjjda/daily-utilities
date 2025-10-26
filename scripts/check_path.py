@@ -87,8 +87,9 @@ def main(
     logger = setup_logging(script_name="CPath")
     logger.debug("CPath script started.")
 
-    # --- Logic khởi tạo Config (Giữ nguyên) ---
+    # --- Logic khởi tạo Config (Đã REFACTOR) ---
     try:
+        # --- MODIFIED: Đơn giản hóa logic gọi ---
         config_action_taken = handle_config_init_request(
             logger=logger,
             config_project=config_project,
@@ -98,8 +99,9 @@ def main(
             config_filename=CONFIG_FILENAME,
             project_config_filename=PROJECT_CONFIG_FILENAME,
             config_section_name=CONFIG_SECTION_NAME,
-            default_values=CPATH_DEFAULTS
+            base_defaults=CPATH_DEFAULTS # <-- Chỉ cần truyền base defaults
         )
+        # --- END MODIFIED ---
         
         if config_action_taken:
             raise typer.Exit(code=0)
@@ -134,7 +136,6 @@ def main(
 
     check_mode = dry_run
     
-    # --- Chỉ tải config, không xử lý ---
     file_config_data = load_config_files(effective_scan_root, logger)
     
     # --- Xóa logic merge 'extensions' và 'ignore' khỏi đây ---
@@ -148,17 +149,16 @@ def main(
     fix_command_str = "cpath " + " ".join(filtered_args)
 
     try:
-        # --- MODIFIED: Thay đổi lời gọi hàm, truyền giá trị thô ---
+        # --- (Lời gọi hàm process_check_path_logic giữ nguyên như Giai đoạn 3 (làm lại) ---
         files_to_fix = process_check_path_logic(
             logger=logger, project_root=effective_scan_root,
             target_dir_str=str(target_directory_arg) if effective_scan_root == scan_root and target_directory_arg else None,
-            cli_extensions=extensions,     # <-- Truyền giá trị thô
-            cli_ignore=ignore,           # <-- Truyền giá trị thô
-            file_config_data=file_config_data, # <-- Truyền dict config
+            cli_extensions=extensions,
+            cli_ignore=ignore,
+            file_config_data=file_config_data,
             script_file_path=THIS_SCRIPT_PATH,
             check_mode=check_mode
         )
-        # --- END MODIFIED ---
         
         # (Lệnh gọi execute_check_path_action giữ nguyên)
         execute_check_path_action(
