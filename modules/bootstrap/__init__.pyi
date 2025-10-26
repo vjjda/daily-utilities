@@ -25,4 +25,24 @@ load_template: Any
 process_bootstrap_logic: Any
 
 # Static declaration of exported symbols (for Pylance)
-__all__: List[str] = ['CONFIG_SECTION_NAME', 'DEFAULT_BIN_DIR_NAME', 'DEFAULT_DOCS_DIR_NAME', 'DEFAULT_MODULES_DIR_NAME', 'DEFAULT_SCRIPTS_DIR_NAME', 'TEMPLATE_DIR', 'TYPE_HINT_MAP', 'TYPING_IMPORTS', 'execute_bootstrap_action', 'generate_bin_wrapper', 'generate_doc_file', 'generate_module_file', 'generate_module_init_file', 'generate_script_entrypoint', 'get_cli_args', 'load_bootstrap_config', 'load_spec_file', 'load_template', 'process_bootstrap_logic']
+__all__: List[str] = [
+'CONFIG_SECTION_NAME',
+'DEFAULT_BIN_DIR_NAME',
+'DEFAULT_DOCS_DIR_NAME',
+'DEFAULT_MODULES_DIR_NAME',
+'DEFAULT_SCRIPTS_DIR_NAME',
+'TEMPLATE_DIR',
+'TYPE_HINT_MAP',
+'TYPING_IMPORTS',
+'execute_bootstrap_action',
+'generate_bin_wrapper',
+'generate_doc_file',
+'generate_module_file',
+'generate_module_init_file',
+'generate_script_entrypoint',
+'get_cli_args',
+'load_bootstrap_config',
+'load_spec_file',
+'load_template',
+'process_bootstrap_logic'
+]

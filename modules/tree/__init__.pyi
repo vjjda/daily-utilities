@@ -21,4 +21,20 @@ print_final_result: Any
 print_status_header: Any
 
 # Static declaration of exported symbols (for Pylance)
-__all__: List[str] = ['CONFIG_FILENAME', 'CONFIG_SECTION_NAME', 'DEFAULT_DIRS_ONLY_LOGIC', 'DEFAULT_IGNORE', 'DEFAULT_MAX_LEVEL', 'DEFAULT_PRUNE', 'FALLBACK_SHOW_SUBMODULES', 'FALLBACK_USE_GITIGNORE', 'PROJECT_CONFIG_FILENAME', 'generate_dynamic_config', 'generate_tree', 'load_config_files', 'merge_config_sources', 'print_final_result', 'print_status_header']
+__all__: List[str] = [
+'CONFIG_FILENAME',
+'CONFIG_SECTION_NAME',
+'DEFAULT_DIRS_ONLY_LOGIC',
+'DEFAULT_IGNORE',
+'DEFAULT_MAX_LEVEL',
+'DEFAULT_PRUNE',
+'FALLBACK_SHOW_SUBMODULES',
+'FALLBACK_USE_GITIGNORE',
+'PROJECT_CONFIG_FILENAME',
+'generate_dynamic_config',
+'generate_tree',
+'load_config_files',
+'merge_config_sources',
+'print_final_result',
+'print_status_header'
+]

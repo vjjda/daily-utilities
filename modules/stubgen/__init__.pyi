@@ -20,4 +20,19 @@ load_config_files: Any
 process_stubgen_logic: Any
 
 # Static declaration of exported symbols (for Pylance)
-__all__: List[str] = ['AST_ALL_LIST_NAME', 'AST_MODULE_LIST_NAME', 'CONFIG_FILENAME', 'CONFIG_SECTION_NAME', 'DEFAULT_IGNORE', 'DEFAULT_RESTRICT', 'DYNAMIC_IMPORT_INDICATORS', 'PROJECT_CONFIG_FILENAME', 'collect_all_exported_symbols', 'execute_stubgen_action', 'extract_module_list', 'find_gateway_files', 'load_config_files', 'process_stubgen_logic']
+__all__: List[str] = [
+'AST_ALL_LIST_NAME',
+'AST_MODULE_LIST_NAME',
+'CONFIG_FILENAME',
+'CONFIG_SECTION_NAME',
+'DEFAULT_IGNORE',
+'DEFAULT_RESTRICT',
+'DYNAMIC_IMPORT_INDICATORS',
+'PROJECT_CONFIG_FILENAME',
+'collect_all_exported_symbols',
+'execute_stubgen_action',
+'extract_module_list',
+'find_gateway_files',
+'load_config_files',
+'process_stubgen_logic'
+]
