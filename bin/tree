@@ -1,5 +1,5 @@
 #!/usr/bin/env zsh
-# Path: bin/ctree
+# Path: bin/tree
 #
 # File wrapper này sử dụng đường dẫn tương đối.
 # Toàn bộ project (bao gồm cả wrapper này) có thể được di chuyển cùng nhau.
@@ -10,7 +10,7 @@ PROJECT_ROOT=$(cd "$(dirname "$SCRIPT_PATH")/.." && pwd)
 
 # --- Relative Paths (Calculated by zrap) ---
 VENV_PATH="$PROJECT_ROOT/.venv"
-SCRIPT_TO_RUN="$PROJECT_ROOT/scripts/aptree.py"
+SCRIPT_TO_RUN="$PROJECT_ROOT/scripts/tree.py"
 # --- END PATHS ---
 
 # 2. Activate virtual environment
