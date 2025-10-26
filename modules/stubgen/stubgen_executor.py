@@ -31,9 +31,16 @@ def execute_stubgen_action(
     if not results:
         return
 
+    # --- MODIFIED: Cập nhật logic báo cáo ---
     # 1. Báo cáo kết quả
-    files_to_overwrite = [r for r in results if r["exists"]]
-    files_to_create = [r for r in results if not r["exists"]]
+    files_to_create = [r for r in results if r["status"] == "new"]
+    files_to_overwrite = [r for r in results if r["status"] == "overwrite"]
+    files_no_change = [r for r in results if r["status"] == "no_change"]
+
+    if files_no_change:
+        logger.info(f"\n✅ Files up-to-date ({len(files_no_change)}):")
+        for r in files_no_change:
+            logger.info(f"   -> OK: {r['rel_path']} ({r['symbols_count']} symbols)")
     
     if files_to_create:
         logger.info(f"\n📝 Files to create ({len(files_to_create)}):")
@@ -44,7 +51,13 @@ def execute_stubgen_action(
         logger.warning(f"\n⚠️ Files to OVERWRITE ({len(files_to_overwrite)}):")
         for r in files_to_overwrite:
             logger.warning(f"   -> OVERWRITE: {r['rel_path']} ({r['symbols_count']} symbols)")
+    # --- END MODIFIED ---
 
+    # --- MODIFIED: Chỉ hỏi/ghi nếu có file cần thay đổi ---
+    if not (files_to_create or files_to_overwrite):
+        log_success(logger, "\n✨ Stub generation complete. All stubs are up-to-date.")
+        return # Thoát sớm
+    
     # 2. Xử lý tương tác (nếu không có cờ --force)
     if not force:
         try:
@@ -62,6 +75,10 @@ def execute_stubgen_action(
     logger.info("✍️ Writing .pyi stub files...")
     
     for result in results:
+        # --- MODIFIED: Bỏ qua file không thay đổi ---
+        if result["status"] == "no_change":
+            continue
+        
         stub_path: Path = result["stub_path"]
         content: str = result["content"]
         
@@ -69,7 +86,8 @@ def execute_stubgen_action(
             # Ghi file
             stub_path.write_text(content, encoding='utf-8')
             
-            action = "Overwrote" if result["exists"] else "Created"
+            # --- MODIFIED: Cập nhật logic 'action' ---
+            action = "Overwrote" if result["status"] == "overwrite" else "Created"
             log_success(logger, f"{action} stub: {result['rel_path']}")
             written_count += 1
             
@@ -78,4 +96,10 @@ def execute_stubgen_action(
         except Exception as e:
             logger.error(f"❌ Unknown error while writing file {result['rel_path']}: {e}")
             
-    log_success(logger, f"\n✨ Stub generation complete. Successfully processed {written_count} files.")
+    # --- MODIFIED: Cập nhật thông báo cuối (để xử lý trường hợp không ghi gì) ---
+    if written_count > 0:
+        log_success(logger, f"\n✨ Stub generation complete. Successfully processed {written_count} files.")
+    else:
+        # Trường hợp này không nên xảy ra do đã return sớm
+        log_success(logger, f"\n✨ Stub generation complete. No files needed writing.")
+    # --- END MODIFIED ---

@@ -26,6 +26,8 @@ __all__ = ["process_stubgen_logic"]
 
 
 # --- AST UTILITIES (Refactored from pyi_generator.py) ---
+# ... (Các hàm _get_ast_tree, _extract_module_list, _extract_direct_symbols, 
+# ...  _extract_all_symbols, _generate_stub_content giữ nguyên) ...
 
 def _get_ast_tree(path: Path) -> Optional[ast.Module]:
     """Reads a file and returns its AST."""
@@ -202,12 +204,33 @@ def process_stubgen_logic(
 
         stub_path = init_file.with_suffix(".pyi")
         
+        # --- MODIFIED: Phân loại trạng thái file ---
+        status = ""
+        file_exists = stub_path.exists()
+        
+        if not file_exists:
+            status = "new"
+        else:
+            try:
+                # Đọc nội dung file .pyi hiện có
+                existing_content = stub_path.read_text(encoding='utf-8')
+                if existing_content == stub_content:
+                    status = "no_change"
+                else:
+                    status = "overwrite"
+            except Exception as e:
+                # Lỗi khi đọc file, coi như cần overwrite
+                logger.warning(f"Could not read existing stub {stub_path.name}: {e}")
+                status = "overwrite"
+        # --- END MODIFIED ---
+
         # 4. Collate Result
         results.append({
             "init_path": init_file,
             "stub_path": stub_path,
             "content": stub_content,
-            "exists": stub_path.exists(),
+            # "exists": stub_path.exists(), # <-- ĐÃ THAY THẾ
+            "status": status, # <-- MỚI
             "symbols_count": len(exported_symbols),
             "rel_path": stub_path.relative_to(scan_root).as_posix()
         })
