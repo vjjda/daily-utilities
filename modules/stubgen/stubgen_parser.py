@@ -10,11 +10,9 @@ import ast
 from pathlib import Path
 from typing import Dict, Any, List, Optional, Set, Tuple, Final
 
-# Import Configs
-from .stubgen_config import (
-    AST_MODULE_LIST_NAME, 
-    AST_ALL_LIST_NAME
-)
+# --- MODIFIED: Xóa import hằng số ---
+# (Không cần nữa, vì chúng được truyền vào)
+# --- END MODIFIED ---
 
 __all__ = [
     "extract_module_list",
@@ -29,7 +27,10 @@ def _get_ast_tree(path: Path) -> Optional[ast.Module]:
     except (UnicodeDecodeError, FileNotFoundError, SyntaxError, OSError): 
         return None
 
-def extract_module_list(init_path: Path) -> List[str]:
+def extract_module_list(
+    init_path: Path,
+    ast_module_list_name: str # <-- MODIFIED: Nhận tham số
+) -> List[str]:
     """Extracts the list of submodules from an __init__.py file using AST, with heuristic fallback."""
     tree = _get_ast_tree(init_path)
     
@@ -37,11 +38,13 @@ def extract_module_list(init_path: Path) -> List[str]:
 
     if tree:
         for node in ast.walk(tree):
-            # Tìm kiếm: modules_to_export = [...]
+            # Tìm kiếm: [ast_module_list_name] = [...]
+            # --- MODIFIED: Dùng tham số ---
             if (isinstance(node, ast.Assign) and 
                 len(node.targets) == 1 and 
                 isinstance(node.targets[0], ast.Name) and 
-                node.targets[0].id == AST_MODULE_LIST_NAME and
+                node.targets[0].id == ast_module_list_name and
+            # --- END MODIFIED ---
                 isinstance(node.value, ast.List)):
                 
                 for element in node.value.elts:
@@ -50,7 +53,6 @@ def extract_module_list(init_path: Path) -> List[str]:
                 return module_names # Trả về ngay nếu thành công
 
     # --- HEURISTIC FALLBACK ---
-    # (Dùng cho utils/core/__init__.py và các trường hợp tương tự)
     parent_dir = init_path.parent
     module_names = [
         f.stem for f in parent_dir.iterdir() 
@@ -77,18 +79,23 @@ def _extract_direct_symbols(tree: ast.Module) -> Set[str]:
     
     return direct_symbols
 
-def _extract_all_symbols_from_file(module_path: Path) -> Set[str]:
+def _extract_all_symbols_from_file(
+    module_path: Path,
+    ast_all_list_name: str # <-- MODIFIED: Nhận tham số
+) -> Set[str]:
     """Extracts symbols from the __all__ list of a submodule."""
     tree = _get_ast_tree(module_path)
     if not tree:
         return set()
 
     for node in ast.walk(tree):
-        # Tìm kiếm: __all__ = [...]
+        # Tìm kiếm: [ast_all_list_name] = [...]
+        # --- MODIFIED: Dùng tham số ---
         if (isinstance(node, ast.Assign) and 
             len(node.targets) == 1 and 
             isinstance(node.targets[0], ast.Name) and 
-            node.targets[0].id == AST_ALL_LIST_NAME and
+            node.targets[0].id == ast_all_list_name and
+        # --- END MODIFIED ---
             isinstance(node.value, ast.List)):
             
             symbols: Set[str] = set()
@@ -98,20 +105,26 @@ def _extract_all_symbols_from_file(module_path: Path) -> Set[str]:
             return symbols
     return set()
 
-def collect_all_exported_symbols(init_path: Path, submodule_stems: List[str]) -> Set[str]:
+def collect_all_exported_symbols(
+    init_path: Path, 
+    submodule_stems: List[str],
+    ast_all_list_name: str # <-- MODIFIED: Nhận tham số
+) -> Set[str]:
     """
     Collects all symbols from submodules and the __init__.py itself.
     """
     all_exported_symbols: Set[str] = set()
     
-    # 1. Thu thập từ các file con (ví dụ: stubgen_config.py, stubgen_loader.py)
+    # 1. Thu thập từ các file con
     for stem in submodule_stems:
         submodule_path = init_path.parent / f"{stem}.py"
         if submodule_path.is_file():
-            symbols = _extract_all_symbols_from_file(submodule_path)
+            # --- MODIFIED: Truyền tham số ---
+            symbols = _extract_all_symbols_from_file(submodule_path, ast_all_list_name)
+            # --- END MODIFIED ---
             all_exported_symbols.update(symbols)
             
-    # 2. Thu thập các symbols định nghĩa trực tiếp trong __init__.py (ví dụ: Logger)
+    # 2. Thu thập các symbols định nghĩa trực tiếp trong __init__.py
     init_tree = _get_ast_tree(init_path)
     if init_tree:
         direct_symbols = _extract_direct_symbols(init_tree)

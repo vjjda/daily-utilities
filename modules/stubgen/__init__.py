@@ -16,7 +16,7 @@ current_dir = Path(__file__).parent
 modules_to_export: List[str] = [
     "stubgen_config",
     "stubgen_loader",
-    "stubgen_parser", # <-- MỚI
+    "stubgen_parser", 
     "stubgen_core",
     "stubgen_executor"
 ]

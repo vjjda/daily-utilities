@@ -5,32 +5,84 @@ File Scanning logic for the Stub Generator (sgen) module.
 """
 
 import logging
+import sys
 from pathlib import Path
-from typing import List, Set, Final
+from typing import List, Set, Final, Dict, Any
 
 # Tái sử dụng các tiện ích Git, Filtering
 from utils.core import get_submodule_paths, parse_gitignore, is_path_matched
+# --- NEW: Import helpers để đọc config ---
+from utils.core import load_project_config_section, merge_config_sections, load_toml_file
+# --- END NEW ---
+
 
 # Import Configs
-from .stubgen_config import DEFAULT_IGNORE, SCAN_ROOTS, DYNAMIC_IMPORT_INDICATORS
+# --- MODIFIED: Import thêm hằng số config ---
+from .stubgen_config import (
+    DEFAULT_IGNORE, SCAN_ROOTS, DYNAMIC_IMPORT_INDICATORS,
+    PROJECT_CONFIG_FILENAME, CONFIG_FILENAME, CONFIG_SECTION_NAME
+)
+# --- END MODIFIED ---
 
-__all__ = ["find_gateway_files"]
 
-def _is_dynamic_gateway(path: Path) -> bool:
+# --- MODIFIED: Thêm load_config_files ---
+__all__ = ["find_gateway_files", "load_config_files"]
+# --- END MODIFIED ---
+
+
+# --- NEW: Hàm tải config (tương tự cpath/ctree) ---
+def load_config_files(
+    start_dir: Path, 
+    logger: logging.Logger
+) -> Dict[str, Any]:
+    """
+    Tải file .project.toml VÀ .sgen.toml,
+    trích xuất và merge section [sgen].
+    """
+    project_config_path = start_dir / PROJECT_CONFIG_FILENAME
+    local_config_path = start_dir / CONFIG_FILENAME
+
+    # 1. Tải section từ .project.toml
+    project_section = load_project_config_section(
+        project_config_path, 
+        CONFIG_SECTION_NAME, 
+        logger
+    )
+    
+    # 2. Tải file .sgen.toml (file này là section [sgen])
+    local_section = load_toml_file(local_config_path, logger)
+    if CONFIG_SECTION_NAME in local_section:
+        # (Nếu file .sgen.toml có dạng [sgen]... thay vì ...)
+        local_section = local_section[CONFIG_SECTION_NAME]
+        
+    # 3. Merge (local ghi đè project)
+    return merge_config_sections(project_section, local_section)
+# --- END NEW ---
+
+
+def _is_dynamic_gateway(
+    path: Path,
+    dynamic_import_indicators: List[str] # <-- MODIFIED: Nhận tham số
+) -> bool:
     """
     Checks if an __init__.py file uses dynamic import (import_module + globals()).
     """
     try:
         content = path.read_text(encoding='utf-8')
-        return all(indicator in content for indicator in DYNAMIC_IMPORT_INDICATORS)
+        # --- MODIFIED: Dùng tham số ---
+        return all(indicator in content for indicator in dynamic_import_indicators)
+        # --- END MODIFIED ---
     except Exception:
         return False
         
 def find_gateway_files(
     logger: logging.Logger, 
     scan_root: Path,
-    cli_ignore: Set[str],
-    cli_restrict: Set[str],
+    # --- MODIFIED: Nhận các tham số đã merge ---
+    ignore_set: Set[str],
+    restrict_list: List[str],
+    dynamic_import_indicators: List[str],
+    # --- END MODIFIED ---
     script_file_path: Path
 ) -> List[Path]:
     """
@@ -41,13 +93,10 @@ def find_gateway_files(
     gitignore_spec = parse_gitignore(scan_root)
     submodule_paths = get_submodule_paths(scan_root, logger)
     
-    fnmatch_patterns = DEFAULT_IGNORE.union(cli_ignore)
+    fnmatch_patterns = ignore_set # (Đã bao gồm DEFAULT + CLI)
     
     # 2. Xác định phạm vi quét
-    search_sub_roots = SCAN_ROOTS
-    if cli_restrict:
-        # Nếu có cờ --restrict, ghi đè SCAN_ROOTS mặc định
-        search_sub_roots = list(cli_restrict)
+    search_sub_roots = restrict_list # (Đã được merge)
 
     logger.debug(f"Scanning within sub-roots: {search_sub_roots}")
     
@@ -62,7 +111,7 @@ def find_gateway_files(
 
         for path in root_path.rglob('__init__.py'):
             
-            # --- LỌC 1: Bỏ qua script entrypoint (dù không phải __init__.py nhưng là phòng thủ)
+            # --- LỌC 1: Bỏ qua script entrypoint
             if path.resolve().samefile(script_file_path):
                 continue
             
@@ -89,7 +138,9 @@ def find_gateway_files(
                     pass
             
             # --- LỌC 5: Dynamic Import Check
-            if _is_dynamic_gateway(path):
+            # --- MODIFIED: Truyền tham số indicators ---
+            if _is_dynamic_gateway(path, dynamic_import_indicators):
+            # --- END MODIFIED ---
                 gateway_files.append(path)
                 logger.debug(f"Found dynamic gateway: {path.relative_to(scan_root).as_posix()}")
             else:

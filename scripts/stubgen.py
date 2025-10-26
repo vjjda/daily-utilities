@@ -3,7 +3,7 @@
 import sys
 import logging
 from pathlib import Path
-from typing import Optional, List, Set
+from typing import Optional, List, Set, Dict, Any
 
 import typer
 
@@ -14,30 +14,50 @@ sys.path.append(str(PROJECT_ROOT))
 try:
     from utils.logging_config import setup_logging, log_success
     
-    # --- MODIFIED: Xóa find_git_root/is_git_repository ---
-    from utils.core import parse_comma_list
+    # --- MODIFIED: Xóa parse_comma_list (chuyển vào core) ---
     # --- END MODIFIED ---
     
     # --- NEW: Import helper từ utils.cli ---
-    from utils.cli import handle_project_root_validation
+    from utils.cli import handle_project_root_validation, handle_config_init_request
     # --- END NEW ---
     
     # --- MODULE IMPORTS (SRP) ---
     from modules.stubgen import (
+        # Configs
+        DEFAULT_IGNORE, 
+        SCAN_ROOTS, 
+        DYNAMIC_IMPORT_INDICATORS,
+        AST_MODULE_LIST_NAME,
+        AST_ALL_LIST_NAME,
+        PROJECT_CONFIG_FILENAME,
+        CONFIG_FILENAME,
+        CONFIG_SECTION_NAME,
+        
+        # Functions
+        load_config_files,
         process_stubgen_logic,
         execute_stubgen_action
     )
     # ----------------------
 except ImportError as e:
-    # Log error tiếng Anh theo quy tắc.
     print(f"Error: Could not import project utilities/modules. Ensure PROJECT_ROOT is correct: {PROJECT_ROOT}. Error: {e}", file=sys.stderr)
     sys.exit(1)
 
 # --- CONSTANTS ---
 THIS_SCRIPT_PATH = Path(__file__).resolve()
+# --- NEW: Constants cho config init ---
+MODULE_DIR = PROJECT_ROOT / "modules" / "stubgen"
+TEMPLATE_FILENAME = "stubgen.toml.template" 
+SGEN_DEFAULTS: Dict[str, Any] = {
+    "ignore": DEFAULT_IGNORE,
+    "restrict": SCAN_ROOTS,
+    "dynamic_import_indicators": DYNAMIC_IMPORT_INDICATORS,
+    "ast_module_list_name": AST_MODULE_LIST_NAME,
+    "ast_all_list_name": AST_ALL_LIST_NAME
+}
+# --- END NEW ---
 
 # --- TYPER APP ---
-# ... (Định nghĩa app giữ nguyên) ...
 app = typer.Typer(
     help="Automatically generates .pyi stub files for dynamic module gateways.",
     epilog="Ví dụ: sgen . -f -R modules/auth,utils/core",
@@ -52,7 +72,17 @@ app = typer.Typer(
 def main(
     ctx: typer.Context,
     
-    # ... (Các tham số Typer giữ nguyên) ...
+    # --- NEW: Config Init Flags ---
+    config_project: bool = typer.Option(
+        False, "-c", "--config-project",
+        help=f"Khởi tạo/cập nhật section [{CONFIG_SECTION_NAME}] trong {PROJECT_CONFIG_FILENAME}.",
+    ),
+    config_local: bool = typer.Option(
+        False, "-C", "--config-local",
+        help=f"Khởi tạo/cập nhật file {CONFIG_FILENAME} (scope 'local').",
+    ),
+    # --- END NEW ---
+    
     target_dir: Path = typer.Argument(
         Path("."),
         help="Đường dẫn thư mục để bắt đầu quét (base directory). Mặc định là thư mục hiện tại (.)."
@@ -65,12 +95,12 @@ def main(
     ignore: Optional[str] = typer.Option(
         None,
         "-I", "--ignore",
-        help="Danh sách pattern (fnmatch) ngăn cách bởi dấu phẩy để bỏ qua."
+        help="Danh sách pattern (fnmatch) ngăn cách bởi dấu phẩy để bỏ qua (THÊM vào config)." 
     ),
     restrict: Optional[str] = typer.Option(
         None,
         "-R", "--restrict",
-        help="Danh sách thư mục con (so với target_dir) ngăn cách bởi dấu phẩy để giới hạn quét. Mặc định là SCAN_ROOTS."
+        help="Danh sách thư mục con (so với target_dir) ngăn cách bởi dấu phẩy để giới hạn quét (GHI ĐÈ config)." 
     ),
 ):
     """
@@ -81,16 +111,39 @@ def main(
     # 1. Setup Logging
     logger = setup_logging(script_name="SGen")
     logger.debug("SGen script started.")
+
+    # --- 2. Xử lý Config Init (Tái sử dụng 100%) ---
+    try:
+        config_action_taken = handle_config_init_request(
+            logger=logger,
+            config_project=config_project,
+            config_local=config_local,
+            module_dir=MODULE_DIR,
+            template_filename=TEMPLATE_FILENAME,
+            config_filename=CONFIG_FILENAME,
+            project_config_filename=PROJECT_CONFIG_FILENAME,
+            config_section_name=CONFIG_SECTION_NAME,
+            base_defaults=SGEN_DEFAULTS
+        )
+        if config_action_taken:
+            raise typer.Exit(code=0) # Thoát an toàn
+            
+    except typer.Exit as e:
+        raise e
+    except Exception as e:
+        logger.error(f"❌ Đã xảy ra lỗi khi khởi tạo config: {e}")
+        logger.debug("Traceback:", exc_info=True)
+        raise typer.Exit(code=1)
+    # --- KẾT THÚC ---
     
-    # Mở rộng `~` và resolve đường dẫn tuyệt đối
+    # 3. Mở rộng `~` và resolve đường dẫn tuyệt đối
     scan_root = target_dir.expanduser().resolve()
 
     if not scan_root.exists() or not scan_root.is_dir():
         logger.error(f"❌ Error: Target directory does not exist or is not a directory: {scan_root.as_posix()}")
         raise typer.Exit(code=1)
 
-    # --- MODIFIED: Thay thế khối R/C/Q bằng hàm helper ---
-    # sgen tôn trọng cờ --force để bỏ qua prompt
+    # 4. Xác thực Project Root (R/C/Q)
     effective_scan_root: Optional[Path]
     effective_scan_root, _ = handle_project_root_validation(
         logger=logger,
@@ -98,29 +151,33 @@ def main(
         force_silent=force 
     )
     
-    # --- NEW: Xử lý Quit (None) ---
     if effective_scan_root is None:
-        # (Logger đã in thông báo hủy)
         raise typer.Exit(code=0)
-    # --- END NEW ---
-    # (Chúng ta không cần git_warning_str ở đây)
-    # --- END MODIFIED ---
 
-    # 3. Prepare Args for Core
-    cli_ignore_patterns: Set[str] = parse_comma_list(ignore)
-    cli_restrict_patterns: Set[str] = parse_comma_list(restrict)
+    # --- 5. Tải Config và Chuẩn bị Args cho Core ---
     
-    # 4. Execute Core Logic
+    # 5.1. Tải file config
+    file_config = load_config_files(effective_scan_root, logger)
+    
+    # 5.2. Chuẩn bị config từ CLI
+    cli_config: Dict[str, Optional[str]] = {
+        "ignore": ignore,
+        "restrict": restrict
+    }
+    
+    # 6. Execute Core Logic
     try:
+        # --- MODIFIED: Cập nhật lời gọi hàm ---
         results = process_stubgen_logic(
             logger=logger,
-            scan_root=effective_scan_root, # <-- Sử dụng root đã được xác định
-            cli_ignore=cli_ignore_patterns,
-            cli_restrict=cli_restrict_patterns,
+            scan_root=effective_scan_root,
+            cli_config=cli_config,
+            file_config=file_config,
             script_file_path=THIS_SCRIPT_PATH
         )
+        # --- END MODIFIED ---
         
-        # 5. Execute Action
+        # 7. Execute Action
         if results:
             execute_stubgen_action(
                 logger=logger,
@@ -130,8 +187,7 @@ def main(
         else:
             log_success(logger, "No dynamic module gateways found to process.")
        
-        if not results:
-            log_success(logger, "Operation completed.")
+        # (Xóa log "Operation completed." vì execute_stubgen_action đã log)
             
     except typer.Exit:
         pass

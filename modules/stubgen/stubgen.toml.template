@@ -1,0 +1,34 @@
+# Path: modules/stubgen/stubgen.toml.template
+#
+# Cấu hình tùy chọn cho sgen (Stub Generator)
+# Được tạo bởi `sgen --config-project` hoặc `sgen --config-local`
+#
+
+[{config_section_name}]
+
+# --- Cấu hình Quét (Scanning Configuration) ---
+
+# ignore: Danh sách các pattern (FNMATCH) để bỏ qua khi quét.
+# GHI ĐÈ giá trị mặc định (DEFAULT_IGNORE).
+ignore = {toml_ignore}
+
+# restrict: Danh sách các thư mục con (so với gốc) để giới hạn quét.
+# GHI ĐÈ giá trị mặc định (SCAN_ROOTS).
+# Ví dụ: ["modules", "utils", "api"]
+restrict = {toml_restrict}
+
+
+# --- Cấu hình Logic Cốt lõi (Core Logic Configuration) ---
+# (Chỉ thay đổi nếu dự án của bạn có quy ước code khác)
+
+# dynamic_import_indicators: Các chuỗi code dùng để xác định
+# một file __init__.py có phải là dynamic gateway hay không.
+dynamic_import_indicators = {toml_dynamic_import_indicators}
+
+# ast_module_list_name: Tên biến (trong AST) chứa danh sách
+# các module con (ví dụ: 'modules_to_export').
+ast_module_list_name = {toml_ast_module_list_name}
+
+# ast_all_list_name: Tên biến (trong AST) chứa danh sách
+# các symbol export (ví dụ: '__all__').
+ast_all_list_name = {toml_ast_all_list_name}

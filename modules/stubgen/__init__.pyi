@@ -6,14 +6,18 @@ from pathlib import Path
 
 AST_ALL_LIST_NAME: Any
 AST_MODULE_LIST_NAME: Any
+CONFIG_FILENAME: Any
+CONFIG_SECTION_NAME: Any
 DEFAULT_IGNORE: Any
 DYNAMIC_IMPORT_INDICATORS: Any
+PROJECT_CONFIG_FILENAME: Any
 SCAN_ROOTS: Any
 collect_all_exported_symbols: Any
 execute_stubgen_action: Any
 extract_module_list: Any
 find_gateway_files: Any
+load_config_files: Any
 process_stubgen_logic: Any
 
 # Static declaration of exported symbols (for Pylance)
-__all__: List[str] = ['AST_ALL_LIST_NAME', 'AST_MODULE_LIST_NAME', 'DEFAULT_IGNORE', 'DYNAMIC_IMPORT_INDICATORS', 'SCAN_ROOTS', 'collect_all_exported_symbols', 'execute_stubgen_action', 'extract_module_list', 'find_gateway_files', 'process_stubgen_logic']
+__all__: List[str] = ['AST_ALL_LIST_NAME', 'AST_MODULE_LIST_NAME', 'CONFIG_FILENAME', 'CONFIG_SECTION_NAME', 'DEFAULT_IGNORE', 'DYNAMIC_IMPORT_INDICATORS', 'PROJECT_CONFIG_FILENAME', 'SCAN_ROOTS', 'collect_all_exported_symbols', 'execute_stubgen_action', 'extract_module_list', 'find_gateway_files', 'load_config_files', 'process_stubgen_logic']
