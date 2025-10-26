@@ -6,6 +6,7 @@ from pathlib import Path
 
 COMMENT_RULES: Any
 COMMENT_RULES_BY_EXT: Any
+CONFIG_FILENAME: Any
 CONFIG_SECTION_NAME: Any
 DEFAULT_EXTENSIONS_STRING: Any
 DEFAULT_IGNORE: Any
@@ -18,4 +19,4 @@ process_path_updates: Any
 scan_for_files: Any
 
 # Static declaration of exported symbols (for Pylance)
-__all__: List[str] = ['COMMENT_RULES', 'COMMENT_RULES_BY_EXT', 'CONFIG_SECTION_NAME', 'DEFAULT_EXTENSIONS_STRING', 'DEFAULT_IGNORE', 'PROJECT_CONFIG_FILENAME', 'apply_block_comment_rule', 'apply_line_comment_rule', 'handle_results', 'load_config_files', 'process_path_updates', 'scan_for_files']
+__all__: List[str] = ['COMMENT_RULES', 'COMMENT_RULES_BY_EXT', 'CONFIG_FILENAME', 'CONFIG_SECTION_NAME', 'DEFAULT_EXTENSIONS_STRING', 'DEFAULT_IGNORE', 'PROJECT_CONFIG_FILENAME', 'apply_block_comment_rule', 'apply_line_comment_rule', 'handle_results', 'load_config_files', 'process_path_updates', 'scan_for_files']

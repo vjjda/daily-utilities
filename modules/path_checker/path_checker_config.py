@@ -2,23 +2,22 @@
 
 """
 Configuration for the Path Checker module.
-
-This file defines which file types are supported and which
-commenting rules they use.
+...
 """
 
 from typing import Dict, Any, Set
 
-# --- NEW: __all__ definition ---
+# --- MODIFIED: Thêm CONFIG_FILENAME ---
 __all__ = [
     "DEFAULT_IGNORE",
     "DEFAULT_EXTENSIONS_STRING",
     "COMMENT_RULES",
     "COMMENT_RULES_BY_EXT",
-    "PROJECT_CONFIG_FILENAME", # <-- NEW
-    "CONFIG_SECTION_NAME"      # <-- NEW
+    "PROJECT_CONFIG_FILENAME", 
+    "CONFIG_SECTION_NAME",
+    "CONFIG_FILENAME" # <-- MỚI
 ]
-# --- END NEW ---
+# --- END MODIFIED ---
 
 # Các pattern mặc định luôn bị bỏ qua khi quét
 DEFAULT_IGNORE: Set[str] = {
@@ -29,10 +28,12 @@ DEFAULT_IGNORE: Set[str] = {
 DEFAULT_EXTENSIONS_STRING = "py,js,ts,css,scss,zsh,sh"
 
 
-# --- NEW: Config file constants ---
+# --- Config file constants ---
 PROJECT_CONFIG_FILENAME: str = ".project.toml"
-CONFIG_SECTION_NAME: str = "cpath"
+# --- NEW: File config cục bộ ---
+CONFIG_FILENAME: str = ".cpath.toml"
 # --- END NEW ---
+CONFIG_SECTION_NAME: str = "cpath"
 
 
 # --- 1. Định nghĩa các quy tắc (Rules) ---

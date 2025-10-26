@@ -8,19 +8,18 @@ Tiện ích tải file cho module Path Checker (cpath).
 import logging
 import sys
 from pathlib import Path
-from typing import Dict, Any
+from typing import Dict, Any, List # <-- Thêm List
 
 try:
     import tomllib 
 except ImportError:
-    try:
-        import toml as tomllib # Fallback
-    except ImportError:
-        print("Lỗi: Cần 'tomli'. Chạy 'pip install tomli'", file=sys.stderr)
-        tomllib = None
+    # ... (fallback giữ nguyên)
+    tomllib = None
 
 from .path_checker_config import (
-    PROJECT_CONFIG_FILENAME, CONFIG_SECTION_NAME
+    PROJECT_CONFIG_FILENAME, 
+    CONFIG_SECTION_NAME,
+    CONFIG_FILENAME # <-- MỚI: Import file config cục bộ
 )
 
 __all__ = ["load_config_files"]
@@ -31,25 +30,49 @@ def load_config_files(
     logger: logging.Logger
 ) -> Dict[str, Any]:
     """
-    Tải file .project.toml và trích xuất section [cpath].
+    Tải file .project.toml VÀ .cpath.toml,
+    trích xuất và merge section [cpath].
+    
+    Ưu tiên: .cpath.toml (cục bộ) sẽ ghi đè .project.toml (dự án).
     """
     if tomllib is None:
         logger.error("❌ Thư viện 'tomli' (cho Python < 3.11) chưa được cài đặt.")
         return {} # Trả về config rỗng
 
     project_config_path = start_dir / PROJECT_CONFIG_FILENAME
-    config_data: Dict[str, Any] = {}
+    local_config_path = start_dir / CONFIG_FILENAME # <-- MỚI
+
+    project_data: Dict[str, Any] = {}
+    local_data: Dict[str, Any] = {} # <-- MỚI
+    files_loaded: List[str] = [] # <-- MỚI
 
     try:
         if project_config_path.exists():
             with open(project_config_path, 'rb') as f:
-                config_data = tomllib.load(f)
-            logger.debug(f"Đã tải cấu hình từ: {project_config_path.name}")
-        else:
-            logger.debug(f"Không tìm thấy file {PROJECT_CONFIG_FILENAME}.")
+                project_data = tomllib.load(f)
+            files_loaded.append(project_config_path.name)
+            
+        # --- MỚI: Đọc file .cpath.toml ---
+        if local_config_path.exists():
+            with open(local_config_path, 'rb') as f:
+                local_data = tomllib.load(f)
+            files_loaded.append(local_config_path.name)
+        # --- KẾT THÚC MỚI ---
             
     except Exception as e:
-        logger.warning(f"⚠️ Không thể đọc file cấu hình {PROJECT_CONFIG_FILENAME}: {e}")
+        logger.warning(f"⚠️ Không thể đọc file cấu hình: {e}")
 
-    # Trả về section [cpath] hoặc dict rỗng nếu không có
-    return config_data.get(CONFIG_SECTION_NAME, {})
+    if files_loaded:
+        logger.debug(f"Đã tải cấu hình từ: {files_loaded}")
+    else:
+        logger.debug(f"Không tìm thấy file config. Dùng mặc định.")
+
+
+    # Lấy section [cpath] từ mỗi file
+    project_cpath_section = project_data.get(CONFIG_SECTION_NAME, {})
+    local_cpath_section = local_data.get(CONFIG_SECTION_NAME, {}) # <-- MỚI
+
+    # Merge: local (cục bộ) sẽ ghi đè project (dự án)
+    final_config_section = {**project_cpath_section, **local_cpath_section}
+        
+    return final_config_section

@@ -24,13 +24,13 @@ from utils.core import (
     parse_comma_list, is_git_repository, find_git_root,
     load_config_template, 
     format_value_to_toml,
-    load_project_config_section, 
+    # --- BƯỚC 5: Xóa import cũ ---
+    # load_project_config_section, (Đã xóa)
+    # --- KẾT THÚC BƯỚC 5 ---
     load_toml_file,
     write_toml_file
 )
-# --- MODIFIED: Thêm import utils.cli ---
 from utils.cli import prompt_config_overwrite, launch_editor
-# --- END MODIFIED ---
 
 # Module Imports
 from modules.path_checker import (
@@ -40,12 +40,14 @@ from modules.path_checker import (
     DEFAULT_IGNORE,
     PROJECT_CONFIG_FILENAME, 
     CONFIG_SECTION_NAME,
+    CONFIG_FILENAME, # <-- BƯỚC 4: Import config cục bộ
+    load_config_files # <-- BƯỚC 5: Import loader mới
 )
 
 # --- CONSTANTS ---
 THIS_SCRIPT_PATH = Path(__file__).resolve()
 MODULE_DIR = THIS_SCRIPT_PATH.parent.parent / "modules" / "path_checker" 
-TEMPLATE_FILENAME = "cpath.toml.template" 
+TEMPLATE_FILENAME = "cpath.toml.template"
 
 app = typer.Typer(
     help="Kiểm tra (và tùy chọn sửa) các comment '# Path:' trong file nguồn.",
@@ -57,10 +59,15 @@ app = typer.Typer(
 @app.callback(invoke_without_command=True)
 def main(
     ctx: typer.Context,
-    # (Các tham số Typer giữ nguyên)
+    
+    # --- BƯỚC 3: Cập nhật cờ config ---
     config_project: bool = typer.Option(
-        False, "-c", "--config",
-        help="Khởi tạo/cập nhật section [cpath] trong .project.toml. (Tương đương --config project)",
+        False, "-c", "--config-project",
+        help="Khởi tạo/cập nhật section [cpath] trong .project.toml.",
+    ),
+    config_local: bool = typer.Option(
+        False, "-C", "--config-local", # <-- MỚI
+        help="Khởi tạo/cập nhật file .cpath.toml (scope 'local').",
     ),
     target_directory_arg: Optional[Path] = typer.Argument(
         None,
@@ -84,17 +91,16 @@ def main(
     logger.debug("CPath script started.")
 
     # --- Logic cho cờ --config (ĐÃ REFACTOR VỚI O/R/Q) ---
-    if config_project: 
+    if config_project or config_local: 
         
         if tomllib is None:
              logger.error("❌ Thiếu thư viện 'tomli'. Vui lòng cài đặt: 'pip install tomli tomli-w'")
              raise typer.Exit(code=1)
              
-        scope = 'project' 
-        config_file_path = Path.cwd() / PROJECT_CONFIG_FILENAME
+        scope = 'project' if config_project else 'local' # <-- Xác định scope
         
         try:
-            # (Logic tạo 'new_section_dict' giữ nguyên)
+            # (Logic tạo template giữ nguyên)
             template_str = load_config_template(MODULE_DIR, TEMPLATE_FILENAME, logger)
             cpath_defaults = {
                 "extensions": DEFAULT_EXTENSIONS_STRING,
@@ -104,39 +110,67 @@ def main(
             for key, value in cpath_defaults.items():
                 format_dict[f"toml_{key}"] = format_value_to_toml(value)
             content_section_only = template_str.format(**format_dict)
-            full_toml_string = f"[{CONFIG_SECTION_NAME}]\n{content_section_only}"
-            new_section_dict = tomllib.loads(full_toml_string).get(CONFIG_SECTION_NAME, {})
-            if not new_section_dict:
-                    raise ValueError("Nội dung section mới bị rỗng.")
-            
-            config_data = load_toml_file(config_file_path, logger)
             
             should_write = True
+            config_file_path: Path # Khai báo
             
-            # --- MODIFIED: Sử dụng helper O/R/Q ---
-            if CONFIG_SECTION_NAME in config_data:
-                should_write = prompt_config_overwrite(
-                    logger,
-                    config_file_path,
-                    f"Section [{CONFIG_SECTION_NAME}]"
-                )
-            # --- END MODIFIED ---
-            
-            if should_write:
-                config_data[CONFIG_SECTION_NAME] = new_section_dict
-                if write_toml_file(config_file_path, config_data, logger):
-                    log_success(logger, f"✅ Đã tạo/cập nhật thành công '{config_file_path.name}'.")
-                else:
-                    raise IOError(f"Không thể ghi file TOML: {config_file_path.name}")
+            # --- MỚI: Xử lý scope 'local' ---
+            if scope == "local":
+                config_file_path = Path.cwd() / CONFIG_FILENAME
+                file_existed = config_file_path.exists()
+
+                if file_existed:
+                    should_write = prompt_config_overwrite(
+                        logger,
+                        config_file_path,
+                        f"File '{CONFIG_FILENAME}'"
+                    )
+                
+                if should_write:
+                    # Tạo nội dung đầy đủ (thêm header)
+                    full_toml_string = (
+                        f"# Path: {CONFIG_FILENAME}\n"
+                        f"# Cấu hình cục bộ cho cpath (ghi đè .project.toml)\n\n"
+                        f"[{CONFIG_SECTION_NAME}]\n{content_section_only}"
+                    )
+                    config_file_path.write_text(full_toml_string, encoding="utf-8")
+                    log_msg = (
+                        f"Đã tạo thành công '{config_file_path.name}'." if not file_existed
+                        else f"Đã ghi đè thành công '{config_file_path.name}'."
+                    )
+                    log_success(logger, log_msg)
+
+            # --- Cập nhật: Xử lý scope 'project' ---
+            elif scope == "project":
+                config_file_path = Path.cwd() / PROJECT_CONFIG_FILENAME
+                
+                # (Logic parse 'new_section_dict' giữ nguyên)
+                full_toml_string = f"[{CONFIG_SECTION_NAME}]\n{content_section_only}"
+                new_section_dict = tomllib.loads(full_toml_string).get(CONFIG_SECTION_NAME, {})
+                if not new_section_dict:
+                        raise ValueError("Nội dung section mới bị rỗng.")
+                
+                config_data = load_toml_file(config_file_path, logger)
+                
+                if CONFIG_SECTION_NAME in config_data:
+                    should_write = prompt_config_overwrite(
+                        logger,
+                        config_file_path,
+                        f"Section [{CONFIG_SECTION_NAME}]"
+                    )
+                
+                if should_write:
+                    config_data[CONFIG_SECTION_NAME] = new_section_dict
+                    if write_toml_file(config_file_path, config_data, logger):
+                        log_success(logger, f"✅ Đã tạo/cập nhật thành công '{config_file_path.name}'.")
+                    else:
+                        raise IOError(f"Không thể ghi file TOML: {config_file_path.name}")
 
         except (IOError, KeyError, ValueError) as e:
             logger.error(f"❌ Đã xảy ra lỗi khi thao tác file config: {e}")
             raise typer.Exit(code=1)
 
-        # --- MODIFIED: Sử dụng helper launch ---
         launch_editor(logger, config_file_path)
-        # --- END MODIFIED ---
-
         raise typer.Exit(code=0)
     # --- KẾT THÚC LOGIC CONFIG ---
 
@@ -199,8 +233,7 @@ def main(
 
     check_mode = dry_run
     
-    project_config_path = effective_scan_root / PROJECT_CONFIG_FILENAME
-    file_config_data = load_project_config_section(project_config_path, CONFIG_SECTION_NAME, logger)
+    file_config_data = load_config_files(effective_scan_root, logger)
     
     extensions_str: str
     if extensions:
@@ -222,7 +255,8 @@ def main(
     original_args = sys.argv[1:]
     filtered_args = [
         shlex.quote(arg) for arg in original_args
-        if arg not in ('-d', '--dry-run', '--fix', '-c', '--config')
+        # --- BƯỚC 5 (tiếp): Cập nhật filter cờ config ---
+        if arg not in ('-d', '--dry-run', '--fix', '-c', '--config-project', '-C', '--config-local')
     ]
     fix_command_str = "cpath " + " ".join(filtered_args)
 
