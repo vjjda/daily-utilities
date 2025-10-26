@@ -47,8 +47,12 @@ def generate_bin_wrapper(config: Dict[str, Any]) -> str:
 def generate_script_entrypoint(config: Dict[str, Any]) -> str:
     """Tạo nội dung cho file entrypoint Python trong /scripts/"""
     
-    # --- NEW: Lựa chọn logic (Factory) ---
-    interface_type = config.get('cli', {}).get('interface', 'typer')
+    # --- MODIFIED: Đọc config từ cấp [cli] (Sửa lỗi của tôi) ---
+    cli_config = config.get('cli', {})
+    cli_help_config = cli_config.get('help', {})
+    # Đọc 'interface' từ cấp [cli]
+    interface_type = cli_config.get('interface', 'typer')
+    # --- END MODIFIED ---
     
     # Imports config (dùng chung cho cả hai)
     config_imports_code = build_config_imports(config['module_name'], config)
@@ -58,7 +62,6 @@ def generate_script_entrypoint(config: Dict[str, Any]) -> str:
         template = load_template("script_entrypoint_argparse.py.template")
         
         # Build snippets
-        cli_help_config = config.get('cli', {}).get('help', {})
         argparse_args_code = build_argparse_arguments(config)
         
         # (Gọi các hàm dùng chung từ helpers.py)
@@ -72,7 +75,7 @@ def generate_script_entrypoint(config: Dict[str, Any]) -> str:
             module_name=config['module_name'],
             config_imports=config_imports_code,
             
-            # Placeholders của Argparse
+            # Placeholders của Argparse (Đọc từ cli_help_config)
             cli_description=cli_help_config.get('description', f"Mô tả cho {config['meta']['tool_name']}."),
             cli_epilog=cli_help_config.get('epilog', ""),
             argparse_arguments=argparse_args_code,
@@ -94,7 +97,7 @@ def generate_script_entrypoint(config: Dict[str, Any]) -> str:
         return template.format(
             script_file=config['meta']['script_file'],
             logger_name=config['meta']['logger_name'],
-            module_name=config['module_name'], # <--- Hoàn tác
+            module_name=config['module_name'], 
             config_imports=config_imports_code,
             typer_app_code=typer_app_code,
             typer_main_function_signature=typer_main_sig,

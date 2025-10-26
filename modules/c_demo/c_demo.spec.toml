@@ -1,7 +1,6 @@
 # Path: modules/c_demo/c_demo.spec.toml
 #
 # BẢN THIẾT KẾ THỬ NGHIỆM (TEST) CHO TOOL "c-demo"
-# (Đã cập nhật lên cấu trúc Typer [cli])
 #
 
 # --- 1. THÔNG TIN CƠ BẢN ---
@@ -10,12 +9,14 @@ tool_name = "c_demo"
 script_file = "c_demo.py"
 logger_name = "CDemo"
 
-# --- 2. CẤU HÌNH CLI (TYPER) ---
+# --- 2. CẤU HÌNH CLI ---
+[cli]
+interface = "argparse"
+allow_interspersed_args = true
+
 [cli.help]
 description = "Một công cụ demo để thử nghiệm hệ thống bootstrap mới (Typer + SRP)."
 epilog = "Ví dụ: c_demo /path/to/dir -f -L 3 --format json"
-allow_interspersed_args = true
-interface = "argparse"
 
 # --- 3. DANH SÁCH ARGUMENTS (TYPER) ---
 

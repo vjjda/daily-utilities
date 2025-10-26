@@ -19,21 +19,23 @@ script_file = "new_tool.py"
 # Tên Logger cho setup_logging() (ví dụ: CDiag, CPath, CTree)
 logger_name = "CNewTool"
 
-# --- 2. CẤU HÌNH CLI (TYPER) ---
-# (MỚI: Thay thế [argparse] cũ)
-[cli.help]
-# Mô tả chính cho Typer App()
-description = "Mô tả về công dụng của tool này."
+# --- 2. CẤU HÌNH CLI ---
+# (MỚI: Cấu hình chung cho CLI)
+[cli]
+# Chọn "typer" (mặc định) hoặc "argparse"
+interface = "typer"
 
-# (Tùy chọn) Đoạn text hiển thị ở cuối --help
-epilog = "Ví dụ sử dụng: c-new-tool --fix /path/to/scan"
-# --- NEW: Cấu hình cho Typer context_settings ---
-# allow_interspersed_args: Cho phép đối số vị trí (Argument) và tùy chọn (Option)
-# được đặt xen kẽ nhau (e.g., c_demo . --fix thay vì c_demo --fix .).
+# allow_interspersed_args: Cho phép đối số (Argument) và tùy chọn (Option)
+# xen kẽ (e.g., c_demo . --fix). (Chỉ dùng cho Typer)
 allow_interspersed_args = true
 
-# Chọn "typer" (mặc định) hoặc "argparse"
-interface = "argparse"
+# (Cấu hình [cli.help] giờ chỉ chứa text)
+[cli.help]
+# Mô tả chính cho Typer App() hoặc Argparse description
+description = "Mô tả về công dụng của tool này."
+
+# (Tùy chọn) Đoạn text hiển thị ở cuối --help (epilog)
+epilog = "Ví dụ sử dụng: c-new-tool --fix /path/to/scan"
 
 # --- 3. DANH SÁCH ARGUMENTS (TYPER) ---
 # (MỚI: Cấu trúc đơn giản hơn)
