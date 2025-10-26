@@ -15,7 +15,17 @@ prune = [
 dirs-only = []
 
 [cpath]
-extensions = "py,js,ts,css,scss,zsh,sh,py.template,template.toml"
+extensions = [
+    "css",
+    "js",
+    "py",
+    "py.template",
+    "scss",
+    "sh",
+    "template.toml",
+    "ts",
+    "zsh",
+]
 ignore = [
     ".git",
     ".venv",
