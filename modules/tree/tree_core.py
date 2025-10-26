@@ -23,7 +23,14 @@ if TYPE_CHECKING:
 # --- END MODIFIED ---
 
 # Import utilities
-from utils.core import get_submodule_paths, parse_comma_list, parse_gitignore
+# --- MODIFIED: Import các helper mới, xóa parse_comma_list ---
+from utils.core import (
+    get_submodule_paths, 
+    parse_gitignore, 
+    resolve_config_value, 
+    resolve_config_list
+)
+# --- END MODIFIED ---
 
 from .tree_config import (
     DEFAULT_IGNORE, DEFAULT_PRUNE, DEFAULT_DIRS_ONLY_LOGIC,
@@ -67,21 +74,24 @@ def merge_config_sources(
 
     # --- 3. Merge Configs (CLI > File > Default) ---
     
-    # Level
-    # --- MODIFIED: Dùng .get() trên Dict ---
-    level_from_config_file = file_config.get('level', DEFAULT_MAX_LEVEL)
-    final_level = args.level if args.level is not None else level_from_config_file
+    # Level (Sử dụng helper mới)
+    # --- MODIFIED: Sử dụng resolve_config_value ---
+    final_level = resolve_config_value(
+        cli_value=args.level,
+        file_value=file_config.get('level'),
+        default_value=DEFAULT_MAX_LEVEL
+    )
+    # --- END MODIFIED ---
     
-    # Submodules
+    # Submodules (Giữ logic cũ, vì 'args.show_submodules' là cờ boolean Falsy)
     show_submodules = args.show_submodules if args.show_submodules else \
                       file_config.get('show-submodules', FALLBACK_SHOW_SUBMODULES)
 
-    # Gitignore Logic
+    # Gitignore Logic (Giữ logic cũ, vì 'args.no_gitignore' là cờ boolean Inverted)
     use_gitignore_from_config = file_config.get(
         'use-gitignore', 
         FALLBACK_USE_GITIGNORE
     )
-    # --- END MODIFIED ---
     final_use_gitignore = False if args.no_gitignore else use_gitignore_from_config
     
     gitignore_spec: Optional['pathspec.PathSpec'] = None 
@@ -93,28 +103,36 @@ def merge_config_sources(
     else:
         logger.debug("Không phải kho Git. Bỏ qua .gitignore.")
 
-    # --- MODIFIED: Đọc list từ TOML (file_config.get trả về list) ---
+    # --- MODIFIED: Sử dụng logic "override" mới qua resolve_config_list ---
     # Ignore List
-    ignore_cli = parse_comma_list(args.ignore) # CLI vẫn dùng comma_list
-    ignore_file = set(file_config.get('ignore', [])) # File config là list
-    final_ignore_list = DEFAULT_IGNORE.union(ignore_file).union(ignore_cli)
+    final_ignore_list = resolve_config_list(
+        cli_str_value=args.ignore,
+        file_list_value=file_config.get('ignore'),
+        default_set_value=DEFAULT_IGNORE
+    )
 
     # Prune List
-    prune_cli = parse_comma_list(args.prune) 
-    prune_file = set(file_config.get('prune', []))
-    final_prune_list = DEFAULT_PRUNE.union(prune_file).union(prune_cli)
+    final_prune_list = resolve_config_list(
+        cli_str_value=args.prune,
+        file_list_value=file_config.get('prune'),
+        default_set_value=DEFAULT_PRUNE
+    )
 
-    # Dirs Only List
+    # Dirs Only List (Giữ logic cũ vì phức tạp: _ALL_, list, hoặc string)
     dirs_only_cli = args.dirs_only
-    dirs_only_file = file_config.get('dirs-only', None) # Có thể là list hoặc string "_ALL_"
+    dirs_only_file = file_config.get('dirs-only', None) 
     final_dirs_only_mode = dirs_only_cli if dirs_only_cli is not None else dirs_only_file
     
     global_dirs_only = final_dirs_only_mode == '_ALL_'
     dirs_only_list_custom: Set[str] = set()
     
-    if isinstance(final_dirs_only_mode, list): # Nếu là list từ TOML
+    if isinstance(final_dirs_only_mode, list): 
         dirs_only_list_custom = set(final_dirs_only_mode)
-    elif final_dirs_only_mode is not None and not global_dirs_only: # Nếu là string từ CLI
+    elif final_dirs_only_mode is not None and not global_dirs_only: 
+        # (Chỗ này cần import parse_comma_list - OK, tôi sẽ thêm lại)
+        # --- RE-MODIFIED: Thêm lại import parse_comma_list ---
+        from utils.core import parse_comma_list 
+        # --- END RE-MODIFIED ---
         dirs_only_list_custom = parse_comma_list(final_dirs_only_mode)
         
     final_dirs_only_list = DEFAULT_DIRS_ONLY_LOGIC.union(dirs_only_list_custom)

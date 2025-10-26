@@ -5,7 +5,15 @@ import os
 from pathlib import Path
 from typing import List, Set, Optional, Dict, Any
 
-from .check_path_config import COMMENT_RULES_BY_EXT
+# --- NEW: Import helpers và defaults ---
+from utils.core import resolve_config_value, resolve_config_list
+from .check_path_config import (
+    COMMENT_RULES_BY_EXT, 
+    DEFAULT_EXTENSIONS_STRING, 
+    DEFAULT_IGNORE
+)
+# --- END NEW ---
+
 from .check_path_rules import apply_line_comment_rule, apply_block_comment_rule
 from .check_path_scanner import scan_for_files
 
@@ -107,35 +115,57 @@ def _update_files(
 
 
 # --- 2. Hàm Điều phối (Orchestrator) ---
+# --- MODIFIED: Thay đổi chữ ký hàm để nhận giá trị thô ---
 def process_check_path_logic(
     logger: logging.Logger,
     project_root: Path,
     target_dir_str: Optional[str],
-    extensions: List[str],
-    # --- MODIFIED: Thay đổi tên tham số ---
-    ignore_set: Set[str], # (Thay vì 'cli_ignore')
-    # --- END MODIFIED ---
+    cli_extensions: Optional[str],     # <-- Thay đổi
+    cli_ignore: Optional[str],         # <-- Thay đổi
+    file_config_data: Dict[str, Any],  # <-- Mới
     script_file_path: Path,
     check_mode: bool
 ) -> List[Dict[str, Any]]: 
     """
     Điều phối quá trình kiểm tra đường dẫn:
-    1. Quét file.
-    2. Phân tích chúng.
+    1. Hợp nhất cấu hình (Logic)
+    2. Quét file.
+    3. Phân tích chúng.
     """
     
-    # 1. Quét file (Gọi file scanner.py)
+    # --- 1. Hợp nhất Cấu hình (Logic đã di chuyển về đây) ---
+    extensions_str = resolve_config_value(
+        cli_value=cli_extensions,
+        file_value=file_config_data.get('extensions'),
+        default_value=DEFAULT_EXTENSIONS_STRING
+    )
+    if cli_extensions:
+        logger.debug("Sử dụng danh sách 'extensions' từ CLI.")
+    elif 'extensions' in file_config_data:
+        logger.debug("Sử dụng danh sách 'extensions' từ file config.")
+    else:
+        logger.debug("Sử dụng danh sách 'extensions' mặc định.")
+        
+    final_extensions_list = [ext.strip() for ext in extensions_str.split(',') if ext.strip()]
+
+    final_ignore_set = resolve_config_list(
+        cli_str_value=cli_ignore,
+        file_list_value=file_config_data.get('ignore'),
+        default_set_value=DEFAULT_IGNORE
+    )
+    logger.debug(f"Danh sách 'ignore' cuối cùng (đã merge): {sorted(list(final_ignore_set))}")
+    # --- Kết thúc Hợp nhất Cấu hình ---
+    
+    # 2. Quét file (Gọi file scanner.py)
     files_to_process = scan_for_files(
         logger=logger,
         project_root=project_root,
         target_dir_str=target_dir_str,
-        extensions=extensions,
-        # --- MODIFIED: Thay đổi tên keyword argument ---
-        ignore_set=ignore_set, # (Thay vì 'cli_ignore')
-        # --- END MODIFIED ---
+        extensions=final_extensions_list, # <-- Truyền giá trị đã xử lý
+        ignore_set=final_ignore_set,     # <-- Truyền giá trị đã xử lý
         script_file_path=script_file_path,
         check_mode=check_mode
     )
     
-    # 2. Phân tích file (Gọi hàm _update_files)
+    # 3. Phân tích file (Gọi hàm _update_files)
     return _update_files(files_to_process, project_root, logger)

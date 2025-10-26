@@ -7,15 +7,22 @@ Tiện ích logic để xử lý template và cấu trúc dữ liệu config.
 
 import logging
 from pathlib import Path
-from typing import Dict, Any, Set, List
+# --- MODIFIED: Thêm Optional ---
+from typing import Dict, Any, Set, List, Optional
+# --- END MODIFIED ---
 
 from .toml_io import load_toml_file 
+# --- NEW: Import parse_comma_list ---
+from .parsing import parse_comma_list
+# --- END NEW ---
 
 __all__ = [
     "load_project_config_section",
     "load_config_template",
     "merge_config_sections",
-    "format_value_to_toml"  # <-- ĐÃ THAY ĐỔI
+    "format_value_to_toml",
+    "resolve_config_value",  # <-- NEW
+    "resolve_config_list"    # <-- NEW
 ]
 
 # --- ĐÃ ĐỔI TÊN: Bỏ dấu gạch dưới, export ra ngoài ---
@@ -41,6 +48,53 @@ def format_value_to_toml(value: Any) -> str:
         # Kiểu không xác định, dùng repr() như một fallback
         return repr(value)
 # --- KẾT THÚC THAY ĐỔI ---
+
+# --- NEW: Hàm helper cho giá trị đơn ---
+def resolve_config_value(
+    cli_value: Any, 
+    file_value: Any, 
+    default_value: Any
+) -> Any:
+    """
+    Xác định giá trị config cuối cùng cho các_giá_trị_đơn.
+    Ưu tiên: CLI > File Config > Mặc định.
+    
+    (Lưu ý: Giá trị 'None' từ CLI/File được coi là "không được đặt")
+    """
+    if cli_value is not None:
+        return cli_value
+    if file_value is not None:
+        return file_value
+    return default_value
+# --- END NEW ---
+
+# --- NEW: Hàm helper cho giá trị danh sách (với logic override mới) ---
+def resolve_config_list(
+    cli_str_value: Optional[str], 
+    file_list_value: Optional[List[str]], 
+    default_set_value: Set[str]
+) -> Set[str]:
+    """
+    Xác định danh sách (set) config cuối cùng (cho ignore, prune, v.v.).
+    Logic: (File Config GHI ĐÈ Mặc định) ĐƯỢC HỢP NHẤT (union) với (CLI).
+    """
+    
+    # 1. Xác định tentative_set (File config GHI ĐÈ Mặc định)
+    tentative_set: Set[str]
+    if file_list_value is not None:
+        # File config (.tree.toml / .project.toml) tồn tại
+        tentative_set = set(file_list_value)
+    else:
+        # Dùng giá trị mặc định của script
+        tentative_set = default_set_value
+        
+    # 2. Phân tích cờ CLI (luôn là union/thêm vào)
+    cli_set = parse_comma_list(cli_str_value)
+    
+    # 3. Trả về kết quả hợp nhất
+    return tentative_set.union(cli_set)
+# --- END NEW ---
+
 
 def load_project_config_section(
     config_path: Path,
