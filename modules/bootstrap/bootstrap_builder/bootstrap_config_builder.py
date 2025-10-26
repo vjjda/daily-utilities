@@ -7,8 +7,8 @@ Code snippet generation logic for the Bootstrap module.
 
 from typing import Dict, Any, List
 
-# --- MODIFIED: Import từ gateway cha (bootstrap) ---
-from ..bootstrap_helpers import get_cli_args
+# --- MODIFIED: Import từ ..bootstrap_utils ---
+from ..bootstrap_utils import get_cli_args
 # --- END MODIFIED ---
 
 __all__ = [

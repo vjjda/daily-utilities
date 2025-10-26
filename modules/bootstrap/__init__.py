@@ -11,14 +11,14 @@ from typing import List
 # --- Dynamic Re-export ---
 current_dir = Path(__file__).parent
 
-# --- MODIFIED: Xóa các builder cũ ---
+# --- MODIFIED: Cập nhật danh sách module theo SRP ---
 # Define the explicit order of internal modules to load
 modules_to_export: List[str] = [
     "bootstrap_config",
-    "bootstrap_helpers",
-    # "bootstrap_builder", # <-- Đã xóa (thay bằng package)
-    # "bootstrap_argparse_builder", # <-- Đã xóa (di chuyển)
-    "bootstrap_filler"
+    "bootstrap_loader",   # (Thay thế _helpers)
+    "bootstrap_utils",    # (Mới - chứa get_cli_args)
+    "bootstrap_core",     # (Thay thế _filler)
+    "bootstrap_executor"  # (Mới - chứa logic I/O Ghi)
 ]
 # --- END MODIFIED ---
 
@@ -36,7 +36,7 @@ for module_name in modules_to_export:
             __all__.extend(public_symbols)
         
     except ImportError as e:
-        print(f"Warning: Could not import symbols from {module_name}: {{e}}")
+        print(f"Warning: Could not import symbols from {module_name}: {e}")
 
 # Clean up temporary variables
 del Path, import_module, List, current_dir, modules_to_export, module_name

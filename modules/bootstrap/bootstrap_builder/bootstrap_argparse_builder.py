@@ -10,8 +10,8 @@ from typing import Dict, Any, List
 from pathlib import Path
 # --- END MODIFIED ---
 
-# --- MODIFIED: Import từ gateway cha (bootstrap) ---
-from ..bootstrap_helpers import get_cli_args
+# --- MODIFIED: Import từ ..bootstrap_utils ---
+from ..bootstrap_utils import get_cli_args
 # --- END MODIFIED ---
 
 # --- MODIFIED: Cập nhật __all__ ---

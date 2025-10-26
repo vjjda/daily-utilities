@@ -1,16 +1,19 @@
-# Path: modules/bootstrap/bootstrap_filler.py
+# Path: modules/bootstrap/bootstrap_core.py
 
 """
 Template Filling logic for the Bootstrap module.
 (Loads templates and formats them with code snippets)
 """
 
-from typing import Dict, Any
+import logging
+import sys
+from pathlib import Path
+from typing import Dict, Any, Tuple
 
-from .bootstrap_helpers import (
-    load_template,
-    # (Các hàm build_... đã bị xóa khỏi đây)
-)
+# --- MODIFIED: Import từ _loader và _utils ---
+from .bootstrap_loader import load_template
+from .bootstrap_utils import get_cli_args
+# --- END MODIFIED ---
 
 # --- MODIFIED: Import từ gateway 'bootstrap_builder' mới ---
 from .bootstrap_builder import (
@@ -35,7 +38,8 @@ from .bootstrap_builder import (
 
 __all__ = [
     "generate_bin_wrapper", "generate_script_entrypoint", 
-    "generate_module_file", "generate_module_init_file", "generate_doc_file"
+    "generate_module_file", "generate_module_init_file", "generate_doc_file",
+    "process_bootstrap_logic" # <-- NEW
 ]
 
 
@@ -48,6 +52,7 @@ def generate_bin_wrapper(config: Dict[str, Any]) -> str:
     )
 
 def generate_script_entrypoint(config: Dict[str, Any]) -> str:
+    # (Hàm này giữ nguyên, chỉ di chuyển)
     """Tạo nội dung cho file entrypoint Python trong /scripts/"""
     
     cli_config = config.get('cli', {})
@@ -62,8 +67,6 @@ def generate_script_entrypoint(config: Dict[str, Any]) -> str:
         
         # Build snippets
         argparse_args_code = build_argparse_arguments(config)
-        
-        # (Các hàm này giờ cũng được import từ .bootstrap_builder)
         path_expands_code = build_path_expands(config)
         args_pass_code = build_args_pass_to_core(config)
         
@@ -85,7 +88,7 @@ def generate_script_entrypoint(config: Dict[str, Any]) -> str:
         # --- 2. LOGIC CHO TYPER (Mặc định) ---
         template = load_template("script_entrypoint.py.template")
         
-        # Build snippets (Các hàm này giờ cũng được import từ .bootstrap_builder)
+        # Build snippets
         typer_app_code = build_typer_app_code(config)
         typer_main_sig = build_typer_main_signature(config)
         typer_path_expands = build_typer_path_expands(config)
@@ -105,7 +108,7 @@ def generate_script_entrypoint(config: Dict[str, Any]) -> str:
 
 
 def generate_module_file(config: Dict[str, Any], file_type: str) -> str:
-    # (Hàm này giữ nguyên)
+    # (Hàm này giữ nguyên, chỉ di chuyển)
     template_name_map = {
         "config": "module_config.py.template",
         "core": "module_core.py.template",
@@ -126,15 +129,84 @@ def generate_module_file(config: Dict[str, Any], file_type: str) -> str:
     return template.format(**format_dict)
 
 def generate_module_init_file(config: Dict[str, Any]) -> str:
-    # (Hàm này giữ nguyên)
+    # (Hàm này giữ nguyên, chỉ di chuyển)
     template = load_template("module_init.py.template")
     return template.format(module_name=config['module_name'])
 
 def generate_doc_file(config: Dict[str, Any]) -> str:
-    # (Hàm này giữ nguyên)
+    # (Hàm này giữ nguyên, chỉ di chuyển)
     template = load_template("doc_file.md.template")
     
     return template.format(
         tool_name=config['meta']['tool_name'],
         short_description=config.get('docs', {}).get('short_description', f'Tài liệu cho {config["meta"]["tool_name"]}.')
     )
+
+# --- NEW: Hàm điều phối logic (chuyển từ bootstrap_tool.py) ---
+def process_bootstrap_logic(
+    logger: logging.Logger,
+    config: Dict[str, Any],
+    configured_paths: Dict[str, Path]
+) -> Tuple[Dict[str, str], Dict[str, Path], Path]:
+    """
+    Điều phối việc tạo nội dung, xác thực config và tạo dict đường dẫn.
+    (Logic thuần túy)
+    """
+    
+    BIN_DIR = configured_paths["BIN_DIR"]
+    SCRIPTS_DIR = configured_paths["SCRIPTS_DIR"]
+    MODULES_DIR = configured_paths["MODULES_DIR"]
+    DOCS_DIR = configured_paths["DOCS_DIR"]
+
+    # 1. Xác thực config (chuyển từ bootstrap_tool.py)
+    try:
+        tool_name = config['meta']['tool_name']
+        script_file = config['meta']['script_file']
+        module_name = config['meta']['module_name']
+        config['module_name'] = module_name # Đảm bảo key này tồn tại
+        
+        logger.debug(f"Tool Name: {tool_name}")
+        logger.debug(f"Script File: {script_file}")
+        logger.debug(f"Module Name: {module_name}")
+        
+    except KeyError as e:
+        logger.error(f"❌ File spec thiếu key bắt buộc trong [meta]: {e}")
+        sys.exit(1)
+    
+    # Xác định đường dẫn module
+    module_path = MODULES_DIR / module_name
+
+    # 2. Tạo nội dung (chuyển từ bootstrap_tool.py)
+    try:
+        mod_name = config['module_name']
+        
+        generated_content = {
+            "bin": generate_bin_wrapper(config),
+            "script": generate_script_entrypoint(config),
+            "config": generate_module_file(config, "config"),
+            "loader": generate_module_file(config, "loader"), 
+            "core": generate_module_file(config, "core"),
+            "executor": generate_module_file(config, "executor"),
+            "init": generate_module_init_file(config), 
+        }
+        
+        target_paths = {
+            "bin": BIN_DIR / tool_name,
+            "script": SCRIPTS_DIR / script_file,
+            "config": module_path / f"{mod_name}_config.py",
+            "loader": module_path / f"{mod_name}_loader.py", 
+            "core": module_path / f"{mod_name}_core.py",
+            "executor": module_path / f"{mod_name}_executor.py",
+            "init": module_path / "__init__.py", 
+        }
+        
+        if config.get('docs', {}).get('enabled', False):
+            generated_content["docs"] = generate_doc_file(config)
+            target_paths["docs"] = DOCS_DIR / "tools" / f"{tool_name}.md"
+
+    except Exception as e:
+        logger.error(f"❌ Lỗi nghiêm trọng khi tạo nội dung code: {e}")
+        logger.debug("Traceback:", exc_info=True)
+        sys.exit(1)
+
+    return generated_content, target_paths, module_path
