@@ -1,15 +1,15 @@
 # Path: utils/cli/ui_helpers.py
 
 """
-Tiện ích UI chung cho các entry-point CLI (Typer).
+Tiện ích UI chung cho các entry-point CLI.
 Chứa các hàm xử lý prompt (O/R/Q) và khởi chạy editor.
 """
 
 import logging
 from pathlib import Path
 # --- MODIFIED: Thêm imports ---
-from typing import Tuple
-import typer 
+from typing import Tuple, Optional
+# --- REMOVED: import typer ---
 
 # Import các tiện ích core cần thiết cho hàm mới
 from utils.core import is_git_repository, find_git_root
@@ -21,7 +21,7 @@ def prompt_config_overwrite(
     logger: logging.Logger, 
     item_path: Path, 
     item_name: str
-) -> bool:
+) -> Optional[bool]:
     """
     Hỏi người dùng (O/R/Q) khi file/section config đã tồn tại.
     ...
@@ -49,13 +49,18 @@ def prompt_config_overwrite(
         return False # Không ghi
     else: # choice == 'q'
         logger.warning("❌ Hoạt động bị hủy bởi người dùng.")
-        raise typer.Exit(code=0)
+        # --- MODIFIED: Return None instead of raise ---
+        return None
+        # --- END MODIFIED ---
 
 def launch_editor(logger: logging.Logger, file_path: Path) -> None:
     """
     Mở file cấu hình trong editor mặc định một cách an toàn.
     """
     try:
+        # --- MODIFIED: Import typer locally ---
+        import typer
+        # --- END MODIFIED ---
         logger.info(f"Đang mở '{file_path.name}'...")
         typer.launch(str(file_path))
     except Exception as e:
@@ -67,17 +72,18 @@ def handle_project_root_validation(
     logger: logging.Logger,
     scan_root: Path,
     force_silent: bool = False
-) -> Tuple[Path, str]:
+) -> Tuple[Optional[Path], str]:
     """
     Xác thực gốc quét (scan_root). 
     Nếu không phải là Git root, chạy logic tương tác (R/C/Q hoặc y/N).
     Bỏ qua nếu force_silent = True.
 
     Returns:
-        Tuple[Path, str]: (effective_scan_root, git_warning_str)
+        Tuple[Optional[Path], str]: (effective_scan_root, git_warning_str)
+        Trả về (None, "") nếu người dùng chọn Quit.
     """
     
-    effective_scan_root = scan_root
+    effective_scan_root: Optional[Path] = scan_root
     git_warning_str = ""
     
     # Chỉ chạy logic tương tác nếu KHÔNG ở chế độ im lặng
@@ -108,7 +114,9 @@ def handle_project_root_validation(
                     git_warning_str = f"⚠️ Cảnh báo: Đang chạy từ thư mục không phải gốc Git ('{scan_root.name}/'). Quy tắc .gitignore có thể không đầy đủ."
                 elif choice == 'q':
                     logger.error("❌ Hoạt động bị hủy bởi người dùng.")
-                    raise typer.Exit(code=0)
+                    # --- MODIFIED: Return None instead of raise ---
+                    effective_scan_root = None
+                    # --- END MODIFIED ---
             
             else:
                 logger.warning(f"⚠️ Không tìm thấy thư mục '.git' trong '{scan_root.name}/' hoặc các thư mục cha.")
@@ -120,7 +128,9 @@ def handle_project_root_validation(
                 
                 if confirmation.lower() != 'y':
                     logger.error("❌ Hoạt động bị hủy bởi người dùng.")
-                    raise typer.Exit(code=0)
+                    # --- MODIFIED: Return None instead of raise ---
+                    effective_scan_root = None
+                    # --- END MODIFIED ---
                 else:
                     logger.info(f"✅ Tiếp tục quét tại thư mục không phải gốc Git: {scan_root.as_posix()}")
                     git_warning_str = f"⚠️ Cảnh báo: Đang chạy từ thư mục không phải gốc Git ('{scan_root.name}/'). Quy tắc .gitignore có thể không đầy đủ."

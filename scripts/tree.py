@@ -102,20 +102,27 @@ def main(
     # --- Logic khởi tạo Config (ĐÃ REFACTOR) ---
     logger = setup_logging(script_name="CTree")
 
-    config_action_taken = handle_config_init_request(
-        logger=logger,
-        config_project=config_project,
-        config_local=config_local,
-        module_dir=MODULE_DIR,
-        template_filename=TEMPLATE_FILENAME,
-        config_filename=CONFIG_FILENAME,
-        project_config_filename=PROJECT_CONFIG_FILENAME,
-        config_section_name=CONFIG_SECTION_NAME,
-        default_values=TREE_DEFAULTS
-    )
-    
-    if config_action_taken:
-        raise typer.Exit(code=0)
+    # --- MODIFIED: Bọc trong try/except ---
+    try:
+        config_action_taken = handle_config_init_request(
+            logger=logger,
+            config_project=config_project,
+            config_local=config_local,
+            module_dir=MODULE_DIR,
+            template_filename=TEMPLATE_FILENAME,
+            config_filename=CONFIG_FILENAME,
+            project_config_filename=PROJECT_CONFIG_FILENAME,
+            config_section_name=CONFIG_SECTION_NAME,
+            default_values=TREE_DEFAULTS
+        )
+        
+        if config_action_taken:
+            raise typer.Exit(code=0)
+    except Exception as e:
+        logger.error(f"❌ Đã xảy ra lỗi khi khởi tạo config: {e}")
+        logger.debug("Traceback:", exc_info=True)
+        raise typer.Exit(code=1)
+    # --- END MODIFIED ---
 
     start_path = start_path_arg.expanduser()
     if not start_path.exists():

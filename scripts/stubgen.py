@@ -91,11 +91,18 @@ def main(
 
     # --- MODIFIED: Thay thế khối R/C/Q bằng hàm helper ---
     # sgen tôn trọng cờ --force để bỏ qua prompt
+    effective_scan_root: Optional[Path]
     effective_scan_root, _ = handle_project_root_validation(
         logger=logger,
         scan_root=scan_root,
         force_silent=force 
     )
+    
+    # --- NEW: Xử lý Quit (None) ---
+    if effective_scan_root is None:
+        # (Logger đã in thông báo hủy)
+        raise typer.Exit(code=0)
+    # --- END NEW ---
     # (Chúng ta không cần git_warning_str ở đây)
     # --- END MODIFIED ---
 

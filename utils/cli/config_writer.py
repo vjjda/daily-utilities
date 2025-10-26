@@ -17,7 +17,7 @@ except ImportError:
     except ImportError:
         tomllib = None
 
-import typer
+# --- REMOVED: import typer ---
 
 # Import các tiện ích cốt lõi
 from utils.core import (
@@ -102,80 +102,91 @@ def handle_config_init_request(
     # 1. Kiểm tra thư viện
     if tomllib is None:
          logger.error("❌ Thiếu thư viện 'tomli'/'tomli-w'. Vui lòng cài đặt: 'pip install tomli tomli-w'")
-         raise typer.Exit(code=1)
+         # --- MODIFIED: Raise exception instead of typer.Exit ---
+         raise ImportError("Missing tomli/tomli-w libraries")
+         # --- END MODIFIED ---
          
     scope = 'project' if config_project else 'local'
     
-    try:
-        # 2. Tạo nội dung file/section từ template
-        content_with_placeholders = _generate_template_content(
-            logger,
-            module_dir,
-            template_filename,
-            config_section_name,
-            default_values
-        )
+    # --- MODIFIED: Removed top-level try/except ---
+    # (Cho phép exceptions (IOError, etc.) raise lên caller)
 
-        should_write = True 
-        config_file_path: Path
+    # 2. Tạo nội dung file/section từ template
+    content_with_placeholders = _generate_template_content(
+        logger,
+        module_dir,
+        template_filename,
+        config_section_name,
+        default_values
+    )
 
-        # 3. Xử lý logic ghi file theo scope
-        if scope == "local":
-            config_file_path = Path.cwd() / config_filename
-            file_existed = config_file_path.exists()
-            
-            if file_existed:
-                should_write = prompt_config_overwrite(
-                    logger, 
-                    config_file_path, 
-                    f"File '{config_filename}'"
-                )
-            
-            if should_write:
-                # Ghi file đầy đủ
-                config_file_path.write_text(content_with_placeholders, encoding="utf-8")
-                log_msg = (
-                    f"Đã tạo thành công '{config_file_path.name}'." if not file_existed
-                    else f"Đã ghi đè thành công '{config_file_path.name}'."
-                )
-                log_success(logger, log_msg) # <-- Lỗi Pylance đã được fix
+    should_write_result: Optional[bool] = True 
+    config_file_path: Path
 
-        elif scope == "project":
-            config_file_path = Path.cwd() / project_config_filename
-            
-            # Trích xuất nội dung section [xxx] từ template đã format
-            start_marker = f"[{config_section_name}]"
-            start_index = content_with_placeholders.find(start_marker)
-            if start_index == -1: 
-                raise ValueError(f"Template '{template_filename}' thiếu header section '{start_marker}'.")
-                
-            content_section_only = content_with_placeholders[start_index + len(start_marker):].strip()
-            full_toml_string = f"[{config_section_name}]\n{content_section_only}"
-            new_section_dict = tomllib.loads(full_toml_string).get(config_section_name, {})
-            
-            if not new_section_dict:
-                    raise ValueError("Nội dung section mới bị rỗng sau khi parse.")
+    # 3. Xử lý logic ghi file theo scope
+    if scope == "local":
+        config_file_path = Path.cwd() / config_filename
+        file_existed = config_file_path.exists()
+        
+        if file_existed:
+            should_write_result = prompt_config_overwrite(
+                logger, 
+                config_file_path, 
+                f"File '{config_filename}'"
+            )
+        
+        # --- MODIFIED: Handle None (Quit) ---
+        if should_write_result is None:
+            return True # Báo hiệu caller thoát
+        # --- END MODIFIED ---
 
-            # Tải, merge và ghi file .project.toml
-            config_data = load_toml_file(config_file_path, logger)
-            
-            if config_section_name in config_data:
-                should_write = prompt_config_overwrite(
-                    logger,
-                    config_file_path,
-                    f"Section [{config_section_name}]"
-                )
-            
-            if should_write:
-                config_data[config_section_name] = new_section_dict
-                if not write_toml_file(config_file_path, config_data, logger):
-                    raise IOError(f"Không thể ghi file TOML: {config_file_path.name}")
-                log_success(logger, f"✅ Đã tạo/cập nhật thành công '{config_file_path.name}'.") # <-- Lỗi Pylance đã được fix
+        if should_write_result:
+            # Ghi file đầy đủ
+            config_file_path.write_text(content_with_placeholders, encoding="utf-8")
+            log_msg = (
+                f"Đã tạo thành công '{config_file_path.name}'." if not file_existed
+                else f"Đã ghi đè thành công '{config_file_path.name}'."
+            )
+            log_success(logger, log_msg) # <-- Lỗi Pylance đã được fix
 
-    except (IOError, KeyError, ValueError) as e:
-        logger.error(f"❌ Đã xảy ra lỗi khi thao tác file config: {e}")
-        logger.debug("Traceback:", exc_info=True)
-        raise typer.Exit(code=1)
+    elif scope == "project":
+        config_file_path = Path.cwd() / project_config_filename
+        
+        # Trích xuất nội dung section [xxx] từ template đã format
+        start_marker = f"[{config_section_name}]"
+        start_index = content_with_placeholders.find(start_marker)
+        if start_index == -1: 
+            raise ValueError(f"Template '{template_filename}' thiếu header section '{start_marker}'.")
+            
+        content_section_only = content_with_placeholders[start_index + len(start_marker):].strip()
+        full_toml_string = f"[{config_section_name}]\n{content_section_only}"
+        new_section_dict = tomllib.loads(full_toml_string).get(config_section_name, {})
+        
+        if not new_section_dict:
+                raise ValueError("Nội dung section mới bị rỗng sau khi parse.")
+
+        # Tải, merge và ghi file .project.toml
+        config_data = load_toml_file(config_file_path, logger)
+        
+        if config_section_name in config_data:
+            should_write_result = prompt_config_overwrite(
+                logger,
+                config_file_path,
+                f"Section [{config_section_name}]"
+            )
+        
+        # --- MODIFIED: Handle None (Quit) ---
+        if should_write_result is None:
+            return True # Báo hiệu caller thoát
+        # --- END MODIFIED ---
+
+        if should_write_result:
+            config_data[config_section_name] = new_section_dict
+            if not write_toml_file(config_file_path, config_data, logger):
+                raise IOError(f"Không thể ghi file TOML: {config_file_path.name}")
+            log_success(logger, f"✅ Đã tạo/cập nhật thành công '{config_file_path.name}'.") # <-- Lỗi Pylance đã được fix
+
+    # --- MODIFIED: Removed try/except block ---
 
     # 4. Mở editor
     launch_editor(logger, config_file_path)

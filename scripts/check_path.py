@@ -89,20 +89,27 @@ def main(
     logger.debug("CPath script started.")
 
     # --- Logic khởi tạo Config (Giữ nguyên) ---
-    config_action_taken = handle_config_init_request(
-        logger=logger,
-        config_project=config_project,
-        config_local=config_local,
-        module_dir=MODULE_DIR,
-        template_filename=TEMPLATE_FILENAME,
-        config_filename=CONFIG_FILENAME,
-        project_config_filename=PROJECT_CONFIG_FILENAME,
-        config_section_name=CONFIG_SECTION_NAME,
-        default_values=CPATH_DEFAULTS
-    )
-    
-    if config_action_taken:
-        raise typer.Exit(code=0)
+    # --- MODIFIED: Bọc trong try/except ---
+    try:
+        config_action_taken = handle_config_init_request(
+            logger=logger,
+            config_project=config_project,
+            config_local=config_local,
+            module_dir=MODULE_DIR,
+            template_filename=TEMPLATE_FILENAME,
+            config_filename=CONFIG_FILENAME,
+            project_config_filename=PROJECT_CONFIG_FILENAME,
+            config_section_name=CONFIG_SECTION_NAME,
+            default_values=CPATH_DEFAULTS
+        )
+        
+        if config_action_taken:
+            raise typer.Exit(code=0)
+    except Exception as e:
+        logger.error(f"❌ Đã xảy ra lỗi khi khởi tạo config: {e}")
+        logger.debug("Traceback:", exc_info=True)
+        raise typer.Exit(code=1)
+    # --- END MODIFIED ---
 
     # --- Logic xác định scan_root (Giữ nguyên) ---
     if target_directory_arg:
@@ -119,11 +126,18 @@ def main(
 
     # --- MODIFIED: Thay thế khối R/C/Q bằng hàm helper ---
     # cpath *luôn* chạy kiểm tra này (không bị ảnh hưởng bởi dry_run/force)
+    effective_scan_root: Optional[Path]
     effective_scan_root, git_warning_str = handle_project_root_validation(
         logger=logger,
         scan_root=scan_root,
         force_silent=False 
     )
+    
+    # --- NEW: Xử lý Quit (None) ---
+    if effective_scan_root is None:
+        # (Logger đã in thông báo hủy)
+        raise typer.Exit(code=0)
+    # --- END NEW ---
     # --- END MODIFIED ---
 
     check_mode = dry_run
