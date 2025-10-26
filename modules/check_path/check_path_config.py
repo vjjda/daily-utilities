@@ -25,7 +25,7 @@ DEFAULT_IGNORE: Set[str] = {
     "node_modules", "dist", "build", "out"
 }
 
-DEFAULT_EXTENSIONS_STRING = "py,js,ts,css,scss,zsh,sh"
+DEFAULT_EXTENSIONS_STRING = "py,js,ts,css,scss,zsh,sh,py.template,template.toml"
 
 
 # --- Config file constants ---
@@ -55,7 +55,8 @@ COMMENT_RULES: Dict[str, Dict[str, Any]] = {
     },
     "md_block": {
         "type": "block",
-        "comment_prefix": "",
+        "comment_prefix": "<!--",
+        "comment_suffix": "-->",
         "padding": True, 
     }
 }
@@ -71,4 +72,6 @@ COMMENT_RULES_BY_EXT: Dict[str, Dict[str, Any]] = {
     ".scss": COMMENT_RULES["slash_line"],
     ".css":  COMMENT_RULES["css_block"],
     ".md":   COMMENT_RULES["md_block"],
+    ".py.template": COMMENT_RULES["hash_line"],
+    ".template.toml": COMMENT_RULES["hash_line"],
 }
