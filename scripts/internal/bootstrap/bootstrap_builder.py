@@ -8,12 +8,17 @@ Code snippet generation logic for the Bootstrap module.
 from typing import Dict, Any, List
 
 from .bootstrap_config import TYPE_HINT_MAP
+# --- MODIFIED: Import helper `get_cli_args` ---
 from .bootstrap_helpers import get_cli_args
+# --- END MODIFIED ---
 
 __all__ = [
     "build_config_constants", "build_config_all_list", "build_config_imports",
-    "build_typer_app_code", "build_typer_path_expands", 
-    "build_typer_args_pass_to_core", "build_typer_main_signature"
+    "build_typer_app_code", 
+    # --- REMOVED: build_typer_path_expands, build_typer_args_pass_to_core ---
+    "build_typer_main_signature",
+    # --- NEW: Các hàm (giống tên) này là của Typer ---
+    "build_typer_path_expands", "build_typer_args_pass_to_core"
 ]
 
 
@@ -103,40 +108,49 @@ def build_typer_app_code(config: Dict[str, Any]) -> str:
     ]
     return "\n".join(code_lines)
 
+# --- MODIFIED: Hàm riêng của Typer ---
 def build_typer_path_expands(config: Dict[str, Any]) -> str:
-    # (Hàm này giữ nguyên)
+    """Tạo code expand Path cho Typer (dùng tên biến gốc)."""
     code_lines: List[str] = []
     path_args = [arg for arg in get_cli_args(config) if arg.get('type') == 'Path']
     if not path_args:
-        code_lines.append("# (No Path arguments to expand)")
+        code_lines.append("    # (No Path arguments to expand)")
         
     for arg in path_args:
         name = arg['name']
+        var_name = f"{name}_expanded" # (VD: target_dir_expanded)
+        
         if arg.get('is_argument') and 'default' not in arg:
-             code_lines.append(f"    {name}_expanded = {name}.expanduser()")
+             # Tham số Path bắt buộc
+             code_lines.append(f"    {var_name} = {name}.expanduser()")
         else:
-             code_lines.append(f"    {name}_expanded = {name}.expanduser() if {name} else None")
+             # Tham số Path tùy chọn (có default hoặc là --option)
+             code_lines.append(f"    {var_name} = {name}.expanduser() if {name} else None")
             
     return "\n".join(code_lines)
+# --- END MODIFIED ---
 
+# --- MODIFIED: Hàm riêng của Typer ---
 def build_typer_args_pass_to_core(config: Dict[str, Any]) -> str:
-    # (Hàm này giữ nguyên)
+    """Tạo code truyền args cho Typer (dùng tên biến gốc/expanded)."""
     code_lines: List[str] = []
     args = get_cli_args(config)
     if not args:
-        code_lines.append("            # (No CLI args to pass)")
+        code_lines.append("        # (No CLI args to pass)")
         
     for arg in args:
         name = arg['name']
         if arg.get('type') == 'Path':
-            code_lines.append(f"            {name}={name}_expanded,")
+            code_lines.append(f"        {name}={name}_expanded,")
         else:
-            code_lines.append(f"            {name}={name},")
+            code_lines.append(f"        {name}={name},")
             
     return "\n".join(code_lines)
+# --- END MODIFIED ---
+
 
 def build_typer_main_signature(config: Dict[str, Any]) -> str:
-    # (Hàm này giữ nguyên)
+    # (Hàm này giữ nguyên, không thay đổi)
     code_lines: List[str] = [
         f"def main(",
         f"    ctx: typer.Context,"

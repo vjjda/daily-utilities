@@ -32,6 +32,9 @@ epilog = "Ví dụ sử dụng: c-new-tool --fix /path/to/scan"
 # được đặt xen kẽ nhau (e.g., c_demo . --fix thay vì c_demo --fix .).
 allow_interspersed_args = true
 
+# Chọn "typer" (mặc định) hoặc "argparse"
+interface = "argparse"
+
 # --- 3. DANH SÁCH ARGUMENTS (TYPER) ---
 # (MỚI: Cấu trúc đơn giản hơn)
 #

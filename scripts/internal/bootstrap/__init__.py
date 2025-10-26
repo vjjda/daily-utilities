@@ -16,8 +16,10 @@ modules_to_export: List[str] = [
     "bootstrap_config",
     "bootstrap_helpers",
     "bootstrap_builder",
+    "bootstrap_argparse_builder", # <-- NEW
     "bootstrap_filler"
 ]
+# --- END MODIFIED ---
 
 __all__: List[str] = []
 
