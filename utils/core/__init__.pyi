@@ -9,6 +9,7 @@ Logger: Any
 find_git_root: Any
 format_value_to_toml: Any
 get_submodule_paths: Any
+git_add_and_commit: Any
 is_git_repository: Any
 is_path_matched: Any
 load_and_merge_configs: Any
@@ -24,4 +25,4 @@ run_command: Any
 write_toml_file: Any
 
 # Static declaration of exported symbols (for Pylance)
-__all__: List[str] = ['Logger', 'find_git_root', 'format_value_to_toml', 'get_submodule_paths', 'is_git_repository', 'is_path_matched', 'load_and_merge_configs', 'load_project_config_section', 'load_text_template', 'load_toml_file', 'merge_config_sections', 'parse_comma_list', 'parse_gitignore', 'resolve_config_list', 'resolve_config_value', 'run_command', 'write_toml_file']
+__all__: List[str] = ['Logger', 'find_git_root', 'format_value_to_toml', 'get_submodule_paths', 'git_add_and_commit', 'is_git_repository', 'is_path_matched', 'load_and_merge_configs', 'load_project_config_section', 'load_text_template', 'load_toml_file', 'merge_config_sections', 'parse_comma_list', 'parse_gitignore', 'resolve_config_list', 'resolve_config_value', 'run_command', 'write_toml_file']
