@@ -5,7 +5,7 @@ Configuration for the Path Checker module.
 ...
 """
 
-from typing import Dict, Any, Set
+from typing import Dict, Any, Set, Final
 
 # --- MODIFIED: Thêm CONFIG_FILENAME ---
 __all__ = [
