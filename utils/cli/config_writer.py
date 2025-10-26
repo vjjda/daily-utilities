@@ -45,7 +45,6 @@ def _generate_template_content(
     template_str = load_config_template(module_dir, template_filename, logger)
     
     # 1. Xử lý các giá trị đặc biệt (ví dụ: level của ctree)
-    # (Logic này đặc thù cho ctree, cần chuẩn hóa)
     toml_level_str = ""
     if "level" in default_values:
         level_val = default_values["level"]
@@ -62,8 +61,19 @@ def _generate_template_content(
     }
     
     for key, value in default_values.items():
-        # Dùng format_value_to_toml cho tất cả
-        format_dict[f"toml_{key}"] = format_value_to_toml(value)
+        
+        # Bỏ qua 'level' vì nó đã được xử lý đặc biệt ở trên
+        if key == "level":
+            continue
+            
+        # --- SỬA LỖI: Chuyển key (ví dụ: 'show-submodules')
+        # --- thành key placeholder (ví dụ: 'toml_show_submodules')
+        
+        # Chuyển 'show-submodules' -> 'toml_show_submodules'
+        placeholder_key = f"toml_{key.replace('-', '_')}" 
+        
+        format_dict[placeholder_key] = format_value_to_toml(value)
+        # --- KẾT THÚC SỬA LỖI ---
 
     return template_str.format(**format_dict)
 
