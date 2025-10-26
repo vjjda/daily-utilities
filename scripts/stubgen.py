@@ -13,7 +13,14 @@ sys.path.append(str(PROJECT_ROOT))
 
 try:
     from utils.logging_config import setup_logging, log_success
-    from utils.core import is_git_repository, parse_comma_list
+    
+    # --- MODIFIED: Xóa find_git_root/is_git_repository ---
+    from utils.core import parse_comma_list
+    # --- END MODIFIED ---
+    
+    # --- NEW: Import helper từ utils.cli ---
+    from utils.cli import handle_project_root_validation
+    # --- END NEW ---
     
     # --- MODULE IMPORTS (SRP) ---
     from modules.stubgen import (
@@ -30,6 +37,7 @@ except ImportError as e:
 THIS_SCRIPT_PATH = Path(__file__).resolve()
 
 # --- TYPER APP ---
+# ... (Định nghĩa app giữ nguyên) ...
 app = typer.Typer(
     help="Automatically generates .pyi stub files for dynamic module gateways.",
     epilog="Ví dụ: sgen . -f -R modules/auth,utils/core",
@@ -43,6 +51,8 @@ app = typer.Typer(
 @app.callback(invoke_without_command=True)
 def main(
     ctx: typer.Context,
+    
+    # ... (Các tham số Typer giữ nguyên) ...
     target_dir: Path = typer.Argument(
         Path("."),
         help="Đường dẫn thư mục để bắt đầu quét (base directory). Mặc định là thư mục hiện tại (.)."
@@ -79,23 +89,15 @@ def main(
         logger.error(f"❌ Error: Target directory does not exist or is not a directory: {scan_root.as_posix()}")
         raise typer.Exit(code=1)
 
-    # 2. Git Check & Confirmation (if not force)
-    if not force:
-        if not is_git_repository(scan_root):
-            logger.warning(f"⚠️ Target directory '{scan_root.name}/' is not a Git repository.")
-            logger.warning("   Scanning a non-project directory may lead to unexpected results.")
-            try:
-                confirmation = input("   Are you sure you want to proceed? (y/N): ")
-            except (EOFError, KeyboardInterrupt):
-                confirmation = 'n'
-            
-            if confirmation.lower() != 'y':
-                logger.error("❌ Operation cancelled by user.")
-                raise typer.Exit(code=0)
-            else:
-                logger.info("✅ Proceeding with scan in non-Git repository.")
-        else:
-            logger.info("✅ Git repository detected. Proceeding with scan.")
+    # --- MODIFIED: Thay thế khối R/C/Q bằng hàm helper ---
+    # sgen tôn trọng cờ --force để bỏ qua prompt
+    effective_scan_root, _ = handle_project_root_validation(
+        logger=logger,
+        scan_root=scan_root,
+        force_silent=force 
+    )
+    # (Chúng ta không cần git_warning_str ở đây)
+    # --- END MODIFIED ---
 
     # 3. Prepare Args for Core
     cli_ignore_patterns: Set[str] = parse_comma_list(ignore)
@@ -103,13 +105,12 @@ def main(
     
     # 4. Execute Core Logic
     try:
-        # Core logic sẽ thực hiện quét, phân tích và tạo nội dung stub.
         results = process_stubgen_logic(
             logger=logger,
-            scan_root=scan_root,
+            scan_root=effective_scan_root, # <-- Sử dụng root đã được xác định
             cli_ignore=cli_ignore_patterns,
             cli_restrict=cli_restrict_patterns,
-            script_file_path=THIS_SCRIPT_PATH # Cần loại trừ chính nó
+            script_file_path=THIS_SCRIPT_PATH
         )
         
         # 5. Execute Action
@@ -122,12 +123,10 @@ def main(
         else:
             log_success(logger, "No dynamic module gateways found to process.")
        
-        # Log_success cuối cùng được thực hiện bởi executor nếu có file được xử lý.
         if not results:
             log_success(logger, "Operation completed.")
             
     except typer.Exit:
-        # Typer.Exit đã được xử lý (khi user chọn Quit trong Git check hoặc action)
         pass
     except Exception as e:
         logger.error(f"❌ An unexpected error occurred: {e}")

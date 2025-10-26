@@ -5,8 +5,9 @@ from typing import Any, List, Optional, Set, Dict, Union
 from pathlib import Path
 
 handle_config_init_request: Any
+handle_project_root_validation: Any
 launch_editor: Any
 prompt_config_overwrite: Any
 
 # Static declaration of exported symbols (for Pylance)
-__all__: List[str] = ['handle_config_init_request', 'launch_editor', 'prompt_config_overwrite']
+__all__: List[str] = ['handle_config_init_request', 'handle_project_root_validation', 'launch_editor', 'prompt_config_overwrite']

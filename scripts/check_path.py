@@ -23,11 +23,11 @@ from utils.core import (
     parse_comma_list, is_git_repository, find_git_root,
 )
 # --- MODIFIED: Import helper config mới ---
-from utils.cli import handle_config_init_request
+from utils.cli import handle_config_init_request, handle_project_root_validation
 # --- END MODIFIED ---
 
 # Module Imports
-# --- MODIFIED: Import from 'check_path' and new function names ---
+# ... (Giữ nguyên imports từ modules.check_path) ...
 from modules.check_path import (
     process_check_path_logic,
     execute_check_path_action,
@@ -38,26 +38,19 @@ from modules.check_path import (
     CONFIG_FILENAME,
     load_config_files
 )
-# --- END MODIFIED ---
 
 # --- CONSTANTS ---
 THIS_SCRIPT_PATH = Path(__file__).resolve()
-# --- MODIFIED: Updated module dir and template filename ---
 MODULE_DIR = THIS_SCRIPT_PATH.parent.parent / "modules" / "check_path" 
 TEMPLATE_FILENAME = "check_path.toml.template" 
-# --- END MODIFIED ---
-
-# --- MỚI: Định nghĩa các giá trị default cho template ---
 CPATH_DEFAULTS: Dict[str, Any] = {
     "extensions": DEFAULT_EXTENSIONS_STRING,
     "ignore": DEFAULT_IGNORE
 }
-# --- KẾT THÚC MỚI ---
 
 app = typer.Typer(
     help="Kiểm tra (và tùy chọn sửa) các comment '# Path:' trong file nguồn.",
     add_completion=False,
-    # rich_markup_mode=None, 
     context_settings={"help_option_names": ["--help", "-h"]}
 )
 
@@ -65,7 +58,7 @@ app = typer.Typer(
 def main(
     ctx: typer.Context,
     
-    # (Các cờ config_project và config_local giữ nguyên)
+    # ... (Các tham số config_project, config_local, target_directory_arg giữ nguyên) ...
     config_project: bool = typer.Option(
         False, "-c", "--config-project",
         help="Khởi tạo/cập nhật section [cpath] trong .project.toml.",
@@ -74,8 +67,6 @@ def main(
         False, "-C", "--config-local",
         help="Khởi tạo/cập nhật file .cpath.toml (scope 'local').",
     ),
-    
-    # (Các tham số Typer khác giữ nguyên)
     target_directory_arg: Optional[Path] = typer.Argument(
         None,
         help="Thư mục để quét (mặc định: thư mục làm việc hiện tại, tôn trọng .gitignore). Dùng '~' cho thư mục home.",
@@ -97,7 +88,7 @@ def main(
     logger = setup_logging(script_name="CPath")
     logger.debug("CPath script started.")
 
-    # --- Logic khởi tạo Config (ĐÃ REFACTOR) ---
+    # --- Logic khởi tạo Config (Giữ nguyên) ---
     config_action_taken = handle_config_init_request(
         logger=logger,
         config_project=config_project,
@@ -112,11 +103,8 @@ def main(
     
     if config_action_taken:
         raise typer.Exit(code=0)
-    # --- KẾT THÚC REFACTOR ---
 
-
-    # (Logic chạy tool giữ nguyên)
-    # ...
+    # --- Logic xác định scan_root (Giữ nguyên) ---
     if target_directory_arg:
         scan_root = target_directory_arg.expanduser()
     else:
@@ -129,52 +117,20 @@ def main(
         logger.error(f"❌ Lỗi: Đường dẫn mục tiêu không phải là thư mục: {scan_root}")
         raise typer.Exit(code=1)
 
-    git_warning_str = ""
-    effective_scan_root = scan_root
-    
-    if not is_git_repository(scan_root):
-        suggested_root = find_git_root(scan_root.parent)
-        if suggested_root:
-            logger.warning(f"⚠️ Thư mục hiện tại '{scan_root.name}/' không phải là gốc Git.")
-            logger.warning(f"   Đã tìm thấy gốc Git tại: {suggested_root.as_posix()}")
-            logger.warning("   Vui lòng chọn một tùy chọn:")
-            logger.warning("     [R] Chạy từ Gốc Git (Khuyên dùng)")
-            logger.warning(f"     [C] Chạy từ Thư mục Hiện tại ({scan_root.name}/)")
-            logger.warning("     [Q] Thoát / Hủy")
-            choice = ""
-            while choice not in ('r', 'c', 'q'):
-                try:
-                    choice = input("   Nhập lựa chọn của bạn (R/C/Q): ").lower().strip()
-                except (EOFError, KeyboardInterrupt):
-                    choice = 'q'
-            if choice == 'r':
-                effective_scan_root = suggested_root
-                logger.info(f"✅ Di chuyển quét đến gốc Git: {effective_scan_root.as_posix()}")
-            elif choice == 'c':
-                effective_scan_root = scan_root
-                logger.info(f"✅ Quét từ thư mục hiện tại: {scan_root.as_posix()}")
-                git_warning_str = f"⚠️ Cảnh báo: Đang chạy từ thư mục không phải gốc Git ('{scan_root.name}/'). Quy tắc .gitignore có thể không đầy đủ."
-            elif choice == 'q':
-                logger.error("❌ Hoạt động bị hủy bởi người dùng.")
-                raise typer.Exit(code=0)
-        else:
-             logger.warning(f"⚠️ Không tìm thấy thư mục '.git' trong '{scan_root.name}/' hoặc các thư mục cha.")
-             logger.warning(f"   Quét từ một thư mục không phải dự án (như $HOME) có thể chậm hoặc không an toàn.")
-             try:
-                 confirmation = input(f"   Bạn có chắc muốn quét '{scan_root.as_posix()}'? (y/N): ")
-             except (EOFError, KeyboardInterrupt):
-                 confirmation = 'n'
-             if confirmation.lower() == 'y':
-                 logger.info(f"✅ Tiếp tục quét tại thư mục không phải gốc Git: {scan_root.as_posix()}")
-                 git_warning_str = f"⚠️ Cảnh báo: Đang chạy từ thư mục không phải gốc Git ('{scan_root.name}/'). Quy tắc .gitignore có thể không đầy đủ."
-             else:
-                 logger.error("❌ Hoạt động bị hủy bởi người dùng.")
-                 raise typer.Exit(code=0)
+    # --- MODIFIED: Thay thế khối R/C/Q bằng hàm helper ---
+    # cpath *luôn* chạy kiểm tra này (không bị ảnh hưởng bởi dry_run/force)
+    effective_scan_root, git_warning_str = handle_project_root_validation(
+        logger=logger,
+        scan_root=scan_root,
+        force_silent=False 
+    )
+    # --- END MODIFIED ---
 
     check_mode = dry_run
     
     file_config_data = load_config_files(effective_scan_root, logger)
     
+    # ... (Logic merge config (extensions, ignore) giữ nguyên) ...
     extensions_str: str
     if extensions:
         extensions_str = extensions
@@ -195,13 +151,12 @@ def main(
     original_args = sys.argv[1:]
     filtered_args = [
         shlex.quote(arg) for arg in original_args
-        # --- BƯỚC 5 (tiếp): Cập nhật filter cờ config ---
         if arg not in ('-d', '--dry-run', '--fix', '-c', '--config-project', '-C', '--config-local')
     ]
     fix_command_str = "cpath " + " ".join(filtered_args)
 
     try:
-        # --- MODIFIED: Call new function name ---
+        # --- (Lệnh gọi process_check_path_logic giữ nguyên) ---
         files_to_fix = process_check_path_logic(
             logger=logger, project_root=effective_scan_root,
             target_dir_str=str(target_directory_arg) if effective_scan_root == scan_root and target_directory_arg else None,
@@ -211,7 +166,7 @@ def main(
             check_mode=check_mode
         )
         
-        # --- MODIFIED: Call new function name ---
+        # --- (Lệnh gọi execute_check_path_action giữ nguyên) ---
         execute_check_path_action(
             logger=logger, files_to_fix=files_to_fix, check_mode=check_mode,
             fix_command_str=fix_command_str, scan_root=effective_scan_root,
