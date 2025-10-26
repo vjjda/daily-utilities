@@ -26,13 +26,15 @@ DEFAULT_IGNORE: Final[Set[str]] = {
     "dist", "build", "out", "*.pyc", "*.pyo"
 }
 
+# --- MODIFIED: Xóa 'scripts/internal/bootstrap' ---
 # Các thư mục con (tương đối với scan_root) để tìm kiếm các module gateway.
 # Đây là giá trị mặc định cho cờ --restrict.
 SCAN_ROOTS: Final[List[str]] = [
     "modules", 
     "utils",
-    "scripts/internal/bootstrap" 
+    # "scripts/internal/bootstrap" # <-- ĐÃ XÓA (giờ nằm trong 'modules')
 ]
+# --- END MODIFIED ---
 
 # Các chuỗi code dùng để xác định file __init__.py có phải là dynamic gateway không
 DYNAMIC_IMPORT_INDICATORS: Final[List[str]] = [
@@ -44,4 +46,3 @@ DYNAMIC_IMPORT_INDICATORS: Final[List[str]] = [
 # Tên biến AST để trích xuất
 AST_MODULE_LIST_NAME: Final[str] = 'modules_to_export'
 AST_ALL_LIST_NAME: Final[str] = '__all__'
-# --- END NEW ---

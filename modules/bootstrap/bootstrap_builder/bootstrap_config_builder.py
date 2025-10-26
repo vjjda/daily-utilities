@@ -1,4 +1,4 @@
-# Path: scripts/internal/bootstrap/bootstrap_builder/bootstrap_config_builder.py
+# Path: modules/bootstrap/bootstrap_builder/bootstrap_config_builder.py
 
 """
 Code snippet generation logic for the Bootstrap module.

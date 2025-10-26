@@ -1,4 +1,4 @@
-# Path: scripts/internal/bootstrap/bootstrap_builder/__init__.py
+# Path: modules/bootstrap/bootstrap_builder/__init__.py
 
 """
 Module Gateway (Facade) for the Bootstrap Builder subsystem.

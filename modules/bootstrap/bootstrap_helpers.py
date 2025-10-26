@@ -1,4 +1,4 @@
-# Path: scripts/internal/bootstrap/bootstrap_helpers.py
+# Path: modules/bootstrap/bootstrap_helpers.py
 """
 Helper utilities for the Bootstrap module.
 (Loading templates, parsing config)

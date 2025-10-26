@@ -1,4 +1,4 @@
-# Path: scripts/internal/bootstrap/bootstrap_tool.py
+# Path: scripts/bootstrap_tool.py
 
 """
 Script nội bộ để bootstrap (khởi tạo) một tool utility mới.
@@ -22,17 +22,18 @@ except ImportError:
         print("Lỗi: Cần gói 'toml'. Chạy 'pip install toml' (cho Python < 3.11)", file=sys.stderr)
         sys.exit(1)
 
-# --- (sys.path import giữ nguyên) ---
-PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+# --- MODIFIED: Cập nhật PROJECT_ROOT và sys.path ---
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.append(str(PROJECT_ROOT))
+# --- END MODIFIED ---
 
 try:
     from utils.logging_config import setup_logging, log_success # type: ignore[reportUnknownVariableType]
     
-    # --- MODIFIED: Import utils.core và các hằng số config ---
+    # --- MODIFIED: Import từ 'modules.bootstrap' ---
     from utils.core import load_project_config_section # type: ignore[reportUnknownVariableType]
     
-    from scripts.internal.bootstrap import (
+    from modules.bootstrap import (
         generate_bin_wrapper,
         generate_script_entrypoint,
         generate_module_file,
@@ -51,28 +52,22 @@ except ImportError as e:
     print(f"Lỗi: Không thể import utils hoặc bootstrap gateway: {e}", file=sys.stderr)
     sys.exit(1)
 
-# --- (Định nghĩa thư mục đã bị XÓA) ---
-# (BIN_DIR, SCRIPTS_DIR, MODULES_DIR, DOCS_DIR sẽ được định nghĩa trong main())
-
-# --- HÀM MAIN (ĐIỀU PHỐI) ---
+# --- (Hàm main giữ nguyên, không cần thay đổi logic bên trong) ---
 def main():
     """Hàm chính chạy script bootstrap"""
     
     logger = setup_logging(script_name="Bootstrap", console_level_str="INFO")
     logger.debug("Bootstrap script started.")
     
-    # --- NEW: Load Configurable Paths ---
-    # Tải cấu hình từ section [bootstrap] trong .project.toml
+    # --- (Load Configurable Paths giữ nguyên) ---
     config_path = PROJECT_ROOT / ".project.toml"
     toml_config = load_project_config_section(config_path, CONFIG_SECTION_NAME, logger)
     
-    # Merge với defaults
     bin_dir_name = toml_config.get("bin_dir", DEFAULT_BIN_DIR_NAME)
     scripts_dir_name = toml_config.get("scripts_dir", DEFAULT_SCRIPTS_DIR_NAME)
     modules_dir_name = toml_config.get("modules_dir", DEFAULT_MODULES_DIR_NAME)
     docs_dir_name = toml_config.get("docs_dir", DEFAULT_DOCS_DIR_NAME)
     
-    # Xây dựng các biến Path tuyệt đối
     BIN_DIR = PROJECT_ROOT / bin_dir_name
     SCRIPTS_DIR = PROJECT_ROOT / scripts_dir_name
     MODULES_DIR = PROJECT_ROOT / modules_dir_name
@@ -80,9 +75,8 @@ def main():
     
     logger.debug(f"BIN_DIR set to: {BIN_DIR.as_posix()}")
     logger.debug(f"SCRIPTS_DIR set to: {SCRIPTS_DIR.as_posix()}")
-    # --- END NEW ---
 
-    # --- (1. Phân tích đối số giữ nguyên) ---
+    # --- (Phân tích đối số giữ nguyên) ---
     parser = argparse.ArgumentParser(description="Bootstrap (khởi tạo) một tool utility mới từ file *.spec.toml.")
     parser.add_argument(
         "target_path_str", 
@@ -91,7 +85,7 @@ def main():
     )
     args = parser.parse_args()
 
-    # --- (2. Load và xác thực đường dẫn giữ nguyên) ---
+    # --- (Load và xác thực đường dẫn giữ nguyên) ---
     target_path = Path(args.target_path_str).resolve()
     module_path: Optional[Path] = None
     spec_file_path: Optional[Path] = None
@@ -120,7 +114,6 @@ def main():
         spec_file_path = module_path / "tool.spec.toml" # Mặc định cho tool mới
         logger.warning(f"Đường dẫn '{module_path.name}' không tồn tại. Giả định đây là module mới.")
 
-    # ... (log info giữ nguyên) ...
     logger.info(f"🚀 Bắt đầu bootstrap:")
     logger.info(f"   Thư mục Module: {module_path.relative_to(PROJECT_ROOT).as_posix()}")
     logger.info(f"   File Spec:      {spec_file_path.name}")
@@ -131,10 +124,9 @@ def main():
     
     if not spec_file_path.exists():
         logger.error(f"❌ Không tìm thấy file spec: {spec_file_path.name}")
-        # ... (log error giữ nguyên) ...
         sys.exit(1)
 
-    # --- (3. Load TOML giữ nguyên) ---
+    # --- (Load TOML giữ nguyên) ---
     try:
         with open(spec_file_path, 'rb') as f:
             config = tomllib.load(f) # type: ignore[reportArgumentType]
@@ -142,9 +134,9 @@ def main():
         logger.error(f"❌ Lỗi khi đọc file TOML: {e}")
         sys.exit(1)
 
-    # --- (4. Xác thực config giữ nguyên) ---
+    # --- (Xác thực config giữ nguyên) ---
     try:
-        config['module_name'] = module_path.name # (ví dụ: 'c_demo')
+        config['module_name'] = module_path.name
         tool_name = config['meta']['tool_name']
         script_file = config['meta']['script_file']
         
@@ -155,7 +147,7 @@ def main():
         logger.error(f"❌ File spec '{spec_file_path.name}' thiếu key bắt buộc trong [meta]: {e}")
         sys.exit(1)
         
-    # --- (5. Tạo nội dung giữ nguyên) ---
+    # --- (Tạo nội dung giữ nguyên) ---
     try:
         mod_name = config['module_name']
         
@@ -169,7 +161,6 @@ def main():
             "init": generate_module_init_file(config), 
         }
         
-        # --- (target_paths giữ nguyên, vì nó DÙNG các biến Path đã được load động) ---
         target_paths = {
             "bin": BIN_DIR / tool_name,
             "script": SCRIPTS_DIR / script_file,
@@ -189,7 +180,7 @@ def main():
         logger.debug("Traceback:", exc_info=True)
         sys.exit(1)
 
-    # --- (6. KIỂM TRA AN TOÀN giữ nguyên) ---
+    # --- (KIỂM TRA AN TOÀN giữ nguyên) ---
     existing_files = [p for p in target_paths.values() if p.exists()]
     if existing_files:
         logger.error(f"❌ Dừng lại! Các file sau đã tồn tại. Sẽ không ghi đè:")
@@ -197,7 +188,7 @@ def main():
             logger.error(f"   -> {p.relative_to(PROJECT_ROOT).as_posix()}")
         sys.exit(1)
 
-    # --- (7. GHI FILE (I/O) giữ nguyên) ---
+    # --- (GHI FILE (I/O) giữ nguyên) ---
     try:
         for key, path in target_paths.items():
             content = generated_content[key]

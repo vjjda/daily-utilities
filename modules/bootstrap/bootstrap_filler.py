@@ -1,4 +1,4 @@
-# Path: scripts/internal/bootstrap/bootstrap_filler.py
+# Path: modules/bootstrap/bootstrap_filler.py
 
 """
 Template Filling logic for the Bootstrap module.
