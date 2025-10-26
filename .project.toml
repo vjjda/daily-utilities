@@ -19,7 +19,6 @@ extensions = [
     "css",
     "js",
     "py",
-    "py.template",
     "scss",
     "sh",
     "template.toml",
@@ -34,7 +33,7 @@ ignore = [
     "dist",
     "node_modules",
     "out",
-    "venv",
+    "venv"
 ]
 
 [sgen]

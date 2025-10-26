@@ -27,7 +27,7 @@ DEFAULT_IGNORE: Set[str] = {
 
 DEFAULT_EXTENSIONS: Final[Set[str]] = {
     "py", "js", "ts", "css", "scss", "zsh", "sh", 
-    "py.template", "template.toml"
+    "template.toml"
 }
 
 # --- Config file constants ---
