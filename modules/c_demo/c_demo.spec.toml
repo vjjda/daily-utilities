@@ -18,7 +18,7 @@ allow_interspersed_args = true
 description = "Một công cụ demo để thử nghiệm hệ thống bootstrap mới (Typer + SRP)."
 epilog = "Ví dụ: c_demo /path/to/dir -f -L 3 --format json"
 
-# --- 3. DANH SÁCH ARGUMENTS (TYPER) ---
+# --- 3. DANH SÁCH ARGUMENTS (TYPER/ARGPARSE) ---
 
 # --- TEST 1: Positional Argument (Path, bắt buộc) ---
 [[cli.args]]
