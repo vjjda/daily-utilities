@@ -29,8 +29,8 @@ from utils.core import (
     load_config_template, 
     format_value_to_toml 
 )
-# --- MODIFIED: Thêm import utils.cli ---
-from utils.cli import prompt_config_overwrite, launch_editor
+# --- MODIFIED: Import helper config mới ---
+from utils.cli import prompt_config_overwrite, launch_editor, handle_config_init_request
 # --- END MODIFIED ---
 
 # Module Imports
@@ -52,7 +52,16 @@ from modules.tree import (
 
 # --- CONSTANTS ---
 MODULE_DIR = PROJECT_ROOT / "modules" / "tree"
-TEMPLATE_FILENAME = "tree.toml.template"
+TEMPLATE_FILENAME = "tree.toml.template" 
+# --- MỚI: Định nghĩa các giá trị default cho template ---
+TREE_DEFAULTS: Dict[str, Any] = {
+    "level": DEFAULT_MAX_LEVEL,
+    "show-submodules": FALLBACK_SHOW_SUBMODULES,
+    "use-gitignore": FALLBACK_USE_GITIGNORE,
+    "ignore": DEFAULT_IGNORE,
+    "prune": DEFAULT_PRUNE,
+    "dirs-only": DEFAULT_DIRS_ONLY_LOGIC
+}
 
 # (Typer app giữ nguyên)
 app = typer.Typer(
@@ -65,18 +74,19 @@ app = typer.Typer(
 def main(
     ctx: typer.Context,
     
-    # --- THAY ĐỔI: Xóa config_scope cũ và thêm 2 cờ mới ---
+    # (Các cờ config_project và config_local giữ nguyên)
     config_project: bool = typer.Option(
         False, "-c", "--config-project",
         help="Khởi tạo/cập nhật file .project.toml (scope 'project').",
         show_default=False,
     ),
     config_local: bool = typer.Option(
-        False, "-C", "--config-local", # <-- Dùng -C (viết hoa)
+        False, "-C", "--config-local", 
         help="Khởi tạo/cập nhật file .tree.toml (scope 'local').",
         show_default=False,
     ),
-    # --- KẾT THÚC THAY ĐỔI ---
+    
+    # (Các tham số Typer khác giữ nguyên)
     start_path_arg: Path = typer.Argument(
         Path("."),
         help="Đường dẫn bắt đầu (file hoặc thư mục). Dùng '~' cho thư mục home.",
@@ -93,117 +103,24 @@ def main(
     """ Hàm điều phối chính: Phân tích đối số, gọi xử lý config, và chạy tạo cây. """
     if ctx.invoked_subcommand: return
 
-    # --- Logic khởi tạo Config ---
-    # --- THAY ĐỔI: Kiểm tra 2 cờ mới ---
-    if config_project or config_local:
-        logger = setup_logging(script_name="CTree")
-        
-        if tomllib is None:
-             logger.error("❌ Thiếu thư viện 'tomli'. Vui lòng cài đặt: 'pip install tomli tomli-w'")
-             raise typer.Exit(code=1)
-
-        # --- THAY ĐỔI: Xác định scope dựa trên cờ ---
-        scope = "project" if config_project else "local"
-        
-        # (Logic tạo 'content_with_placeholders' giữ nguyên)
-        try:
-            template_str = load_config_template(MODULE_DIR, TEMPLATE_FILENAME, logger)
-            tree_defaults: Dict[str, Any] = {
-                "level": DEFAULT_MAX_LEVEL,
-                "show-submodules": FALLBACK_SHOW_SUBMODULES,
-                "use-gitignore": FALLBACK_USE_GITIGNORE,
-                "ignore": DEFAULT_IGNORE,
-                "prune": DEFAULT_PRUNE,
-                "dirs-only": DEFAULT_DIRS_ONLY_LOGIC
-            }
-            toml_level_str = (
-                f"level = {tree_defaults['level']}" 
-                if tree_defaults['level'] is not None 
-                else f"# level = 3"
-            )
-            format_dict: Dict[str, str] = {
-                'config_section_name': CONFIG_SECTION_NAME,
-                'toml_level': toml_level_str,
-                'toml_show_submodules': format_value_to_toml(tree_defaults['show-submodules']),
-                'toml_use_gitignore': format_value_to_toml(tree_defaults['use-gitignore']),
-                'toml_ignore': format_value_to_toml(tree_defaults['ignore']),
-                'toml_prune': format_value_to_toml(tree_defaults['prune']),
-                'toml_dirs_only': format_value_to_toml(tree_defaults['dirs-only'])
-            }
-            content_with_placeholders = template_str.format(**format_dict)
-        except Exception as e:
-            logger.error(f"❌ Đã xảy ra lỗi nghiêm trọng khi tạo nội dung config: {e}")
-            raise typer.Exit(code=1)
-        
-        should_write = True 
-        config_file_path: Path = Path.cwd() 
-
-        if scope == "local":
-             config_file_path = Path.cwd() / CONFIG_FILENAME
-             file_existed = config_file_path.exists()
-             
-             if file_existed:
-                should_write = prompt_config_overwrite(
-                    logger, 
-                    config_file_path, 
-                    f"File '{CONFIG_FILENAME}'"
-                )
-             
-             if should_write:
-                 try:
-                    config_file_path.write_text(content_with_placeholders, encoding="utf-8")
-                    log_msg = (
-                        f"Đã tạo thành công '{config_file_path.name}'." if not file_existed
-                        else f"Đã ghi đè thành công '{config_file_path.name}'."
-                    )
-                    log_success(logger, log_msg)
-                 except IOError as e:
-                     logger.error(f"❌ Lỗi khi ghi file '{config_file_path.name}': {e}")
-                     raise typer.Exit(code=1)
-
-        elif scope == "project":
-             config_file_path = Path.cwd() / PROJECT_CONFIG_FILENAME
-             try:
-                # (Logic parse 'new_section_dict' giữ nguyên)
-                start_marker = f"[{CONFIG_SECTION_NAME}]"
-                start_index = content_with_placeholders.find(start_marker)
-                if start_index == -1: raise ValueError("Template thiếu header section.")
-                content_section_only = content_with_placeholders[start_index + len(start_marker):].strip()
-                full_toml_string = f"[{CONFIG_SECTION_NAME}]\n{content_section_only}"
-                new_section_dict = tomllib.loads(full_toml_string).get(CONFIG_SECTION_NAME, {})
-                if not new_section_dict:
-                     raise ValueError("Nội dung section mới bị rỗng.")
-
-                config_data = load_toml_file(config_file_path, logger)
-                
-                if CONFIG_SECTION_NAME in config_data:
-                    should_write = prompt_config_overwrite(
-                        logger,
-                        config_file_path,
-                        f"Section [{CONFIG_SECTION_NAME}]"
-                    )
-                
-                if should_write:
-                    config_data[CONFIG_SECTION_NAME] = new_section_dict
-                    if write_toml_file(config_file_path, config_data, logger):
-                        log_success(logger, f"✅ Đã tạo/cập nhật thành công '{config_file_path.name}'.")
-                    else:
-                        raise IOError(f"Không thể ghi file TOML: {config_file_path.name}")
-
-             except (IOError, KeyError, ValueError) as e:
-                logger.error(f"❌ Đã xảy ra lỗi khi thao tác file: {e}")
-                raise typer.Exit(code=1)
-        
-        # --- THAY ĐỔI: Không cần khối 'else:' cho scope không hợp lệ nữa ---
-        
-        launch_editor(logger, config_file_path)
-        # --- END MODIFIED ---
-
-        raise typer.Exit(code=0)
-    # --- KẾT THÚC LOGIC CONFIG ---
-
-    # (Phần logic chạy tool giữ nguyên)
+    # --- Logic khởi tạo Config (ĐÃ REFACTOR) ---
     logger = setup_logging(script_name="CTree")
+
+    config_action_taken = handle_config_init_request(
+        logger=logger,
+        config_project=config_project,
+        config_local=config_local,
+        module_dir=MODULE_DIR,
+        template_filename=TEMPLATE_FILENAME,
+        config_filename=CONFIG_FILENAME,
+        project_config_filename=PROJECT_CONFIG_FILENAME,
+        config_section_name=CONFIG_SECTION_NAME,
+        default_values=TREE_DEFAULTS
+    )
+    
+    if config_action_taken:
+        raise typer.Exit(code=0)
+
     start_path = start_path_arg.expanduser()
     if not start_path.exists():
         logger.error(f"❌ Lỗi: Đường dẫn bắt đầu không tồn tại: {start_path}")

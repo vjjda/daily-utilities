@@ -13,7 +13,8 @@ current_dir = Path(__file__).parent
 
 # (Hiện tại chỉ có 'ui_helpers', sau này có thể thêm 'formatters', v.v.)
 modules_to_export: List[str] = [
-    "ui_helpers"
+    "ui_helpers",
+    "config_writer" # <-- MỚI
 ]
 
 __all__: List[str] = []

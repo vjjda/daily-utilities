@@ -3,6 +3,10 @@
 # Cấu hình mặc định cho cpath (Path Checker)
 #
 
+# --- MỚI: Thêm header section ---
+[{config_section_name}]
+# --- KẾT THÚC MỚI ---
+
 # Các đuôi file (phân cách bởi dấu phẩy) mà cpath sẽ quét.
 extensions = {toml_extensions}
 
