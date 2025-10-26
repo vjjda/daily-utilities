@@ -17,15 +17,15 @@ except ImportError:
     except ImportError:
         tomllib = None
 
-# --- REMOVED: import typer ---
-
 # Import các tiện ích cốt lõi
 from utils.core import (
-    load_config_template, 
+    # --- MODIFIED: Thay thế hàm load template ---
+    load_text_template, # <-- MỚI (thay thế load_config_template)
+    # --- END MODIFIED ---
     format_value_to_toml,
     load_toml_file,
     write_toml_file,
-    load_project_config_section # <-- MỚI
+    load_project_config_section
 )
 # Import các tiện ích UI
 from .ui_helpers import prompt_config_overwrite, launch_editor
@@ -39,20 +39,20 @@ def _generate_template_content(
     module_dir: Path,
     template_filename: str,
     config_section_name: str,
-    # --- MODIFIED: Đổi tên tham số cho rõ nghĩa ---
     effective_defaults: Dict[str, Any] 
-    # --- END MODIFIED ---
 ) -> str:
     """Tải và điền nội dung template .toml."""
     
-    template_str = load_config_template(module_dir, template_filename, logger)
+    # --- MODIFIED: Sử dụng hàm load template chung ---
+    template_path = module_dir / template_filename
+    template_str = load_text_template(template_path, logger)
+    # --- END MODIFIED ---
     
+    # (Logic format giữ nguyên)
     # 1. Xử lý các giá trị đặc biệt (ví dụ: level của ctree)
     toml_level_str = ""
-    # --- MODIFIED: Sử dụng effective_defaults ---
     if "level" in effective_defaults:
         level_val = effective_defaults["level"]
-    # --- END MODIFIED ---
         toml_level_str = (
             f"level = {level_val}" 
             if level_val is not None 
@@ -62,25 +62,14 @@ def _generate_template_content(
     # 2. Format các giá trị còn lại
     format_dict: Dict[str, str] = {
         'config_section_name': config_section_name,
-        'toml_level': toml_level_str, # (An toàn nếu không có)
+        'toml_level': toml_level_str, 
     }
     
-    # --- MODIFIED: Sử dụng effective_defaults ---
     for key, value in effective_defaults.items():
-    # --- END MODIFIED ---
-        
-        # Bỏ qua 'level' vì nó đã được xử lý đặc biệt ở trên
         if key == "level":
             continue
-            
-        # --- SỬA LỖI: Chuyển key (ví dụ: 'show-submodules')
-        # --- thành key placeholder (ví dụ: 'toml_show_submodules')
-        
-        # Chuyển 'show-submodules' -> 'toml_show_submodules'
         placeholder_key = f"toml_{key.replace('-', '_')}" 
-        
         format_dict[placeholder_key] = format_value_to_toml(value)
-        # --- KẾT THÚC SỬA LỖI ---
 
     return template_str.format(**format_dict)
 
@@ -92,37 +81,32 @@ def handle_config_init_request(
     # Đường dẫn và tên file
     module_dir: Path,
     template_filename: str,
-    config_filename: str, # (ví dụ: .tree.toml)
-    project_config_filename: str, # (ví dụ: .project.toml)
-    config_section_name: str, # (ví dụ: tree)
+    config_filename: str, 
+    project_config_filename: str, 
+    config_section_name: str, 
     # Dữ liệu để điền
-    # --- MODIFIED: Đổi tên tham số ---
-    base_defaults: Dict[str, Any] # (Giá trị gốc từ _config.py)
-    # --- END MODIFIED ---
+    base_defaults: Dict[str, Any] 
 ) -> bool:
     """
     Xử lý logic tạo config (-c / -C) cho các entrypoint.
     """
     
+    # (Nội dung hàm này giữ nguyên, nó đã gọi _generate_template_content
+    #  mà chúng ta vừa sửa ở trên)
+    
     if not (config_project or config_local):
-        return False # Không làm gì cả
+        return False 
 
-    # 1. Kiểm tra thư viện
     if tomllib is None:
          logger.error("❌ Thiếu thư viện 'tomli'/'tomli-w'. Vui lòng cài đặt: 'pip install tomli tomli-w'")
          raise ImportError("Missing tomli/tomli-w libraries")
          
     scope = 'project' if config_project else 'local'
     
-    # --- MODIFIED: Thêm logic "Smart Default" vào đây ---
-    # 1. Xác định giá trị mặc định hiệu lực (effective defaults)
-    effective_defaults = base_defaults.copy() # Bắt đầu với DEFAULT
+    effective_defaults = base_defaults.copy() 
     
     if config_local:
-        # Nếu là -C (local), tải .project.toml và merge vào
         project_config_path = Path.cwd() / project_config_filename
-        
-        # (Hàm này đã được import từ utils.core)
         project_section = load_project_config_section(
             project_config_path, 
             config_section_name, 
@@ -134,23 +118,17 @@ def handle_config_init_request(
         else:
             logger.debug(f"Không tìm thấy {project_config_filename}, dùng DEFAULT làm cơ sở cho {config_filename}")
     
-    # (Nếu là -c (project), effective_defaults vẫn là base_defaults)
-    # --- END MODIFIED ---
-
-
-    # 2. Tạo nội dung file/section từ template
     content_with_placeholders = _generate_template_content(
         logger,
         module_dir,
         template_filename,
         config_section_name,
-        effective_defaults # <-- Truyền giá trị đã tính toán
+        effective_defaults
     )
 
     should_write_result: Optional[bool] = True 
     config_file_path: Path
 
-    # 3. Xử lý logic ghi file theo scope
     if scope == "local":
         config_file_path = Path.cwd() / config_filename
         file_existed = config_file_path.exists()
@@ -163,10 +141,9 @@ def handle_config_init_request(
             )
         
         if should_write_result is None:
-            return True # Báo hiệu caller thoát
+            return True 
 
         if should_write_result:
-            # Ghi file đầy đủ
             config_file_path.write_text(content_with_placeholders, encoding="utf-8")
             log_msg = (
                 f"Đã tạo thành công '{config_file_path.name}'." if not file_existed
@@ -177,7 +154,6 @@ def handle_config_init_request(
     elif scope == "project":
         config_file_path = Path.cwd() / project_config_filename
         
-        # Trích xuất nội dung section [xxx] từ template đã format
         start_marker = f"[{config_section_name}]"
         start_index = content_with_placeholders.find(start_marker)
         if start_index == -1: 
@@ -190,7 +166,6 @@ def handle_config_init_request(
         if not new_section_dict:
                 raise ValueError("Nội dung section mới bị rỗng sau khi parse.")
 
-        # Tải, merge và ghi file .project.toml
         config_data = load_toml_file(config_file_path, logger)
         
         if config_section_name in config_data:
@@ -201,7 +176,7 @@ def handle_config_init_request(
             )
         
         if should_write_result is None:
-            return True # Báo hiệu caller thoát
+            return True 
 
         if should_write_result:
             config_data[config_section_name] = new_section_dict
@@ -209,7 +184,6 @@ def handle_config_init_request(
                 raise IOError(f"Không thể ghi file TOML: {config_file_path.name}")
             log_success(logger, f"✅ Đã tạo/cập nhật thành công '{config_file_path.name}'.")
 
-    # 4. Mở editor
     launch_editor(logger, config_file_path)
     
-    return True # Báo hiệu cho entrypoint biết để thoát
+    return True

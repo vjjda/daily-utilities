@@ -11,18 +11,23 @@ from typing import Dict, Any, Set, List, Optional
 
 from .toml_io import load_toml_file, write_toml_file
 from .parsing import parse_comma_list
+# --- MODIFIED: Xóa import file helper cũ ---
+# --- END MODIFIED ---
 
 __all__ = [
     "load_project_config_section",
-    "load_and_merge_configs", # <-- MỚI
-    "load_config_template",
+    "load_and_merge_configs", 
+    # "load_config_template", # <-- ĐÃ XÓA
     "merge_config_sections",
     "format_value_to_toml",
     "resolve_config_value",
     "resolve_config_list"
 ]
 
-# --- (Các hàm format_value_to_toml, resolve_config_value, resolve_config_list giữ nguyên) ---
+# --- (Các hàm format_value_to_toml, resolve_config_value, resolve_config_list,
+# ---  load_project_config_section, merge_config_sections, load_and_merge_configs
+# ---  giữ nguyên) ---
+
 def format_value_to_toml(value: Any) -> str:
     """Helper: Định dạng giá trị Python thành chuỗi TOML hợp lệ."""
     if isinstance(value, bool):
@@ -73,7 +78,6 @@ def resolve_config_list(
     cli_set = parse_comma_list(cli_str_value)
     
     return tentative_set.union(cli_set)
-# --- (Hết các hàm giữ nguyên) ---
 
 
 def load_project_config_section(
@@ -96,7 +100,6 @@ def merge_config_sections(
     """
     return {**project_section, **local_section}
 
-# --- NEW: Hàm helper tải config chung ---
 def load_and_merge_configs(
     start_dir: Path, 
     logger: logging.Logger,
@@ -107,44 +110,24 @@ def load_and_merge_configs(
     """
     Hàm chung để tải và hợp nhất cấu hình từ .project.toml và
     file .<toolname>.toml cục bộ.
-    
-    Ưu tiên: File cục bộ (.toolname.toml) sẽ ghi đè .project.toml.
     """
     project_config_path = start_dir / project_config_filename
     local_config_path = start_dir / local_config_filename
 
-    # 1. Tải section từ .project.toml
     project_section = load_project_config_section(
         project_config_path, 
         config_section_name, 
         logger
     )
     
-    # 2. Tải file .toolname.toml (file này là section [toolname])
     local_section = load_toml_file(local_config_path, logger)
     
-    # (Xử lý trường hợp file .toolname.toml có thể chứa section [toolname])
     if config_section_name in local_section:
         local_section = local_section[config_section_name]
         
-    # 3. Merge (local ghi đè project)
     return merge_config_sections(project_section, local_section)
-# --- END NEW ---
 
-def load_config_template(
-    module_dir: Path,
-    template_filename: str,
-    logger: logging.Logger
-) -> str:
-    """
-    Đọc nội dung thô của file template .toml từ thư mục module cụ thể.
-    """
-    try:
-        template_path = module_dir / template_filename
-        return template_path.read_text(encoding="utf-8")
-    except FileNotFoundError:
-        logger.error(f"❌ LỖI NGHIÊM TRỌNG: Không tìm thấy template '{template_filename}' trong {module_dir.name}.")
-        raise
-    except Exception as e:
-        logger.error(f"❌ LỖI NGHIÊM TRỌNG: Không thể đọc file template '{template_filename}': {e}")
-        raise
+# --- REMOVED: load_config_template ---
+# (Hàm này đã được di chuyển và tổng quát hóa thành 
+#  utils.core.file_helpers.load_text_template)
+# --- END REMOVED ---

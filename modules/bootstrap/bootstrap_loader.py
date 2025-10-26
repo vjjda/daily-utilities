@@ -9,19 +9,18 @@ import sys
 from pathlib import Path
 from typing import Dict, Any, Tuple
 
-# --- (tomllib import) ---
 try:
     import tomllib
 except ImportError:
     try:
         import toml as tomllib
     except ImportError:
-        # Lỗi này sẽ được bắt ở entrypoint, nhưng vẫn an toàn
         tomllib = None
 
 from .bootstrap_config import TEMPLATE_DIR, CONFIG_SECTION_NAME
-# (Import load_project_config_section từ utils.core)
-from utils.core import load_project_config_section
+# --- MODIFIED: Import hàm helper chung ---
+from utils.core import load_project_config_section, load_text_template
+# --- END MODIFIED ---
 
 __all__ = [
     "load_template",
@@ -32,15 +31,13 @@ __all__ = [
 
 def load_template(template_name: str) -> str:
     """Helper: Đọc nội dung từ một file template."""
-    try:
-        template_path = TEMPLATE_DIR / template_name
-        return template_path.read_text(encoding='utf-8')
-    except FileNotFoundError:
-        logging.error(f"Lỗi nghiêm trọng: Không tìm thấy template '{template_name}'")
-        raise
-    except Exception as e:
-        logging.error(f"Lỗi khi đọc template '{template_name}': {e}")
-        raise
+    # --- MODIFIED: Tái sử dụng logic chung ---
+    # (Chúng ta dùng getLogger vì logger không được truyền vào đây,
+    #  điều này nhất quán với hành vi cũ)
+    logger = logging.getLogger("Bootstrap") 
+    template_path = TEMPLATE_DIR / template_name
+    return load_text_template(template_path, logger)
+    # --- END MODIFIED ---
 
 def load_bootstrap_config(
     logger: logging.Logger, 
@@ -48,12 +45,9 @@ def load_bootstrap_config(
 ) -> Dict[str, Any]:
     """
     Tải section [bootstrap] từ file .project.toml.
-    (Logic chuyển từ bootstrap_tool.py)
     """
     if tomllib is None:
-        # --- MODIFIED: Đã xóa 'file=sys.stderr' ---
         logger.error("Lỗi: Cần gói 'toml' (cho Python < 3.11)")
-        # --- END MODIFIED ---
         sys.exit(1)
         
     config_path = project_root / ".project.toml"
@@ -65,12 +59,9 @@ def load_spec_file(
 ) -> Dict[str, Any]:
     """
     Tải và parse file *.spec.toml.
-    (Logic chuyển từ bootstrap_tool.py)
     """
     if tomllib is None:
-        # --- MODIFIED: Đã xóa 'file=sys.stderr' ---
         logger.error("Lỗi: Cần gói 'toml' (cho Python < 3.11)")
-        # --- END MODIFIED ---
         sys.exit(1)
         
     try:
@@ -80,5 +71,3 @@ def load_spec_file(
     except Exception as e:
         logger.error(f"❌ Lỗi khi đọc file TOML: {e}")
         sys.exit(1)
-
-# --- REMOVED: get_cli_args (Đã chuyển sang bootstrap_utils.py) ---
