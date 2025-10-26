@@ -158,7 +158,8 @@ def main(
             execute_stubgen_action(
                 logger=logger,
                 results=results,
-                force=force
+                force=force,
+                scan_root=effective_scan_root
             )
         else:
             log_success(logger, "No dynamic module gateways found to process.")
