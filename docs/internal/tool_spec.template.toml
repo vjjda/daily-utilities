@@ -4,7 +4,7 @@
 # (Cập nhật cho Typer và cấu trúc SRP)
 # ---------------------------------
 # Điền thông tin vào file này, sau đó chạy:
-# python scripts/internal/bootstrap_tool.py modules/NEW_MODULE_NAME
+# python scripts/bootstrap_tool.py /path/to/your.spec.toml
 #
 
 # --- 1. THÔNG TIN CƠ BẢN ---
@@ -15,6 +15,9 @@ tool_name = "c-new-tool"
 
 # Tên file entrypoint Python trong /scripts/
 script_file = "new_tool.py"
+
+# --- NEW: Tên thư mục module trong /modules/ ---
+module_name = "new_tool"
 
 # Tên Logger cho setup_logging() (ví dụ: CDiag, CPath, CTree)
 logger_name = "CNewTool"

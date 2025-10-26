@@ -76,55 +76,31 @@ def main():
     logger.debug(f"BIN_DIR set to: {BIN_DIR.as_posix()}")
     logger.debug(f"SCRIPTS_DIR set to: {SCRIPTS_DIR.as_posix()}")
 
-    # --- (Phân tích đối số giữ nguyên) ---
+    # --- MODIFIED: Phân tích đối số ---
     parser = argparse.ArgumentParser(description="Bootstrap (khởi tạo) một tool utility mới từ file *.spec.toml.")
     parser.add_argument(
-        "target_path_str", 
+        "spec_file_path_str", 
         type=str, 
-        help="Đường dẫn đến thư mục module MỚI (modules/new) HOẶC file .spec.toml (modules/new/new.spec.toml)."
+        help="Đường dẫn đầy đủ đến file *.spec.toml (ví dụ: docs/drafts/new_tool.spec.toml)."
     )
     args = parser.parse_args()
+    # --- END MODIFIED ---
 
-    # --- (Load và xác thực đường dẫn giữ nguyên) ---
-    target_path = Path(args.target_path_str).resolve()
-    module_path: Optional[Path] = None
-    spec_file_path: Optional[Path] = None
+    # --- MODIFIED: Load và xác thực đường dẫn ---
+    spec_file_path = Path(args.spec_file_path_str).resolve()
 
-    if target_path.is_dir():
-        module_path = target_path
-        try:
-            spec_file_path = next(module_path.glob("*.spec.toml"))
-            logger.debug(f"Phát hiện mode thư mục. Đã tìm thấy file spec: {spec_file_path.name}")
-        except StopIteration:
-            logger.error(f"❌ Không tìm thấy file *.spec.toml nào trong thư mục:")
-            logger.error(f"   {module_path.as_posix()}")
-            sys.exit(1)
-            
-    elif target_path.is_file():
-        if target_path.name.endswith(".spec.toml"):
-            module_path = target_path.parent
-            spec_file_path = target_path
-            logger.debug(f"Phát hiện mode file. Sử dụng file spec: {spec_file_path.name}")
-        else:
-            logger.error("❌ Lỗi: Bạn đã cung cấp một file, nhưng nó không phải là file *.spec.toml.")
-            sys.exit(1)
-            
-    else:
-        module_path = target_path
-        spec_file_path = module_path / "tool.spec.toml" # Mặc định cho tool mới
-        logger.warning(f"Đường dẫn '{module_path.name}' không tồn tại. Giả định đây là module mới.")
-
-    logger.info(f"🚀 Bắt đầu bootstrap:")
-    logger.info(f"   Thư mục Module: {module_path.relative_to(PROJECT_ROOT).as_posix()}")
-    logger.info(f"   File Spec:      {spec_file_path.name}")
-
-    if not module_path.is_dir():
-        logger.warning(f"Thư mục module '{module_path.name}' chưa tồn tại. Đang tạo...")
-        module_path.mkdir(parents=True, exist_ok=True)
-    
-    if not spec_file_path.exists():
-        logger.error(f"❌ Không tìm thấy file spec: {spec_file_path.name}")
+    if not spec_file_path.is_file() or not spec_file_path.name.endswith(".spec.toml"):
+        logger.error(f"❌ Lỗi: Đường dẫn cung cấp không phải là file *.spec.toml hợp lệ.")
+        logger.error(f"   Đã nhận: {spec_file_path.as_posix()}")
         sys.exit(1)
+        
+    logger.info(f"🚀 Bắt đầu bootstrap:")
+    try:
+        spec_rel_path = spec_file_path.relative_to(PROJECT_ROOT).as_posix()
+    except ValueError:
+        spec_rel_path = spec_file_path.as_posix() # Nếu file spec nằm ngoài project
+    logger.info(f"   File Spec: {spec_rel_path}")
+    # --- END MODIFIED ---
 
     # --- (Load TOML giữ nguyên) ---
     try:
@@ -134,18 +110,28 @@ def main():
         logger.error(f"❌ Lỗi khi đọc file TOML: {e}")
         sys.exit(1)
 
-    # --- (Xác thực config giữ nguyên) ---
+    # --- MODIFIED: Xác thực config ---
     try:
-        config['module_name'] = module_path.name
+        # Đọc các giá trị meta
         tool_name = config['meta']['tool_name']
         script_file = config['meta']['script_file']
+        module_name = config['meta']['module_name']
+        
+        # Truyền module_name vào config dict để dùng trong generator
+        config['module_name'] = module_name 
         
         logger.debug(f"Tool Name: {tool_name}")
-        logger.debug(f"Module Name: {config['module_name']}")
+        logger.debug(f"Script File: {script_file}")
+        logger.debug(f"Module Name: {module_name}")
         
     except KeyError as e:
         logger.error(f"❌ File spec '{spec_file_path.name}' thiếu key bắt buộc trong [meta]: {e}")
         sys.exit(1)
+    
+    # Xác định đường dẫn module dựa trên config
+    module_path = MODULES_DIR / module_name
+    logger.info(f"   Thư mục Module: {module_path.relative_to(PROJECT_ROOT).as_posix()}")
+    # --- END MODIFIED ---
         
     # --- (Tạo nội dung giữ nguyên) ---
     try:
@@ -180,16 +166,27 @@ def main():
         logger.debug("Traceback:", exc_info=True)
         sys.exit(1)
 
-    # --- (KIỂM TRA AN TOÀN giữ nguyên) ---
+    # --- MODIFIED: KIỂM TRA AN TOÀN ---
+    # Kiểm tra thư mục module trước
+    if module_path.exists():
+        logger.error(f"❌ Dừng lại! Thư mục module sau đã tồn tại. Sẽ không ghi đè:")
+        logger.error(f"   -> {module_path.relative_to(PROJECT_ROOT).as_posix()}")
+        sys.exit(1)
+        
     existing_files = [p for p in target_paths.values() if p.exists()]
     if existing_files:
         logger.error(f"❌ Dừng lại! Các file sau đã tồn tại. Sẽ không ghi đè:")
         for p in existing_files:
             logger.error(f"   -> {p.relative_to(PROJECT_ROOT).as_posix()}")
         sys.exit(1)
+    # --- END MODIFIED ---
 
-    # --- (GHI FILE (I/O) giữ nguyên) ---
+    # --- MODIFIED: GHI FILE (I/O) ---
     try:
+        # Tạo thư mục module trước
+        module_path.mkdir(parents=True, exist_ok=True)
+        logger.info(f"Đã tạo thư mục: {module_path.relative_to(PROJECT_ROOT).as_posix()}")
+            
         for key, path in target_paths.items():
             content = generated_content[key]
             path.parent.mkdir(parents=True, exist_ok=True) 
@@ -205,6 +202,7 @@ def main():
     except IOError as e:
         logger.error(f"❌ Lỗi I/O khi ghi file: {e}")
         sys.exit(1)
+    # --- END MODIFIED ---
         
     logger.info("\n✨ Bootstrap hoàn tất! Cấu trúc file cho tool mới đã sẵn sàng.")
 

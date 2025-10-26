@@ -8,6 +8,7 @@
 tool_name = "c_demo"
 script_file = "c_demo.py"
 logger_name = "CDemo"
+module_name = "c_demo"
 
 # --- 2. CẤU HÌNH CLI ---
 [cli]
