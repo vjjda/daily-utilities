@@ -13,10 +13,10 @@ DEFAULT_IGNORE: Any
 PROJECT_CONFIG_FILENAME: Any
 apply_block_comment_rule: Any
 apply_line_comment_rule: Any
-handle_results: Any
+execute_check_path_action: Any
 load_config_files: Any
-process_path_updates: Any
+process_check_path_logic: Any
 scan_for_files: Any
 
 # Static declaration of exported symbols (for Pylance)
-__all__: List[str] = ['COMMENT_RULES', 'COMMENT_RULES_BY_EXT', 'CONFIG_FILENAME', 'CONFIG_SECTION_NAME', 'DEFAULT_EXTENSIONS_STRING', 'DEFAULT_IGNORE', 'PROJECT_CONFIG_FILENAME', 'apply_block_comment_rule', 'apply_line_comment_rule', 'handle_results', 'load_config_files', 'process_path_updates', 'scan_for_files']
+__all__: List[str] = ['COMMENT_RULES', 'COMMENT_RULES_BY_EXT', 'CONFIG_FILENAME', 'CONFIG_SECTION_NAME', 'DEFAULT_EXTENSIONS_STRING', 'DEFAULT_IGNORE', 'PROJECT_CONFIG_FILENAME', 'apply_block_comment_rule', 'apply_line_comment_rule', 'execute_check_path_action', 'load_config_files', 'process_check_path_logic', 'scan_for_files']
