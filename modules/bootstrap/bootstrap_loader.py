@@ -51,7 +51,9 @@ def load_bootstrap_config(
     (Logic chuyển từ bootstrap_tool.py)
     """
     if tomllib is None:
-        logger.error("Lỗi: Cần gói 'toml' (cho Python < 3.11)", file=sys.stderr)
+        # --- MODIFIED: Đã xóa 'file=sys.stderr' ---
+        logger.error("Lỗi: Cần gói 'toml' (cho Python < 3.11)")
+        # --- END MODIFIED ---
         sys.exit(1)
         
     config_path = project_root / ".project.toml"
@@ -66,7 +68,9 @@ def load_spec_file(
     (Logic chuyển từ bootstrap_tool.py)
     """
     if tomllib is None:
-        logger.error("Lỗi: Cần gói 'toml' (cho Python < 3.11)", file=sys.stderr)
+        # --- MODIFIED: Đã xóa 'file=sys.stderr' ---
+        logger.error("Lỗi: Cần gói 'toml' (cho Python < 3.11)")
+        # --- END MODIFIED ---
         sys.exit(1)
         
     try:
