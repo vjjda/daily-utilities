@@ -84,16 +84,17 @@ def get_submodule_paths(root: Path, logger: Optional[logging.Logger] = None) -> 
     return submodule_paths
 
 # --- NEW: Nâng cấp parse_gitignore với pathspec ---
-def parse_gitignore(root: Path) -> Optional['pathspec.PathSpec']:
+def parse_gitignore(root: Path) -> Set[str]:
     """
-    Parses a .gitignore file using 'pathspec' and returns a compiled spec.
+    Đọc .gitignore và trả về một Set các chuỗi quy tắc (patterns).
     """
+    patterns: Set[str] = set()
     if pathspec is None:
-        return None # Trả về None nếu thư viện không được cài đặt
+        return patterns # Trả về set rỗng nếu không có thư viện
 
     gitignore_path = root / ".gitignore"
     if not gitignore_path.exists():
-        return None # Không có file .gitignore
+        return patterns # Không có file .gitignore
 
     try:
         with open(gitignore_path, 'r', encoding='utf-8') as f:
@@ -101,13 +102,17 @@ def parse_gitignore(root: Path) -> Optional['pathspec.PathSpec']:
         
         # Thêm các quy tắc mặc định mà Git luôn áp dụng
         lines.append(".git")
-            
-        spec = pathspec.PathSpec.from_lines('gitwildmatch', lines)
-        return spec
+        
+        # Lọc các dòng rỗng/comment
+        valid_lines = {
+            line.strip() for line in lines 
+            if line.strip() and not line.strip().startswith('#')
+        }
+        return valid_lines
         
     except Exception as e:
-        print(f"Warning: Could not read or compile .gitignore file: {e}")
-        return None
+        print(f"Warning: Could not read .gitignore file: {e}")
+        return patterns
 
 def git_add_and_commit(
     logger: logging.Logger, 

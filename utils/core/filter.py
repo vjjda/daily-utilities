@@ -4,44 +4,68 @@
 File Filtering and Path Matching Utilities
 (Internal module, imported by utils/core.py)
 
-GIAI ĐOẠN 1: Chỉ chứa logic fnmatch.
-(Logic gitignore đã được chuyển sang git.py)
+Đã refactor để sử dụng 'pathspec' làm engine thống nhất.
 """
 
-import fnmatch
-import os
+# --- MODIFIED: Thêm imports ---
 from pathlib import Path
-from typing import Set
-
-# --- MODIFIED: __all__ ---
-__all__ = ["is_path_matched"]
+from typing import Set, TYPE_CHECKING, Optional
 # --- END MODIFIED ---
 
-def is_path_matched(path: Path, patterns: Set[str], start_dir: Path) -> bool:
+# --- NEW: Import pathspec ---
+try:
+    import pathspec
+except ImportError:
+    pathspec = None
+
+if TYPE_CHECKING:
+    import pathspec
+# --- END NEW ---
+
+# --- MODIFIED: __all__ ---
+__all__ = ["is_path_matched", "compile_spec_from_patterns"]
+# --- END MODIFIED ---
+
+# --- NEW: Hàm biên dịch spec ---
+def compile_spec_from_patterns(
+    patterns: Set[str]
+) -> Optional['pathspec.PathSpec']:
+    """Biên dịch một Set các pattern thành một đối tượng PathSpec."""
+    if pathspec is None or not patterns:
+        return None
+    
+    try:
+        # Sử dụng 'gitwildmatch' để có cú pháp giống .gitignore
+        spec = pathspec.PathSpec.from_lines('gitwildmatch', list(patterns))
+        return spec
+    except Exception:
+        return None # (Có thể log lỗi nếu cần)
+# --- END NEW ---
+
+
+def is_path_matched(
+    path: Path, 
+    spec: Optional['pathspec.PathSpec'], # <-- MODIFIED: Nhận spec
+    start_dir: Path
+) -> bool:
     """
-    Checks if a path matches any pattern (using fnmatch for name or relative path).
-    (Code moved from utils/core.py)
+    Kiểm tra xem một đường dẫn có khớp với 'PathSpec' đã biên dịch không.
+    (Đã sửa để dùng pathspec)
     """
-    if not patterns: 
+    if spec is None: 
         return False
     
-    relative_path = path.relative_to(start_dir)
-    relative_path_str = relative_path.as_posix()
-    
-    path_parts = relative_path.parts 
-
-    for pattern in patterns: 
-        if fnmatch.fnmatch(relative_path_str, pattern):
-            return True
+    try:
+        relative_path = path.relative_to(start_dir)
+        relative_path_str = relative_path.as_posix()
         
-        if fnmatch.fnmatch(path.name, pattern):
-            return True
+        # Thêm dấu / cho thư mục (nếu chưa có) để khớp chính xác
+        if path.is_dir() and not relative_path_str.endswith('/'):
+            relative_path_str += '/'
+        
+        if relative_path_str == './':
+            return False
 
-        if any(fnmatch.fnmatch(part, pattern) for part in path_parts):
-            return True
-            
-    return False
-
-# --- REMOVED: parse_gitignore ---
-# (Logic này đã được chuyển sang utils/core/git.py và nâng cấp)
-# --- END REMOVED ---
+        return spec.match_file(relative_path_str) 
+    except Exception:
+        return False
