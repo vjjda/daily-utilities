@@ -8,18 +8,114 @@ Handles interactive path resolution (S/I/Q prompts) and validation.
 import logging
 import sys
 from pathlib import Path
-from typing import Optional
+# --- MODIFIED: Thêm Callable ---
+from typing import Optional, Callable
+# --- END MODIFIED ---
 
 from .zsh_wrapper_config import (
     DEFAULT_WRAPPER_RELATIVE_DIR, 
     DEFAULT_WRAPPER_ABSOLUTE_PATH
 )
 
-# --- NEW: __all__ definition ---
+# --- NEW: Khai báo __all__ (SỬA LỖI) ---
+# Chỉ export các hàm mà entrypoint (scripts/zsh_wrapper.py) cần.
 __all__ = ["resolve_output_path_interactively", "resolve_root_interactively"]
 # --- END NEW ---
 
+# --- MODIFIED: Thêm typing cho hàm validator ---
+# Định nghĩa type hint cho hàm validator
+# (Hàm nhận Path và Logger, trả về bool)
+PathValidator = Callable[[Path, logging.Logger], bool]
+# --- END MODIFIED ---
 
+
+# --- NEW: Hàm validator cho Output Path ---
+def _validate_output_path(path: Path, logger: logging.Logger) -> bool:
+    """Validator cho resolve_output_path_interactively."""
+    parent_dir = path.parent
+    if not parent_dir.exists():
+        logger.error(f"❌ Error: Parent directory of Output path does not exist: {parent_dir.as_posix()}")
+        return False
+    if not parent_dir.is_dir():
+        logger.error(f"❌ Error: Parent path is not a directory: {parent_dir.as_posix()}")
+        return False
+    return True
+# --- END NEW ---
+
+# --- NEW: Hàm validator cho Root Path ---
+def _validate_root_path(path: Path, logger: logging.Logger) -> bool:
+    """Validator cho resolve_root_interactively."""
+    if not path.exists() or not path.is_dir():
+        logger.error(f"❌ Error: The entered path does not exist or is not a directory: {path.as_posix()}")
+        return False
+    return True
+# --- END NEW ---
+
+# --- NEW: Hàm helper S/I/Q chung ---
+def _resolve_path_via_prompt(
+    logger: logging.Logger,
+    prompt_title: str,
+    suggested_option_text: str,
+    suggested_path: Path,
+    custom_input_prompt: str,
+    custom_path_validator: PathValidator
+) -> Path:
+    """
+    Handles the generic S/I/Q prompt loop for resolving a path.
+    """
+    selected_path: Optional[Path] = None
+
+    logger.warning(f"\n{prompt_title}")
+    
+    while selected_path is None:
+        # 1. Display options
+        print(f"     [S] {suggested_option_text}")
+        print("     [I] Input Custom Path")
+        print("     [Q] Quit / Cancel")
+
+        try:
+            choice = input("   Enter your choice (S/I/Q): ").lower().strip()
+        except (EOFError, KeyboardInterrupt):
+            choice = 'q'
+        
+        if choice == 's':
+            selected_path = suggested_path
+            logger.info(f"✅ Option [S] selected. Using suggested path: {selected_path.as_posix()}")
+            
+        elif choice == 'i':
+            while True:
+                try:
+                    custom_path_str = input(f"   {custom_input_prompt}: ").strip()
+                    if not custom_path_str:
+                        print("   Error: Path cannot be empty.")
+                        continue
+
+                    custom_path = Path(custom_path_str).expanduser().resolve()
+                    
+                    # Sử dụng hàm validator được truyền vào
+                    if custom_path_validator(custom_path, logger):
+                        selected_path = custom_path
+                        logger.info(f"✅ Option [I] selected. Using custom path: {selected_path.as_posix()}")
+                        break
+                    else:
+                        # Validator tự log lỗi
+                        continue
+                        
+                except Exception as e:
+                    logger.error(f"❌ Error processing path: {e}")
+                    
+        elif choice == 'q':
+            logger.error("❌ Operation cancelled by user.")
+            raise sys.exit(0) 
+            
+        else:
+            print("   Invalid choice. Please enter S, I, or Q.")
+            
+    return selected_path.resolve()
+# --- END NEW ---
+
+
+# --- MODIFIED: Hàm gốc được đơn giản hóa ---
 def resolve_output_path_interactively(
     logger: logging.Logger,
     script_path: Path,
@@ -35,81 +131,40 @@ def resolve_output_path_interactively(
         # Path already provided and expanded by main() caller
         return output_arg.resolve()
         
-    # Determine the default path based on mode
+    # 1. Logic chuẩn bị (vẫn giữ nguyên)
     script_name_without_ext = script_path.stem
     
     if mode == "absolute":
         default_output_path = DEFAULT_WRAPPER_ABSOLUTE_PATH / script_name_without_ext
         logger.warning(f"⚠️ Output path (-o) not specified for 'absolute' mode.")
     else:
-        # Use PROJECT_ROOT (từ script entrypoint) để tính toán đường dẫn mặc định
         default_output_path = project_root / DEFAULT_WRAPPER_RELATIVE_DIR / script_name_without_ext
         logger.warning("⚠️ Output path (-o) not specified.")
 
-    selected_output: Optional[Path] = None
+    # 2. Chuẩn bị các chuỗi cho prompt
+    prompt_title = "⚠️ Output Path (-o) was not specified.\n   Please select the destination for the Zsh wrapper:"
+    suggested_text = f"Use Suggested Path: {default_output_path.as_posix()}"
     
-    logger.warning(f"\n⚠️ Output Path (-o) was not specified.")
-    logger.warning(f"   Please select the destination for the Zsh wrapper:")
-    
-    while selected_output is None:
-        # 1. Display options
-        print(f"     [S] Use Suggested Path: {default_output_path.as_posix()}")
-        print("     [I] Input Custom Path")
-        print("     [Q] Quit / Cancel")
+    if mode == "relative":
+        input_prompt = "Enter custom Output path (Mode: relative -> path relative to Project Root/absolute)"
+    elif mode == "absolute":
+        input_prompt = "Enter custom Output path (Mode: absolute -> full path required)"
+    else:
+        input_prompt = "Enter custom Output path"
 
-        try:
-            choice = input("   Enter your choice (S/I/Q): ").lower().strip()
-        except (EOFError, KeyboardInterrupt):
-            choice = 'q'
-        
-        if choice == 's':
-            selected_output = default_output_path
-            logger.info(f"✅ Option [S] selected. Using suggested path: {selected_output.as_posix()}")
-            
-        elif choice == 'i':
-            while True:
-                try:
-                    # --- MODIFIED: Thêm thông tin về mode vào prompt ---
-                    if mode == "relative":
-                        prompt_mode_info = " (Mode: relative -> path relative to Project Root/absolute)"
-                    elif mode == "absolute":
-                        prompt_mode_info = " (Mode: absolute -> full path required)"
-                    else:
-                        prompt_mode_info = ""
-                        
-                    custom_path_str = input(f"   Enter custom Output path{prompt_mode_info}: ").strip()
-                    # --- END MODIFIED ---
-
-                    if not custom_path_str:
-                        print("   Error: Path cannot be empty.")
-                        continue
-
-                    custom_path = Path(custom_path_str).expanduser().resolve()
-                    
-                    parent_dir = custom_path.parent
-                    if not parent_dir.exists():
-                        logger.error(f"❌ Error: Parent directory of Output path does not exist: {parent_dir.as_posix()}")
-                        continue
-                    if not parent_dir.is_dir():
-                        logger.error(f"❌ Error: Parent path is not a directory: {parent_dir.as_posix()}")
-                        continue
-
-                    selected_output = custom_path
-                    logger.info(f"✅ Option [I] selected. Using custom path: {selected_output.as_posix()}")
-                    break
-                except Exception as e:
-                    logger.error(f"❌ Error processing path: {e}")
-                    
-        elif choice == 'q':
-            logger.error("❌ Operation cancelled by user.")
-            raise sys.exit(0) 
-            
-        else:
-            print("   Invalid choice. Please enter S, I, or Q.")
-            
-    return selected_output.resolve()
+    # 3. Gọi hàm helper chung
+    return _resolve_path_via_prompt(
+        logger=logger,
+        prompt_title=prompt_title,
+        suggested_option_text=suggested_text,
+        suggested_path=default_output_path,
+        custom_input_prompt=input_prompt,
+        custom_path_validator=_validate_output_path # <-- Truyền validator
+    )
+# --- END MODIFIED ---
 
 
+# --- MODIFIED: Hàm gốc được đơn giản hóa ---
 def resolve_root_interactively(
     logger: logging.Logger, 
     fallback_path: Path
@@ -118,51 +173,21 @@ def resolve_root_interactively(
     Handles the S/I/Q interaction for the Project Root if fallback is required.
     Returns the final, resolved, absolute project root path or exits (Q).
     """
-    selected_root: Optional[Path] = None
-
+    # 1. Logic chuẩn bị
     logger.warning(f"\n⚠️ Project Root (Git Root) was not found automatically.")
-    logger.warning(f"   Please select the Project Root for this wrapper:")
-    
-    while selected_root is None:
-        # 1. Display options
-        print(f"     [S] Use Suggested Root: {fallback_path.as_posix()} (Script Parent Directory)")
-        print("     [I] Input Custom Path")
-        print("     [Q] Quit / Cancel")
 
-        try:
-            choice = input("   Enter your choice (S/I/Q): ").lower().strip()
-        except (EOFError, KeyboardInterrupt):
-            choice = 'q'
-        
-        if choice == 's':
-            selected_root = fallback_path
-            logger.info(f"✅ Option [S] selected. Using suggested root.")
-            
-        elif choice == 'i':
-            while True:
-                try:
-                    custom_path_str = input("   Enter custom Project Root path (absolute or relative): ").strip()
-                    if not custom_path_str:
-                        print("   Error: Path cannot be empty.")
-                        continue
+    # 2. Chuẩn bị các chuỗi cho prompt
+    prompt_title = "Please select the Project Root for this wrapper:"
+    suggested_text = f"Use Suggested Root: {fallback_path.as_posix()} (Script Parent Directory)"
+    input_prompt = "Enter custom Project Root path (absolute or relative)"
 
-                    custom_path = Path(custom_path_str).expanduser().resolve()
-
-                    if not custom_path.exists() or not custom_path.is_dir():
-                        logger.error(f"❌ Error: The entered path does not exist or is not a directory: {custom_path.as_posix()}")
-                        continue
-                    
-                    selected_root = custom_path
-                    logger.info(f"✅ Option [I] selected. Using custom root: {selected_root.as_posix()}")
-                    break
-                except Exception as e:
-                    logger.error(f"❌ Error processing path: {e}")
-                    
-        elif choice == 'q':
-            logger.error("❌ Operation cancelled by user.")
-            raise sys.exit(0) 
-            
-        else:
-            print("   Invalid choice. Please enter S, I, or Q.")
-            
-    return selected_root.resolve()
+    # 3. Gọi hàm helper chung
+    return _resolve_path_via_prompt(
+        logger=logger,
+        prompt_title=prompt_title,
+        suggested_option_text=suggested_text,
+        suggested_path=fallback_path,
+        custom_input_prompt=input_prompt,
+        custom_path_validator=_validate_root_path # <-- Truyền validator
+    )
+# --- END MODIFIED ---
