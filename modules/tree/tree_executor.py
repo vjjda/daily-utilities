@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     import pathspec
 # --- END MODIFIED ---
 
-from utils.core import is_path_matched
+from utils.core import is_path_matched # <-- Chỉ cần import hàm này
 from utils.logging_config import log_success 
 
 from .tree_config import (
@@ -87,11 +87,12 @@ def generate_tree(
     prefix: str = "", 
     level: int = 0, 
     max_level: Optional[int] = DEFAULT_MAX_LEVEL, 
-    ignore_list: Set[str] = DEFAULT_IGNORE, 
+    # --- MODIFIED: Nhận specs ---
+    ignore_spec: Optional['pathspec.PathSpec'] = None,
     submodules: Optional[Set[Path]] = None, 
-    prune_list: Set[str] = DEFAULT_PRUNE,
-    gitignore_spec: Optional['pathspec.PathSpec'] = None,
-    dirs_only_list: Set[str] = DEFAULT_DIRS_ONLY_LOGIC, 
+    prune_spec: Optional['pathspec.PathSpec'] = None,
+    dirs_only_spec: Optional['pathspec.PathSpec'] = None,
+    # --- END MODIFIED ---
     is_in_dirs_only_zone: bool = False, 
     counters: Optional[Dict[str, int]] = None
 ):
@@ -114,25 +115,10 @@ def generate_tree(
         return
         
     def is_ignored(path: Path) -> bool:
-        if is_path_matched(path, ignore_list, start_dir):
-            return True
-        
-        if gitignore_spec:
-            try:
-                rel_path = path.relative_to(start_dir)
-                rel_path_str = rel_path.as_posix()
-                
-                if path.is_dir() and not rel_path_str.endswith('/'):
-                    rel_path_str += '/'
-                
-                if rel_path_str == './':
-                    return False
-
-                return gitignore_spec.match_file(rel_path_str) 
-            except Exception:
-                return False
-                
-        return False
+        # --- MODIFIED: Chỉ dùng is_path_matched (mới) ---
+        # (Xóa logic gitignore_spec.match_file)
+        return is_path_matched(path, ignore_spec, start_dir)
+        # --- END MODIFIED ---
     
     dirs = sorted(
         [d for d in contents if d.is_dir() and not is_ignored(d)], 
@@ -156,12 +142,15 @@ def generate_tree(
             counters['files'] += 1
 
         is_submodule = path.is_dir() and path.resolve() in submodules
-        is_pruned = path.is_dir() and is_path_matched(path, prune_list, start_dir)
+        
+        # --- MODIFIED: Dùng is_path_matched với spec ---
+        is_pruned = path.is_dir() and is_path_matched(path, prune_spec, start_dir)
         is_dirs_only_entry = (
             path.is_dir() and 
-            is_path_matched(path, dirs_only_list, start_dir) and 
+            is_path_matched(path, dirs_only_spec, start_dir) and 
             not is_in_dirs_only_zone
         ) 
+        # --- END MODIFIED ---
         
         line = f"{prefix}{pointer}{path.name}{'/' if path.is_dir() else ''}"
         
@@ -180,8 +169,9 @@ def generate_tree(
             
             generate_tree(
                 path, start_dir, prefix + extension, level + 1, max_level, 
-                ignore_list, submodules, prune_list, 
-                gitignore_spec,
-                dirs_only_list, 
+                # --- MODIFIED: Truyền specs ---
+                ignore_spec, submodules, prune_spec, 
+                dirs_only_spec, 
+                # --- END MODIFIED ---
                 next_is_in_dirs_only_zone, counters
             )

@@ -28,7 +28,9 @@ from utils.core import (
     get_submodule_paths, 
     parse_gitignore, 
     resolve_config_value, 
-    resolve_config_list
+    resolve_config_list,
+    compile_spec_from_patterns, # <-- MỚI
+    parse_comma_list # <-- THÊM LẠI (cho dirs-only)
 )
 # --- END MODIFIED ---
 
@@ -56,14 +58,15 @@ def merge_config_sources(
         logger.info("⚡ Chế độ xem đầy đủ. Bỏ qua mọi bộ lọc và giới hạn.")
         return {
             "max_level": None,
-            "ignore_list": set(),
+            # --- MODIFIED: Trả về None spec ---
+            "ignore_spec": None,
             "submodules": set(),
-            "prune_list": set(),
-            "dirs_only_list": set(),
+            "prune_spec": None,
+            "dirs_only_spec": None,
+            # --- END MODIFIED ---
             "is_in_dirs_only_zone": False,
             "global_dirs_only_flag": False,
-            "gitignore_spec": None,
-            "using_gitignore": False,
+            "using_gitignore": False, # (Sửa)
             "filter_lists": {
                 "ignore": set(),
                 "prune": set(),
@@ -74,36 +77,36 @@ def merge_config_sources(
 
     # --- 3. Merge Configs (CLI > File > Default) ---
     
-    # Level (Sử dụng helper mới)
-    # --- MODIFIED: Sử dụng resolve_config_value ---
+    # (Level, Submodules, Gitignore Logic giữ nguyên)
+    # ...
     final_level = resolve_config_value(
         cli_value=args.level,
         file_value=file_config.get('level'),
         default_value=DEFAULT_MAX_LEVEL
     )
-    # --- END MODIFIED ---
-    
-    # Submodules (Giữ logic cũ, vì 'args.show_submodules' là cờ boolean Falsy)
     show_submodules = args.show_submodules if args.show_submodules else \
                       file_config.get('show-submodules', FALLBACK_SHOW_SUBMODULES)
-
-    # Gitignore Logic (Giữ logic cũ, vì 'args.no_gitignore' là cờ boolean Inverted)
     use_gitignore_from_config = file_config.get(
         'use-gitignore', 
         FALLBACK_USE_GITIGNORE
     )
     final_use_gitignore = False if args.no_gitignore else use_gitignore_from_config
     
-    gitignore_spec: Optional['pathspec.PathSpec'] = None 
+    # --- MODIFIED: Lấy patterns, không lấy spec ---
+    gitignore_patterns: Set[str] = set()
     if is_git_repo and final_use_gitignore:
-        logger.debug("Phát hiện kho Git. Đang tải .gitignore qua pathspec.")
-        gitignore_spec = parse_gitignore(start_dir)
+        logger.debug("Phát hiện kho Git. Đang tải patterns .gitignore.")
+        # parse_gitignore giờ trả về Set[str]
+        gitignore_patterns = parse_gitignore(start_dir) 
     elif is_git_repo and not final_use_gitignore:
         logger.debug("Phát hiện kho Git, nhưng bỏ qua .gitignore (do cờ hoặc cấu hình).")
     else:
         logger.debug("Không phải kho Git. Bỏ qua .gitignore.")
+    # --- END MODIFIED ---
 
-    # --- MODIFIED: Sử dụng logic "override" mới qua resolve_config_list ---
+
+    # --- MODIFIED: Lấy danh sách pattern (như cũ), nhưng gộp và biên dịch ---
+    
     # Ignore List
     final_ignore_list = resolve_config_list(
         cli_str_value=args.ignore,
@@ -129,14 +132,19 @@ def merge_config_sources(
     if isinstance(final_dirs_only_mode, list): 
         dirs_only_list_custom = set(final_dirs_only_mode)
     elif final_dirs_only_mode is not None and not global_dirs_only: 
-        # (Chỗ này cần import parse_comma_list - OK, tôi sẽ thêm lại)
-        # --- RE-MODIFIED: Thêm lại import parse_comma_list ---
-        from utils.core import parse_comma_list 
-        # --- END RE-MODIFIED ---
+        # (parse_comma_list đã được import lại ở trên)
         dirs_only_list_custom = parse_comma_list(final_dirs_only_mode)
         
     final_dirs_only_list = DEFAULT_DIRS_ONLY_LOGIC.union(dirs_only_list_custom)
-    # --- END MODIFIED ---
+    
+    # --- NEW: Gộp và Biên dịch Specs ---
+    # Gộp ignore từ config và .gitignore
+    all_ignore_patterns = final_ignore_list.union(gitignore_patterns)
+    
+    final_ignore_spec = compile_spec_from_patterns(all_ignore_patterns)
+    final_prune_spec = compile_spec_from_patterns(final_prune_list)
+    final_dirs_only_spec = compile_spec_from_patterns(final_dirs_only_list)
+    # --- END NEW ---
     
     # Submodule Paths
     submodule_paths: Set[Path] = set()
@@ -148,16 +156,18 @@ def merge_config_sources(
     # 4. Return a dict
     return {
         "max_level": final_level,
-        "ignore_list": final_ignore_list,
+        # --- MODIFIED: Trả về specs ---
+        "ignore_spec": final_ignore_spec,
+        "prune_spec": final_prune_spec,
+        "dirs_only_spec": final_dirs_only_spec,
+        # --- END MODIFIED ---
         "submodules": submodule_paths,
-        "prune_list": final_prune_list,
-        "dirs_only_list": final_dirs_only_list,
         "is_in_dirs_only_zone": global_dirs_only,
-        "gitignore_spec": gitignore_spec,
-        "using_gitignore": is_git_repo and final_use_gitignore and (gitignore_spec is not None),
+        # (Sửa logic: dùng len(gitignore_patterns) thay vì (spec is not None))
+        "using_gitignore": is_git_repo and final_use_gitignore and (len(gitignore_patterns) > 0),
         "global_dirs_only_flag": global_dirs_only,
         "filter_lists": {
-            "ignore": final_ignore_list,
+            "ignore": final_ignore_list, # Giữ lại để in status
             "prune": final_prune_list,
             "dirs_only": final_dirs_only_list,
             "submodules": submodule_names

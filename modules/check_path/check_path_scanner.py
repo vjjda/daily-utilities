@@ -19,7 +19,14 @@ if TYPE_CHECKING:
 
 
 # Import utilities used for scanning
-from utils.core import get_submodule_paths, parse_gitignore, is_path_matched
+# --- MODIFIED: Import thêm compile_spec_from_patterns ---
+from utils.core import (
+    get_submodule_paths, 
+    parse_gitignore, 
+    is_path_matched,
+    compile_spec_from_patterns
+)
+# --- END MODIFIED ---
 
 __all__ = ["scan_for_files"]
 
@@ -28,9 +35,9 @@ def scan_for_files(
     project_root: Path,
     target_dir_str: Optional[str],
     extensions: List[str],
-    # --- MODIFIED: Thay đổi tên tham số ---
-    ignore_set: Set[str], # (Thay vì 'cli_ignore')
-    # --- END MODIFIED ---
+    # (Tên tham số này vẫn là ignore_set,
+    # nó nhận pattern từ config)
+    ignore_set: Set[str], 
     script_file_path: Path,
     check_mode: bool
 ) -> List[Path]:
@@ -46,26 +53,32 @@ def scan_for_files(
 
     submodule_paths = get_submodule_paths(project_root, logger)
     
-    gitignore_spec: Optional['pathspec.PathSpec'] = None
+    # --- MODIFIED: Gộp logic ignore ---
+    gitignore_patterns: Set[str] = set()
     if use_gitignore:
-        gitignore_spec = parse_gitignore(project_root)
-        if gitignore_spec:
+        # parse_gitignore giờ trả về Set[str]
+        gitignore_patterns = parse_gitignore(project_root) 
+        if gitignore_patterns:
             logger.info("Chế độ mặc định: Tôn trọng quy tắc .gitignore (qua pathspec).")
         else:
             logger.info("Chế độ mặc định: Không tìm thấy .gitignore hoặc 'pathspec' bị thiếu.")
     else:
         logger.info(f"Chế độ đường dẫn cụ thể: Không dùng .gitignore cho '{target_dir_str}'.")
 
-    # --- MODIFIED: Gán từ tham số mới ---
-    fnmatch_patterns = ignore_set
+    # Gộp pattern từ config (ignore_set) và .gitignore
+    all_ignore_patterns = ignore_set.union(gitignore_patterns)
+    
+    # Biên dịch 1 lần
+    ignore_spec = compile_spec_from_patterns(all_ignore_patterns)
     # --- END MODIFIED ---
     
     if check_mode:
         logger.info("Đang chạy ở [Chế độ Dry-run] (chạy thử).")
     
     logger.info(f"Đang quét *.{', *.'.join(extensions)} trong: {scan_path.relative_to(scan_path.parent) if scan_path.parent != scan_path else scan_path.name}")
-    if fnmatch_patterns:
-        logger.debug(f"Bỏ qua (fnmatch): {', '.join(sorted(list(fnmatch_patterns)))}")
+    if all_ignore_patterns:
+        # (Đã xóa fnmatch_patterns, dùng all_ignore_patterns)
+        logger.debug(f"Bỏ qua (pathspec): {', '.join(sorted(list(all_ignore_patterns)))}")
 
     all_files = []
     for ext in extensions:
@@ -86,26 +99,12 @@ def scan_for_files(
         if is_in_submodule:
             continue
             
-        # 3. Skip ignored files (fnmatch: .tree.ini, CLI, Config)
-        if is_path_matched(file_path, fnmatch_patterns, project_root):
+        # --- MODIFIED: Gộp 2 bước lọc thành 1 ---
+        # 3. Skip ignored files (Config + .gitignore)
+        #    Sử dụng is_path_matched (mới) với ignore_spec
+        if is_path_matched(file_path, ignore_spec, project_root):
             continue
-        
-        # 4. Skip ignored files (pathspec: .gitignore)
-        if gitignore_spec:
-            try:
-                rel_path = file_path.relative_to(project_root)
-                rel_path_str = rel_path.as_posix()
-
-                if file_path.is_dir() and not rel_path_str.endswith('/'):
-                    rel_path_str += '/'
-                
-                if rel_path_str == './': 
-                    continue
-                
-                if gitignore_spec.match_file(rel_path_str):
-                    continue
-            except Exception:
-                pass
+        # --- END MODIFIED ---
             
         files_to_process.append(file_path)
         

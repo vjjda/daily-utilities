@@ -177,16 +177,21 @@ def main():
             cli_no_gitignore=args.no_gitignore
         )
         counters = {'dirs': 0, 'files': 0}
+        
+        # --- MODIFIED: Cập nhật lệnh gọi generate_tree ---
         generate_tree(
             start_dir, start_dir, counters=counters,
             max_level=config_params["max_level"],
-            ignore_list=config_params["ignore_list"],
+            # Truyền các specs đã biên dịch
+            ignore_spec=config_params["ignore_spec"],
             submodules=config_params["submodules"],
-            prune_list=config_params["prune_list"],
-            gitignore_spec=config_params["gitignore_spec"],
-            dirs_only_list=config_params["dirs_only_list"],
+            prune_spec=config_params["prune_spec"],
+            dirs_only_spec=config_params["dirs_only_spec"],
+            # (Xóa gitignore_spec)
             is_in_dirs_only_zone=config_params["is_in_dirs_only_zone"]
         )
+        # --- END MODIFIED ---
+        
         print_final_result(
             counters=counters,
             global_dirs_only=config_params["global_dirs_only_flag"]
