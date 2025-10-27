@@ -40,7 +40,7 @@ from .tree_config import (
     FALLBACK_SHOW_SUBMODULES, FALLBACK_USE_GITIGNORE
 )
 
-__all__ = ["merge_config_sources", "generate_dynamic_config"]
+__all__ = ["merge_config_sources"]
 
 
 def merge_config_sources(
@@ -173,47 +173,3 @@ def merge_config_sources(
             "submodules": submodule_names
         }
     }
-
-
-def generate_dynamic_config(template_content: str) -> str:
-    """
-    Chèn các giá trị mặc định vào chuỗi template .toml.
-    """
-    
-    # --- MODIFIED: Helper mới cho TOML array ---
-    def _format_set_to_toml_array(value_set: Set[str]) -> str:
-        """Helper: Chuyển set thành chuỗi mảng TOML."""
-        if not value_set:
-            return "[]" # Mảng rỗng
-        # Dùng repr() để tạo list string chuẩn: ['a', 'b']
-        return repr(sorted(list(value_set)))
-    # --- END MODIFIED ---
-
-    # Format values for TOML
-    toml_level = (
-        f"level = {DEFAULT_MAX_LEVEL}" 
-        if DEFAULT_MAX_LEVEL is not None 
-        else f"# level = 3" # (Commented out)
-    )
-    toml_show_submodules = str(FALLBACK_SHOW_SUBMODULES).lower()
-    toml_use_gitignore = str(FALLBACK_USE_GITIGNORE).lower()
-    toml_ignore = _format_set_to_toml_array(DEFAULT_IGNORE)
-    toml_prune = _format_set_to_toml_array(DEFAULT_PRUNE)
-    toml_dirs_only = _format_set_to_toml_array(DEFAULT_DIRS_ONLY_LOGIC)
-
-    # Format the template string
-    try:
-        # --- MODIFIED: Dùng placeholder của TOML ---
-        dynamic_template = template_content.format(
-            config_section_name=CONFIG_SECTION_NAME,
-            toml_level=toml_level,
-            toml_show_submodules=toml_show_submodules,
-            toml_use_gitignore=toml_use_gitignore,
-            toml_ignore=toml_ignore,
-            toml_prune=toml_prune,
-            toml_dirs_only=toml_dirs_only
-        )
-        return dynamic_template
-    except KeyError as e:
-        print(f"LỖI NGHIÊM TRỌNG: Template key không khớp: {e}")
-        return "# LỖI: File template thiếu placeholder."
