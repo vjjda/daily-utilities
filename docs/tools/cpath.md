@@ -1,4 +1,4 @@
-# Hướng Dẫn Công Cụ: cpath
+# Tool Guide: cpath
 
 `cpath` là công cụ để kiểm tra và tùy chọn sửa các comment `# Path:` ở đầu các file mã nguồn, đảm bảo chúng khớp với vị trí thực tế của file trong dự án. Nó hỗ trợ nhiều loại comment khác nhau (ví dụ: `#`, `//`, `/* */`).
 

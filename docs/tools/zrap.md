@@ -38,7 +38,7 @@ File Zsh wrapper này sẽ tự động xử lý các vấn đề phức tạp n
 Cú pháp cơ bản:
 
 ```sh
-zrap <script_path> -o <output_path> [options]
+zrap <script_path> [options]
 ```
 
 ### Các tham số (Arguments)
@@ -49,11 +49,12 @@ zrap <script_path> -o <output_path> [options]
 
 - `-o, --output <path>`
 
-  - (Bắt buộc) Đường dẫn nơi file wrapper Zsh sẽ được tạo ra.
+  - (Tùy chọn) Đường dẫn nơi file wrapper Zsh sẽ được tạo ra.
+  - Nếu bỏ qua, `zrap` sẽ đề xuất đường dẫn mặc định (trong `bin/` hoặc `~/bin` tùy theo chế độ) và hỏi bạn một cách tương tác.
 
 - `-m, --mode <mode>`
 
-  - Chọn chế độ wrapper: `relative` (mặc định) hoặc `absolute`.
+  - (Tùy chọn) Chọn chế độ wrapper: `relative` (mặc định) hoặc `absolute`.
 
 - `-r, --root <path>`
 
@@ -67,7 +68,7 @@ zrap <script_path> -o <output_path> [options]
 
   - (Tùy chọn) Ghi đè file output nếu nó đã tồn tại.
 
----
+-----
 
 ## Ví dụ (Examples)
 
@@ -77,7 +78,7 @@ Giống như cách chúng ta đã test, lệnh này tạo ra `bin/btool` để s
 
 ```sh
 # Chạy từ gốc project
-zrap scripts/internal/bootstrap_tool.py -o bin/btool
+zrap scripts/bootstrap_tool.py -o bin/btool
 ```
 
 - `zrap` sẽ tự động tìm `PROJECT_ROOT` là thư mục `daily-utilities`.

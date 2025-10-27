@@ -1,4 +1,4 @@
-# Tiếng Việt: Hướng Dẫn Công Cụ: tree
+# Tool Guide: tree
 
 `tree` là một công cụ tạo cây thư mục thông minh. Nó cung cấp các tùy chọn lọc nâng cao thông qua các đối số dòng lệnh và file cấu hình, đồng thời tự động bỏ qua các file/thư mục không cần thiết như `.venv` và `__pycache__`.
 
@@ -9,11 +9,11 @@ Cách dễ nhất để bắt đầu là khởi tạo một file cấu hình tro
 ```sh
 # 1. Khởi tạo file cấu hình cục bộ
 # Tạo/cập nhật file .tree.toml (cục bộ cho thư mục hiện tại) và mở nó.
-tree --config local
+tree --config-local
 
 # 2. Hoặc, cập nhật file cấu hình toàn dự án
 # Cập nhật phần [tree] trong file .project.toml tại thư mục hiện tại.
-tree --config project
+tree --config-project
 ```
 
 ## Cách Sử Dụng
@@ -28,9 +28,8 @@ tree [start_path] [options]
 
 Các tùy chọn này cung cấp khả năng ghi đè một lần đối với cấu hình.
 
-  * **`-c, --config <scope>`**: Khởi tạo hoặc cập nhật các file cấu hình.
-      * `local`: Tạo/ghi đè file `.tree.toml` cục bộ và mở nó.
-      * `project`: Ghi đè hoặc thêm phần `[tree]` vào file `.project.toml` toàn dự án và mở nó.
+  * **`-c, --config-project`**: Khởi tạo/cập nhật file .project.toml (scope 'project').
+  * **`-C, --config-local`**: Khởi tạo/cập nhật file .tree.toml (scope 'local').
   * `-L, --level <num>`: Giới hạn độ sâu hiển thị của cây.
   * **`-I, --ignore <patterns>`**: Danh sách các pattern (ví dụ: `*.log,*.tmp`) được phân tách bằng dấu komma để ẩn hoàn toàn khỏi đầu ra. Các pattern này sẽ được **THÊM** vào danh sách ignore từ file cấu hình hoặc giá trị mặc định.
   * **`-P, --prune <patterns>`**: Danh sách các pattern thư mục (ví dụ: `dist,build`) được phân tách bằng dấu komma. Thư mục sẽ được hiển thị nhưng `tree` sẽ không duyệt vào bên trong (được đánh dấu bằng `[...]`). Các pattern này sẽ được **THÊM** vào danh sách prune từ file cấu hình hoặc giá trị mặc định.
@@ -69,3 +68,4 @@ Tất cả các pattern lọc trong file `.toml` đều hỗ trợ **cú pháp g
   * **Phủ định:** `!important.log` (không bỏ qua file này)
   * **Neo vào gốc:** `/README.md` (chỉ khớp file ở thư mục gốc)
   * **Chỉ thư mục:** `build/` (khớp thư mục `build` ở mọi cấp, nhưng không khớp file tên `build`)
+
