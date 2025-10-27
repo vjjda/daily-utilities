@@ -19,39 +19,65 @@ def execute_bootstrap_action(
     generated_content: Dict[str, str],
     target_paths: Dict[str, Path],
     module_path: Path,
-    project_root: Path
+    project_root: Path,
+    force: bool # <-- NEW PARAMETER
 ) -> None:
     """
     Thực hiện kiểm tra an toàn và ghi tất cả file ra đĩa.
     """
     
     # 1. KIỂM TRA AN TOÀN
+    # --- MODIFIED: Check force flag ---
     if module_path.exists():
-        logger.error(f"❌ Dừng lại! Thư mục module sau đã tồn tại. Sẽ không ghi đè:")
-        logger.error(f"   -> {module_path.relative_to(project_root).as_posix()}")
-        sys.exit(1)
+        if not force:
+            logger.error(f"❌ Dừng lại! Thư mục module sau đã tồn tại. Sẽ không ghi đè:")
+            logger.error(f"   -> {module_path.relative_to(project_root).as_posix()}")
+            logger.error("   (Sử dụng -f hoặc --force để ghi đè)")
+            sys.exit(1)
+        else:
+            logger.warning(f"⚠️  Thư mục module đã tồn tại. Ghi đè (do --force)...")
         
     existing_files = [p for p in target_paths.values() if p.exists()]
     if existing_files:
-        logger.error(f"❌ Dừng lại! Các file sau đã tồn tại. Sẽ không ghi đè:")
-        for p in existing_files:
-            logger.error(f"   -> {p.relative_to(project_root).as_posix()}")
-        sys.exit(1)
+        if not force:
+            logger.error(f"❌ Dừng lại! Các file sau đã tồn tại. Sẽ không ghi đè:")
+            for p in existing_files:
+                logger.error(f"   -> {p.relative_to(project_root).as_posix()}")
+            logger.error("   (Sử dụng -f hoặc --force để ghi đè)")
+            sys.exit(1)
+        else:
+            logger.warning(f"⚠️  Phát hiện {len(existing_files)} file đã tồn tại. Ghi đè (do --force)...")
+    # --- END MODIFIED ---
 
     # 2. GHI FILE (I/O)
     try:
-        # Tạo thư mục module trước
+        # Kiểm tra trước khi tạo thư mục
+        module_existed_before = module_path.exists()
+        
+        # Tạo thư mục module
         module_path.mkdir(parents=True, exist_ok=True)
-        logger.info(f"Đã tạo thư mục: {module_path.relative_to(project_root).as_posix()}")
+        
+        if not module_existed_before:
+            logger.info(f"Đã tạo thư mục: {module_path.relative_to(project_root).as_posix()}")
             
         for key, path in target_paths.items():
             content = generated_content[key]
             # Đảm bảo thư mục cha (như /bin, /scripts) tồn tại
             path.parent.mkdir(parents=True, exist_ok=True) 
+            
+            is_existing = path.exists() # Check before writing
+            
             path.write_text(content, encoding='utf-8')
             
             relative_path = path.relative_to(project_root).as_posix()
-            log_success(logger, f"Đã tạo: {relative_path}")
+            
+            # --- MODIFIED: Log khác nhau cho tạo mới/ghi đè ---
+            if is_existing and force:
+                log_success(logger, f"Đã ghi đè: {relative_path}")
+            elif not is_existing:
+                log_success(logger, f"Đã tạo: {relative_path}")
+            # (Trường hợp file tồn tại nhưng không có --force đã bị chặn ở trên)
+            # --- END MODIFIED ---
 
             # Cấp quyền thực thi cho wrapper /bin/
             if key == "bin":

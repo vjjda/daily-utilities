@@ -47,13 +47,22 @@ def main():
     logger = setup_logging(script_name="Bootstrap", console_level_str="INFO")
     logger.debug("Bootstrap script started.")
     
-    # --- MODIFIED: Phân tích đối số (giữ nguyên) ---
+    # --- MODIFIED: Phân tích đối số ---
     parser = argparse.ArgumentParser(description="Bootstrap (khởi tạo) một tool utility mới từ file *.spec.toml.")
     parser.add_argument(
         "spec_file_path_str", 
         type=str, 
         help="Đường dẫn đầy đủ đến file *.spec.toml (ví dụ: docs/drafts/new_tool.spec.toml)."
     )
+    
+    # --- NEW: Thêm cờ --force ---
+    parser.add_argument(
+        "-f", "--force",
+        action="store_true",
+        help="Ghi đè (overwrite) các file đã tồn tại nếu có."
+    )
+    # --- END NEW ---
+    
     args = parser.parse_args()
     
     try:
@@ -115,7 +124,8 @@ def main():
             generated_content=generated_content,
             target_paths=target_paths,
             module_path=module_path,
-            project_root=PROJECT_ROOT
+            project_root=PROJECT_ROOT,
+            force=args.force # <-- MODIFIED: Truyền cờ force
         )
         
         logger.info("\n✨ Bootstrap hoàn tất! Cấu trúc file cho tool mới đã sẵn sàng.")

@@ -1,4 +1,4 @@
-# Path: scripts/{script_file}
+# Path: modules/bootstrap/bootstrap_templates/script_entrypoint_argparse.py.template
 
 import sys
 import argparse
@@ -30,7 +30,7 @@ def main():
     )
 
     # --- Các arguments được tạo tự động ---
-    {argparse_arguments}
+{argparse_arguments}
     # --- Hết arguments ---
 
     args = parser.parse_args()
@@ -40,7 +40,7 @@ def main():
     logger.debug("{logger_name} script started.")
 
     # --- Mở rộng Path (nếu có) ---
-    {argparse_path_expands}
+{argparse_path_expands}
     # --- Hết mở rộng Path ---
 
     # 3. Chạy Core Logic
