@@ -20,7 +20,41 @@ from utils.core import is_git_repository, find_git_root
 
 __all__ = ["prompt_config_overwrite", "launch_editor", "handle_project_root_validation"]
 
-# ... (Hàm prompt_config_overwrite giữ nguyên) ...
+def prompt_config_overwrite(
+    logger: logging.Logger, 
+    item_path: Path, 
+    item_name: str
+) -> Optional[bool]:
+    """
+    Hỏi người dùng (O/R/Q) khi file/section config đã tồn tại.
+    ...
+    (Nội dung hàm giữ nguyên)
+    ...
+    """
+    logger.warning(f"⚠️ {item_name} đã tồn tại trong '{item_path.name}'.")
+    logger.warning("   Vui lòng chọn một tùy chọn:")
+    logger.warning(f"     [O] Overwrite: Ghi đè {item_name} và mở file.")
+    logger.warning("     [R] Read-only: Chỉ mở file (không ghi đè).")
+    logger.warning("     [Q] Quit: Hủy bỏ, không làm gì cả.")
+    
+    choice = ""
+    while choice not in ('o', 'r', 'q'):
+        try:
+            choice = input("   Nhập lựa chọn của bạn (O/R/Q): ").lower().strip()
+        except (EOFError, KeyboardInterrupt):
+            choice = 'q'
+    
+    if choice == 'o':
+        logger.info(f"✅ [Overwrite] Đã chọn. Đang ghi đè {item_name}...")
+        return True # Yêu cầu ghi
+    elif choice == 'r':
+        logger.info(f"✅ [Read-only] Đã chọn. Sẽ chỉ mở file.")
+        return False # Không ghi
+    else: # choice == 'q'
+        logger.warning("❌ Hoạt động bị hủy bởi người dùng.")
+        # --- MODIFIED: Return None instead of raise ---
+        return None
+        # --- END MODIFIED ---
 
 def launch_editor(logger: logging.Logger, file_path: Path) -> None:
     """
