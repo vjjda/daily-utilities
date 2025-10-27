@@ -6,6 +6,6 @@ Thư mục này chứa tài liệu hướng dẫn sử dụng cho tất cả cá
 
 Vui lòng chọn một công cụ dưới đây để xem hướng dẫn sử dụng chi tiết:
 
-* [**ctree**](./tools/ctree.md) - Công cụ tạo cây thư mục thông minh với tính năng lọc nâng cao.
+* [**tree**](./tools/tree.md) - Công cụ tạo cây thư mục thông minh với tính năng lọc nâng cao.
 * [**zrap**](./tools/zrap.md) - Công cụ tạo Zsh wrapper cho các script Python.
 * *(Các công cụ trong tương lai sẽ được liệt kê tại đây)*

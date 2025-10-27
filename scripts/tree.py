@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Optional, Set, Dict, Any
 
 try:
-    import tomllib 
+    import tomllib
 except ImportError:
     try:
         import toml as tomllib
@@ -25,11 +25,9 @@ sys.path.append(str(PROJECT_ROOT))
 
 # Common utilities
 from utils.logging_config import setup_logging, log_success
-# --- MODIFIED: Xóa load_project_config_section ---
 from utils.core import (
     is_git_repository
 )
-# --- END MODIFIED ---
 from utils.cli import handle_config_init_request
 
 # Module Imports (Tái sử dụng 100% logic của tree)
@@ -40,7 +38,7 @@ from modules.tree import (
     DEFAULT_IGNORE, DEFAULT_PRUNE, DEFAULT_DIRS_ONLY_LOGIC,
     DEFAULT_MAX_LEVEL, FALLBACK_SHOW_SUBMODULES, FALLBACK_USE_GITIGNORE,
 
-    load_config_files, 
+    load_config_files,
 
     merge_config_sources,
 
@@ -51,7 +49,7 @@ from modules.tree import (
 
 # --- CONSTANTS ---
 MODULE_DIR = PROJECT_ROOT / "modules" / "tree"
-TEMPLATE_FILENAME = "tree.toml.template" 
+TEMPLATE_FILENAME = "tree.toml.template"
 TREE_DEFAULTS: Dict[str, Any] = {
     "level": DEFAULT_MAX_LEVEL,
     "show-submodules": FALLBACK_SHOW_SUBMODULES,
@@ -64,12 +62,11 @@ TREE_DEFAULTS: Dict[str, Any] = {
 
 def main():
     """ Hàm điều phối chính (phiên bản Argparse) """
-    
+
     # --- 1. Định nghĩa Argparse ---
-    # (Giữ nguyên)
     parser = argparse.ArgumentParser(
         description="Một công cụ tạo cây thư mục thông minh hỗ trợ file cấu hình .tree.toml (Phiên bản Argparse).",
-        epilog="Ví dụ: tree . -L 3 -I *.log",
+        epilog="Ví dụ: tree . -L 3 -I '*.log'", # <-- Sửa ví dụ dùng dấu nháy đơn
         formatter_class=argparse.RawTextHelpFormatter
     )
     tree_group = parser.add_argument_group("Tree Generation Options")
@@ -80,20 +77,45 @@ def main():
         help="Đường dẫn bắt đầu (file hoặc thư mục). Mặc định là thư mục hiện tại (.)."
     )
     tree_group.add_argument("-L", "--level", type=int, help="Giới hạn độ sâu hiển thị.")
-    tree_group.add_argument("-I", "--ignore", help="Danh sách pattern (phân cách bởi dấu phẩy) để bỏ qua.")
-    tree_group.add_argument("-P", "--prune", help="Danh sách pattern (phân cách bởi dấu phẩy) để cắt tỉa (prune).")
+
+    # --- MODIFIED: Cập nhật help text cho -I ---
+    tree_group.add_argument(
+        "-I", "--ignore",
+        help="Danh sách pattern (phân cách bởi dấu phẩy) để bỏ qua. Sẽ được **THÊM** vào danh sách từ config/default."
+    )
+    # --- END MODIFIED ---
+
+    # --- MODIFIED: Cập nhật help text cho -P ---
+    tree_group.add_argument(
+        "-P", "--prune",
+        help="Danh sách pattern (phân cách bởi dấu phẩy) để cắt tỉa (prune). Sẽ được **THÊM** vào danh sách từ config/default."
+    )
+    # --- END MODIFIED ---
+
     dirs_only_group = tree_group.add_mutually_exclusive_group()
     dirs_only_group.add_argument(
-        "-d", "--all-dirs", 
-        action="store_true", 
+        "-d", "--all-dirs",
+        action="store_true",
         help="Chỉ hiển thị thư mục cho toàn bộ cây."
     )
+
+    # --- MODIFIED: Thêm cờ ngắn -D ---
     dirs_only_group.add_argument(
-        "--dirs-patterns", 
+        "-D", "--dirs-patterns", # <-- Thêm -D
         help="Chỉ hiển thị thư mục con cho các pattern cụ thể (ví dụ: 'assets')."
     )
+    # --- END MODIFIED ---
+
     tree_group.add_argument("-s", "--show-submodules", action="store_true", help="Hiển thị nội dung của các submodule.")
-    tree_group.add_argument("--no-gitignore", action="store_true", help="Không tôn trọng file .gitignore.")
+
+    # --- MODIFIED: Thêm cờ ngắn -N ---
+    tree_group.add_argument(
+        "-N", "--no-gitignore", # <-- Thêm -N
+        action="store_true",
+        help="Không tôn trọng file .gitignore."
+    )
+    # --- END MODIFIED ---
+
     tree_group.add_argument("-f", "--full-view", action="store_true", help="Bỏ qua tất cả bộ lọc (.gitignore, rules, level) và hiển thị tất cả.")
     config_group = parser.add_argument_group("Config Initialization (Chạy riêng lẻ)")
     config_group.add_argument(
@@ -102,21 +124,18 @@ def main():
         help="Khởi tạo/cập nhật file .project.toml (scope 'project')."
     )
     config_group.add_argument(
-        "-C", "--config-local", 
+        "-C", "--config-local",
         action="store_true",
         help="Khởi tạo/cập nhật file .tree.toml (scope 'local')."
     )
     args = parser.parse_args()
-    
+
     # --- 2. Setup Logging ---
     logger = setup_logging(script_name="APTree")
     logger.debug("APTree script (argparse) started.")
 
     # --- 3. Xử lý Config Init (Tái sử dụng 100%) ---
-    # --- MODIFIED: Đơn giản hóa logic gọi ---
     try:
-        # Xóa logic tải .project_config_section ở đây
-        
         config_action_taken = handle_config_init_request(
             logger=logger,
             config_project=args.config_project,
@@ -126,34 +145,32 @@ def main():
             config_filename=CONFIG_FILENAME,
             project_config_filename=PROJECT_CONFIG_FILENAME,
             config_section_name=CONFIG_SECTION_NAME,
-            base_defaults=TREE_DEFAULTS # <-- Chỉ cần truyền base defaults
+            base_defaults=TREE_DEFAULTS
         )
-        
         if config_action_taken:
-            sys.exit(0) # Thoát an toàn
-            
+            sys.exit(0)
     except Exception as e:
         logger.error(f"❌ Đã xảy ra lỗi khi khởi tạo config: {e}")
         logger.debug("Traceback:", exc_info=True)
         sys.exit(1)
-    # --- END MODIFIED ---
 
     # --- 4. Logic chạy ctree (Giống hệt Typer) ---
-    # (Phần còn lại của file giữ nguyên)
     start_path_obj = Path(args.start_path).expanduser()
     if not start_path_obj.exists():
         logger.error(f"❌ Lỗi: Đường dẫn bắt đầu không tồn tại: {start_path_obj}")
         sys.exit(1)
-    
-    cli_dirs_only = "_ALL_" if args.all_dirs else args.dirs_patterns
-    
+
+    # --- MODIFIED: Lấy đúng tên arg mới ---
+    cli_dirs_only = "_ALL_" if args.all_dirs else args.dirs_patterns # <-- Sửa tên biến
+    # --- END MODIFIED ---
+
     cli_args = argparse.Namespace(
-        level=args.level, 
-        ignore=args.ignore, 
-        prune=args.prune, 
-        dirs_only=cli_dirs_only,
-        show_submodules=args.show_submodules, 
-        no_gitignore=args.no_gitignore, 
+        level=args.level,
+        ignore=args.ignore,
+        prune=args.prune,
+        dirs_only=cli_dirs_only, # <-- Sửa tên biến
+        show_submodules=args.show_submodules,
+        no_gitignore=args.no_gitignore,
         full_view=args.full_view,
     )
 
@@ -177,21 +194,18 @@ def main():
             cli_no_gitignore=args.no_gitignore
         )
         counters = {'dirs': 0, 'files': 0}
-        
-        # --- MODIFIED: Cập nhật lệnh gọi generate_tree ---
+
+        # (Lệnh gọi generate_tree giữ nguyên sau lần refactor trước)
         generate_tree(
             start_dir, start_dir, counters=counters,
             max_level=config_params["max_level"],
-            # Truyền các specs đã biên dịch
             ignore_spec=config_params["ignore_spec"],
             submodules=config_params["submodules"],
             prune_spec=config_params["prune_spec"],
             dirs_only_spec=config_params["dirs_only_spec"],
-            # (Xóa gitignore_spec)
             is_in_dirs_only_zone=config_params["is_in_dirs_only_zone"]
         )
-        # --- END MODIFIED ---
-        
+
         print_final_result(
             counters=counters,
             global_dirs_only=config_params["global_dirs_only_flag"]
@@ -203,8 +217,8 @@ def main():
 
 
 if __name__ == "__main__":
-    try: 
+    try:
         main()
-    except KeyboardInterrupt: 
-        print("\n\n❌ [Lệnh dừng] Đã dừng tạo cây."); 
+    except KeyboardInterrupt:
+        print("\n\n❌ [Lệnh dừng] Đã dừng tạo cây.");
         sys.exit(1)
