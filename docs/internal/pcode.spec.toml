@@ -17,6 +17,7 @@ logger_name = "pcode"
 [cli]
 # (Đã đổi sang argparse)
 interface = "argparse"
+allow_interspersed_args = true
 
 [cli.help]
 description = "Đóng gói nội dung của nhiều file/thư mục thành một file văn bản duy nhất."
