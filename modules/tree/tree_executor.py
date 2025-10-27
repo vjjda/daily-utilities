@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     import pathspec
 # --- END MODIFIED ---
 
-from utils.core import is_path_matched # <-- Chỉ cần import hàm này
+from utils.core import is_path_matched
 from utils.logging_config import log_success 
 
 from .tree_config import (
@@ -43,7 +43,7 @@ def print_status_header(
     cli_no_gitignore: bool
 ) -> None:
     """
-    In tiêu đề trạng thái trước khi chạy tạo cây.
+    Prints the status header before running the tree.
     (Side-effect: print)
     """
     is_truly_full_view = (
@@ -52,18 +52,20 @@ def print_status_header(
         config_params["max_level"] is None
     )
     
-    filter_info = "Xem đầy đủ" if is_truly_full_view else "Xem đã lọc"
-    level_info = "toàn bộ độ sâu" if config_params["max_level"] is None else f"giới hạn độ sâu: {config_params['max_level']}"
-    mode_info = ", chỉ thư mục" if config_params["global_dirs_only_flag"] else ""
+    # --- MODIFIED: Dịch sang tiếng Anh ---
+    filter_info = "Full view" if is_truly_full_view else "Filtered view"
+    level_info = "full depth" if config_params["max_level"] is None else f"depth limit: {config_params['max_level']}"
+    mode_info = ", dirs only" if config_params["global_dirs_only_flag"] else ""
     git_info = ""
     if is_git_repo: 
         git_info = (
-            ", Dự án Git (.gitignore bật)" if config_params["using_gitignore"] 
-            else (", Dự án Git (.gitignore tắt do cờ)" if cli_no_gitignore 
-                  else ", Dự án Git")
+            ", Git project (.gitignore enabled)" if config_params["using_gitignore"] 
+            else (", Git project (.gitignore disabled by flag)" if cli_no_gitignore 
+                  else ", Git project")
         )
         
     print(f"{start_dir.name}/ [{filter_info}, {level_info}{mode_info}{git_info}]")
+    # --- END MODIFIED ---
 
 
 def print_final_result(
@@ -71,14 +73,22 @@ def print_final_result(
     global_dirs_only: bool
 ) -> None:
     """
-    In kết quả thống kê cuối cùng.
+    Prints the final summary statistics.
     (Side-effect: print)
     """
+    # --- MODIFIED: Dịch sang tiếng Anh và xử lý số nhiều ---
+    files_count = counters['files']
+    dirs_count = counters['dirs']
+
     files_info = (
-        "0 file (bị ẩn)" if global_dirs_only and counters['files'] == 0 
-        else f"{counters['files']} file"
+        "0 files (hidden)" if global_dirs_only and files_count == 0 
+        else f"{files_count} file{'s' if files_count != 1 else ''}"
     )
-    print(f"\n{counters['dirs']} thư mục, {files_info}")
+    
+    dirs_info = f"{dirs_count} director{'ies' if dirs_count != 1 else 'y'}"
+    
+    print(f"\n{dirs_info}, {files_info}")
+    # --- END MODIFIED ---
 
 
 def generate_tree(
@@ -87,7 +97,7 @@ def generate_tree(
     prefix: str = "", 
     level: int = 0, 
     max_level: Optional[int] = DEFAULT_MAX_LEVEL, 
-    # --- MODIFIED: Nhận specs ---
+    # --- MODIFIED: Nhận specs (từ lần refactor trước) ---
     ignore_spec: Optional['pathspec.PathSpec'] = None,
     submodules: Optional[Set[Path]] = None, 
     prune_spec: Optional['pathspec.PathSpec'] = None,
@@ -115,10 +125,8 @@ def generate_tree(
         return
         
     def is_ignored(path: Path) -> bool:
-        # --- MODIFIED: Chỉ dùng is_path_matched (mới) ---
-        # (Xóa logic gitignore_spec.match_file)
+        # (Sử dụng logic pathspec đã refactor)
         return is_path_matched(path, ignore_spec, start_dir)
-        # --- END MODIFIED ---
     
     dirs = sorted(
         [d for d in contents if d.is_dir() and not is_ignored(d)], 
@@ -143,14 +151,13 @@ def generate_tree(
 
         is_submodule = path.is_dir() and path.resolve() in submodules
         
-        # --- MODIFIED: Dùng is_path_matched với spec ---
+        # (Sử dụng logic pathspec đã refactor)
         is_pruned = path.is_dir() and is_path_matched(path, prune_spec, start_dir)
         is_dirs_only_entry = (
             path.is_dir() and 
             is_path_matched(path, dirs_only_spec, start_dir) and 
             not is_in_dirs_only_zone
         ) 
-        # --- END MODIFIED ---
         
         line = f"{prefix}{pointer}{path.name}{'/' if path.is_dir() else ''}"
         
@@ -169,9 +176,8 @@ def generate_tree(
             
             generate_tree(
                 path, start_dir, prefix + extension, level + 1, max_level, 
-                # --- MODIFIED: Truyền specs ---
+                # (Sử dụng logic pathspec đã refactor)
                 ignore_spec, submodules, prune_spec, 
                 dirs_only_spec, 
-                # --- END MODIFIED ---
                 next_is_in_dirs_only_zone, counters
             )
