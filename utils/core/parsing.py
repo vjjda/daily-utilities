@@ -5,12 +5,15 @@ String Parsing Utilities
 (Internal module, imported by utils/core.py)
 """
 
-from typing import Union, Set
+# --- MODIFIED: Thêm re và Tuple ---
+import re
+from typing import Union, Set, Tuple
+# --- END MODIFIED ---
 
-# --- NEW: Export list ---
-__all__ = ["parse_comma_list"]
 
-from typing import Union, Set
+# --- MODIFIED: Cập nhật __all__ ---
+__all__ = ["parse_comma_list", "parse_cli_set_operators"]
+# --- END MODIFIED ---
 
 def parse_comma_list(value: Union[str, None]) -> Set[str]:
     """
@@ -20,3 +23,49 @@ def parse_comma_list(value: Union[str, None]) -> Set[str]:
     if not value: 
         return set()
     return {item.strip() for item in value.split(',') if item.strip() != ''}
+
+# --- NEW: Hàm phân tích toán tử set ---
+def parse_cli_set_operators(cli_string: str) -> Tuple[Set[str], Set[str], Set[str]]:
+    """
+    Phân tích chuỗi CLI thành các tập hợp Ghi đè, Thêm, và Bớt.
+    Ví dụ: "a,b+x,y-z" -> ({"a", "b"}, {"x", "y"}, {"z"})
+    Ví dụ: "+x,y-z" -> (set(), {"x", "y"}, {"z"})
+    """
+    overwrite_set: Set[str] = set()
+    add_set: Set[str] = set()
+    subtract_set: Set[str] = set()
+
+    if not cli_string:
+        return overwrite_set, add_set, subtract_set
+
+    # Regex: Tìm các đoạn bắt đầu bằng + hoặc - (hoặc không có gì)
+    # "a,b+x,y-z" -> [('a,b', ''), ('+x,y', '+'), ('-z', '-')]
+    # "+x,y-z" -> [('+x,y', '+'), ('-z', '-')]
+    # (Regex này tìm các nhóm [toán tử][nội dung])
+    matches = re.findall(r'([+-]?)((?:[^+-]|\\.)+)', cli_string)
+    
+    if not matches:
+        return overwrite_set, add_set, subtract_set
+    
+    # Xử lý match đầu tiên
+    first_operator, first_items_str = matches[0]
+    first_items_set = parse_comma_list(first_items_str)
+    
+    if not first_operator:
+        # Trường hợp Ghi đè (không có toán tử ở đầu)
+        overwrite_set.update(first_items_set)
+    elif first_operator == '+':
+        add_set.update(first_items_set)
+    elif first_operator == '-':
+        subtract_set.update(first_items_set)
+        
+    # Xử lý các match còn lại (nếu có)
+    for operator, items_str in matches[1:]:
+        items_set = parse_comma_list(items_str)
+        if operator == '+':
+            add_set.update(items_set)
+        elif operator == '-':
+            subtract_set.update(items_set)
+    
+    return overwrite_set, add_set, subtract_set
+# --- END NEW ---

@@ -10,24 +10,21 @@ from pathlib import Path
 from typing import Dict, Any, Set, List, Optional
 
 from .toml_io import load_toml_file, write_toml_file
-from .parsing import parse_comma_list
-# --- MODIFIED: Xóa import file helper cũ ---
+# --- MODIFIED: Import hàm parser mới ---
+from .parsing import parse_comma_list, parse_cli_set_operators
 # --- END MODIFIED ---
 
 __all__ = [
     "load_project_config_section",
     "load_and_merge_configs", 
-    # "load_config_template", # <-- ĐÃ XÓA
     "merge_config_sections",
     "format_value_to_toml",
     "resolve_config_value",
-    "resolve_config_list"
+    "resolve_config_list",
+    "resolve_set_modification" # <-- NEW
 ]
 
-# --- (Các hàm format_value_to_toml, resolve_config_value, resolve_config_list,
-# ---  load_project_config_section, merge_config_sections, load_and_merge_configs
-# ---  giữ nguyên) ---
-
+# --- (Hàm format_value_to_toml giữ nguyên) ---
 def format_value_to_toml(value: Any) -> str:
     """Helper: Định dạng giá trị Python thành chuỗi TOML hợp lệ."""
     if isinstance(value, bool):
@@ -45,6 +42,7 @@ def format_value_to_toml(value: Any) -> str:
     else:
         return repr(value)
 
+# --- (Hàm resolve_config_value giữ nguyên) ---
 def resolve_config_value(
     cli_value: Any, 
     file_value: Any, 
@@ -60,6 +58,7 @@ def resolve_config_value(
         return file_value
     return default_value
 
+# --- (Hàm resolve_config_list giữ nguyên) ---
 def resolve_config_list(
     cli_str_value: Optional[str], 
     file_list_value: Optional[List[str]], 
@@ -79,7 +78,40 @@ def resolve_config_list(
     
     return tentative_set.union(cli_set)
 
+# --- NEW: Hàm resolver set mới ---
+def resolve_set_modification(
+    tentative_set: Set[str], 
+    cli_string: Optional[str]
+) -> Set[str]:
+    """
+    Xử lý logic +/-/overwrite cho một set dựa trên chuỗi CLI.
+    
+    - "a,b" (Overwrite): Trả về {"a", "b"} (cộng thêm add_set, trừ đi subtract_set)
+    - "+a,b" (Modify): Trả về tentative_set.union({"a", "b"})
+    - "-a,b" (Modify): Trả về tentative_set.difference({"a", "b"})
+    - "a,b+c,d-a" (Overwrite): Trả về {"b", "c", "d"}
+    """
+    if cli_string is None or cli_string == "":
+        return tentative_set # Không thay đổi
+    
+    overwrite_set, add_set, subtract_set = parse_cli_set_operators(cli_string)
+    
+    base_set: Set[str]
+    if overwrite_set:
+        # Chế độ Ghi đè: Bắt đầu từ overwrite_set
+        base_set = overwrite_set
+    else:
+        # Chế độ Chỉnh sửa: Bắt đầu từ tentative_set
+        base_set = tentative_set
+    
+    # Áp dụng toán tử
+    final_set = (base_set.union(add_set)).difference(subtract_set)
+    
+    return final_set
+# --- END NEW ---
 
+
+# --- (Các hàm load/merge config còn lại giữ nguyên) ---
 def load_project_config_section(
     config_path: Path,
     section_name: str,
@@ -126,8 +158,3 @@ def load_and_merge_configs(
         local_section = local_section[config_section_name]
         
     return merge_config_sections(project_section, local_section)
-
-# --- REMOVED: load_config_template ---
-# (Hàm này đã được di chuyển và tổng quát hóa thành 
-#  utils.core.file_helpers.load_text_template)
-# --- END REMOVED ---

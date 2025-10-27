@@ -6,7 +6,12 @@ from pathlib import Path
 from typing import List, Set, Optional, Dict, Any
 
 # --- MODIFIED: Import hàm merge và default mới ---
-from utils.core import resolve_config_value, resolve_config_list, parse_comma_list
+from utils.core import (
+    resolve_config_value, 
+    resolve_config_list, 
+    parse_comma_list,
+    resolve_set_modification # <-- THÊM HÀM MỚI
+)
 from .check_path_config import (
     COMMENT_RULES_BY_EXT, 
     DEFAULT_EXTENSIONS, # <-- Import Set mới
@@ -114,29 +119,42 @@ def process_check_path_logic(
     """
     
     # --- 1. Hợp nhất Cấu hình ---
-    # --- MODIFIED: Sử dụng resolve_config_list cho extensions ---
-    # (Lưu ý: file_config_data['extensions'] có thể là list hoặc string từ TOML)
+    
+    # --- MODIFIED: Sử dụng resolve_set_modification cho extensions ---
+    # 1.1. Lấy tentative set (File > Default)
     file_extensions_value = file_config_data.get('extensions')
-    final_extensions_set = resolve_config_list(
-        cli_str_value=cli_extensions,
-        # Nếu là string từ TOML cũ, parse nó thành list trước khi đưa vào set
-        file_list_value=(
-            list(parse_comma_list(file_extensions_value)) 
-            if isinstance(file_extensions_value, str) 
-            else file_extensions_value # Giữ nguyên nếu đã là list
-        ),
-        default_set_value=DEFAULT_EXTENSIONS
-    )
-    if cli_extensions:
-        logger.debug("Sử dụng danh sách 'extensions' từ CLI (thêm vào config/default).")
-    elif file_extensions_value is not None:
-         logger.debug("Sử dụng danh sách 'extensions' từ file config (ghi đè default).")
+    
+    # Xử lý trường hợp TOML cũ (trả về string) hoặc TOML mới (trả về list)
+    file_ext_list: Optional[List[str]]
+    if isinstance(file_extensions_value, str):
+        file_ext_list = list(parse_comma_list(file_extensions_value))
     else:
-        logger.debug("Sử dụng danh sách 'extensions' mặc định.")
+        file_ext_list = file_extensions_value # Giữ nguyên (List hoặc None)
+        
+    tentative_extensions: Set[str]
+    if file_ext_list is not None:
+         tentative_extensions = set(file_ext_list)
+         logger.debug("Sử dụng danh sách 'extensions' từ file config làm cơ sở.")
+    else:
+         tentative_extensions = DEFAULT_EXTENSIONS
+         logger.debug("Sử dụng danh sách 'extensions' mặc định làm cơ sở.")
+    
+    # 1.2. Áp dụng logic +/-/overwrite từ CLI
+    final_extensions_set = resolve_set_modification(
+        tentative_set=tentative_extensions,
+        cli_string=cli_extensions
+    )
+    
+    if cli_extensions:
+        logger.debug(f"Đã áp dụng logic CLI: '{cli_extensions}'. Set 'extensions' cuối cùng: {sorted(list(final_extensions_set))}")
+    else:
+        logger.debug(f"Set 'extensions' cuối cùng (không có CLI): {sorted(list(final_extensions_set))}")
+
     # Chuyển thành List để dùng cho scanner
     final_extensions_list = sorted(list(final_extensions_set))
     # --- END MODIFIED ---
 
+    # (Logic 'ignore' giữ nguyên, vẫn dùng resolve_config_list)
     final_ignore_set = resolve_config_list(
         cli_str_value=cli_ignore,
         file_list_value=file_config_data.get('ignore'),
