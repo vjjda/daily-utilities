@@ -78,7 +78,7 @@ def main():
         "-I", "--ignore",
         type=str,
         default=None,
-        help="Danh sách pattern (fnmatch) ngăn cách bởi dấu phẩy để bỏ qua (THÊM vào config)."
+        help="Danh sách pattern ngăn cách bởi dấu phẩy để bỏ qua (THÊM vào config)."
     )
     stubgen_group.add_argument(
         "-R", "--restrict",
