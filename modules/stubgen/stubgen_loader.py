@@ -5,9 +5,8 @@ File Scanning logic for the Stub Generator (sgen) module.
 """
 
 import logging
-import sys
 from pathlib import Path
-from typing import List, Set, Final, Dict, Any
+from typing import List, Set, Dict, Any
 
 # Tái sử dụng các tiện ích Git, Filtering
 from utils.core import get_submodule_paths, parse_gitignore, is_path_matched
@@ -17,9 +16,6 @@ from utils.core import load_and_merge_configs # (Hàm chung đã import)
 # Import Configs
 # --- MODIFIED: Import đúng tên hằng số ---
 from .stubgen_config import (
-    DEFAULT_IGNORE, 
-    DEFAULT_RESTRICT, # <-- SỬA LỖI: Import tên mới
-    DYNAMIC_IMPORT_INDICATORS,
     PROJECT_CONFIG_FILENAME, CONFIG_FILENAME, CONFIG_SECTION_NAME
 )
 # --- END MODIFIED ---
