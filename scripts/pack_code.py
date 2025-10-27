@@ -1,4 +1,4 @@
-# Path: scripts/pack_code.py
+# Path: modules/bootstrap/bootstrap_templates/script_entrypoint_argparse.py.template
 
 import sys
 import argparse
@@ -30,7 +30,7 @@ def main():
     )
 
     # --- Các arguments được tạo tự động ---
-        parser.add_argument(
+    parser.add_argument(
         "start_path",
         type=str,
         nargs="?",
@@ -38,35 +38,35 @@ def main():
         help='Đường dẫn (file hoặc thư mục) để bắt đầu quét.'
     )
     parser.add_argument(
-        "-o",, "--output",
+        "-o", "--output",
         type=str,
         default=None,
         help="File output để ghi. Mặc định: 'tmp/<input_name>.txt'"
     )
     parser.add_argument(
-        "-S",, "--stdout",
+        "-S", "--stdout",
         action="store_true",
         help='In kết quả ra stdout (console) thay vì ghi file.'
     )
     parser.add_argument(
-        "-e",, "--extensions",
+        "-e", "--extensions",
         type=str,
         default=None,
         help="Chỉ bao gồm các đuôi file này (vd: 'py,md'). Hỗ trợ +/-."
     )
     parser.add_argument(
-        "-I",, "--ignore",
+        "-I", "--ignore",
         type=str,
         default=None,
         help='Các pattern (giống .gitignore) để bỏ qua (THÊM vào config).'
     )
     parser.add_argument(
-        "-N",, "--no_gitignore",
+        "-N", "--no_gitignore",
         action="store_true",
         help='Không tôn trọng các file .gitignore.'
     )
     parser.add_argument(
-        "-d",, "--dry_run",
+        "-d", "--dry_run",
         action="store_true",
         help='Chỉ in danh sách file sẽ được đóng gói (không in nội dung).'
     )
@@ -89,7 +89,7 @@ def main():
     logger.debug("pcode script started.")
 
     # --- Mở rộng Path (nếu có) ---
-        start_path_path = Path(args.start_path).expanduser() if args.start_path else None
+    start_path_path = Path(args.start_path).expanduser() if args.start_path else None
     output_path = Path(args.output).expanduser() if args.output else None
     # --- Hết mở rộng Path ---
 
