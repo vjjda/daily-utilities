@@ -1,9 +1,7 @@
 # Path: .gitignore
 # Python
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
+*.py[cod]
 .Python
 # Môi trường ảo (Quan trọng!)
 .venv
