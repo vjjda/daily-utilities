@@ -6,10 +6,9 @@ Handles interactive path resolution (S/I/Q prompts) and validation.
 """
 
 import logging
+import sys
 from pathlib import Path
 from typing import Optional
-
-import typer
 
 from .zsh_wrapper_config import (
     DEFAULT_WRAPPER_RELATIVE_DIR, 
@@ -103,7 +102,7 @@ def resolve_output_path_interactively(
                     
         elif choice == 'q':
             logger.error("❌ Operation cancelled by user.")
-            raise typer.Exit(code=0) 
+            raise sys.exit(0) 
             
         else:
             print("   Invalid choice. Please enter S, I, or Q.")
@@ -161,7 +160,7 @@ def resolve_root_interactively(
                     
         elif choice == 'q':
             logger.error("❌ Operation cancelled by user.")
-            raise typer.Exit(code=0) 
+            raise sys.exit(0) 
             
         else:
             print("   Invalid choice. Please enter S, I, or Q.")

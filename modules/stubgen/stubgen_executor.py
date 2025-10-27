@@ -12,8 +12,6 @@ from pathlib import Path
 from typing import Dict, Any, List, Optional
 # --- END MODIFIED ---
 
-import typer
-
 from utils.logging_config import log_success
 # --- MODIFIED: Import hàm git mới từ utils ---
 from utils.core import git_add_and_commit

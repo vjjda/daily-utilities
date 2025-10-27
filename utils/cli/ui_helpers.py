@@ -6,10 +6,11 @@ Chứa các hàm xử lý prompt (O/R/Q) và khởi chạy editor.
 """
 
 import logging
+import subprocess # <-- MỚI
+import platform # <-- MỚI
+import os # <-- MỚI
 from pathlib import Path
-# --- MODIFIED: Thêm imports ---
 from typing import Tuple, Optional
-# --- REMOVED: import typer ---
 
 # Import các tiện ích core cần thiết cho hàm mới
 from utils.core import is_git_repository, find_git_root
@@ -55,17 +56,33 @@ def prompt_config_overwrite(
 
 def launch_editor(logger: logging.Logger, file_path: Path) -> None:
     """
-    Mở file cấu hình trong editor mặc định một cách an toàn.
+    Mở file cấu hình trong editor mặc định một cách an toàn (cross-platform).
     """
+    system_name = platform.system()
+    command = []
+    
+    if system_name == "Windows":
+        # Sử dụng os.startfile trên Windows
+        try:
+            os.startfile(str(file_path))
+            logger.info(f"Đang mở '{file_path.name}'...")
+            return
+        except Exception:
+            pass
+    elif system_name == "Darwin": # macOS
+        command = ["open", str(file_path)]
+    elif system_name == "Linux":
+        command = ["xdg-open", str(file_path)]
+    
     try:
-        # --- MODIFIED: Import typer locally ---
-        import typer
-        # --- END MODIFIED ---
-        logger.info(f"Đang mở '{file_path.name}'...")
-        typer.launch(str(file_path))
+        if command:
+            logger.info(f"Đang mở '{file_path.name}'...")
+            # Run command, suppress output
+            subprocess.run(command, check=True, capture_output=True)
+            return
     except Exception as e:
         logger.error(f"❌ Lỗi khi mở file: {e}")
-        logger.warning(f"⚠️ Không thể tự động mở file.")
+        logger.warning(f"⚠️ Không thể tự động mở file. Vui lòng mở thủ công: {file_path.as_posix()}")
 
 # --- NEW: Hàm xác thực Project Root (R/C/Q) ---
 def handle_project_root_validation(
