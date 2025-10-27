@@ -58,44 +58,48 @@ def main():
         formatter_class=argparse.RawTextHelpFormatter 
     )
 
-    # Config Flags
-    parser.add_argument(
-        "-c", "--config-project",
-        action="store_true",
-        help=f"Khởi tạo/cập nhật section [{CONFIG_SECTION_NAME}] trong {PROJECT_CONFIG_FILENAME}."
-    )
-    parser.add_argument(
-        "-C", "--config-local",
-        action="store_true",
-        help=f"Khởi tạo/cập nhật file {CONFIG_FILENAME} (scope 'local')."
-    )
+    # --- MODIFIED: Tách thành 2 Argument Groups ---
 
-    # Positional Argument
-    parser.add_argument(
+    # Group 2: Stub Generation Options
+    stubgen_group = parser.add_argument_group("Stub Generation Options")
+    stubgen_group.add_argument(
         "target_dir",
         nargs='?',
         default=".",
         help="Đường dẫn thư mục để bắt đầu quét (base directory). Mặc định là thư mục hiện tại (.)."
     )
     
-    # Options
-    parser.add_argument(
+    stubgen_group.add_argument(
         "-f", "--force",
         action="store_true",
         help="Ghi đè file .pyi nếu đã tồn tại (không hỏi xác nhận)."
     )
-    parser.add_argument(
+    stubgen_group.add_argument(
         "-I", "--ignore",
         type=str,
         default=None,
         help="Danh sách pattern (fnmatch) ngăn cách bởi dấu phẩy để bỏ qua (THÊM vào config)."
     )
-    parser.add_argument(
+    stubgen_group.add_argument(
         "-R", "--restrict",
         type=str,
         default=None,
         help="Danh sách thư mục con (so với target_dir) ngăn cách bởi dấu phẩy để giới hạn quét (GHI ĐÈ config)."
     )
+
+        # Group 1: Config Flags
+    config_group = parser.add_argument_group("Config Initialization (Chạy riêng lẻ)")
+    config_group.add_argument(
+        "-c", "--config-project",
+        action="store_true",
+        help=f"Khởi tạo/cập nhật section [{CONFIG_SECTION_NAME}] trong {PROJECT_CONFIG_FILENAME}."
+    )
+    config_group.add_argument(
+        "-C", "--config-local",
+        action="store_true",
+        help=f"Khởi tạo/cập nhật file {CONFIG_FILENAME} (scope 'local')."
+    )
+    # --- END MODIFIED ---
     
     args = parser.parse_args()
     

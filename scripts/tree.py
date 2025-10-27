@@ -69,19 +69,8 @@ def main():
     # (Giữ nguyên)
     parser = argparse.ArgumentParser(
         description="Một công cụ tạo cây thư mục thông minh hỗ trợ file cấu hình .tree.toml (Phiên bản Argparse).",
-        epilog="Ví dụ: aptree . -L 3 -I *.log",
+        epilog="Ví dụ: tree . -L 3 -I *.log",
         formatter_class=argparse.RawTextHelpFormatter
-    )
-    config_group = parser.add_argument_group("Config Initialization (Chạy riêng lẻ)")
-    config_group.add_argument(
-        "-c", "--config-project",
-        action="store_true",
-        help="Khởi tạo/cập nhật file .project.toml (scope 'project')."
-    )
-    config_group.add_argument(
-        "-C", "--config-local", 
-        action="store_true",
-        help="Khởi tạo/cập nhật file .tree.toml (scope 'local')."
     )
     tree_group = parser.add_argument_group("Tree Generation Options")
     tree_group.add_argument(
@@ -106,6 +95,17 @@ def main():
     tree_group.add_argument("-s", "--show-submodules", action="store_true", help="Hiển thị nội dung của các submodule.")
     tree_group.add_argument("--no-gitignore", action="store_true", help="Không tôn trọng file .gitignore.")
     tree_group.add_argument("-f", "--full-view", action="store_true", help="Bỏ qua tất cả bộ lọc (.gitignore, rules, level) và hiển thị tất cả.")
+    config_group = parser.add_argument_group("Config Initialization (Chạy riêng lẻ)")
+    config_group.add_argument(
+        "-c", "--config-project",
+        action="store_true",
+        help="Khởi tạo/cập nhật file .project.toml (scope 'project')."
+    )
+    config_group.add_argument(
+        "-C", "--config-local", 
+        action="store_true",
+        help="Khởi tạo/cập nhật file .tree.toml (scope 'local')."
+    )
     args = parser.parse_args()
     
     # --- 2. Setup Logging ---

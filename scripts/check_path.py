@@ -54,7 +54,35 @@ def main():
         formatter_class=argparse.RawTextHelpFormatter
     )
 
-    # Config Group
+    # --- MODIFIED: Tách thành 2 Argument Groups (theo thứ tự) ---
+
+    # Group 1: Path Checking Options
+    path_check_group = parser.add_argument_group("Path Checking Options")
+    path_check_group.add_argument(
+        "target_directory_arg",
+        nargs='?',
+        default=".",
+        help="Thư mục để quét (mặc định: thư mục làm việc hiện tại).",
+    )
+    path_check_group.add_argument(
+        "-e", "--extensions",
+        type=str,
+        default=None,
+        help="Các đuôi file. Mặc định (không có +/-): Ghi đè config/default. Dùng + (thêm) hoặc ~ (bớt) để chỉnh sửa. Ví dụ: 'py,js' (ghi đè), '+ts,md' (thêm), '~py' (bớt)."
+    )
+    path_check_group.add_argument(
+        "-I", "--ignore",
+        type=str,
+        default=None,
+        help="Danh sách pattern để bỏ qua (THÊM vào config/default)."
+    )
+    path_check_group.add_argument(
+        "-d", "--dry-run",
+        action="store_true", 
+        help="Chỉ chạy ở chế độ 'dry-run' (kiểm tra). Mặc định là chạy 'fix'."
+    )
+    
+    # Group 2: Config Initialization (Chạy riêng lẻ)
     config_group = parser.add_argument_group("Config Initialization (Chạy riêng lẻ)")
     config_group.add_argument(
         "-c", "--config-project",
@@ -66,37 +94,8 @@ def main():
         action="store_true",
         help=f"Khởi tạo/cập nhật file {CONFIG_FILENAME} (scope 'local')."
     )
-
-    # Main Arguments/Options
-    parser.add_argument(
-        "target_directory_arg",
-        nargs='?',
-        default=".",
-        help="Thư mục để quét (mặc định: thư mục làm việc hiện tại).",
-    )
     
-    # --- MODIFIED: Cập nhật help text cho -e (dùng ~) ---
-    parser.add_argument(
-        "-e", "--extensions",
-        type=str,
-        default=None,
-        help="Các đuôi file. Mặc định (không có +/-): Ghi đè config/default. Dùng + (thêm) hoặc ~ (bớt) để chỉnh sửa. Ví dụ: 'py,js' (ghi đè), '+ts,md' (thêm), '~py' (bớt)."
-    )
     # --- END MODIFIED ---
-    
-    parser.add_argument(
-        "-I", "--ignore",
-        type=str,
-        default=None,
-        help="Danh sách pattern để bỏ qua (THÊM vào config/default)."
-    )
-    
-    # Argparse.action="store_true" tương đương với Typer Option (False default)
-    parser.add_argument(
-        "-d", "--dry-run",
-        action="store_true", 
-        help="Chỉ chạy ở chế độ 'dry-run' (kiểm tra). Mặc định là chạy 'fix'."
-    )
     
     args = parser.parse_args()
 
