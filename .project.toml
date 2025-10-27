@@ -3,7 +3,7 @@ show-submodules = false
 use-gitignore = true
 ignore = [
     ".git",
-    "__pycache__"
+    "__pycache__",
     ".venv",
     "node_modules",
     "venv",
