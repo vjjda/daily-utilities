@@ -95,7 +95,6 @@ def find_gateway_files(
     # --- END MODIFIED ---
 
     submodule_paths = get_submodule_paths(scan_root, logger)
-    # (fnmatch_patterns đã bị xóa, chỉ dùng ignore_spec)
     search_sub_roots = restrict_list 
     logger.debug(f"Scanning within sub-roots: {search_sub_roots}")
     gateway_files: List[Path] = []

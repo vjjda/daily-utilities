@@ -1,13 +1,17 @@
 # Path: modules/check_path/check_path.toml.template
 #
-# Cấu hình mặc định cho cpath (Path Checker)
+# Default configuration for cpath (Path Checker)
 #
 
 [{config_section_name}]
 
-# Các đuôi file mà cpath sẽ quét.
-# Định dạng: Mảng các chuỗi (Array of Strings).
-extensions = {toml_extensions} # <-- Sẽ được format thành ["py", "js", ...]
+# File extensions that cpath will scan.
+# Format: Array of Strings.
+extensions = {toml_extensions}
 
-# Danh sách các pattern (FNMATCH) sẽ bị bỏ qua (ngoài .gitignore).
+# --- MODIFIED: Mention pathspec/gitwildmatch ---
+# List of gitignore-style patterns (pathspec/gitwildmatch)
+# to ignore (in addition to .gitignore rules).
+# Example: ["generated/", "*.temp.py"]
+# --- END MODIFIED ---
 ignore = {toml_ignore}

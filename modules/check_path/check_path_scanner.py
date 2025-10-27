@@ -77,7 +77,6 @@ def scan_for_files(
     
     logger.info(f"Đang quét *.{', *.'.join(extensions)} trong: {scan_path.relative_to(scan_path.parent) if scan_path.parent != scan_path else scan_path.name}")
     if all_ignore_patterns:
-        # (Đã xóa fnmatch_patterns, dùng all_ignore_patterns)
         logger.debug(f"Bỏ qua (pathspec): {', '.join(sorted(list(all_ignore_patterns)))}")
 
     all_files = []
