@@ -6,6 +6,8 @@ Thư mục này chứa tài liệu hướng dẫn sử dụng cho tất cả cá
 
 Vui lòng chọn một công cụ dưới đây để xem hướng dẫn sử dụng chi tiết:
 
-* [**tree**](./tools/tree.md) - Công cụ tạo cây thư mục thông minh với tính năng lọc nâng cao.
+* [**tree**](./tools/ctree.md) - Công cụ tạo cây thư mục thông minh với tính năng lọc nâng cao.
+* [**cpath**](./tools/cpath.md) - Công cụ kiểm tra/sửa comment `# Path:`.
+* [**sgen**](./tools/sgen.md) - Công cụ tạo file stub `.pyi`.
 * [**zrap**](./tools/zrap.md) - Công cụ tạo Zsh wrapper cho các script Python.
 * *(Các công cụ trong tương lai sẽ được liệt kê tại đây)*
