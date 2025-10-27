@@ -16,10 +16,12 @@ load_project_config_section: Any
 load_text_template: Any
 load_toml_file: Any
 merge_config_sections: Any
+parse_cli_set_operators: Any
 parse_comma_list: Any
 parse_gitignore: Any
 resolve_config_list: Any
 resolve_config_value: Any
+resolve_set_modification: Any
 run_command: Any
 write_toml_file: Any
 
@@ -37,10 +39,12 @@ __all__: List[str] = [
     'load_text_template',
     'load_toml_file',
     'merge_config_sections',
+    'parse_cli_set_operators',
     'parse_comma_list',
     'parse_gitignore',
     'resolve_config_list',
     'resolve_config_value',
+    'resolve_set_modification',
     'run_command',
     'write_toml_file'
 ]
