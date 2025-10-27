@@ -24,12 +24,12 @@ def parse_comma_list(value: Union[str, None]) -> Set[str]:
         return set()
     return {item.strip() for item in value.split(',') if item.strip() != ''}
 
-# --- NEW: Hàm phân tích toán tử set ---
+# --- MODIFIED: Hàm phân tích toán tử set (Dùng ~ thay vì -) ---
 def parse_cli_set_operators(cli_string: str) -> Tuple[Set[str], Set[str], Set[str]]:
     """
     Phân tích chuỗi CLI thành các tập hợp Ghi đè, Thêm, và Bớt.
-    Ví dụ: "a,b+x,y-z" -> ({"a", "b"}, {"x", "y"}, {"z"})
-    Ví dụ: "+x,y-z" -> (set(), {"x", "y"}, {"z"})
+    Ví dụ: "a,b+x,y~z" -> ({"a", "b"}, {"x", "y"}, {"z"})
+    Ví dụ: "+x,y~z" -> (set(), {"x", "y"}, {"z"})
     """
     overwrite_set: Set[str] = set()
     add_set: Set[str] = set()
@@ -38,11 +38,10 @@ def parse_cli_set_operators(cli_string: str) -> Tuple[Set[str], Set[str], Set[st
     if not cli_string:
         return overwrite_set, add_set, subtract_set
 
-    # Regex: Tìm các đoạn bắt đầu bằng + hoặc - (hoặc không có gì)
-    # "a,b+x,y-z" -> [('a,b', ''), ('+x,y', '+'), ('-z', '-')]
-    # "+x,y-z" -> [('+x,y', '+'), ('-z', '-')]
-    # (Regex này tìm các nhóm [toán tử][nội dung])
-    matches = re.findall(r'([+-]?)((?:[^+-]|\\.)+)', cli_string)
+    # Regex: Tìm các đoạn bắt đầu bằng + hoặc ~
+    # --- MODIFIED: Thay thế - bằng ~ trong regex ---
+    matches = re.findall(r'([+~]?)((?:[^~+]|\\.)+)', cli_string)
+    # --- END MODIFIED ---
     
     if not matches:
         return overwrite_set, add_set, subtract_set
@@ -56,16 +55,20 @@ def parse_cli_set_operators(cli_string: str) -> Tuple[Set[str], Set[str], Set[st
         overwrite_set.update(first_items_set)
     elif first_operator == '+':
         add_set.update(first_items_set)
-    elif first_operator == '-':
+    # --- MODIFIED: Thay thế - bằng ~ ---
+    elif first_operator == '~':
         subtract_set.update(first_items_set)
+    # --- END MODIFIED ---
         
     # Xử lý các match còn lại (nếu có)
     for operator, items_str in matches[1:]:
         items_set = parse_comma_list(items_str)
         if operator == '+':
             add_set.update(items_set)
-        elif operator == '-':
+        # --- MODIFIED: Thay thế - bằng ~ ---
+        elif operator == '~':
             subtract_set.update(items_set)
+        # --- END MODIFIED ---
     
     return overwrite_set, add_set, subtract_set
-# --- END NEW ---
+# --- END MODIFIED ---

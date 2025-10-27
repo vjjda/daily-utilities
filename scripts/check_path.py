@@ -75,12 +75,12 @@ def main():
         help="Thư mục để quét (mặc định: thư mục làm việc hiện tại).",
     )
     
-    # --- MODIFIED: Cập nhật help text cho -e ---
+    # --- MODIFIED: Cập nhật help text cho -e (dùng ~) ---
     parser.add_argument(
         "-e", "--extensions",
         type=str,
         default=None,
-        help="Các đuôi file. Mặc định (không có +/-): Ghi đè config/default. Dùng + (thêm) hoặc - (bớt) để chỉnh sửa. Ví dụ: 'py,js' (ghi đè), '+ts,md' (thêm), '-py' (bớt)."
+        help="Các đuôi file. Mặc định (không có +/-): Ghi đè config/default. Dùng + (thêm) hoặc ~ (bớt) để chỉnh sửa. Ví dụ: 'py,js' (ghi đè), '+ts,md' (thêm), '~py' (bớt)."
     )
     # --- END MODIFIED ---
     
