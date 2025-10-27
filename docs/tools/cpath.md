@@ -14,7 +14,7 @@ cpath --config-local
 # 2. Hoặc, cập nhật file cấu hình toàn dự án
 # Cập nhật phần [cpath] trong file .project.toml tại thư mục hiện tại.
 cpath --config-project
-````
+```
 
 ## Cách Sử Dụng
 
