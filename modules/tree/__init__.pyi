@@ -13,7 +13,6 @@ DEFAULT_PRUNE: Any
 FALLBACK_SHOW_SUBMODULES: Any
 FALLBACK_USE_GITIGNORE: Any
 PROJECT_CONFIG_FILENAME: Any
-generate_dynamic_config: Any
 generate_tree: Any
 load_config_files: Any
 merge_config_sources: Any
@@ -31,7 +30,6 @@ __all__: List[str] = [
     'FALLBACK_SHOW_SUBMODULES',
     'FALLBACK_USE_GITIGNORE',
     'PROJECT_CONFIG_FILENAME',
-    'generate_dynamic_config',
     'generate_tree',
     'load_config_files',
     'merge_config_sources',
