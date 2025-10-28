@@ -9,21 +9,41 @@ import logging
 from pathlib import Path
 from typing import Dict, Any, List, Optional
 
-__all__ = ["load_data"] # (Example, user can change)
+# --- MODIFIED: Cập nhật __all__ ---
+__all__ = ["load_files_content"]
+# --- END MODIFIED ---
 
-def load_data(logger: logging.Logger, path_to_load: Path) -> Any:
+# --- MODIFIED: Thay đổi hàm 'load_data' ---
+def load_files_content(
+    logger: logging.Logger, 
+    file_paths: List[Path],
+    base_dir: Path
+) -> Dict[Path, str]:
     """
-    (Example) Loads data from the target path.
+    Tải nội dung của tất cả các file được yêu cầu.
+    Bỏ qua các file không thể đọc (ví dụ: binary, encoding lỗi).
     """
-    # --- MODIFIED: Escaped braces ({...}) for .format() ---
-    logger.info(f"Loader running on: {path_to_load.name}")
+    logger.info(f"Đang đọc nội dung từ {len(file_paths)} file...")
+    content_map: Dict[Path, str] = {}
     
-    # (TODO: Thêm logic đọc file (read I/O) ở đây)
-    # Ví dụ:
-    # if not path_to_load.exists():
-    #    logger.error("Target path does not exist.")
-    #    return None
-    # return path_to_load.read_text()
-    
-    return f"Data from {path_to_load.name}"
-    # --- END MODIFIED ---
+    skipped_count = 0
+    for file_path in file_paths:
+        try:
+            # Đọc nội dung file
+            content = file_path.read_text(encoding='utf-8')
+            content_map[file_path] = content
+        except UnicodeDecodeError:
+            logger.warning(f"   -> Bỏ qua (lỗi encoding): {file_path.relative_to(base_dir).as_posix()}")
+            skipped_count += 1
+        except IOError as e:
+            logger.warning(f"   -> Bỏ qua (lỗi I/O: {e}): {file_path.relative_to(base_dir).as_posix()}")
+            skipped_count += 1
+        except Exception as e:
+            logger.warning(f"   -> Bỏ qua (lỗi: {e}): {file_path.relative_to(base_dir).as_posix()}")
+            skipped_count += 1
+            
+    if skipped_count > 0:
+        logger.warning(f"Đã bỏ qua tổng cộng {skipped_count} file không thể đọc.")
+        
+    return content_map
+# --- END MODIFIED ---
