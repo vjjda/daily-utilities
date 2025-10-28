@@ -11,7 +11,7 @@ sys.path.append(str(PROJECT_ROOT))
 
 try:
     from utils.logging_config import setup_logging, log_success
-    from modules.pack_code.pack_code_config import DEFAULT_START_PATH
+    from modules.pack_code.pack_code_config import DEFAULT_START_PATH, DEFAULT_EXTENSIONS
     from modules.pack_code import (
         process_pack_code_logic,
         execute_pack_code_action
@@ -51,7 +51,7 @@ def main():
     parser.add_argument(
         "-e", "--extensions",
         type=str,
-        default=None,
+        default='md,py,txt,json,xml,yaml,yml,ini,cfg,cfg.py,sh,bash,zsh',
         help="Chỉ bao gồm các đuôi file này (vd: 'py,md'). Hỗ trợ +/-."
     )
     parser.add_argument(

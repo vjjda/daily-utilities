@@ -52,6 +52,7 @@ help = "In kết quả ra stdout (console) thay vì ghi file."
 name = "extensions"
 short = "-e"
 type = "str"
+default = "md,py,txt,json,xml,yaml,yml,ini,cfg,cfg.py,sh,bash,zsh"
 help = "Chỉ bao gồm các đuôi file này (vd: 'py,md'). Hỗ trợ +/-."
 
 # --- Filter 2: Ignore ---
