@@ -38,7 +38,7 @@ from .pack_code_config import DEFAULT_EXTENSIONS, DEFAULT_IGNORE
 __all__ = ["process_pack_code_logic"]
 
 
-# --- NEW: Hàm quét file (Dựa trên scanner của cpath) ---
+# --- (Hàm _scan_files không đổi) ---
 def _scan_files(
     logger: logging.Logger,
     start_path: Path,
@@ -53,7 +53,14 @@ def _scan_files(
     files_to_pack: List[Path] = []
     
     if start_path.is_file():
-        all_files = [start_path]
+        # --- MODIFIED: Sửa lỗi logic khi start_path là file ---
+        # Chúng ta nên rglob từ thư mục cha
+        all_files_iter = start_path.parent.rglob("*")
+        # Và sau đó lọc chỉ file đó
+        all_files = [p for p in all_files_iter if p.samefile(start_path)]
+        if not all_files:
+             all_files = [start_path] # Fallback
+        # --- END MODIFIED ---
     elif start_path.is_dir():
         all_files = list(start_path.rglob("*"))
     else:
@@ -62,6 +69,10 @@ def _scan_files(
 
     for file_path in all_files:
         if file_path.is_dir():
+            continue
+            
+        # 0. Nếu start_path là file, chỉ lấy file đó
+        if start_path.is_file() and not file_path.samefile(start_path):
             continue
 
         # 1. Bỏ qua file trong submodule
@@ -75,6 +86,10 @@ def _scan_files(
         # 3. Lọc theo đuôi file
         file_ext = file_path.suffix.lstrip('.')
         if file_ext not in ext_filter_set:
+            # Bỏ qua nếu start_path là file và không khớp ext
+            if start_path.is_file():
+                logger.warning(f"File chỉ định {start_path.name} bị bỏ qua do không khớp extension.")
+                return []
             continue
             
         files_to_pack.append(file_path)
@@ -82,10 +97,8 @@ def _scan_files(
     # Sắp xếp file theo thứ tự alphabet
     files_to_pack.sort()
     return files_to_pack
-# --- END NEW ---
 
-
-# --- NEW: Hàm tạo cây thư mục (dạng string) ---
+# --- (Hàm _generate_tree_string không đổi) ---
 def _generate_tree_string(
     start_path: Path, 
     file_paths: List[Path]
@@ -104,7 +117,7 @@ def _generate_tree_string(
 
     # Chỉ xây dựng cây nếu start_path là thư mục và có file
     if not start_path.is_dir() or not file_paths:
-        return "".join(tree_lines)
+        return "\n".join(tree_lines) # Sửa lỗi: join list
 
     # Chuyển đổi paths sang relative_paths
     relative_paths = [p.relative_to(start_path) for p in file_paths]
@@ -134,30 +147,31 @@ def _generate_tree_string(
             p for p in sorted_parts 
             if p.parent == part.parent and len(p.parts) == len(part.parts)
         ]
+        
+        # Bỏ qua nếu không có siblings (ví dụ: file rỗng)
+        if not siblings:
+            continue
+        
         is_last = (part == siblings[-1])
         pointer = "└── " if is_last else "├── "
         
         # Cập nhật dict 'printed_parents' cho các cấp độ con
-        if part.is_dir(): # (pathspec coi 'a/b' là file, 'a/b/' là dir)
-             # Thực tế, 'part' từ 'relative_paths' luôn là file
-             # Chúng ta cần kiểm tra xem nó có phải là thư mục trong `all_parts` không
-             is_dir = any(p.parent == part for p in sorted_parts)
-             
-             line = f"{indent_prefix}{pointer}{part.name}{'/' if is_dir else ''}"
-             
-             # Nếu là thư mục, lưu lại indent cho con
-             if is_dir:
-                 printed_parents[part] = "    " if is_last else "│   "
-        else:
-            line = f"{indent_prefix}{pointer}{part.name}"
+        # (Sửa lỗi: 'part' từ 'relative_paths' là file. 
+        # Chúng ta cần kiểm tra xem nó có phải là thư mục cha của file khác không)
+        is_dir = any(p.parent == part for p in sorted_parts)
+         
+        line = f"{indent_prefix}{pointer}{part.name}{'/' if is_dir else ''}"
+         
+        # Nếu là thư mục, lưu lại indent cho con
+        if is_dir:
+             printed_parents[part] = "    " if is_last else "│   "
 
         tree_lines.append(line)
 
     return "\n".join(tree_lines)
-# --- END NEW ---
 
 
-# --- MODIFIED: Hàm logic chính ---
+# --- (Hàm process_pack_code_logic) ---
 def process_pack_code_logic(logger: logging.Logger, **cli_args) -> Dict[str, Any]:
     """
     Hàm logic chính, chỉ phân tích, không có side-effect.
@@ -176,7 +190,6 @@ def process_pack_code_logic(logger: logging.Logger, **cli_args) -> Dict[str, Any
     no_tree: bool = cli_args.get("no_tree", False)
     
     # 2. Xác định gốc quét (Scan Root) cho các quy tắc
-    # (Giống logic cpath: dùng git root nếu có, hoặc thư mục cha)
     scan_root: Path
     if start_path.is_file():
         scan_root = find_git_root(start_path.parent) or start_path.parent
@@ -193,7 +206,6 @@ def process_pack_code_logic(logger: logging.Logger, **cli_args) -> Dict[str, Any
     
     # 3.2. Lọc Ignore
     default_ignore_set = parse_comma_list(DEFAULT_IGNORE)
-    # (Logic ignore của pcode là THÊM vào, không phải +/-)
     cli_ignore_set = parse_comma_list(ignore_cli_str)
     
     gitignore_patterns: Set[str] = set()
@@ -202,7 +214,10 @@ def process_pack_code_logic(logger: logging.Logger, **cli_args) -> Dict[str, Any
         logger.debug(f"Đã tải {len(gitignore_patterns)} quy tắc từ .gitignore")
         
     all_ignore_patterns = default_ignore_set.union(cli_ignore_set).union(gitignore_patterns)
-    ignore_spec = compile_spec_from_patterns(all_ignore_patterns)
+    
+    # --- MODIFIED: Truyền scan_root ---
+    ignore_spec = compile_spec_from_patterns(all_ignore_patterns, scan_root)
+    # --- END MODIFIED ---
     
     # 3.3. Submodules
     submodule_paths = get_submodule_paths(scan_root, logger)
@@ -225,7 +240,6 @@ def process_pack_code_logic(logger: logging.Logger, **cli_args) -> Dict[str, Any
         tree_str = _generate_tree_string(start_path, files_to_pack)
 
     # 6. Đọc nội dung file (Gọi Loader)
-    # (Bỏ qua đọc file nếu là dry_run và không cần cây)
     files_content: Dict[Path, str] = {}
     if not (dry_run and no_tree):
         files_content = load_files_content(logger, files_to_pack, scan_root)
@@ -237,14 +251,18 @@ def process_pack_code_logic(logger: logging.Logger, **cli_args) -> Dict[str, Any
         final_content_lines.append(tree_str)
         final_content_lines.append("\n" + ("=" * 80) + "\n")
 
-    # (Chỉ thêm nội dung file nếu không phải dry_run)
     if not dry_run:
         for file_path in files_to_pack:
             content = files_content.get(file_path)
             if content is None:
-                continue # File đã bị bỏ qua (ví dụ: lỗi encoding)
+                continue 
 
-            rel_path_str = file_path.relative_to(scan_root).as_posix()
+            # --- MODIFIED: Tính rel_path từ scan_root (nhất quán) ---
+            try:
+                rel_path_str = file_path.relative_to(scan_root).as_posix()
+            except ValueError:
+                 rel_path_str = file_path.as_posix() # Fallback
+            # --- END MODIFIED ---
             
             if not no_header:
                 header = f"===== Path: {rel_path_str} ====="
@@ -263,7 +281,6 @@ def process_pack_code_logic(logger: logging.Logger, **cli_args) -> Dict[str, Any
         if output_path_arg:
             final_output_path = output_path_arg
         else:
-            # Mặc định: tmp/<start_path_name>.txt
             tmp_dir = scan_root / "tmp"
             start_name = start_path.stem if start_path.is_file() else start_path.name
             final_output_path = tmp_dir / f"{start_name}_context.txt"
@@ -278,5 +295,3 @@ def process_pack_code_logic(logger: logging.Logger, **cli_args) -> Dict[str, Any
         'file_list_relative': [p.relative_to(scan_root) for p in files_to_pack],
         'scan_root': scan_root # Cần cho Executor
     }
-
-# --- END MODIFIED ---

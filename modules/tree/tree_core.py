@@ -180,10 +180,11 @@ def merge_config_sources(
     # Gộp ignore từ config và .gitignore
     all_ignore_patterns = final_ignore_list.union(gitignore_patterns)
     
-    final_ignore_spec = compile_spec_from_patterns(all_ignore_patterns)
-    final_prune_spec = compile_spec_from_patterns(final_prune_list)
-    final_dirs_only_spec = compile_spec_from_patterns(final_dirs_only_list)
-    # --- END NEW ---
+    # --- MODIFIED: Truyền start_dir ---
+    final_ignore_spec = compile_spec_from_patterns(all_ignore_patterns, start_dir)
+    final_prune_spec = compile_spec_from_patterns(final_prune_list, start_dir)
+    final_dirs_only_spec = compile_spec_from_patterns(final_dirs_only_list, start_dir)
+    # --- END MODIFIED ---
     
     # Submodule Paths
     submodule_paths: Set[Path] = set()

@@ -68,8 +68,8 @@ def scan_for_files(
     # Gộp pattern từ config (ignore_set) và .gitignore
     all_ignore_patterns = ignore_set.union(gitignore_patterns)
     
-    # Biên dịch 1 lần
-    ignore_spec = compile_spec_from_patterns(all_ignore_patterns)
+    # --- MODIFIED: Truyền project_root ---
+    ignore_spec = compile_spec_from_patterns(all_ignore_patterns, project_root)
     # --- END MODIFIED ---
     
     if check_mode:
@@ -77,7 +77,9 @@ def scan_for_files(
     
     logger.info(f"Đang quét *.{', *.'.join(extensions)} trong: {scan_path.relative_to(scan_path.parent) if scan_path.parent != scan_path else scan_path.name}")
     if all_ignore_patterns:
-        logger.debug(f"Bỏ qua (pathspec): {', '.join(sorted(list(all_ignore_patterns)))}")
+        # --- MODIFIED: Log số lượng pattern ---
+        logger.debug(f"Bỏ qua (pathspec): {len(all_ignore_patterns)} pattern (config + .gitignore)")
+        # --- END MODIFIED ---
 
     all_files = []
     for ext in extensions:

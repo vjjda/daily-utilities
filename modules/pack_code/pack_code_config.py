@@ -17,8 +17,8 @@ __all__ = ["DEFAULT_START_PATH", "DEFAULT_EXTENSIONS", "DEFAULT_IGNORE"] # (Auto
 DEFAULT_START_PATH = '.'
 DEFAULT_EXTENSIONS = 'md,py,txt,json,xml,yaml,yml,ini,cfg,cfg.py,sh,bash,zsh'
 
-# --- MODIFIED: Thêm dấu / vào cuối các thư mục ---
-DEFAULT_IGNORE = '.venv/,venv/,__pycache__/,*.git/,*.hg/,*.svn/,.DS_Store'
+# --- MODIFIED: Hoàn tác về trạng thái gốc (không có /) ---
+DEFAULT_IGNORE = '.venv,venv,__pycache__,.git,.hg,.svn,.DS_Store'
 # --- END MODIFIED ---
 
 # --- End generated constants ---

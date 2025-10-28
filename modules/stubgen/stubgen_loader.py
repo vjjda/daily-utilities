@@ -90,8 +90,8 @@ def find_gateway_files(
     # (ignore_set được truyền vào)
     all_ignore_patterns = ignore_set.union(gitignore_patterns)
     
-    # Biên dịch 1 lần
-    ignore_spec = compile_spec_from_patterns(all_ignore_patterns) 
+    # --- MODIFIED: Truyền scan_root ---
+    ignore_spec = compile_spec_from_patterns(all_ignore_patterns, scan_root) 
     # --- END MODIFIED ---
 
     submodule_paths = get_submodule_paths(scan_root, logger)
