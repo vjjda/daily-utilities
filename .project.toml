@@ -85,7 +85,5 @@ ignore = [
     ".svn",
     ".venv",
     "__pycache__",
-    "venv",
-    "*.md",
-    "!*/for-ai/*.md"
+    "venv"
 ]
