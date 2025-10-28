@@ -16,7 +16,7 @@ __all__ = [
 
 # --- Giá trị Mặc định (sử dụng nếu không có CLI/Config) ---
 DEFAULT_START_PATH: Final[str] = '.'
-DEFAULT_EXTENSIONS: Final[str] = 'md,py,txt,json,xml,yaml,yml,ini,cfg,cfg.py,sh,bash,zsh' # Chuỗi ngăn cách bởi dấu phẩy
+DEFAULT_EXTENSIONS: Final[str] = 'md,py,txt,json,xml,yaml,yml,ini,cfg,cfg.py,sh,bash,zsh,toml' # Chuỗi ngăn cách bởi dấu phẩy
 DEFAULT_IGNORE: Final[str] = '.venv,venv,__pycache__,.git,.hg,.svn,.DS_Store' # Chuỗi ngăn cách bởi dấu phẩy
 DEFAULT_OUTPUT_DIR: Final[str] = "~/Documents/code.context" # Chuỗi đường dẫn, có thể chứa '~'
 

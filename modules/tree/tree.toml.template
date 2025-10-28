@@ -39,9 +39,9 @@ dirs-only = {toml_dirs_only}
 
 # show-submodules (bool): Hiển thị nội dung của Git submodules.
 # Mặc định: false (ẩn submodules)
-# show-submodules = {toml_show_submodules}
+show-submodules = {toml_show_submodules}
 
 # use-gitignore (bool): Có tôn trọng file .gitignore hay không.
 # Cờ --no-gitignore trên CLI sẽ ghi đè giá trị này thành false.
 # Mặc định: true (luôn tôn trọng nếu là kho Git)
-# use-gitignore = {toml_use_gitignore}
+use-gitignore = {toml_use_gitignore}

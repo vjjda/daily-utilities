@@ -136,8 +136,8 @@ def main():
     args = parser.parse_args()
 
     # --- 2. Setup Logging ---
-    logger = setup_logging(script_name="APTree")
-    logger.debug("APTree script (argparse) started.")
+    logger = setup_logging(script_name="tree")
+    logger.debug("Tree script (argparse) started.")
 
     # --- 3. Xử lý Config Init ---
     try:
