@@ -16,7 +16,11 @@ __all__ = ["DEFAULT_START_PATH", "DEFAULT_EXTENSIONS", "DEFAULT_IGNORE"] # (Auto
 # --- Constants generated from tool.spec.toml ---
 DEFAULT_START_PATH = '.'
 DEFAULT_EXTENSIONS = 'md,py,txt,json,xml,yaml,yml,ini,cfg,cfg.py,sh,bash,zsh'
-DEFAULT_IGNORE = '.venv,venv,__pycache__,.git,.hg,.svn,.DS_Store'
+
+# --- MODIFIED: Thêm dấu / vào cuối các thư mục ---
+DEFAULT_IGNORE = '.venv/,venv/,__pycache__/,*.git/,*.hg/,*.svn/,.DS_Store'
+# --- END MODIFIED ---
+
 # --- End generated constants ---
 
 # (Ví dụ: DEFAULT_OUTPUT_DIR = Path.home() / 'Documents' / 'pack_code_output')

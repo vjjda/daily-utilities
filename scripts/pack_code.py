@@ -1,4 +1,4 @@
-# Path: modules/bootstrap/bootstrap_templates/script_entrypoint_argparse.py.template
+# Path: scripts/pack_code.py
 
 import sys
 import argparse
@@ -23,7 +23,7 @@ except ImportError:
 def main():
     """Hàm điều phối chính."""
 
-    # 1. Định nghĩa Parser
+    # 1. Định nghĩa Parser (Giữ nguyên)
     parser = argparse.ArgumentParser(
         description="Đóng gói nội dung của nhiều file/thư mục thành một file văn bản duy nhất.",
         epilog="Ví dụ: pcode ./src -e 'py,md' -o context.txt"
@@ -84,16 +84,20 @@ def main():
 
     args = parser.parse_args()
 
-    # 2. Setup Logging
+    # 2. Setup Logging (Giữ nguyên)
     logger = setup_logging(script_name="pcode")
     logger.debug("pcode script started.")
 
     # --- Mở rộng Path (nếu có) ---
-    start_path_path = Path(args.start_path).expanduser() if args.start_path else None
+    
+    # --- MODIFIED: Thêm .resolve() ---
+    start_path_path = Path(args.start_path).expanduser().resolve() if args.start_path else None
+    # --- END MODIFIED ---
+    
     output_path = Path(args.output).expanduser() if args.output else None
     # --- Hết mở rộng Path ---
 
-    # 3. Chạy Core Logic
+    # 3. Chạy Core Logic (Giữ nguyên)
     try:
         result = process_pack_code_logic(
             logger=logger,
@@ -114,7 +118,10 @@ def main():
                 result=result
             )
 
-        log_success(logger, "Hoàn thành.")
+        # --- MODIFIED: Chỉ log "Hoàn thành" nếu không phải dry_run/stdout ---
+        if not (args.dry_run or args.stdout) and result and result.get('status') == 'ok':
+            log_success(logger, "Hoàn thành.")
+        # --- END MODIFIED ---
 
     except Exception as e:
         logger.error(f"❌ Đã xảy ra lỗi không mong muốn: {e}")
