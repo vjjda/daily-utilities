@@ -2,33 +2,31 @@
 
 """
 Configuration constants for the Clip Diagram utility (cdiag).
-Defines paths for output, external tools, and viewing applications.
+(Single Source of Truth)
 """
 
 import os
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, Final
 
-# --- NEW: __all__ definition ---
 __all__ = [
     "DEFAULT_OUTPUT_DIR", "DOT_PATH", "MMC_PATH", "APP_CONFIG",
     "GRAPHVIZ_PREFIX", "MERMAID_PREFIX", "DEFAULT_TO_ARG"
 ]
-# --- END NEW ---
 
-# --- CẤU HÌNH ĐƯỜNG DẪN CỐ ĐỊNH ---
+# --- Đường dẫn Cố định ---
+
 # Thư mục mặc định để lưu file diagram.
-# Tên thư mục được đặt theo logic cũ: ~/Documents/graphviz
-DEFAULT_OUTPUT_DIR: Path = Path(os.path.expanduser("~/Documents/graphviz"))
+DEFAULT_OUTPUT_DIR: Final[Path] = Path(os.path.expanduser("~/Documents/graphviz"))
 
-# --- CẤU HÌNH CÔNG CỤ VÀ ỨNG DỤNG ---
-# Đường dẫn tuyệt đối đến các công cụ dòng lệnh (nếu đã cài qua Homebrew)
-# Mặc định là path thường thấy trên MacOS dùng Homebrew
-DOT_PATH: str = "/opt/homebrew/bin/dot" # Graphviz
-MMC_PATH: str = "/opt/homebrew/bin/mmc" # Mermaid
+# --- Công cụ & Ứng dụng ---
 
-# Ứng dụng để mở file nguồn/ảnh (trên MacOS)
-APP_CONFIG: Dict[str, str] = {
+# Đường dẫn tuyệt đối đến các công cụ dòng lệnh (ví dụ trên macOS Homebrew).
+DOT_PATH: Final[str] = "/opt/homebrew/bin/dot" # Graphviz
+MMC_PATH: Final[str] = "/opt/homebrew/bin/mmc" # Mermaid CLI
+
+# Ứng dụng để mở file nguồn/ảnh (ví dụ trên macOS).
+APP_CONFIG: Final[Dict[str, str]] = {
     # Ứng dụng mở file nguồn
     "dot_app": "DotChart",
     "mermaid_app": "MarkChart",
@@ -38,10 +36,13 @@ APP_CONFIG: Dict[str, str] = {
     "png_viewer_app": "Preview"
 }
 
-# --- CẤU HÌNH CHUNG ---
-# Tên tiền tố file nguồn/ảnh
-GRAPHVIZ_PREFIX: str = "graphviz"
-MERMAID_PREFIX: str = "mermaid"
+# --- Cấu hình Chung ---
 
-# --- NEW: Argparse Default ---
-DEFAULT_TO_ARG: Optional[str] = None
+# Tiền tố tên file nguồn/ảnh.
+GRAPHVIZ_PREFIX: Final[str] = "graphviz"
+MERMAID_PREFIX: Final[str] = "mermaid"
+
+# --- Argparse Default ---
+
+# Giá trị mặc định cho tùy chọn '--to'. None nghĩa là mở file nguồn.
+DEFAULT_TO_ARG: Final[Optional[str]] = None
