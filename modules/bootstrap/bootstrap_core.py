@@ -1,4 +1,5 @@
 # Path: modules/bootstrap/bootstrap_core.py
+
 """
 Logic điền template (Template Filling) cho module Bootstrap.
 (Logic thuần túy, không I/O ghi)
@@ -32,6 +33,7 @@ from .bootstrap_builder import (
 )
 
 __all__ = [
+  
     "generate_bin_wrapper", "generate_script_entrypoint",
     "generate_module_file", "generate_module_init_file", "generate_doc_file",
     "process_bootstrap_logic" # Hàm điều phối chính
@@ -62,6 +64,7 @@ def generate_script_entrypoint(config: Dict[str, Any]) -> str:
         # Tạo các code snippet
         argparse_args_code = build_argparse_arguments(config)
         path_expands_code = build_argparse_path_expands(config) # Dùng hàm builder argparse
+   
         args_pass_code = build_argparse_args_pass_to_core(config) # Dùng hàm builder argparse
 
         # Điền vào template
@@ -70,6 +73,7 @@ def generate_script_entrypoint(config: Dict[str, Any]) -> str:
             tool_name=config['meta']['tool_name'],
             # ---------------------------
             script_file=config['meta']['script_file'],
+            
             logger_name=config['meta']['logger_name'],
             module_name=config['module_name'],
             config_imports=config_imports_code,
@@ -80,6 +84,7 @@ def generate_script_entrypoint(config: Dict[str, Any]) -> str:
             argparse_args_pass_to_core=args_pass_code
         )
 
+   
     else:
         # --- Logic cho TYPER (mặc định) ---
         template = load_template("script_entrypoint.py.template")
@@ -92,6 +97,10 @@ def generate_script_entrypoint(config: Dict[str, Any]) -> str:
 
         # Điền vào template
         return template.format(
+            # --- SỬA LỖI: Thêm dòng này ---
+            tool_name=config['meta']['tool_name'],
+            # ---------------------------
+  
             script_file=config['meta']['script_file'],
             logger_name=config['meta']['logger_name'],
             module_name=config['module_name'],
@@ -100,13 +109,13 @@ def generate_script_entrypoint(config: Dict[str, Any]) -> str:
             typer_main_function_signature=typer_main_sig,
             typer_path_expands=typer_path_expands,
             typer_args_pass_to_core=typer_args_pass
+      
         )
 
 
 def generate_module_file(config: Dict[str, Any], file_type: str) -> str:
     """
     Tạo nội dung cho các file bên trong module (`*_config.py`, `*_core.py`, etc.).
-
     Args:
         config: Dict config spec.
         file_type: Loại file cần tạo ('config', 'core', 'executor', 'loader').
@@ -128,6 +137,7 @@ def generate_module_file(config: Dict[str, Any], file_type: str) -> str:
     # Điền thêm thông tin cho file config
     if file_type == "config":
         config_constants_code = build_config_constants(config)
+       
         config_all_code = build_config_all_list(config)
         format_dict["config_constants"] = config_constants_code
         format_dict["config_all_constants"] = config_all_code
@@ -145,6 +155,7 @@ def generate_doc_file(config: Dict[str, Any]) -> str:
 
     return template.format(
         tool_name=config['meta']['tool_name'],
+      
         short_description=config.get('docs', {}).get('short_description', f'Tài liệu cho {config["meta"]["tool_name"]}.') #
     )
 
@@ -162,13 +173,11 @@ def process_bootstrap_logic(
         logger: Logger.
         config: Dict config spec đã load.
         configured_paths: Dict chứa các đường dẫn thư mục chính (BIN_DIR, SCRIPTS_DIR,...).
-
     Returns:
         Tuple chứa:
             - generated_content (Dict[str, str]): Ánh xạ loại file ('bin', 'script', ...) -> nội dung.
             - target_paths (Dict[str, Path]): Ánh xạ loại file -> đường dẫn đích tuyệt đối.
             - module_path (Path): Đường dẫn tuyệt đối đến thư mục module mới.
-
     Raises:
         SystemExit: Nếu config thiếu key bắt buộc trong [meta].
         Exception: Nếu có lỗi nghiêm trọng khi tạo nội dung code.
@@ -196,6 +205,7 @@ def process_bootstrap_logic(
         logger.debug(f"Tên Logger: {config['meta']['logger_name']}") #
 
     except KeyError as e:
+  
         logger.error(f"❌ File spec thiếu key bắt buộc trong [meta]: {e}") #
         sys.exit(1)
 
@@ -208,6 +218,7 @@ def process_bootstrap_logic(
 
         generated_content = {
             "bin": generate_bin_wrapper(config),
+    
             "script": generate_script_entrypoint(config),
             "config": generate_module_file(config, "config"),
             "loader": generate_module_file(config, "loader"),
@@ -223,7 +234,8 @@ def process_bootstrap_logic(
             "config": module_path / f"{mod_name}_config.py",
             "loader": module_path / f"{mod_name}_loader.py",
             "core": module_path / f"{mod_name}_core.py",
-            "executor": module_path / f"{mod_name}_executor.py",
+            "executor": 
+                module_path / f"{mod_name}_executor.py",
             "init": module_path / "__init__.py",
         }
 
@@ -233,6 +245,7 @@ def process_bootstrap_logic(
             target_paths["docs"] = DOCS_DIR / "tools" / f"{tool_name}.md"
 
     except Exception as e:
+        
         logger.error(f"❌ Lỗi nghiêm trọng khi tạo nội dung code: {e}") #
         logger.debug("Traceback:", exc_info=True)
         sys.exit(1)

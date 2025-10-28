@@ -1,7 +1,7 @@
 # Path: scripts/{script_file}
 
 """
-Entrypoint (cổng vào) cho tool '{{tool_name}}'.
+Entrypoint (cổng vào) cho tool '{tool_name}'.
 (Tạo tự động bởi bootstrap_tool.py - Giao diện Typer)
 """
 
