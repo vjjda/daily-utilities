@@ -29,15 +29,3 @@ Cách dễ nhất để bắt đầu là khởi tạo một file cấu hình tro
 ## Ví dụ
 
 *(Thêm một vài ví dụ sử dụng cụ thể.)*
-
-````
-
----
-Giờ đây template này gọn gàng hơn nhiều và chỉ chứa những phần cốt lõi nhất.
-
-Đây là lệnh `git` để commit tất cả các thay đổi của module `bootstrap` (bao gồm cả các template đã được dọn dẹp và Việt hóa):
-
-```sh
-git add modules/bootstrap/__init__.py modules/bootstrap/bootstrap_builder/__init__.py modules/bootstrap/bootstrap_builder/bootstrap_argparse_builder.py modules/bootstrap/bootstrap_builder/bootstrap_config_builder.py modules/bootstrap/bootstrap_builder/bootstrap_typer_builder.py modules/bootstrap/bootstrap_config.py modules/bootstrap/bootstrap_utils.py modules/bootstrap/bootstrap_loader.py modules/bootstrap/bootstrap_core.py modules/bootstrap/bootstrap_executor.py scripts/bootstrap_tool.py modules/bootstrap/bootstrap_templates/bin_wrapper.zsh.template modules/bootstrap/bootstrap_templates/script_entrypoint.py.template modules/bootstrap/bootstrap_templates/script_entrypoint_argparse.py.template modules/bootstrap/bootstrap_templates/module_config.py.template modules/bootstrap/bootstrap_templates/module_core.py.template modules/bootstrap/bootstrap_templates/module_executor.py.template modules/bootstrap/bootstrap_templates/module_loader.py.template modules/bootstrap/bootstrap_templates/module_init.py.template modules/bootstrap/bootstrap_templates/doc_file.md.template
-git commit -m "style(bootstrap): Việt hóa và dọn dẹp comment, docstring, giao diện, templates"
-````
