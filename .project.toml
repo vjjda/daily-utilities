@@ -1,10 +1,8 @@
 [tree]
-show-submodules = false
-use-gitignore = true
 ignore = [
     ".git",
-    "__pycache__",
     ".venv",
+    "__pycache__",
     "node_modules",
     "venv",
 ]
@@ -13,6 +11,8 @@ prune = [
     "dist",
 ]
 dirs-only = []
+show-submodules = false
+use-gitignore = true
 
 [cpath]
 extensions = [
@@ -78,7 +78,7 @@ extensions = [
     "yaml",
     "yml",
     "zsh",
-    "template"
+    "template",
 ]
 ignore = [
     ".DS_Store",
