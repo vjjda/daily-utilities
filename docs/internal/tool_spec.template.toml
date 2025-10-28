@@ -1,109 +1,63 @@
-# Path: docs/internal/tool_spec.template.toml
-#
-# BẢN THIẾT KẾ TOOL (TEMPLATE)
-# (Cập nhật cho Typer và cấu trúc SRP)
-# ---------------------------------
-# Điền thông tin vào file này, sau đó chạy:
-# python scripts/bootstrap_tool.py /path/to/your.spec.toml
-#
+# Path: docs/drafts/tool_spec.template.toml
+# Template để tạo file <tên_tool>.spec.toml
 
-# --- 1. THÔNG TIN CƠ BẢN ---
-# (Bắt buộc)
+# --- Phần [meta]: Thông tin cơ bản về tool ---
 [meta]
-# Tên file thực thi trong /bin/ (ví dụ: cdiag, cpath, ctree)
-tool_name = "c-new-tool"
-
-# Tên file entrypoint Python trong /scripts/
+# Tên tool (dùng cho file thực thi trong bin/, tên section config, v.v.)
+tool_name = "new_tool"
+# Tên file script Python trong thư mục scripts/
 script_file = "new_tool.py"
-
-# --- NEW: Tên thư mục module trong /modules/ ---
+# Tên thư mục module trong thư mục modules/
 module_name = "new_tool"
+# Tên logger (thường là tên tool viết hoa chữ cái đầu)
+logger_name = "NewTool"
 
-# Tên Logger cho setup_logging() (ví dụ: CDiag, CPath, CTree)
-logger_name = "CNewTool"
-
-# --- 2. CẤU HÌNH CLI ---
-# (MỚI: Cấu hình chung cho CLI)
+# --- Phần [cli]: Cấu hình giao diện dòng lệnh ---
 [cli]
-# Chọn "typer" (mặc định) hoặc "argparse"
+# Loại giao diện: "typer" (mặc định) hoặc "argparse"
 interface = "typer"
 
-# allow_interspersed_args: Cho phép đối số (Argument) và tùy chọn (Option)
-# xen kẽ (e.g., c_demo . --fix). (Chỉ dùng cho Typer)
-allow_interspersed_args = true
-
-# (Cấu hình [cli.help] giờ chỉ chứa text)
+# Cấu hình trợ giúp (help text)
 [cli.help]
-# Mô tả chính cho Typer App() hoặc Argparse description
-description = "Mô tả về công dụng của tool này."
+# Mô tả ngắn gọn về tool (hiển thị với --help)
+description = "Mô tả ngắn gọn về chức năng của new_tool."
+# Văn bản hiển thị ở cuối phần trợ giúp (tùy chọn)
+epilog = "Ví dụ sử dụng: new_tool --option value"
 
-# (Tùy chọn) Đoạn text hiển thị ở cuối --help (epilog)
-epilog = "Ví dụ sử dụng: c-new-tool --fix /path/to/scan"
-
-# --- 3. DANH SÁCH ARGUMENTS (TYPER) ---
-# (MỚI: Cấu trúc đơn giản hơn)
-#
-# Định nghĩa các tham số cho hàm main() trong Typer.
-# Bootstrap sẽ tự động:
-# 1. Tạo hằng số DEFAULT_... trong _config.py
-# 2. Tạo tham số typer.Option/Argument trong script_entrypoint.py
-#
-
-#
-# --- MẪU 1: Positional Argument (ví dụ: ctree [start_path]) ---
-#
+# Định nghĩa các đối số dòng lệnh [[cli.args]]
+# Lặp lại khối này cho mỗi đối số
 [[cli.args]]
-# Tên biến (ví dụ: target_path)
-name = "target_path"
-# (Bắt buộc) Kiểu dữ liệu Python (str, int, bool, Path)
+# Tên đối số (dùng trong code Python và làm tên flag dài --name)
+name = "input_path"
+# (Tùy chọn) Tên flag ngắn (ví dụ: "-i")
+short = "-i"
+# Loại dữ liệu: "str", "int", "bool", "Path"
 type = "Path"
-# (Tùy chọn) Giá trị mặc định. Nếu bỏ trống, nó sẽ là bắt buộc.
+# Văn bản trợ giúp cho đối số này
+help = "Đường dẫn đến file hoặc thư mục đầu vào."
+# (Tùy chọn) Giá trị mặc định. Nếu có, hằng số DEFAULT_INPUT_PATH sẽ được tạo.
+# Đối với 'bool', default=true nghĩa là cờ sẽ tắt nó đi (store_false).
 default = "."
-# (Bắt buộc) Text trợ giúp
-help = "Đường dẫn (file hoặc thư mục) để bắt đầu."
-# (Tùy chọn) Đánh dấu là Argument (vị trí) thay vì Option (cờ)
-is_argument = true
+# (Tùy chọn) Đặt thành true nếu đây là đối số vị trí (positional argument) thay vì tùy chọn (--flag).
+# is_argument = true
 
-#
-# --- MẪU 2: Cờ Option (ví dụ: cpath --fix) ---
-#
-[[cli.args]]
-name = "fix"
-# (Tùy chọn) Cờ ngắn
-short = "-f"
-type = "bool"
-default = false
-help = "Fix các file (thay vì chỉ kiểm tra)."
-# (is_argument = false (mặc định) -> nó là Option)
-# (type = bool -> nó tự động là cờ --fix)
+# [[cli.args]]
+# name = "verbose"
+# short = "-v"
+# type = "bool"
+# help = "Bật chế độ hiển thị chi tiết."
+# default = false
 
-#
-# --- MẪU 3: Option có giá trị (ví dụ: ctree -L 3) ---
-#
-[[cli.args]]
-name = "level"
-short = "-L"
-type = "int"
-# (Nếu không có 'default', tham số sẽ là 'Optional[int]')
-help = "Giới hạn độ sâu hiển thị."
+# [[cli.args]]
+# name = "output_file"
+# short = "-o"
+# type = "str"
+# help = "Đường dẫn file output (tùy chọn)."
+# Mặc định None nếu không có 'default' cho option type 'str'/'int'/'Path'
 
-#
-# --- MẪU 4: Option có giá trị (ví dụ: cdiag -t svg) ---
-#
-[[cli.args]]
-name = "format"
-short = "-t"
-type = "str"
-default = "text"
-help = "Định dạng đầu ra."
-# (Typer có thể dùng Enum cho 'choices', nên ta bỏ trường 'choices')
-
-
-# --- 4. TÀI LIỆU ---
-# (Tùy chọn)
-# Tự động tạo file docs/tools/c-new-tool.md
-#
-# [docs]
-# enabled = true
-# # Mô tả ngắn (1-2 câu) cho file README
-# short_description = "Một công cụ mới để làm [việc X]."
+# --- Phần [docs]: Cấu hình tạo tài liệu ---
+[docs]
+# Bật/tắt việc tạo file tài liệu Markdown ban đầu (true/false)
+enabled = true
+# Mô tả ngắn gọn sẽ được dùng trong file tài liệu
+short_description = "Đây là công cụ mới tuyệt vời để làm việc X."

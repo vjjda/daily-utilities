@@ -1,42 +1,35 @@
 # Path: modules/stubgen/stubgen.toml.template
-#
-# Cấu hình cho Stub Generator (sgen).
-#
-# Chạy `sgen -C` (local) hoặc `sgen -c` (project) để
-# tự động điền các giá trị mặc định vào file .toml này.
-#
+# Template cho file cấu hình .sgen.toml (local scope)
 
-# Section header (nếu dùng trong .project.toml)
+# --- Section [{config_section_name}] ---
 [{config_section_name}]
 
-# (Scan Roots)
-# Giới hạn quét vào các thư mục gốc này (để tăng tốc độ).
-# Mặc định (lấy từ .project.toml nếu có, nếu không): ["modules", "utils"]
+# restrict (List[str]): Giới hạn quét trong các thư mục con này (so với gốc quét).
+# GHI ĐÈ hoàn toàn danh sách mặc định của script.
+# Ví dụ: restrict = ["my_modules", "shared_utils"]
+# Mặc định: {toml_restrict}
 restrict = {toml_restrict}
 
-# (Inclusion Filter)
-# BỘ LỌC DƯƠNG. Nếu được đặt (không phải []), chỉ các file __init__.py
-# khớp với pattern (giống .gitignore) MỚI được xử lý.
-# CLI (-i) sẽ NỐI (append) vào danh sách này.
-# Mặc định: [] (tắt, xử lý mọi thứ trong 'restrict')
-# Ví dụ: ["modules/auth/*", "utils/core/*"]
-include = {toml_include}
-
-# (Exclusion Filter)
-# Các pattern (giống .gitignore) để bỏ qua.
-# Sẽ được NỐI (append) vào .gitignore.
-# Mặc định (lấy từ .project.toml nếu có, nếu không): ["__pycache__", ".venv", ".git", ...]
+# ignore (List[str]): Các pattern (giống .gitignore) để bỏ qua khi quét.
+# Các pattern này sẽ được NỐI VÀO danh sách mặc định của script.
+# Ví dụ: ignore = ["*_test.py", "**/legacy/*"]
+# Mặc định (được thêm vào): {toml_ignore}
 ignore = {toml_ignore}
 
+# include (List[str]): Bộ lọc dương. Chỉ xử lý các file khớp với pattern này.
+# Hoạt động sau khi đã áp dụng 'restrict' và 'ignore'.
+# Các pattern này sẽ được NỐI VÀO danh sách mặc định (thường là rỗng).
+# Ví dụ: include = ["modules/core/**", "utils/network.py"]
+# Mặc định (được thêm vào): {toml_include}
+include = {toml_include}
 
-# --- Cấu hình AST (Nâng cao) ---
-# Thường không cần thay đổi các giá trị này.
+# --- Cấu hình nâng cao (Ít khi cần thay đổi) ---
 
-# Các chuỗi dùng để xác định một __init__.py "động".
-dynamic_import_indicators = {toml_dynamic_import_indicators}
+# dynamic_import_indicators (List[str]): Các chuỗi code nhận diện gateway động.
+# dynamic_import_indicators = ["import_module", "globals()[name] = obj"]
 
-# Tên biến (AST) chứa danh sách các file con (ví dụ: 'modules_to_export').
-ast_module_list_name = {toml_ast_module_list_name}
+# ast_module_list_name (str): Tên biến list chứa danh sách submodule trong AST.
+# ast_module_list_name = "modules_to_export"
 
-# Tên biến (AST) chứa danh sách __all__ trong file con.
-ast_all_list_name = {toml_ast_all_list_name}
+# ast_all_list_name (str): Tên biến list __all__ trong AST của submodule.
+# ast_all_list_name = "__all__"
