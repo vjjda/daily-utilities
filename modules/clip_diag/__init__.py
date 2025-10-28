@@ -24,7 +24,7 @@ modules_to_export: List[str] = [
 __all__: List[str] = []
 
 for module_name in modules_to_export:
-    try
+    try:
         module = import_module(f".{module_name}", package=__name__)
         
         if hasattr(module, '__all__'):
