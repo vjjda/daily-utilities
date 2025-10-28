@@ -20,34 +20,25 @@ __all__ = [
 def build_typer_app_code(config: Dict[str, Any]) -> str:
     """
     Tạo code khởi tạo `typer.Typer(...)`.
-
     Lấy thông tin `description` và `epilog` từ `[cli.help]` trong spec.
-
     Args:
         config: Dict chứa nội dung đã parse của file `.spec.toml`.
-
     Returns:
         Chuỗi string chứa code khởi tạo Typer app.
     """
     cli_config = config.get('cli', {})
     help_config = cli_config.get('help', {})
 
-    desc = help_config.get('description', f"Mô tả cho {config['meta']['tool_name']}.") #
+    desc = help_config.get('description', f"Mô tả cho {config['meta']['tool_name']}.")
     epilog = help_config.get('epilog', "")
-
-    # Typer không hỗ trợ allow_interspersed_args trực tiếp trong Typer()
-    # Nó nằm trong context_settings
-    # allow_interspersed = cli_config.get('allow_interspersed_args', False)
-    # allow_interspersed_str = str(allow_interspersed)
 
     code_lines = [
         f"app = typer.Typer(",
-        f"    help={repr(desc)},", # Dùng repr để xử lý dấu ngoặc kép trong chuỗi
+        f"    help={repr(desc)},", # Dùng repr 
         f"    epilog={repr(epilog)},",
         f"    add_completion=False,", # Tắt tính năng auto-completion mặc định
         f"    context_settings={{",
         f"        'help_option_names': ['--help', '-h'],", # Thêm -h làm alias cho --help
-        # f"        'allow_interspersed_args': {allow_interspersed_str}", # Không hỗ trợ
         f"    }}",
         f")"
     ]
@@ -57,10 +48,8 @@ def build_typer_path_expands(config: Dict[str, Any]) -> str:
     """
     Tạo code để gọi `.expanduser()` cho các tham số loại 'Path'
     (phiên bản Typer).
-
     Args:
         config: Dict chứa nội dung đã parse của file `.spec.toml`.
-
     Returns:
         Chuỗi string chứa code xử lý Path.
     """
@@ -68,7 +57,7 @@ def build_typer_path_expands(config: Dict[str, Any]) -> str:
     path_args = [arg for arg in get_cli_args(config) if arg.get('type') == 'Path']
 
     if not path_args:
-        code_lines.append("    # (Không có đối số Path nào cần expand)") #
+        code_lines.append("    # (Không có đối số Path nào cần expand)")
         return "\n".join(code_lines)
 
     for arg in path_args:
@@ -90,10 +79,8 @@ def build_typer_args_pass_to_core(config: Dict[str, Any]) -> str:
     """
     Tạo các dòng `key=value` để truyền các đối số đã xử lý
     vào hàm logic cốt lõi (phiên bản Typer).
-
     Args:
         config: Dict chứa nội dung đã parse của file `.spec.toml`.
-
     Returns:
         Chuỗi string chứa các dòng `key=value,` đã được format.
     """
@@ -101,7 +88,7 @@ def build_typer_args_pass_to_core(config: Dict[str, Any]) -> str:
     args = get_cli_args(config)
 
     if not args:
-        code_lines.append("        # (Không có đối số CLI nào để truyền)") #
+        code_lines.append("        # (Không có đối số CLI nào để truyền)")
         return "\n".join(code_lines)
 
     for arg in args:
@@ -120,10 +107,8 @@ def build_typer_args_pass_to_core(config: Dict[str, Any]) -> str:
 def build_typer_main_signature(config: Dict[str, Any]) -> str:
     """
     Tạo chữ ký (signature) cho hàm `main()` được decorate bởi `@app.command()`.
-
     Args:
         config: Dict chứa nội dung đã parse của file `.spec.toml`.
-
     Returns:
         Chuỗi string chứa toàn bộ chữ ký hàm `main()`, bao gồm type hints
         và các giá trị mặc định `typer.Argument`/`typer.Option`.
@@ -140,6 +125,7 @@ def build_typer_main_signature(config: Dict[str, Any]) -> str:
         not arg.get('is_argument', False) and 'default' not in arg and arg.get('type') != 'bool'
         for arg in args
     )
+   
     if needs_optional:
         # Thêm Optional vào đầu danh sách import nếu cần
         # (Template entrypoint sẽ xử lý việc import thực tế)
@@ -149,7 +135,7 @@ def build_typer_main_signature(config: Dict[str, Any]) -> str:
         name = arg['name']
         spec_type = arg['type'] # 'str', 'int', 'bool', 'Path'
         py_type = TYPE_HINT_MAP.get(spec_type, 'str') # Lấy type hint Python tương ứng
-        help_str = arg.get('help', f"Tham số {name}.") #
+        help_str = arg.get('help', f"Tham số {name}.")
 
         default_repr: str = "..." # Giá trị mặc định cho Typer
         type_hint = py_type # Type hint cuối cùng
@@ -174,28 +160,34 @@ def build_typer_main_signature(config: Dict[str, Any]) -> str:
                     default_repr = "..."
                 else:
                     # Option tùy chọn, mặc định là None
+         
                     default_repr = "None"
-                    type_hint = f"TypingOptional[{type_hint}]" # Thêm Optional[...]
+                    # Sửa lỗi 1 (từ lượt trước): Dùng "Optional"
+                    type_hint = f"Optional[{type_hint}]" # Thêm Optional[...]
 
         # Xác định dùng typer.Argument hay typer.Option
         if is_argument:
             code_lines.append(f"    {name}: {type_hint} = typer.Argument(")
             code_lines.append(f"        {default_repr},") # Giá trị mặc định
             code_lines.append(f"        help={repr(help_str)}") # Help text
+            # SỬA LỖI 2: Thêm lại dấu phẩy (,)
             code_lines.append(f"    ),")
         else: # Là Option
             code_lines.append(f"    {name}: {type_hint} = typer.Option(")
             code_lines.append(f"        {default_repr},") # Giá trị mặc định
 
+ 
             option_names: List[str] = []
             # Thêm short flag (ví dụ: "-o") nếu có
             if 'short' in arg:
                 option_names.append(f"\"{arg['short']}\"")
             # Thêm long flag (ví dụ: "--output")
             option_names.append(f"\"--{name}\"")
+     
             code_lines.append(f"        {', '.join(option_names)},") # Các tên flag
 
             code_lines.append(f"        help={repr(help_str)}") # Help text
+            # SỬA LỖI 2: Thêm lại dấu phẩy (,)
             code_lines.append(f"    ),")
 
     code_lines.append(f"):") # Kết thúc signature

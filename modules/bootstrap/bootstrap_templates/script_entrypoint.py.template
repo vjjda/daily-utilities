@@ -1,7 +1,7 @@
 # Path: scripts/{script_file}
 
 """
-Entrypoint (cổng vào) cho tool '{tool_name}'.
+Entrypoint (cổng vào) cho tool {tool_name}.
 (Tạo tự động bởi bootstrap_tool.py - Giao diện Typer)
 """
 
@@ -23,6 +23,7 @@ try:
     # from modules.{module_name} import process_{module_name}_logic, execute_{module_name}_action
 except ImportError as e:
     print(f"Lỗi: Không thể import các module cần thiết: {{e}}", file=sys.stderr) #
+  
     sys.exit(1)
 
 # --- Khởi tạo Typer App ---
@@ -44,18 +45,19 @@ except ImportError as e:
         # --- Gọi Logic Cốt lõi ---
         # result = process_{module_name}_logic(
         #     logger=logger,
-{typer_args_pass_to_core}
+        # {typer_args_pass_to_core}
         # )
 
         # --- Gọi Executor (nếu cần) ---
         # if result:
+ 
         #     execute_{module_name}_action(logger=logger, result=result)
         #     log_success(logger, "Hoạt động hoàn tất.")
 
         # --- Xử lý Tạm thời (Xóa sau khi thêm logic) ---
         logger.info("Logic xử lý chính chưa được triển khai.") #
         # In các giá trị tham số để kiểm tra
-        args_dict = ctx.params.copy() # Lấy dict các tham số từ context
+        args_dict = ctx.params.copy() # Lấy dict các tham số từ 
         # Thay thế Path đã expand nếu có
         for arg_name in [name for name, hint in main.__annotations__.items() if hint == Path or str(hint).startswith("Optional[Path")] : # Tìm tham số Path
             expanded_var_name = f"{{arg_name}}_expanded"
