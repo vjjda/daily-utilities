@@ -1,18 +1,15 @@
 # Path: utils/core/filter.py
 
 """
-File Filtering and Path Matching Utilities
-(Internal module, imported by utils/core.py)
-
-Đã refactor để sử dụng 'pathspec' làm engine thống nhất.
+Các tiện ích lọc file và khớp đường dẫn sử dụng thư viện 'pathspec'.
+(Module nội bộ, được import bởi utils/core)
 """
 
-# --- MODIFIED: Thêm imports ---
 from pathlib import Path
-from typing import List, TYPE_CHECKING, Optional, Iterable # <-- Thêm Iterable
-# --- END MODIFIED ---
+from typing import List, TYPE_CHECKING, Optional, Iterable
+import logging # Thêm logging
 
-# --- NEW: Import pathspec ---
+# Import pathspec để kiểm tra type và sử dụng
 try:
     import pathspec
 except ImportError:
@@ -20,93 +17,108 @@ except ImportError:
 
 if TYPE_CHECKING:
     import pathspec
-# --- END NEW ---
 
-# --- MODIFIED: __all__ ---
 __all__ = ["is_path_matched", "compile_spec_from_patterns"]
-# --- END MODIFIED ---
 
-# --- MODIFIED: Nâng cấp hàm biên dịch spec ---
+# Khởi tạo logger cho module này (nếu cần log lỗi biên dịch)
+logger = logging.getLogger(__name__)
+
 def compile_spec_from_patterns(
-    patterns_iterable: Iterable[str], # <-- MODIFIED: Nhận Iterable (List, Set, ...)
+    patterns_iterable: Iterable[str],
     scan_root: Path
 ) -> Optional['pathspec.PathSpec']:
     """
-    Biên dịch một Iterable các pattern thành một đối tượng PathSpec.
+    Biên dịch một Iterable (List, Set, ...) các pattern thành đối tượng PathSpec.
 
     Mô phỏng hành vi của Git: Nếu một pattern (ví dụ: '.venv')
-    không chứa '/' và khớp với một thư mục tại scan_root,
-    nó sẽ được tự động xử lý như '.venv/'.
+    không chứa '/' và khớp với một thư mục tại `scan_root`,
+    nó sẽ được tự động xử lý như một pattern thư mục (`.venv/`).
+
+    Args:
+        patterns_iterable: Iterable chứa các chuỗi pattern (giống .gitignore).
+        scan_root: Thư mục gốc dùng làm cơ sở để kiểm tra sự tồn tại của thư mục.
+
+    Returns:
+        Đối tượng `pathspec.PathSpec` đã biên dịch, hoặc None nếu `pathspec`
+        không được cài đặt hoặc không có pattern nào.
     """
     if pathspec is None:
+        logger.warning("Thư viện 'pathspec' không được cài đặt. Việc lọc file sẽ bị hạn chế.") #
         return None
 
     # Chuyển đổi Iterable thành List để xử lý
     patterns = list(patterns_iterable)
     if not patterns:
-        return None
+        return None # Không có gì để biên dịch
 
-    # --- NEW: Logic mô phỏng Git ---
-    processed_patterns: List[str] = [] # Giữ thứ tự
+    # Xử lý các pattern thư mục giống Git
+    processed_patterns: List[str] = [] # Giữ thứ tự gốc
     for pattern in patterns:
-        # Nếu pattern không chứa '/' (ví dụ: '.venv', '__pycache__')
-        # VÀ một thư mục có tên đó tồn tại trong thư mục gốc quét
+        # Bỏ qua pattern rỗng
+        if not pattern:
+            continue
+        # Nếu pattern không chứa '/' và khớp với thư mục tại gốc quét
         if '/' not in pattern and (scan_root / pattern).is_dir():
-            # Thêm dấu / để đảm bảo pathspec bỏ qua toàn bộ thư mục
+            # Thêm dấu '/' để pathspec hiểu là bỏ qua toàn bộ thư mục
             processed_patterns.append(f"{pattern}/")
         else:
             processed_patterns.append(pattern)
-    # --- END NEW ---
+
+    if not processed_patterns:
+        return None
 
     try:
         # Sử dụng 'gitwildmatch' để có cú pháp giống .gitignore
-        # Biên dịch các pattern đã được xử lý (giữ nguyên thứ tự)
         spec = pathspec.PathSpec.from_lines('gitwildmatch', processed_patterns)
         return spec
-    except Exception as e: # Bắt lỗi cụ thể hơn nếu cần
-        # Log lỗi nếu cần thiết
-        # logger.error(f"Error compiling pathspec patterns: {e}")
-        return None # (Có thể log lỗi nếu cần)
-# --- END MODIFIED ---
-
+    except Exception as e:
+        logger.error(f"Lỗi khi biên dịch các pattern pathspec: {e}") #
+        logger.debug(f"Patterns gây lỗi: {processed_patterns}") #
+        return None
 
 def is_path_matched(
     path: Path,
-    spec: Optional['pathspec.PathSpec'], # <-- MODIFIED: Nhận spec
-    start_dir: Path # Giữ lại start_dir để tính relative path
+    spec: Optional['pathspec.PathSpec'],
+    start_dir: Path
 ) -> bool:
     """
     Kiểm tra xem một đường dẫn có khớp với 'PathSpec' đã biên dịch không.
-    (Đã sửa để dùng pathspec)
+
+    Args:
+        path: Đường dẫn cần kiểm tra (có thể là file hoặc thư mục).
+        spec: Đối tượng `pathspec.PathSpec` đã biên dịch (từ `compile_spec_from_patterns`).
+        start_dir: Thư mục gốc được sử dụng khi biên dịch `spec` (để tính đường dẫn tương đối).
+
+    Returns:
+        True nếu đường dẫn khớp với `spec`, False nếu không khớp,
+        `spec` là None, hoặc có lỗi xảy ra.
     """
     if spec is None:
         return False
 
     try:
-        # --- MODIFIED: Xử lý lỗi nếu path không nằm trong start_dir ---
+        # pathspec hoạt động tốt nhất với đường dẫn tương đối từ gốc quét
+        relative_path: Path
         try:
-            # pathspec hoạt động tốt nhất với đường dẫn tương đối từ gốc repo/quét
             relative_path = path.resolve().relative_to(start_dir.resolve())
         except ValueError:
             # Nếu không thể tính tương đối (ví dụ: path nằm ngoài start_dir),
-            # sử dụng đường dẫn tuyệt đối POSIX. pathspec vẫn có thể xử lý.
+            # sử dụng đường dẫn tuyệt đối dạng POSIX. pathspec vẫn có thể xử lý.
             relative_path_str = path.resolve().as_posix()
         else:
             relative_path_str = relative_path.as_posix()
-        # --- END MODIFIED ---
 
-        # Thêm dấu / cho thư mục (nếu chưa có) để khớp chính xác
+        # Thêm dấu '/' cho thư mục (nếu chưa có) để khớp chính xác pattern thư mục
         if path.is_dir() and not relative_path_str.endswith('/'):
-             # Chỉ thêm '/' nếu nó chưa phải là thư mục gốc tương đối '.'
+             # Chỉ thêm '/' nếu nó không phải là thư mục gốc tương đối '.'
              if relative_path_str != '.':
                  relative_path_str += '/'
 
-        # Không khớp với thư mục gốc (tránh lỗi)
+        # Không khớp với chính thư mục gốc (tránh lỗi)
         if relative_path_str == '.' or relative_path_str == './':
             return False
 
         return spec.match_file(relative_path_str)
     except Exception as e:
-         # Log lỗi nếu cần thiết
-         # logger.debug(f"Error matching path '{path}' with spec: {e}")
-        return False
+         logger.debug(f"Lỗi khi khớp đường dẫn '{path}' với spec: {e}") #
+         return False

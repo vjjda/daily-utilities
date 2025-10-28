@@ -1,8 +1,8 @@
 # Path: utils/core/file_helpers.py
 
 """
-Tiện ích I/O file thuần túy (Đọc/Ghi file văn bản).
-(Internal module, imported by utils/core.py)
+Các tiện ích I/O file thuần túy (Đọc file văn bản).
+(Module nội bộ, được import bởi utils/core)
 """
 
 import logging
@@ -13,14 +13,24 @@ __all__ = ["load_text_template"]
 
 def load_text_template(template_path: Path, logger: logging.Logger) -> str:
     """
-    Đọc nội dung thô của một file template (text file).
-    Báo lỗi và ném (raise) exception nếu file không tìm thấy.
+    Đọc nội dung thô của một file template (dạng text).
+
+    Args:
+        template_path: Đường dẫn đến file template.
+        logger: Logger để ghi log lỗi.
+
+    Returns:
+        Nội dung file dưới dạng string.
+
+    Raises:
+        FileNotFoundError: Nếu file template không tồn tại.
+        Exception: Nếu có lỗi khác khi đọc file.
     """
     try:
         return template_path.read_text(encoding="utf-8")
     except FileNotFoundError:
-        logger.error(f"❌ LỖI NGHIÊM TRỌNG: Không tìm thấy file template tại: {template_path.as_posix()}")
-        raise
+        logger.error(f"❌ LỖI NGHIÊM TRỌNG: Không tìm thấy file template tại: {template_path.as_posix()}") #
+        raise # Ném lại lỗi để dừng chương trình
     except Exception as e:
-        logger.error(f"❌ LỖI NGHIÊM TRỌNG: Không thể đọc file template '{template_path.name}': {e}")
-        raise
+        logger.error(f"❌ LỖI NGHIÊM TRỌNG: Không thể đọc file template '{template_path.name}': {e}") #
+        raise # Ném lại lỗi
