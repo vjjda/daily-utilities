@@ -12,13 +12,17 @@ from typing import List
 # --- Dynamic Re-export ---
 current_dir = Path(__file__).parent
 
+# --- MODIFIED: Thêm scanner và tree ---
 # Define the explicit order of internal modules to load
 modules_to_export: List[str] = [
     "pack_code_config",
     "pack_code_loader",
+    "pack_code_scanner",  # <-- NEW
+    "pack_code_tree",     # <-- NEW
     "pack_code_core",
     "pack_code_executor"
 ]
+# --- END MODIFIED ---
 
 # (This list is for Mypy/linters, but the main logic is globals())
 __all__: List[str] = []
@@ -28,7 +32,7 @@ for submodule_stem in modules_to_export:
         # 1. Import the module object
         # Dùng {submodule_stem} để escape khỏi template processor.
         module = import_module(f".{submodule_stem}", package=__name__)
-        
+
         # 2. Check if __all__ is defined and add its contents
         if hasattr(module, '__all__'):
             public_symbols = getattr(module, '__all__')
@@ -37,10 +41,10 @@ for submodule_stem in modules_to_export:
                 obj = getattr(module, name)
                 # Add it to the namespace of this __init__.py
                 globals()[name] = obj
-            
+
             # Add to __all__ for linters
             __all__.extend(public_symbols)
-        
+
     except ImportError as e:
         # Handle cases where a submodule might fail to import
         # Dùng {submodule_stem} và {e} để escape.
