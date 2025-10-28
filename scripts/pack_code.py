@@ -16,6 +16,7 @@ try:
     # --- NEW: Import from utils.core ---
     from utils.core import parse_comma_list
     # --- END NEW ---
+    
     from modules.pack_code.pack_code_config import (
         DEFAULT_START_PATH, DEFAULT_EXTENSIONS, DEFAULT_IGNORE,
         DEFAULT_OUTPUT_DIR, # <-- Import DEFAULT_OUTPUT_DIR
@@ -35,7 +36,9 @@ except ImportError:
 MODULE_DIR = PROJECT_ROOT / "modules" / "pack_code"
 TEMPLATE_FILENAME = "pack_code.toml.template"
 PCODE_DEFAULTS: Dict[str, Any] = {
-    "start_path": DEFAULT_START_PATH,
+    # --- MODIFIED: Đã xóa "start_path" ---
+    # "start_path": DEFAULT_START_PATH,
+    # --- END MODIFIED ---
     "output_dir": DEFAULT_OUTPUT_DIR,
     "extensions": parse_comma_list(DEFAULT_EXTENSIONS), # utils.core.parsing
     "ignore": parse_comma_list(DEFAULT_IGNORE),

@@ -33,7 +33,7 @@ ignore = [
     "dist",
     "node_modules",
     "out",
-    "venv"
+    "venv",
 ]
 
 [sgen]
@@ -60,3 +60,32 @@ dynamic_import_indicators = [
 ]
 ast_module_list_name = "modules_to_export"
 ast_all_list_name = "__all__"
+
+[pcode]
+output_dir = "~/Documents/code.context"
+extensions = [
+    "bash",
+    "cfg",
+    "cfg.py",
+    "ini",
+    "json",
+    "md",
+    "py",
+    "sh",
+    "txt",
+    "xml",
+    "yaml",
+    "yml",
+    "zsh",
+]
+ignore = [
+    ".DS_Store",
+    ".git",
+    ".hg",
+    ".svn",
+    ".venv",
+    "__pycache__",
+    "venv",
+    "*.md",
+    "!*/for-ai/*.md"
+]
