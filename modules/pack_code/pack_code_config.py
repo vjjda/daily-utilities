@@ -24,9 +24,5 @@ DEFAULT_EXTENSIONS = 'md,py,txt,json,xml,yaml,yml,ini,cfg,cfg.py,sh,bash,zsh'
 DEFAULT_IGNORE = '.venv,venv,__pycache__,.git,.hg,.svn,.DS_Store'
 # --- END MODIFIED ---
 
-# --- End generated constants ---
-
-# --- SỬA ĐỔI: Chuyển thành string thuần túy ---
-# (Logic expanduser sẽ được xử lý trong _core.py)
 DEFAULT_OUTPUT_DIR: str = "~/Documents/code.context"
 # --- KẾT THÚC SỬA ĐỔI ---
