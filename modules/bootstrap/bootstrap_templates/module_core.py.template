@@ -16,9 +16,6 @@ from typing import Dict, Any, List, Optional # Thêm các type hint cần thiế
 
 __all__ = ["process_{module_name}_logic"] # Hàm logic chính
 
-# Định nghĩa cấu trúc dữ liệu trả về (nếu cần)
-# class {module_name.capitalize()}Result:
-#     pass
 
 def process_{module_name}_logic(
     logger: logging.Logger,
@@ -37,7 +34,7 @@ def process_{module_name}_logic(
         cho Executor, hoặc None nếu không có gì cần thực thi.
     """
     logger.info("Đang chạy logic cốt lõi cho {module_name}...") #
-    logger.debug(f"Tham số nhận được: {kwargs}") #
+    logger.debug(f"Tham số nhận được: {{kwargs}}") #
 
     # --- Triển khai logic nghiệp vụ tại đây ---
     # Ví dụ:

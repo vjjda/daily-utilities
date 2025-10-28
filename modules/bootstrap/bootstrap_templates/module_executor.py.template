@@ -28,7 +28,7 @@ def execute_{module_name}_action(
         result: Đối tượng kết quả trả về từ `process_{module_name}_logic`.
     """
     logger.info("Đang thực thi hành động cho {module_name}...") #
-    logger.debug(f"Dữ liệu nhận được từ core: {result}") #
+    logger.debug(f"Dữ liệu nhận được từ core: {{result}}") #
 
     # --- Triển khai logic thực thi tại đây ---
     # Ví dụ:

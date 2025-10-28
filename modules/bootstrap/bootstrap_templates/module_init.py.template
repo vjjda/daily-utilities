@@ -33,7 +33,7 @@ __all__: List[str] = []
 
 for submodule_stem in modules_to_export:
     try:
-        module = import_module(f".{submodule_stem}", package=__name__)
+        module = import_module(f".{{submodule_stem}}", package=__name__)
 
         if hasattr(module, '__all__'):
             public_symbols = getattr(module, '__all__')
@@ -43,7 +43,7 @@ for submodule_stem in modules_to_export:
             __all__.extend(public_symbols)
 
     except ImportError as e:
-        print(f"Cảnh báo: Không thể import từ {submodule_stem} trong module {__name__}: {{e}}") #
+        print(f"Cảnh báo: Không thể import từ {{submodule_stem}} trong module {{__name__}}: {{e}}") #
 
 # Dọn dẹp
 del Path, import_module, List, current_dir, modules_to_export, submodule_stem
