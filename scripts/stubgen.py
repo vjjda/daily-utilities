@@ -25,7 +25,7 @@ try:
         CONFIG_FILENAME,
         CONFIG_SECTION_NAME,
         
-        load_config_files,
+        # (load_config_files không cần ở đây nữa)
         process_stubgen_logic,
         execute_stubgen_action
     )
@@ -88,14 +88,12 @@ def main():
         help="Danh sách thư mục con (so với target_dir) ngăn cách bởi dấu phẩy để giới hạn quét (GHI ĐÈ config)."
     )
     
-    # --- MODIFIED: Cập nhật help text ---
     stubgen_group.add_argument(
         "-i", "--include",
         type=str,
         default=None,
         help="Bộ lọc dương (inclusion filter). Chỉ giữ lại các file khớp (THÊM vào config)."
     )
-    # --- END MODIFIED ---
 
     # Group 1: Config Flags
     config_group = parser.add_argument_group("Config Initialization (Chạy riêng lẻ)")
@@ -154,21 +152,17 @@ def main():
     if effective_scan_root is None:
         sys.exit(0)
 
-    # 5. Load Configs và Chạy Core Logic
-    file_config = load_config_files(effective_scan_root, logger)
+    # --- 5. Load Configs và Chạy Core Logic (Đã thu gọn) ---
     
-    cli_config: Dict[str, Optional[str]] = {
-        "ignore": args.ignore,
-        "restrict": args.restrict,
-        "include": args.include
-    }
+    # (Xóa file_config = ...)
+    # (Xóa cli_config = ...)
     
     try:
+        # Truyền thẳng args (Namespace) vào core
         results = process_stubgen_logic(
             logger=logger,
             scan_root=effective_scan_root,
-            cli_config=cli_config,
-            file_config=file_config,
+            cli_args=args, # <-- THAY ĐỔI
             script_file_path=THIS_SCRIPT_PATH
         )
         

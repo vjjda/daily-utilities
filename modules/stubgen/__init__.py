@@ -16,10 +16,10 @@ current_dir = Path(__file__).parent
 # Define the explicit order of internal modules to load
 modules_to_export: List[str] = [
     "stubgen_config",
-    "stubgen_loader",
+    "stubgen_loader",    # <-- Chứa load_config_files
     "stubgen_parser", 
-    "stubgen_merger",    # <-- NEW
-    "stubgen_formatter", # <-- NEW
+    "stubgen_merger",    
+    "stubgen_formatter", 
     "stubgen_core",
     "stubgen_executor"
 ]
