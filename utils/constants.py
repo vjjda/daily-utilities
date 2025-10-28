@@ -1,31 +1,30 @@
 # Path: utils/constants.py
+"""
+Các hằng số dùng chung trong toàn bộ dự án.
+"""
 
-# --- NEW: Thêm Path để xác định root ---
 from pathlib import Path
-# --- END NEW ---
+from typing import Final
 
-# --- NEW: Xác định Project Root ---
-# Lấy đường dẫn file hiện tại (utils/constants.py)
-# .parent -> thư mục utils
-# .parent -> thư mục gốc của dự án (daily-utilities)
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-# --- END NEW ---
+# --- Đường dẫn Gốc Dự án ---
+# Xác định đường dẫn tuyệt đối đến thư mục gốc của dự án `daily-utilities`
+# Path(__file__) -> utils/constants.py
+# .parent        -> utils/
+# .parent        -> daily-utilities/
+PROJECT_ROOT: Final[Path] = Path(__file__).resolve().parent.parent
 
+# --- Cấu hình Logging ---
 
-# --- CẤU HÌNH TƯƠNG ĐỐI VÀ HÀNH VI MẶC ĐỊNH ---
+# Tên thư mục chứa file log (tương đối so với PROJECT_ROOT)
+LOG_DIR_NAME: Final[str] = "logs"
+# Đường dẫn tuyệt đối đến thư mục log
+LOG_DIR_PATH: Final[Path] = PROJECT_ROOT / LOG_DIR_NAME
 
-# Tên thư mục chứa tất cả các file log (Tương đối so với PROJECT_ROOT)
-LOG_DIR_NAME = "logs"
+# Cấp độ log mặc định cho Console (có thể bị ghi đè bởi entrypoint)
+CONSOLE_LOG_LEVEL: Final[str] = "INFO"
+# Cấp độ log mặc định cho File (thường là DEBUG để ghi chi tiết)
+FILE_LOG_LEVEL: Final[str] = "DEBUG"
 
-# --- NEW: Đường dẫn tuyệt đối đến thư mục log ---
-LOG_DIR_PATH = PROJECT_ROOT / LOG_DIR_NAME
-# --- END NEW ---
-
-# Thư mục mặc định cho các file đã xử lý/dọn dẹp 
-DEFAULT_ARCHIVE_FOLDER = "~/Desktop/"
-
-# Cấp độ log cho Console
-CONSOLE_LOG_LEVEL = "INFO"
-
-# Cấp độ log cho File
-FILE_LOG_LEVEL = "DEBUG"
+# --- Cấu hình Khác (Ví dụ) ---
+# Thư mục mặc định cho việc lưu trữ file (ví dụ)
+# DEFAULT_ARCHIVE_FOLDER: Final[str] = "~/Desktop/"
