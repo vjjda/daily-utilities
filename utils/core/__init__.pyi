@@ -6,6 +6,7 @@ from pathlib import Path
 
 Logger: Any
 compile_spec_from_patterns: Any
+copy_file_to_clipboard: Any
 find_git_root: Any
 format_value_to_toml: Any
 get_submodule_paths: Any
@@ -30,6 +31,7 @@ write_toml_file: Any
 __all__: List[str] = [
     'Logger',
     'compile_spec_from_patterns',
+    'copy_file_to_clipboard',
     'find_git_root',
     'format_value_to_toml',
     'get_submodule_paths',
