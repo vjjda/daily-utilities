@@ -20,7 +20,7 @@ from .stubgen_loader import find_gateway_files
 
 from utils.core import (
     resolve_config_value, 
-    resolve_config_list, 
+    resolve_config_list, # <-- Hàm này giờ trả về List
     parse_comma_list,
     load_text_template 
 )
@@ -101,11 +101,13 @@ def process_stubgen_logic(
         raise
 
     # --- 2. Merge Configs ---
-    final_ignore_set = resolve_config_list(
+    # --- MODIFIED: Cập nhật logic 'ignore' để nhận List ---
+    final_ignore_list = resolve_config_list(
         cli_str_value=cli_config.get('ignore'),
-        file_list_value=file_config.get('ignore'),
+        file_list_value=file_config.get('ignore'), # <-- Đây là List[str] hoặc None
         default_set_value=DEFAULT_IGNORE
     )
+    # --- END MODIFIED ---
     
     cli_restrict_str = cli_config.get('restrict')
     final_restrict_list: List[str]
@@ -142,7 +144,7 @@ def process_stubgen_logic(
     gateway_files = find_gateway_files(
         logger=logger, 
         scan_root=scan_root,
-        ignore_set=final_ignore_set,
+        ignore_list=final_ignore_list, # <-- MODIFIED: Đổi tên
         restrict_list=final_restrict_list,
         dynamic_import_indicators=final_indicators,
         script_file_path=script_file_path

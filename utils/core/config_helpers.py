@@ -58,25 +58,32 @@ def resolve_config_value(
         return file_value
     return default_value
 
-# --- (Hàm resolve_config_list giữ nguyên) ---
+# --- MODIFIED: Cập nhật resolve_config_list để trả về List và giữ trật tự ---
 def resolve_config_list(
     cli_str_value: Optional[str], 
-    file_list_value: Optional[List[str]], 
+    file_list_value: Optional[List[str]], # <-- Đây đã là List
     default_set_value: Set[str]
-) -> Set[str]:
+) -> List[str]: # <-- Trả về List
     """
-    Xác định danh sách (set) config cuối cùng (cho ignore, prune, v.v.).
-    Logic: (File Config GHI ĐÈ Mặc định) ĐƯỢC HỢP NHẤT (union) với (CLI).
+    Xác định danh sách (list) config cuối cùng (cho ignore, prune, v.v.).
+    Logic: (File Config GHI ĐÈ Mặc định) ĐƯỢC NỐI (append) với (CLI).
+    Thứ tự được giữ nguyên.
     """
-    tentative_set: Set[str]
-    if file_list_value is not None:
-        tentative_set = set(file_list_value)
-    else:
-        tentative_set = default_set_value
-        
-    cli_set = parse_comma_list(cli_str_value)
     
-    return tentative_set.union(cli_set)
+    # 1. Base list: Ưu tiên file config (giữ trật tự), nếu không có thì dùng default (sắp xếp).
+    base_list: List[str]
+    if file_list_value is not None:
+        base_list = file_list_value
+    else:
+        base_list = sorted(list(default_set_value)) # Sắp xếp default cho nhất quán
+        
+    # 2. Lấy danh sách từ CLI (chuyển set thành list đã sắp xếp)
+    cli_set = parse_comma_list(cli_str_value)
+    cli_list = sorted(list(cli_set))
+    
+    # 3. Nối chúng lại: Base (File/Default) + CLI
+    return base_list + cli_list
+# --- END MODIFIED ---
 
 # --- NEW: Hàm resolver set mới ---
 def resolve_set_modification(
@@ -85,7 +92,6 @@ def resolve_set_modification(
 ) -> Set[str]:
     """
     Xử lý logic +/-/overwrite cho một set dựa trên chuỗi CLI.
-    
     - "a,b" (Overwrite): Trả về {"a", "b"} (cộng thêm add_set, trừ đi subtract_set)
     - "+a,b" (Modify): Trả về tentative_set.union({"a", "b"})
     - "-a,b" (Modify): Trả về tentative_set.difference({"a", "b"})

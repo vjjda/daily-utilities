@@ -24,7 +24,7 @@ from utils.core import (
     get_submodule_paths,
     parse_comma_list,
     # --- NEW ---
-    resolve_config_list,
+    resolve_config_list, # <-- Giờ chúng ta dùng hàm này
     resolve_config_value
     # --- END NEW ---
 )
@@ -69,18 +69,13 @@ def process_pack_code_logic(
     no_tree: bool = cli_args.get("no_tree", False)
     # --- END MODIFIED ---
 
-    # --- NEW: Hợp nhất Start Path (CLI > File > Default) ---
-    start_path_from_file = file_config.get("start_path")
-    
-    # resolve_config_value không hoạt động tốt với Path obj, xử lý thủ công
+    # --- MODIFIED: Hợp nhất Start Path (CLI > Default) ---
     start_path_str: str
     if start_path_from_cli:
         start_path = start_path_from_cli
-    elif start_path_from_file:
-        start_path = Path(start_path_from_file).expanduser().resolve()
     else:
         start_path = Path(DEFAULT_START_PATH).expanduser().resolve()
-    # --- END NEW ---
+    # --- END MODIFIED ---
 
     # 2. Xác định Scan Root (Logic giữ nguyên)
     scan_root: Path
@@ -101,7 +96,7 @@ def process_pack_code_logic(
     # 3. Hợp nhất bộ lọc
     
     # --- MODIFIED: Hợp nhất Extensions (CLI > File > Default) ---
-    # 3.1. Extensions
+    # (Logic 'extensions' giữ nguyên, vì nó dùng resolve_set_modification)
     file_ext_list = file_config.get('extensions') # Đây là List[str] hoặc None
     default_ext_set = parse_comma_list(DEFAULT_EXTENSIONS)
     
@@ -116,12 +111,12 @@ def process_pack_code_logic(
     ext_filter_set = resolve_set_modification(tentative_extensions, ext_cli_str)
     # --- END MODIFIED ---
 
-    # --- MODIFIED: Hợp nhất Ignore (CLI + File + Default) ---
+    # --- MODIFIED: Hợp nhất Ignore (Sử dụng resolve_config_list) ---
     # 3.2. Ignore
     default_ignore_set = parse_comma_list(DEFAULT_IGNORE)
     
-    # Hợp nhất (File > Default) + CLI
-    final_ignore_set = resolve_config_list(
+    # Sử dụng hàm chung mới (trả về List đã giữ trật tự)
+    final_ignore_list = resolve_config_list(
         cli_str_value=ignore_cli_str,
         file_list_value=file_config.get('ignore'), # Đây là List[str] hoặc None
         default_set_value=default_ignore_set
@@ -132,9 +127,9 @@ def process_pack_code_logic(
         gitignore_patterns = parse_gitignore(scan_root) # <-- List
         logger.debug(f"Đã tải {len(gitignore_patterns)} quy tắc từ .gitignore")
 
-    # Gộp thành List (File/Default/CLI + Gitignore)
+    # Gộp thành List (đã giữ trật tự)
     all_ignore_patterns_list: List[str] = (
-        sorted(list(final_ignore_set)) +
+        final_ignore_list +
         gitignore_patterns
     )
     ignore_spec = compile_spec_from_patterns(all_ignore_patterns_list, scan_root)
@@ -225,8 +220,6 @@ def process_pack_code_logic(
         'dry_run': dry_run,
         'file_list_relative': [p.relative_to(scan_root) for p in files_to_pack],
         'scan_root': scan_root,
-        # --- MODIFIED: Thêm tree_str và no_tree vào result ---
         'tree_string': tree_str,
         'no_tree': no_tree
-        # --- END MODIFIED ---
     }

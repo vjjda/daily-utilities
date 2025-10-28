@@ -37,7 +37,9 @@ def scan_for_files(
     project_root: Path,
     target_dir_str: Optional[str],
     extensions: List[str],
-    ignore_set: Set[str], # Ignore từ config/CLI (vẫn là Set)
+    # --- MODIFIED: Đổi tên ignore_set -> ignore_list ---
+    ignore_list: List[str], # Ignore từ config/CLI (List đã giữ trật tự)
+    # --- END MODIFIED ---
     script_file_path: Path,
     check_mode: bool
 ) -> List[Path]:
@@ -47,8 +49,6 @@ def scan_for_files(
 
     use_gitignore = target_dir_str is None
     # --- MODIFIED: Xác định scan_path cẩn thận hơn ---
-    # Nếu target_dir_str được cung cấp, đó là nơi bắt đầu quét thực tế
-    # Nếu không, quét từ project_root
     scan_path = (project_root / target_dir_str).resolve() if target_dir_str else project_root.resolve()
     # --- END MODIFIED ---
 
@@ -68,9 +68,9 @@ def scan_for_files(
     else:
         logger.info(f"Chế độ đường dẫn cụ thể: Không dùng .gitignore cho '{target_dir_str}'.")
 
-    # --- MODIFIED: Gộp thành List ---
+    # --- MODIFIED: Gộp thành List (đã giữ trật tự) ---
     # Ưu tiên: Config/CLI patterns -> Gitignore patterns
-    all_ignore_patterns_list: List[str] = sorted(list(ignore_set)) + gitignore_patterns
+    all_ignore_patterns_list: List[str] = ignore_list + gitignore_patterns
     ignore_spec = compile_spec_from_patterns(all_ignore_patterns_list, project_root)
     # --- END MODIFIED ---
 

@@ -8,9 +8,6 @@
 
 [{config_section_name}]
 
-# (Tùy chọn) Đường dẫn tương đối (hoặc tuyệt đối) để quét.
-start_path = "."
-
 # (Tùy chọn) Đường dẫn thư mục mặc định để lưu file context.
 # Hỗ trợ `~` (ví dụ: "~/Documents/code_contexts")
 output_dir = {toml_output_dir}

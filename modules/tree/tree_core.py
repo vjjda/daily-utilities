@@ -28,7 +28,7 @@ from utils.core import (
     get_submodule_paths,
     parse_gitignore, # Trả về List[str]
     resolve_config_value,
-    resolve_config_list, # Vẫn dùng để lấy Set từ config/cli
+    resolve_config_list, # <-- Hàm này giờ trả về List
     compile_spec_from_patterns, # Nhận Iterable[str]
     parse_comma_list,
     resolve_set_modification # <-- NEW
@@ -108,21 +108,23 @@ def merge_config_sources(
 
     # --- MODIFIED: Lấy danh sách pattern, gộp thành List, và biên dịch ---
 
-    # Ignore List (Từ config/CLI) - Vẫn là Set
-    final_ignore_set = resolve_config_list(
+    # --- MODIFIED: Cập nhật logic 'ignore' để nhận List ---
+    final_ignore_list = resolve_config_list(
         cli_str_value=args.ignore,
-        file_list_value=file_config.get('ignore'),
+        file_list_value=file_config.get('ignore'), # <-- Đây là List[str] hoặc None
         default_set_value=DEFAULT_IGNORE
     )
+    # --- END MODIFIED ---
 
-    # Prune List (Từ config/CLI) - Vẫn là Set
-    final_prune_set = resolve_config_list(
+    # --- MODIFIED: Cập nhật logic 'prune' để nhận List ---
+    final_prune_list = resolve_config_list(
         cli_str_value=args.prune,
-        file_list_value=file_config.get('prune'),
+        file_list_value=file_config.get('prune'), # <-- Đây là List[str] hoặc None
         default_set_value=DEFAULT_PRUNE
     )
+    # --- END MODIFIED ---
 
-    # Dirs Only List (Từ config/CLI) - Vẫn là Set
+    # (Logic 'dirs_only' giữ nguyên, vì nó không dùng resolve_config_list)
     dirs_only_cli = args.dirs_only
     dirs_only_file = file_config.get('dirs-only', None)
     final_dirs_only_mode = dirs_only_cli if dirs_only_cli is not None else dirs_only_file
@@ -138,7 +140,7 @@ def merge_config_sources(
     final_dirs_only_set = DEFAULT_DIRS_ONLY_LOGIC.union(dirs_only_list_custom)
 
 
-    # Extensions List (Giữ nguyên logic dùng resolve_set_modification)
+    # (Logic 'extensions' giữ nguyên)
     cli_ext_str = args.extensions
     file_ext_list: Optional[List[str]] = file_config.get('extensions')
 
@@ -151,7 +153,7 @@ def merge_config_sources(
          logger.debug("Sử dụng danh sách 'extensions' mặc định (None) làm cơ sở.")
 
     extensions_filter: Optional[Set[str]]
-    if cli_ext_str is None and tentative_extensions is None: # Sửa logic: check tentative
+    if cli_ext_str is None and tentative_extensions is None: 
         extensions_filter = None
         logger.debug("Không áp dụng bộ lọc 'extensions'.")
     else:
@@ -166,11 +168,11 @@ def merge_config_sources(
              logger.debug(f"Set 'extensions' cuối cùng (từ config/default): {extensions_filter}")
 
 
-    # --- MODIFIED: Gộp thành List và Biên dịch ---
+    # --- MODIFIED: Gộp thành List (đã giữ trật tự) và Biên dịch ---
     # Ưu tiên: Config/CLI patterns -> Gitignore patterns
-    all_ignore_patterns_list: List[str] = sorted(list(final_ignore_set)) + gitignore_patterns
-    all_prune_patterns_list: List[str] = sorted(list(final_prune_set)) # Prune không dùng gitignore
-    all_dirs_only_patterns_list: List[str] = sorted(list(final_dirs_only_set)) # Dirs-only không dùng gitignore
+    all_ignore_patterns_list: List[str] = final_ignore_list + gitignore_patterns
+    all_prune_patterns_list: List[str] = final_prune_list # Prune không dùng gitignore
+    all_dirs_only_patterns_list: List[str] = sorted(list(final_dirs_only_set)) # Dirs-only (giữ sorted)
 
     final_ignore_spec = compile_spec_from_patterns(all_ignore_patterns_list, start_dir)
     final_prune_spec = compile_spec_from_patterns(all_prune_patterns_list, start_dir)
@@ -197,8 +199,10 @@ def merge_config_sources(
         "global_dirs_only_flag": global_dirs_only,
         # Trả về Set để in status (không ảnh hưởng logic lọc)
         "filter_lists": {
-            "ignore": final_ignore_set,
-            "prune": final_prune_set,
+             # --- MODIFIED: Chuyển đổi List (đã lọc) về Set (cho hiển thị) ---
+            "ignore": set(final_ignore_list),
+            "prune": set(final_prune_list),
+            # --- END MODIFIED ---
             "dirs_only": final_dirs_only_set,
             "submodules": submodule_names,
             "extensions": extensions_filter if extensions_filter is not None else set()

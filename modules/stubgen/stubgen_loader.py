@@ -76,7 +76,9 @@ def _is_dynamic_gateway(
 def find_gateway_files(
     logger: logging.Logger,
     scan_root: Path,
-    ignore_set: Set[str], # Ignore từ config/CLI (vẫn là Set)
+    # --- MODIFIED: Đổi tên ignore_set -> ignore_list ---
+    ignore_list: List[str], # Ignore từ config/CLI (List đã giữ trật tự)
+    # --- END MODIFIED ---
     restrict_list: List[str],
     dynamic_import_indicators: List[str],
     script_file_path: Path
@@ -88,9 +90,9 @@ def find_gateway_files(
     # --- MODIFIED: Gộp logic ignore ---
     gitignore_patterns: List[str] = parse_gitignore(scan_root) # <-- List
 
-    # --- MODIFIED: Gộp thành List ---
+    # --- MODIFIED: Gộp thành List (đã giữ trật tự) ---
     # Ưu tiên: Config/CLI patterns -> Gitignore patterns
-    all_ignore_patterns_list: List[str] = sorted(list(ignore_set)) + gitignore_patterns
+    all_ignore_patterns_list: List[str] = ignore_list + gitignore_patterns
     ignore_spec = compile_spec_from_patterns(all_ignore_patterns_list, scan_root)
     # --- END MODIFIED ---
 
@@ -105,7 +107,6 @@ def find_gateway_files(
             logger.debug(f"Skipping non-existent root: {sub_root_str}")
             continue
         # --- MODIFIED: Dùng rglob('*') và kiểm tra tên sau ---
-        # Điều này đáng tin cậy hơn rglob('__init__.py') trong một số trường hợp
         for path in root_path.rglob('*'):
             # Chỉ xử lý file __init__.py
             if not path.is_file() or path.name != '__init__.py':

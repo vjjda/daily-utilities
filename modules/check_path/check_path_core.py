@@ -8,7 +8,7 @@ from typing import List, Set, Optional, Dict, Any
 # --- MODIFIED: Import hàm merge và default mới ---
 from utils.core import (
     resolve_config_value, 
-    resolve_config_list, 
+    resolve_config_list, # <-- Hàm này giờ trả về List
     parse_comma_list,
     resolve_set_modification # <-- THÊM HÀM MỚI
 )
@@ -121,10 +121,9 @@ def process_check_path_logic(
     # --- 1. Hợp nhất Cấu hình ---
     
     # --- MODIFIED: Sử dụng resolve_set_modification cho extensions ---
-    # 1.1. Lấy tentative set (File > Default)
+    # (Logic 'extensions' giữ nguyên, vì nó dùng resolve_set_modification)
     file_extensions_value = file_config_data.get('extensions')
     
-    # Xử lý trường hợp TOML cũ (trả về string) hoặc TOML mới (trả về list)
     file_ext_list: Optional[List[str]]
     if isinstance(file_extensions_value, str):
         file_ext_list = list(parse_comma_list(file_extensions_value))
@@ -139,7 +138,6 @@ def process_check_path_logic(
          tentative_extensions = DEFAULT_EXTENSIONS
          logger.debug("Sử dụng danh sách 'extensions' mặc định làm cơ sở.")
     
-    # 1.2. Áp dụng logic +/-/overwrite từ CLI
     final_extensions_set = resolve_set_modification(
         tentative_set=tentative_extensions,
         cli_string=cli_extensions
@@ -150,18 +148,17 @@ def process_check_path_logic(
     else:
         logger.debug(f"Set 'extensions' cuối cùng (không có CLI): {sorted(list(final_extensions_set))}")
 
-    # Chuyển thành List để dùng cho scanner
     final_extensions_list = sorted(list(final_extensions_set))
     # --- END MODIFIED ---
 
-    # (Logic 'ignore' giữ nguyên, vẫn dùng resolve_config_list)
-    final_ignore_set = resolve_config_list(
+    # --- MODIFIED: Cập nhật logic 'ignore' để nhận List ---
+    final_ignore_list = resolve_config_list(
         cli_str_value=cli_ignore,
-        file_list_value=file_config_data.get('ignore'),
+        file_list_value=file_config_data.get('ignore'), # <-- Đây là List[str] hoặc None
         default_set_value=DEFAULT_IGNORE
     )
-    logger.debug(f"Danh sách 'ignore' cuối cùng (đã merge): {sorted(list(final_ignore_set))}")
-    # --- Kết thúc Hợp nhất Cấu hình ---
+    logger.debug(f"Danh sách 'ignore' cuối cùng (đã merge, giữ trật tự): {final_ignore_list}")
+    # --- END MODIFIED ---
     
     # 2. Quét file
     files_to_process = scan_for_files(
@@ -169,7 +166,7 @@ def process_check_path_logic(
         project_root=project_root,
         target_dir_str=target_dir_str,
         extensions=final_extensions_list, # <-- Truyền List đã xử lý
-        ignore_set=final_ignore_set,     
+        ignore_list=final_ignore_list,     # <-- MODIFIED: Đổi tên
         script_file_path=script_file_path,
         check_mode=check_mode
     )
