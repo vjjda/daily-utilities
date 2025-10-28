@@ -1,8 +1,11 @@
 # Path: modules/zsh_wrapper/__init__.py
 
 """
-Module Gateway (Facade) for the Zsh Wrapper (zrap) module.
- """
+Module Gateway (Facade) cho module Zsh Wrapper (zrap).
+
+Tự động export tất cả các thành phần public (`__all__`) 
+từ các submodule bên trong.
+"""
 
 from pathlib import Path
 from importlib import import_module
@@ -11,33 +14,31 @@ from typing import List
 # --- Dynamic Re-export ---
 current_dir = Path(__file__).parent
 
-# --- MODIFIED: Thêm run_zsh_wrapper ---
-# Define the explicit order of internal modules to load
+# Định nghĩa thứ tự load các module nội bộ
 modules_to_export: List[str] = [
     "zsh_wrapper_config",
     "zsh_wrapper_helpers", # Import helpers trước core
-    "zsh_wrapper_core",    # Chứa run_zsh_wrapper và _generate_wrapper_content
+    "zsh_wrapper_core",
     "zsh_wrapper_executor"
 ]
 
-# (This list is for Mypy/linters, but the main logic is globals())
 __all__: List[str] = []
 
 for module_name in modules_to_export:
     try:
-        module = import_module(f".{module_name}", package=__name__) #
+        module = import_module(f".{module_name}", package=__name__)
         
         if hasattr(module, '__all__'):
             public_symbols = getattr(module, '__all__')
             for name in public_symbols:
-                obj = getattr(module, name) #
-                globals()[name] = obj #
-            __all__.extend(public_symbols) #
+                obj = getattr(module, name)
+                globals()[name] = obj
+            __all__.extend(public_symbols)
         
     except ImportError as e:
-        print(f"Warning: Could not import symbols from {module_name}: {e}") #
+        print(f"Warning: Could not import symbols from {module_name}: {e}")
 
-# Clean up temporary variables
+# Cleanup
 del Path, import_module, List, current_dir, modules_to_export, module_name
 if 'module' in locals():
     del module
@@ -47,4 +48,3 @@ if 'name' in locals():
     del name
 if 'obj' in locals():
     del obj
-# --- END MODIFIED ---

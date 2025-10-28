@@ -2,17 +2,16 @@
 
 """
 Execution/Action logic for zsh_wrapper (zrap).
-(Ghi file, chmod)
+(Chịu trách nhiệm ghi file, chmod)
 """
 
 import logging
 import os
+import sys
 from pathlib import Path
 from typing import Dict, Any, List, Optional
 
-# --- NEW: __all__ definition ---
 __all__ = ["execute_zsh_wrapper_action"]
-# --- END NEW ---
 
 def execute_zsh_wrapper_action(
     logger: logging.Logger, 
@@ -20,6 +19,15 @@ def execute_zsh_wrapper_action(
 ) -> None:
     """
     Hàm thực thi, nhận nội dung wrapper và ghi ra file.
+    (Side-effect: Ghi I/O, Chmod)
+    
+    Args:
+        logger: Logger.
+        result: Dict kết quả từ core logic.
+
+    Raises:
+        IOError: Nếu không thể ghi file.
+        Exception: Nếu không thể chmod.
     """
     
     if result.get("status") != "ok":
@@ -33,8 +41,9 @@ def execute_zsh_wrapper_action(
     # 1. Kiểm tra an toàn (trừ khi --force)
     if output_path.exists() and not force:
         logger.error(f"❌ Lỗi: File output đã tồn tại: {output_path.name}")
-        logger.error("   Sử dụng --force (-f) để ghi đè.")
-        return # Dừng lại
+        logger.error(f"   Sử dụng --force (-f) để ghi đè.")
+        # Thoát với lỗi để entrypoint biết
+        sys.exit(1)
     
     if output_path.exists() and force:
         logger.warning(f"⚠️  File '{output_path.name}' đã tồn tại. Ghi đè (do --force)...")
@@ -46,8 +55,7 @@ def execute_zsh_wrapper_action(
         
         output_path.write_text(final_content, encoding='utf-8')
         
-        # --- FIX 1: Luôn dùng đường dẫn tuyệt đối (an toàn) ---
-        logger.info(f"✍️  Đã ghi wrapper: {output_path}")
+        logger.info(f"✍️  Đã ghi wrapper: {output_path.as_posix()}")
 
         # 3. Cấp quyền thực thi
         os.chmod(output_path, 0o755)
@@ -55,9 +63,7 @@ def execute_zsh_wrapper_action(
         
     except IOError as e:
         logger.error(f"❌ Lỗi I/O khi ghi file: {e}")
-        # --- FIX 2: Ném lỗi lên để entrypoint bắt ---
-        raise
+        raise # Ném lỗi lên để core/entrypoint bắt
     except Exception as e:
-        logger.error(f"❌ Lỗi không xác định khi ghi file: {e}")
-        # --- FIX 2: Ném lỗi lên để entrypoint bắt ---
-        raise
+        logger.error(f"❌ Lỗi không xác định khi ghi file/chmod: {e}")
+        raise # Ném lỗi lên
