@@ -12,14 +12,18 @@ from typing import List
 # --- Dynamic Re-export ---
 current_dir = Path(__file__).parent
 
+# --- MODIFIED: Thêm merger và formatter ---
 # Define the explicit order of internal modules to load
 modules_to_export: List[str] = [
     "stubgen_config",
     "stubgen_loader",
     "stubgen_parser", 
+    "stubgen_merger",    # <-- NEW
+    "stubgen_formatter", # <-- NEW
     "stubgen_core",
     "stubgen_executor"
 ]
+# --- END MODIFIED ---
 
 # (This list is for Mypy/linters, but the main logic is globals())
 __all__: List[str] = []
