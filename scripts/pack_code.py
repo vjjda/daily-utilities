@@ -92,22 +92,28 @@ def main():
         help='Các pattern (giống .gitignore) để bỏ qua (THÊM vào config).'
     )
     pack_group.add_argument(
-        "-N", "--no_gitignore",
+        "-N", "--no-gitignore",
         action="store_true",
         help='Không tôn trọng các file .gitignore.'
     )
     pack_group.add_argument(
-        "-d", "--dry_run",
+        # --- MODIFIED: Thay đổi gạch dưới thành gạch ngang ---
+        "-d", "--dry-run",
+        # --- END MODIFIED ---
         action="store_true",
         help='Chỉ in danh sách file sẽ được đóng gói (không in nội dung).'
     )
     pack_group.add_argument(
-        "--no_header",
+        # --- MODIFIED: Thay đổi gạch dưới thành gạch ngang ---
+        "--no-header",
+        # --- END MODIFIED ---
         action="store_true",
         help="Không in header phân tách ('===== path/to/file.py =====')."
     )
     pack_group.add_argument(
-        "--no_tree",
+        # --- MODIFIED: Thay đổi gạch dưới thành gạch ngang ---
+        "--no-tree",
+        # --- END MODIFIED ---
         action="store_true",
         help='Không in cây thư mục của các file được chọn ở đầu output.'
     )
