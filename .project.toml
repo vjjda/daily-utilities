@@ -72,12 +72,13 @@ extensions = [
     "md",
     "py",
     "sh",
+    "toml",
     "txt",
     "xml",
     "yaml",
     "yml",
     "zsh",
-    "toml"
+    "template"
 ]
 ignore = [
     ".DS_Store",
