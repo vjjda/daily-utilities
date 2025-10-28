@@ -4,24 +4,32 @@
 from typing import Any, List, Optional, Set, Dict, Union
 from pathlib import Path
 
+CONFIG_FILENAME: Any
+CONFIG_SECTION_NAME: Any
 DEFAULT_EXTENSIONS: Any
 DEFAULT_IGNORE: Any
 DEFAULT_OUTPUT_DIR: Any
 DEFAULT_START_PATH: Any
+PROJECT_CONFIG_FILENAME: Any
 execute_pack_code_action: Any
 generate_tree_string: Any
+load_config_files: Any
 load_files_content: Any
 process_pack_code_logic: Any
 scan_files: Any
 
 # Static declaration of exported symbols (for Pylance)
 __all__: List[str] = [
+    'CONFIG_FILENAME',
+    'CONFIG_SECTION_NAME',
     'DEFAULT_EXTENSIONS',
     'DEFAULT_IGNORE',
     'DEFAULT_OUTPUT_DIR',
     'DEFAULT_START_PATH',
+    'PROJECT_CONFIG_FILENAME',
     'execute_pack_code_action',
     'generate_tree_string',
+    'load_config_files',
     'load_files_content',
     'process_pack_code_logic',
     'scan_files'
