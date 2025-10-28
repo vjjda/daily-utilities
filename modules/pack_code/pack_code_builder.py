@@ -18,34 +18,52 @@ def assemble_packed_content(
     no_header: bool,
     dry_run: bool,
 ) -> str:
-    """Xây dựng chuỗi nội dung output cuối cùng từ các phần."""
-    
-    final_content_lines: List[str] = []
-    
-    # 1. Thêm cây (nếu có)
-    if tree_str:
-        final_content_lines.append(tree_str)
-        final_content_lines.append("\n" + ("=" * 80) + "\n")
+    """
+    Xây dựng chuỗi nội dung output cuối cùng từ các phần đã thu thập.
 
-    # 2. Thêm nội dung file (nếu không phải dry_run)
+    Args:
+        files_to_pack: Danh sách Path các file (đã sắp xếp).
+        files_content: Dict ánh xạ Path -> nội dung file (str).
+        scan_root: Gốc quét (để tính đường dẫn tương đối cho header).
+        tree_str: Chuỗi cây thư mục (có thể rỗng).
+        no_header: True nếu không cần in header "===== Path: ... =====".
+        dry_run: True nếu đang ở chế độ dry-run (sẽ không thêm nội dung file).
+
+    Returns:
+        Chuỗi string chứa toàn bộ nội dung đã đóng gói.
+    """
+
+    final_content_lines: List[str] = []
+
+    # 1. Thêm cây thư mục (nếu có)
+    if tree_str:
+        final_content_lines.append(tree_str) #
+        final_content_lines.append("\n" + ("=" * 80) + "\n") #
+
+    # 2. Thêm nội dung file (chỉ khi không phải dry_run)
     if not dry_run:
         for file_path in files_to_pack:
             content = files_content.get(file_path)
             if content is None:
-                continue # Bỏ qua file không đọc được (đã log trong loader)
+                # Bỏ qua file không đọc được (đã log trong loader)
+                continue
 
             try:
+                # Tính đường dẫn tương đối cho header
                 rel_path_str = file_path.relative_to(scan_root).as_posix()
             except ValueError:
-                 rel_path_str = file_path.as_posix() # Fallback
+                 rel_path_str = file_path.as_posix() # Fallback nếu không cùng cây
 
+            # Thêm header (nếu cần)
             if not no_header:
                 header = f"===== Path: {rel_path_str} ====="
-                final_content_lines.append(header)
+                final_content_lines.append(header) #
 
+            # Thêm nội dung file
             final_content_lines.append(content)
 
+            # Thêm dòng trống sau nội dung (nếu có header)
             if not no_header:
-                final_content_lines.append("\n")
+                final_content_lines.append("\n") #
 
     return "\n".join(final_content_lines)
