@@ -63,14 +63,16 @@ def main():
         "start_path",
         type=str,
         nargs="?",
-        default=None, # <-- MODIFIED: Đặt là None để ưu tiên config
+        default=None, 
         help='Đường dẫn (file hoặc thư mục) để bắt đầu quét. Mặc định: "." hoặc giá trị trong config.'
     )
     pack_group.add_argument(
         "-o", "--output",
         type=str,
         default=None,
-        help="File output để ghi. Mặc định: 'tmp/<input_name>.txt'"
+        # --- MODIFIED: Cập nhật help text ---
+        help="File output để ghi. Mặc định: '[output_dir]/<start_name>_context.txt' (lấy từ config)."
+        # --- END MODIFIED ---
     )
     pack_group.add_argument(
         "-S", "--stdout",
