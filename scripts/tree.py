@@ -9,9 +9,7 @@ import sys
 import argparse
 import logging
 from pathlib import Path
-# --- MODIFIED: Thêm Set ---
 from typing import Optional, Set, Dict, Any
-# --- END MODIFIED ---
 
 try:
     import tomllib
@@ -27,29 +25,27 @@ sys.path.append(str(PROJECT_ROOT))
 
 # Common utilities
 from utils.logging_config import setup_logging, log_success
-from utils.core import (
-    is_git_repository
-)
+# --- MODIFIED: Xóa import không cần thiết ---
+# (is_git_repository đã chuyển vào core)
+# --- END MODIFIED ---
 from utils.cli import handle_config_init_request
 
-# Module Imports (Tái sử dụng 100% logic của tree)
+# Module Imports
 from modules.tree import (
     CONFIG_FILENAME,
     PROJECT_CONFIG_FILENAME,
     CONFIG_SECTION_NAME,
     DEFAULT_IGNORE, DEFAULT_PRUNE, DEFAULT_DIRS_ONLY_LOGIC,
-    # --- MODIFIED: Import DEFAULT_EXTENSIONS ---
     DEFAULT_MAX_LEVEL, FALLBACK_SHOW_SUBMODULES, FALLBACK_USE_GITIGNORE,
     DEFAULT_EXTENSIONS,
-    # --- END MODIFIED ---
 
-    load_config_files,
-
-    merge_config_sources,
-
+    # --- MODIFIED: Import các hàm ---
+    process_tree_logic, # <-- NEW (Orchestrator)
     generate_tree,
     print_status_header,
     print_final_result,
+    # (Xóa load_config_files, merge_config_sources)
+    # --- END MODIFIED ---
 )
 
 # --- CONSTANTS ---
@@ -62,17 +58,17 @@ TREE_DEFAULTS: Dict[str, Any] = {
     "ignore": DEFAULT_IGNORE,
     "prune": DEFAULT_PRUNE,
     "dirs-only": DEFAULT_DIRS_ONLY_LOGIC,
-    "extensions": DEFAULT_EXTENSIONS # <-- NEW
+    "extensions": DEFAULT_EXTENSIONS
 }
 
 
 def main():
     """ Hàm điều phối chính (phiên bản Argparse) """
 
-    # --- 1. Định nghĩa Argparse ---
+    # --- 1. Định nghĩa Argparse (Giữ nguyên) ---
     parser = argparse.ArgumentParser(
         description="Một công cụ tạo cây thư mục thông minh hỗ trợ file cấu hình .tree.toml (Phiên bản Argparse).",
-        epilog="Ví dụ: tree . -L 3 -I '*.log' -e 'py,md'", # <-- Sửa ví dụ
+        epilog="Ví dụ: tree . -L 3 -I '*.log' -e 'py,md'", 
         formatter_class=argparse.RawTextHelpFormatter
     )
     tree_group = parser.add_argument_group("Tree Generation Options")
@@ -84,28 +80,21 @@ def main():
     )
     tree_group.add_argument("-L", "--level", type=int, help="Giới hạn độ sâu hiển thị.")
 
-    # --- NEW: Thêm cờ -e/--extensions ---
     tree_group.add_argument(
         "-e", "--extensions",
         type=str,
         default=None,
         help="Danh sách đuôi file (phân cách bởi dấu phẩy) để hiển thị. Hỗ trợ + (thêm) hoặc ~ (bớt). Ví dụ: 'py,js', '+md', '~log'"
     )
-    # --- END NEW ---
 
-    # --- MODIFIED: Cập nhật help text cho -I ---
     tree_group.add_argument(
         "-I", "--ignore",
         help="Danh sách pattern (phân cách bởi dấu phẩy) để bỏ qua. Sẽ được **THÊM** vào danh sách từ config/default."
     )
-    # --- END MODIFIED ---
-
-    # --- MODIFIED: Cập nhật help text cho -P ---
     tree_group.add_argument(
         "-P", "--prune",
         help="Danh sách pattern (phân cách bởi dấu phẩy) để cắt tỉa (prune). Sẽ được **THÊM** vào danh sách từ config/default."
     )
-    # --- END MODIFIED ---
 
     dirs_only_group = tree_group.add_mutually_exclusive_group()
     dirs_only_group.add_argument(
@@ -113,25 +102,19 @@ def main():
         action="store_true",
         help="Chỉ hiển thị thư mục cho toàn bộ cây."
     )
-
-    # --- MODIFIED: Thêm cờ ngắn -D ---
     dirs_only_group.add_argument(
-        "-D", "--dirs-patterns", # <-- Thêm -D
+        "-D", "--dirs-patterns",
         help="Chỉ hiển thị thư mục con cho các pattern cụ thể (ví dụ: 'assets')."
     )
-    # --- END MODIFIED ---
 
     tree_group.add_argument("-s", "--show-submodules", action="store_true", help="Hiển thị nội dung của các submodule.")
-
-    # --- MODIFIED: Thêm cờ ngắn -N ---
     tree_group.add_argument(
-        "-N", "--no-gitignore", # <-- Thêm -N
+        "-N", "--no-gitignore", 
         action="store_true",
         help="Không tôn trọng file .gitignore."
     )
-    # --- END MODIFIED ---
-
     tree_group.add_argument("-f", "--full-view", action="store_true", help="Bỏ qua tất cả bộ lọc (.gitignore, rules, level) và hiển thị tất cả.")
+    
     config_group = parser.add_argument_group("Config Initialization (Chạy riêng lẻ)")
     config_group.add_argument(
         "-c", "--config-project",
@@ -149,7 +132,7 @@ def main():
     logger = setup_logging(script_name="APTree")
     logger.debug("APTree script (argparse) started.")
 
-    # --- 3. Xử lý Config Init (Tái sử dụng 100%) ---
+    # --- 3. Xử lý Config Init (Giữ nguyên) ---
     try:
         config_action_taken = handle_config_init_request(
             logger=logger,
@@ -169,49 +152,41 @@ def main():
         logger.debug("Traceback:", exc_info=True)
         sys.exit(1)
 
-    # --- 4. Logic chạy ctree (Giống hệt Typer) ---
+    # --- 4. Logic chạy ctree (Đã refactor) ---
     start_path_obj = Path(args.start_path).expanduser()
     if not start_path_obj.exists():
         logger.error(f"❌ Lỗi: Đường dẫn bắt đầu không tồn tại: {start_path_obj}")
         sys.exit(1)
 
-    # --- MODIFIED: Lấy đúng tên arg mới ---
-    cli_dirs_only = "_ALL_" if args.all_dirs else args.dirs_patterns # <-- Sửa tên biến
-    # --- END MODIFIED ---
-
-    cli_args = argparse.Namespace(
-        level=args.level,
-        extensions=args.extensions, # <-- NEW
-        ignore=args.ignore,
-        prune=args.prune,
-        dirs_only=cli_dirs_only, # <-- Sửa tên biến
-        show_submodules=args.show_submodules,
-        no_gitignore=args.no_gitignore,
-        full_view=args.full_view,
-    )
-
-    initial_path: Path = start_path_obj
-    start_dir = initial_path.parent if initial_path.is_file() else initial_path
-    is_git_repo = is_git_repository(start_dir)
-
+    # --- MODIFIED: Toàn bộ logic nghiệp vụ được chuyển vào 'core' ---
     try:
-        file_config = load_config_files(start_dir, logger)
-        config_params = merge_config_sources(
-            args=cli_args,
-            file_config=file_config,
-            start_dir=start_dir,
+        # 1. Gọi Core Logic (truyền args thô)
+        result_data = process_tree_logic(
             logger=logger,
-            is_git_repo=is_git_repo
+            cli_args=args,
+            start_path_obj=start_path_obj
         )
+        
+        if result_data is None:
+            # Lỗi đã được log bên trong core
+            sys.exit(1)
+        
+        # 2. Giải nén Result Object
+        config_params = result_data["config_params"]
+        start_dir = result_data["start_dir"]
+        is_git_repo = result_data["is_git_repo"]
+        cli_no_gitignore = result_data["cli_no_gitignore"]
+        
+        # 3. Gọi Executor (In kết quả)
         print_status_header(
             config_params=config_params,
             start_dir=start_dir,
             is_git_repo=is_git_repo,
-            cli_no_gitignore=args.no_gitignore
+            cli_no_gitignore=cli_no_gitignore
         )
+        
         counters = {'dirs': 0, 'files': 0}
 
-        # (Lệnh gọi generate_tree giữ nguyên sau lần refactor trước)
         generate_tree(
             start_dir, start_dir, counters=counters,
             max_level=config_params["max_level"],
@@ -219,9 +194,7 @@ def main():
             submodules=config_params["submodules"],
             prune_spec=config_params["prune_spec"],
             dirs_only_spec=config_params["dirs_only_spec"],
-            # --- NEW: Truyền extensions_filter ---
             extensions_filter=config_params["extensions_filter"],
-            # --- END NEW ---
             is_in_dirs_only_zone=config_params["is_in_dirs_only_zone"]
         )
 
@@ -229,6 +202,7 @@ def main():
             counters=counters,
             global_dirs_only=config_params["global_dirs_only_flag"]
         )
+    # --- END MODIFIED ---
     except Exception as e:
         logger.error(f"❌ Đã xảy ra lỗi không mong muốn: {e}")
         logger.debug("Traceback:", exc_info=True)

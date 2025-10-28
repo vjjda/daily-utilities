@@ -11,13 +11,13 @@ from typing import List
 # --- Dynamic Re-export ---
 current_dir = Path(__file__).parent
 
-# --- MODIFIED: Xóa 'tree_config_io' ---
+# --- MODIFIED: Thêm 'tree_merger' và 'tree_core' mới ---
 modules_to_export: List[str] = [
     "tree_config",
     "tree_loader",
-    "tree_core",
+    "tree_merger",    # <-- Đổi tên từ tree_core cũ
+    "tree_core",      # <-- Orchestrator mới
     "tree_executor",
-    # "tree_config_io" # <-- Đã xóa
 ]
 # --- END MODIFIED ---
 
