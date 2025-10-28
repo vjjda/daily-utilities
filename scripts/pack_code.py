@@ -13,6 +13,9 @@ try:
     from utils.logging_config import setup_logging, log_success
     # --- MODIFIED: Import thêm ---
     from utils.cli import handle_config_init_request
+    # --- NEW: Import from utils.core ---
+    from utils.core import parse_comma_list
+    # --- END NEW ---
     from modules.pack_code.pack_code_config import (
         DEFAULT_START_PATH, DEFAULT_EXTENSIONS, DEFAULT_IGNORE,
         DEFAULT_OUTPUT_DIR, # <-- Import DEFAULT_OUTPUT_DIR

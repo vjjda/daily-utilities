@@ -52,8 +52,8 @@ def process_pack_code_logic(
 # --- END MODIFIED ---
     """
     Hàm logic chính (Orchestrator).
-Điều phối việc quét, lọc, tạo cây, đọc và đóng gói nội dung.
-"""
+    Điều phối việc quét, lọc, tạo cây, đọc và đóng gói nội dung.
+    """
     logger.info("Core logic running...")
 
     # --- MODIFIED: Trích xuất tham số từ dict cli_args ---
@@ -176,7 +176,7 @@ def process_pack_code_logic(
         for file_path in files_to_pack:
             content = files_content.get(file_path)
             if content is None:
-                 continue
+                continue
 
             try:
                 rel_path_str = file_path.relative_to(scan_root).as_posix()
@@ -224,5 +224,9 @@ def process_pack_code_logic(
         'stdout': stdout,
         'dry_run': dry_run,
         'file_list_relative': [p.relative_to(scan_root) for p in files_to_pack],
-        'scan_root': scan_root
+        'scan_root': scan_root,
+        # --- MODIFIED: Thêm tree_str và no_tree vào result ---
+        'tree_string': tree_str,
+        'no_tree': no_tree
+        # --- END MODIFIED ---
     }

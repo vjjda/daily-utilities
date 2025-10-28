@@ -2,7 +2,7 @@
 
 """
 Execution/Action logic for pack_code.
-(Ghi file, chạy lệnh, in ra console, v.v...)
+(Ghi file, chạy lệnh, in ra console, v.v...) [cite: 355]
 """
 
 import logging
@@ -62,6 +62,16 @@ def execute_pack_code_action(logger: logging.Logger, result: Dict[str, Any]) -> 
 
     # --- 3. Chế độ Ghi File (Mặc định) ---
     if output_path:
+        # --- NEW: In cây ra console trước khi ghi file ---
+        tree_str = result.get('tree_string', '')
+        no_tree = result.get('no_tree', False)
+        
+        if not no_tree and tree_str:
+            # In cây ra console (giống như trong file)
+            print("\n" + tree_str)
+            print("\n" + ("=" * 80) + "\n")
+        # --- END NEW ---
+
         try:
             # --- MODIFIED: Log đường dẫn tuyệt đối (as_posix) ---
             # Vì output_path có thể không nằm trong scan_root
