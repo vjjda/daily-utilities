@@ -30,7 +30,10 @@ from .pack_code_scanner import scan_files
 from .pack_code_tree import generate_tree_string
 # Import loader và config
 from .pack_code_loader import load_files_content
-from .pack_code_config import DEFAULT_EXTENSIONS, DEFAULT_IGNORE, DEFAULT_START_PATH
+from .pack_code_config import (
+    DEFAULT_EXTENSIONS, DEFAULT_IGNORE, DEFAULT_START_PATH,
+    DEFAULT_OUTPUT_DIR # <-- THÊM MỚI
+)
 # --- END MODIFIED ---
 
 __all__ = ["process_pack_code_logic"]
@@ -150,16 +153,19 @@ def process_pack_code_logic(logger: logging.Logger, **cli_args) -> Dict[str, Any
     final_content = "\n".join(final_content_lines)
 
 
-    # 8. Tính toán Output Path (Giữ nguyên)
+    # 8. Tính toán Output Path
     final_output_path: Optional[Path] = None
     if not stdout and not dry_run:
         if output_path_arg:
             final_output_path = output_path_arg
         else:
-            tmp_dir = scan_root / "tmp"
+            # --- MODIFIED: Sử dụng DEFAULT_OUTPUT_DIR ---
             start_name = start_path.stem if start_path.is_file() else start_path.name
-            final_output_path = tmp_dir / f"{start_name}_context.txt"
-            logger.debug(f"Sử dụng đường dẫn output mặc định: {final_output_path.relative_to(scan_root).as_posix()}")
+            # Sử dụng hằng số mới từ config
+            final_output_path = DEFAULT_OUTPUT_DIR / f"{start_name}_context.txt"
+            # Log đường dẫn tuyệt đối vì nó không còn tương đối với scan_root
+            logger.debug(f"Sử dụng đường dẫn output mặc định: {final_output_path.as_posix()}")
+            # --- END MODIFIED ---
 
     # 9. Trả về Result Object (Giữ nguyên)
     return {

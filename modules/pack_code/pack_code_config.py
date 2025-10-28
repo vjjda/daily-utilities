@@ -10,7 +10,10 @@ from pathlib import Path
 from typing import Dict, Any, Optional, List
 
 # --- NEW: __all__ definition ---
-__all__ = ["DEFAULT_START_PATH", "DEFAULT_EXTENSIONS", "DEFAULT_IGNORE"] # (Auto-generated)
+__all__ = [
+    "DEFAULT_START_PATH", "DEFAULT_EXTENSIONS", "DEFAULT_IGNORE",
+    "DEFAULT_OUTPUT_DIR" # <-- THÊM MỚI
+]
 # --- END NEW ---
 
 # --- Constants generated from tool.spec.toml ---
@@ -23,4 +26,7 @@ DEFAULT_IGNORE = '.venv,venv,__pycache__,.git,.hg,.svn,.DS_Store'
 
 # --- End generated constants ---
 
-# (Ví dụ: DEFAULT_OUTPUT_DIR = Path.home() / 'Documents' / 'pack_code_output')
+# --- THÊM MỚI: Đường dẫn output mặc định ---
+# (Sử dụng os.path.expanduser để xử lý '~')
+DEFAULT_OUTPUT_DIR: Path = Path(os.path.expanduser("~/Documents/code.context"))
+# --- KẾT THÚC THÊM MỚI ---
