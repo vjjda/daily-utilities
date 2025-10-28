@@ -1,7 +1,8 @@
 # Path: modules/check_path/check_path_executor.py
 
 """
-Logic thực thi và báo cáo cho module Path Checker.
+Execution and Reporting logic for the Path Checker (cpath) module.
+(Side-effects: Báo cáo, Xác nhận người dùng, Ghi file)
 """
 
 import logging
@@ -23,7 +24,15 @@ def execute_check_path_action(
     git_warning_str: str,
 ) -> None:
     """
-    Xử lý danh sách các file cần sửa.
+    Xử lý danh sách các file cần sửa, thực hiện side-effects.
+
+    Args:
+        logger: Logger.
+        files_to_fix: Danh sách kết quả từ Analyzer.
+        check_mode: True nếu ở chế độ 'check' (dry-run).
+        fix_command_str: Chuỗi lệnh để chạy lại ở chế độ 'fix'.
+        scan_root: Gốc quét (để tính đường dẫn tương đối).
+        git_warning_str: Cảnh báo Git (nếu có) từ entrypoint.
     """
 
     processed_count = len(files_to_fix)
@@ -45,26 +54,21 @@ def execute_check_path_action(
             except ValueError:
                 rel_path = str(file_path)
             
-            # --- MODIFIED: Đã xóa dòng lặp ---
             logger.warning(f"   -> {rel_path}")
-            # --- END MODIFIED ---
-            
             logger.warning(f"      (Dòng 1 hiện tại: {first_line})")
             logger.warning(f"      (Đề xuất:     {fix_preview})")
 
         # 2. Xử lý theo chế độ
         if check_mode:
-            # --- Chế độ "check" (mặc định) ---
-
+            # --- Chế độ "check" (dry-run) ---
             if git_warning_str:
                 logger.warning(f"\n{git_warning_str}")
 
             logger.warning("-> Để sửa các file này, hãy chạy:")
             logger.warning(f"\n{fix_command_str}\n")
-            sys.exit(1)
+            sys.exit(1) # Thoát với mã lỗi
         else:
-            # --- Chế độ "--fix" ---
-
+            # --- Chế độ "fix" (mặc định) ---
             if git_warning_str:
                 logger.warning(f"\n{git_warning_str}")
 

@@ -28,7 +28,23 @@ def merge_check_path_configs(
 ) -> Dict[str, Any]:
     """
     Hợp nhất các nguồn cấu hình (CLI, File, Default) cho cpath.
-    (Logic này được trích xuất từ check_path_core.py)
+
+    Logic hợp nhất:
+    - extensions: Dùng `resolve_set_modification` (hỗ trợ +/-/~).
+    - ignore: Dùng `resolve_config_list` (File GHI ĐÈ Default) + (CLI NỐI VÀO).
+
+    Args:
+        logger: Logger.
+        cli_extensions: Chuỗi extensions thô từ CLI (ví dụ: "+py,~md").
+        cli_ignore: Chuỗi ignore thô từ CLI (ví dụ: "*.log,build/").
+        file_config_data: Dict cấu hình [cpath] đã load từ file.
+
+    Returns:
+        Một dict chứa các danh sách "final" đã được hợp nhất:
+        {
+            "final_extensions_list": List[str],
+            "final_ignore_list": List[str]
+        }
     """
     
     # --- 1. Hợp nhất Cấu hình 'extensions' ---
@@ -36,17 +52,18 @@ def merge_check_path_configs(
     
     file_ext_list: Optional[List[str]]
     if isinstance(file_extensions_value, str):
+        # Hỗ trợ trường hợp file config dùng string thay vì list
         file_ext_list = list(parse_comma_list(file_extensions_value))
     else:
         file_ext_list = file_extensions_value # Giữ nguyên (List hoặc None)
         
     tentative_extensions: Set[str]
     if file_ext_list is not None:
-         tentative_extensions = set(file_ext_list)
-         logger.debug("Sử dụng danh sách 'extensions' từ file config làm cơ sở.")
+        tentative_extensions = set(file_ext_list)
+        logger.debug("Sử dụng danh sách 'extensions' từ file config làm cơ sở.")
     else:
-         tentative_extensions = DEFAULT_EXTENSIONS
-         logger.debug("Sử dụng danh sách 'extensions' mặc định làm cơ sở.")
+        tentative_extensions = DEFAULT_EXTENSIONS
+        logger.debug("Sử dụng danh sách 'extensions' mặc định làm cơ sở.")
     
     final_extensions_set = resolve_set_modification(
         tentative_set=tentative_extensions,

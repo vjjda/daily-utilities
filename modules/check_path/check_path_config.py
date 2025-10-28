@@ -1,13 +1,12 @@
 # Path: modules/check_path/check_path_config.py
 
 """
-Configuration for the Path Checker module.
-...
+Configuration constants for the Path Checker (cpath) module.
+(Single Source of Truth)
 """
 
 from typing import Dict, Any, Set, Final
 
-# --- MODIFIED: Thêm CONFIG_FILENAME ---
 __all__ = [
     "DEFAULT_IGNORE",
     "DEFAULT_EXTENSIONS",
@@ -15,32 +14,33 @@ __all__ = [
     "COMMENT_RULES_BY_EXT",
     "PROJECT_CONFIG_FILENAME", 
     "CONFIG_SECTION_NAME",
-    "CONFIG_FILENAME" # <-- MỚI
+    "CONFIG_FILENAME"
 ]
-# --- END MODIFIED ---
+
+# --- 1. Scanning Defaults ---
 
 # Các pattern mặc định luôn bị bỏ qua khi quét
-DEFAULT_IGNORE: Set[str] = {
+DEFAULT_IGNORE: Final[Set[str]] = {
     ".venv", "venv", "__pycache__", ".git", 
     "node_modules", "dist", "build", "out"
 }
 
+# Các đuôi file mặc định sẽ được quét
 DEFAULT_EXTENSIONS: Final[Set[str]] = {
     "py", "js", "ts", "css", "scss", "zsh", "sh", 
     "template.toml"
 }
 
-# --- Config file constants ---
-PROJECT_CONFIG_FILENAME: str = ".project.toml"
-# --- NEW: File config cục bộ ---
-CONFIG_FILENAME: str = ".cpath.toml"
-# --- END NEW ---
-CONFIG_SECTION_NAME: str = "cpath"
+# --- 2. Config File Names ---
+PROJECT_CONFIG_FILENAME: Final[str] = ".project.toml"
+CONFIG_FILENAME: Final[str] = ".cpath.toml"
+CONFIG_SECTION_NAME: Final[str] = "cpath"
 
 
-# --- 1. Định nghĩa các quy tắc (Rules) ---
-COMMENT_RULES: Dict[str, Dict[str, Any]] = {
-    # ... (Nội dung không đổi) ...
+# --- 3. Comment Rule Definitions ---
+
+# Định nghĩa các loại comment
+COMMENT_RULES: Final[Dict[str, Dict[str, Any]]] = {
     "hash_line": {
         "type": "line",
         "comment_prefix": "#",
@@ -53,19 +53,18 @@ COMMENT_RULES: Dict[str, Dict[str, Any]] = {
         "type": "block",
         "comment_prefix": "/*",
         "comment_suffix": "*/",
-        "padding": True, 
+        "padding": True, # Thêm khoảng trắng: /* Path: ... */
     },
     "md_block": {
         "type": "block",
         "comment_prefix": "<!--",
         "comment_suffix": "-->",
-        "padding": True, 
+        "padding": True
     }
 }
 
-# --- 2. Ánh xạ Đuôi file (Extensions) tới Quy tắc ---
-COMMENT_RULES_BY_EXT: Dict[str, Dict[str, Any]] = {
-    # ... (Nội dung không đổi) ...
+# Ánh xạ Đuôi file (Extension) tới Quy tắc (Rule)
+COMMENT_RULES_BY_EXT: Final[Dict[str, Dict[str, Any]]] = {
     ".py":   COMMENT_RULES["hash_line"],
     ".zsh":  COMMENT_RULES["hash_line"],
     ".sh":   COMMENT_RULES["hash_line"],

@@ -1,8 +1,8 @@
 # Path: modules/check_path/check_path_loader.py
 
 """
-Tiện ích tải file cho module Path Checker (cpath).
-(Chịu trách nhiệm cho mọi hoạt động I/O đọc)
+File Loading logic for the Path Checker (cpath) module.
+(Responsible for all config read I/O)
 """
 
 import logging
@@ -10,13 +10,11 @@ import sys
 from pathlib import Path
 from typing import Dict, Any, List
 
-# --- MODIFIED: Import helper chung ---
 try:
     from utils.core import load_and_merge_configs
 except ImportError:
     print("Lỗi: Không thể import utils.core. Vui lòng chạy từ gốc dự án.", file=sys.stderr)
     sys.exit(1)
-# --- END MODIFIED ---
 
 
 from .check_path_config import (
@@ -33,15 +31,18 @@ def load_config_files(
     logger: logging.Logger
 ) -> Dict[str, Any]:
     """
-    Tải file .project.toml VÀ .cpath.toml,
-    trích xuất và merge section [cpath].
+    Tải và hợp nhất cấu hình từ .project.toml và .cpath.toml.
     
-    Ưu tiên: .cpath.toml (cục bộ) sẽ ghi đè .project.toml (dự án).
+    Sử dụng logic chung từ `utils.core` để tìm `PROJECT_CONFIG_FILENAME`
+    và `CONFIG_FILENAME`, sau đó trích xuất section `CONFIG_SECTION_NAME`.
     
-    (Logic này đã được chuyển vào utils.core.load_and_merge_configs)
+    Args:
+        start_dir: Thư mục bắt đầu quét config.
+        logger: Logger để ghi log.
+
+    Returns:
+        Một dict chứa cấu hình [cpath] đã được hợp nhất (local ưu tiên hơn project).
     """
-    
-    # --- MODIFIED: Tái sử dụng logic chung ---
     return load_and_merge_configs(
         start_dir=start_dir,
         logger=logger,
@@ -49,4 +50,3 @@ def load_config_files(
         local_config_filename=CONFIG_FILENAME,
         config_section_name=CONFIG_SECTION_NAME
     )
-    # --- END MODIFIED ---

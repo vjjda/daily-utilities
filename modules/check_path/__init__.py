@@ -2,6 +2,9 @@
 
 """
 Module Gateway (Facade) for the Path Checker (cpath) module.
+
+Tự động export tất cả các thành phần public (`__all__`) 
+từ các submodule bên trong.
 """
 
 from pathlib import Path
@@ -11,25 +14,24 @@ from typing import List
 # --- Dynamic Re-export ---
 current_dir = Path(__file__).parent
 
-# --- MODIFIED: Thêm merger và analyzer ---
+# Định nghĩa thứ tự load các module nội bộ
 modules_to_export: List[str] = [
     "check_path_config",
     "check_path_loader",
-    "check_path_merger",    # <-- NEW
-    "check_path_analyzer",  # <-- NEW
+    "check_path_merger",
+    "check_path_analyzer",
     "check_path_core",
     "check_path_executor",
     "check_path_rules",
     "check_path_scanner"
 ]
-# --- END MODIFIED ---
 
 __all__: List[str] = []
 
-# (Logic import giữ nguyên)
 for module_name in modules_to_export:
     try:
         module = import_module(f".{module_name}", package=__name__)
+        
         if hasattr(module, '__all__'):
             public_symbols = getattr(module, '__all__')
             for name in public_symbols:
@@ -39,7 +41,7 @@ for module_name in modules_to_export:
     except ImportError as e:
         print(f"Warning: Could not import symbols from {module_name}: {e}")
 
-# (Cleanup giữ nguyên)
+# Cleanup
 del Path, import_module, List, current_dir, modules_to_export, module_name
 if 'module' in locals(): del module
 if 'public_symbols' in locals(): del public_symbols

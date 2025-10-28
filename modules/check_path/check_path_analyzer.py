@@ -2,6 +2,8 @@
 """
 File Analysis logic for the Path Checker (cpath) module.
 (Internal module, imported by check_path_core.py)
+
+Chịu trách nhiệm đọc nội dung file và so sánh với các quy tắc comment.
 """
 
 import logging
@@ -22,7 +24,24 @@ def analyze_files_for_path_comments(
 ) -> List[Dict[str, Any]]:
     """
     Phân tích danh sách file, tìm các file cần sửa comment Path.
-    (Logic này được trích xuất từ _update_files trong check_path_core.py)
+    
+    Đây là logic thuần túy (chỉ đọc I/O).
+
+    Args:
+        files_to_scan: Danh sách file đã được lọc (từ Scanner).
+        project_root: Gốc dự án (để tính đường dẫn tương đối).
+        logger: Logger.
+
+    Returns:
+        Một danh sách các dict, mỗi dict đại diện cho một file cần sửa.
+        [
+            {
+                "path": Path(...),
+                "line": "dòng 1 hiện tại...",
+                "new_lines": ["dòng 1 mới\n", "dòng 2\n", ...],
+                "fix_preview": "dòng 1 mới (đã strip)"
+            }, ...
+        ]
     """
     files_needing_fix: List[Dict[str, Any]] = []
     if not files_to_scan:
@@ -31,7 +50,7 @@ def analyze_files_for_path_comments(
 
     for file_path in files_to_scan:
         relative_path = file_path.relative_to(project_root)
-        file_ext = "".join(file_path.suffixes) # Xử lý đuôi kép như .py.template
+        file_ext = "".join(file_path.suffixes) # Xử lý đuôi kép (ví dụ: .py.template)
         rule = COMMENT_RULES_BY_EXT.get(file_ext)
 
         if not rule:
@@ -41,7 +60,7 @@ def analyze_files_for_path_comments(
         try:
             try:
                 original_lines = file_path.read_text(encoding='utf-8').splitlines(True)
-                lines = list(original_lines)
+                lines = list(original_lines) # Tạo bản copy để sửa
             except UnicodeDecodeError:
                 logger.warning(f"Bỏ qua file lỗi encoding: {relative_path.as_posix()}")
                 continue
@@ -55,10 +74,11 @@ def analyze_files_for_path_comments(
             except Exception: is_executable = False
             
             first_line_content = lines[0].strip()
-            new_lines = []
+            new_lines: List[str] = []
             correct_comment_str = "" 
             rule_type = rule["type"]
             
+            # Áp dụng quy tắc tương ứng
             if rule_type == "line":
                 prefix = rule["comment_prefix"]
                 correct_comment = f"{prefix} Path: {relative_path.as_posix()}\n"
@@ -75,6 +95,7 @@ def analyze_files_for_path_comments(
                 logger.warning(f"Bỏ qua file: Kiểu quy tắc không rõ '{rule_type}' cho {relative_path.as_posix()}")
                 continue
 
+            # So sánh bản gốc và bản mới
             if new_lines != original_lines:
                 fix_preview_str = correct_comment_str.strip()
                 if first_line_content.startswith("#!") and not is_executable:
