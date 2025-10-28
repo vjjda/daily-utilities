@@ -26,7 +26,6 @@ __all__ = ["process_clipboard_content"]
 DiagramResult = Dict[str, Any]
 
 # --- (Các hàm internal _detect_diagram_type, _remove_comments, _filter_emoji, _trim_leading_comments_and_whitespace không thay đổi) ---
-# ...
 def _detect_diagram_type(content: str) -> Optional[str]:
     """Nhận diện loại biểu đồ (graphviz hoặc mermaid)."""
     # --- MODIFIED: strip() được gọi ở đây để đảm bảo ---
@@ -201,13 +200,8 @@ def process_clipboard_content(
     # 6. Tạo thư mục đầu ra nếu chưa có
     DEFAULT_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     
-    # 7. Lưu file nguồn (nếu chưa tồn tại)
-    if not source_path.exists():
-        with open(source_path, "w", encoding="utf-8") as f:
-            f.write(processed_content)
-        logger.info(f"✍️  Saved new source file: {source_path.name}")
-    else:
-        logger.info(f"🔄 Source file already exists: {source_path.name}")
+    # --- REFACTOR: ĐÃ XÓA BƯỚC 7 (GHI FILE) ---
+    # Logic I/O này sẽ được chuyển sang Executor.
     
     # 8. Trả về kết quả
     return {
