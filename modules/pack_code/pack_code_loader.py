@@ -9,9 +9,44 @@ import logging
 from pathlib import Path
 from typing import Dict, Any, List, Optional
 
-# --- MODIFIED: Cập nhật __all__ ---
-__all__ = ["load_files_content"]
+# --- MODIFIED: Import thêm ---
+import sys
+try:
+    from utils.core import load_and_merge_configs
+except ImportError:
+    print("Lỗi: Không thể import utils.core.", file=sys.stderr)
+    sys.exit(1)
+
+from .pack_code_config import (
+    PROJECT_CONFIG_FILENAME,
+    CONFIG_FILENAME,
+    CONFIG_SECTION_NAME
+)
 # --- END MODIFIED ---
+
+
+# --- MODIFIED: Cập nhật __all__ ---
+__all__ = ["load_files_content", "load_config_files"] # <-- MODIFIED
+# --- END MODIFIED ---
+
+# --- NEW: Hàm load_config_files (Copy từ tree/cpath) ---
+def load_config_files(
+    start_dir: Path,
+    logger: logging.Logger
+) -> Dict[str, Any]:
+    """
+    Tải file .project.toml VÀ .pcode.toml,
+    trích xuất và merge section [pcode].
+    """
+    return load_and_merge_configs(
+        start_dir=start_dir,
+        logger=logger,
+        project_config_filename=PROJECT_CONFIG_FILENAME,
+        local_config_filename=CONFIG_FILENAME,
+        config_section_name=CONFIG_SECTION_NAME
+    )
+# --- END NEW ---
+
 
 # --- MODIFIED: Thay đổi hàm 'load_data' ---
 def load_files_content(
@@ -21,8 +56,8 @@ def load_files_content(
 ) -> Dict[Path, str]:
     """
     Tải nội dung của tất cả các file được yêu cầu.
-    Bỏ qua các file không thể đọc (ví dụ: binary, encoding lỗi).
-    """
+Bỏ qua các file không thể đọc (ví dụ: binary, encoding lỗi).
+"""
     logger.info(f"Đang đọc nội dung từ {len(file_paths)} file...")
     content_map: Dict[Path, str] = {}
     

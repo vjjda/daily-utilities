@@ -22,7 +22,11 @@ from utils.core import (
     compile_spec_from_patterns, # Nhận Iterable[str]
     resolve_set_modification,
     get_submodule_paths,
-    parse_comma_list
+    parse_comma_list,
+    # --- NEW ---
+    resolve_config_list,
+    resolve_config_value
+    # --- END NEW ---
 )
 
 # Import các module con mới
@@ -39,18 +43,23 @@ from .pack_code_config import (
 __all__ = ["process_pack_code_logic"]
 
 
-def process_pack_code_logic(logger: logging.Logger, **cli_args) -> Dict[str, Any]:
+# --- MODIFIED: Thay đổi chữ ký hàm ---
+def process_pack_code_logic(
+    logger: logging.Logger,
+    cli_args: Dict[str, Any],
+    file_config: Dict[str, Any]
+) -> Dict[str, Any]:
+# --- END MODIFIED ---
     """
     Hàm logic chính (Orchestrator).
-    Điều phối việc quét, lọc, tạo cây, đọc và đóng gói nội dung.
-    """
+Điều phối việc quét, lọc, tạo cây, đọc và đóng gói nội dung.
+"""
     logger.info("Core logic running...")
 
+    # --- MODIFIED: Trích xuất tham số từ dict cli_args ---
     # 1. Trích xuất tham số CLI (Giữ nguyên)
-    start_path_from_args = cli_args.get("start_path")
-    start_path: Path = start_path_from_args if isinstance(start_path_from_args, Path) else Path(DEFAULT_START_PATH).resolve()
-
-    output_path_arg: Optional[Path] = cli_args.get("output") # Đã expanduser
+    start_path_from_cli = cli_args.get("start_path") # Đây là Path obj đã expand
+    output_path_from_cli: Optional[Path] = cli_args.get("output") # Đã expanduser
     stdout: bool = cli_args.get("stdout", False)
     ext_cli_str: Optional[str] = cli_args.get("extensions")
     ignore_cli_str: Optional[str] = cli_args.get("ignore")
@@ -58,8 +67,22 @@ def process_pack_code_logic(logger: logging.Logger, **cli_args) -> Dict[str, Any
     dry_run: bool = cli_args.get("dry_run", False)
     no_header: bool = cli_args.get("no_header", False)
     no_tree: bool = cli_args.get("no_tree", False)
+    # --- END MODIFIED ---
 
-    # 2. Xác định Scan Root (Giữ nguyên)
+    # --- NEW: Hợp nhất Start Path (CLI > File > Default) ---
+    start_path_from_file = file_config.get("start_path")
+    
+    # resolve_config_value không hoạt động tốt với Path obj, xử lý thủ công
+    start_path_str: str
+    if start_path_from_cli:
+        start_path = start_path_from_cli
+    elif start_path_from_file:
+        start_path = Path(start_path_from_file).expanduser().resolve()
+    else:
+        start_path = Path(DEFAULT_START_PATH).expanduser().resolve()
+    # --- END NEW ---
+
+    # 2. Xác định Scan Root (Logic giữ nguyên)
     scan_root: Path
     if start_path.is_file():
         scan_root = find_git_root(start_path.parent) or start_path.parent
@@ -76,24 +99,42 @@ def process_pack_code_logic(logger: logging.Logger, **cli_args) -> Dict[str, Any
 
 
     # 3. Hợp nhất bộ lọc
-    # (Logic lọc giữ nguyên)
-    # 3.1. Extensions (Giữ nguyên)
+    
+    # --- MODIFIED: Hợp nhất Extensions (CLI > File > Default) ---
+    # 3.1. Extensions
+    file_ext_list = file_config.get('extensions') # Đây là List[str] hoặc None
     default_ext_set = parse_comma_list(DEFAULT_EXTENSIONS)
-    ext_filter_set = resolve_set_modification(default_ext_set, ext_cli_str)
+    
+    tentative_extensions: Set[str]
+    if file_ext_list is not None:
+        tentative_extensions = set(file_ext_list)
+        logger.debug("Sử dụng 'extensions' từ file config làm cơ sở.")
+    else:
+        tentative_extensions = default_ext_set
+        logger.debug("Sử dụng 'extensions' mặc định làm cơ sở.")
+        
+    ext_filter_set = resolve_set_modification(tentative_extensions, ext_cli_str)
+    # --- END MODIFIED ---
 
+    # --- MODIFIED: Hợp nhất Ignore (CLI + File + Default) ---
     # 3.2. Ignore
     default_ignore_set = parse_comma_list(DEFAULT_IGNORE)
-    cli_ignore_set = parse_comma_list(ignore_cli_str)
+    
+    # Hợp nhất (File > Default) + CLI
+    final_ignore_set = resolve_config_list(
+        cli_str_value=ignore_cli_str,
+        file_list_value=file_config.get('ignore'), # Đây là List[str] hoặc None
+        default_set_value=default_ignore_set
+    )
+    
     gitignore_patterns: List[str] = [] # <-- List
     if not no_gitignore:
         gitignore_patterns = parse_gitignore(scan_root) # <-- List
         logger.debug(f"Đã tải {len(gitignore_patterns)} quy tắc từ .gitignore")
 
-    # --- MODIFIED: Gộp thành List ---
-    # Ưu tiên: Default -> CLI -> Gitignore
+    # Gộp thành List (File/Default/CLI + Gitignore)
     all_ignore_patterns_list: List[str] = (
-        sorted(list(default_ignore_set)) +
-        sorted(list(cli_ignore_set)) +
+        sorted(list(final_ignore_set)) +
         gitignore_patterns
     )
     ignore_spec = compile_spec_from_patterns(all_ignore_patterns_list, scan_root)
@@ -135,7 +176,7 @@ def process_pack_code_logic(logger: logging.Logger, **cli_args) -> Dict[str, Any
         for file_path in files_to_pack:
             content = files_content.get(file_path)
             if content is None:
-                continue
+                 continue
 
             try:
                 rel_path_str = file_path.relative_to(scan_root).as_posix()
@@ -157,17 +198,21 @@ def process_pack_code_logic(logger: logging.Logger, **cli_args) -> Dict[str, Any
     # 8. Tính toán Output Path
     final_output_path: Optional[Path] = None
     if not stdout and not dry_run:
-        if output_path_arg:
-            final_output_path = output_path_arg
+        if output_path_from_cli:
+            final_output_path = output_path_from_cli
         else:
-            # --- MODIFIED: Chuyển logic expanduser vào đây ---
-            # 1. Lấy string từ config và expand nó
-            default_output_dir_path = Path(os.path.expanduser(DEFAULT_OUTPUT_DIR))
+            # --- MODIFIED: Hợp nhất Default Output Dir (File > Default) ---
+            default_output_dir_str = resolve_config_value(
+                cli_value=None,
+                file_value=file_config.get("output_dir"),
+                default_value=DEFAULT_OUTPUT_DIR
+            )
+            default_output_dir_path = Path(os.path.expanduser(default_output_dir_str))
+            # --- END MODIFIED ---
             
-            # 2. Tính toán tên file
+            # 2. Tính toán tên file (Logic giữ nguyên)
             start_name = start_path.stem if start_path.is_file() else start_path.name
             final_output_path = default_output_dir_path / f"{start_name}_context.txt"
-            # --- END MODIFIED ---
 
             logger.debug(f"Sử dụng đường dẫn output mặc định: {final_output_path.as_posix()}")
 
