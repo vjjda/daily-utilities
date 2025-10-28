@@ -93,6 +93,7 @@ def process_pack_code_logic(
             'output_path': final_output_path,
             'stdout': cli_args.get("stdout", False),
             'dry_run': dry_run,
+            'copy_to_clipboard': cli_args.get("copy_to_clipboard", False),
             'file_list_relative': [p.relative_to(scan_root) for p in files_to_pack],
             'scan_root': scan_root,
             'tree_string': tree_str,

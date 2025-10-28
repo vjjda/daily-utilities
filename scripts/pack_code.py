@@ -111,6 +111,13 @@ def main():
         action="store_true",
         help='Không in cây thư mục của các file được chọn ở đầu output.'
     )
+    
+    # --- NEW: Thêm cờ --copy ---
+    pack_group.add_argument(
+        "--copy",
+        action="store_true",
+        help="Sao chép file output (không phải nội dung) vào clipboard hệ thống."
+    )
     # --- Hết arguments ---
     
     # --- NEW: Config Group ---
@@ -187,6 +194,9 @@ def main():
         "dry_run": args.dry_run,
         "no_header": args.no_header,
         "no_tree": args.no_tree,
+        # --- NEW: Thêm cờ copy ---
+        "copy_to_clipboard": args.copy,
+        # --- END NEW ---
     }
     # --- END MODIFIED ---
 

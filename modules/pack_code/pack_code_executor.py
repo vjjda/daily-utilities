@@ -9,6 +9,8 @@ import logging
 import sys
 from pathlib import Path
 from typing import Dict, Any, List, Optional
+from utils.core import copy_file_to_clipboard
+from utils.logging_config import log_success
 
 __all__ = ["execute_pack_code_action"]
 
@@ -34,6 +36,7 @@ def execute_pack_code_action(logger: logging.Logger, result: Dict[str, Any]) -> 
     output_path_raw: Optional[Path] = result.get('output_path') #
     # --- END MODIFIED ---
     scan_root: Path = result.get('scan_root', Path.cwd())
+    copy_to_clipboard: bool = result.get('copy_to_clipboard', False)
 
     # --- 1. Chế độ Dry Run ---
     if dry_run:
@@ -80,6 +83,17 @@ def execute_pack_code_action(logger: logging.Logger, result: Dict[str, Any]) -> 
             
             output_path.write_text(final_content, encoding='utf-8')
             logger.info("✅ Ghi file hoàn tất.")
+
+            # --- NEW: Xử lý --copy ---
+            if copy_to_clipboard:
+                logger.info("Đang sao chép file vào clipboard hệ thống...")
+                copy_success = copy_file_to_clipboard(logger, output_path)
+                if copy_success:
+                    log_success(logger, "Đã sao chép file vào clipboard.")
+                else:
+                    # Lỗi đã được log bên trong hàm utility
+                    logger.warning("⚠️ Không thể sao chép file vào clipboard.")
+            # --- END NEW ---
             
         except IOError as e:
             logger.error(f"❌ Lỗi I/O khi ghi file: {e}")
