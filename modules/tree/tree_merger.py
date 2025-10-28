@@ -1,14 +1,14 @@
 # Path: modules/tree/tree_merger.py
 
 """
-Logic nghiệp vụ cốt lõi cho module Tree (ctree).
-(Các hàm thuần túy, không có I/O hoặc side-effect)
+Configuration Merging logic for the Tree (ctree) module.
+(Internal module, imported by tree_core.py)
 """
 
 from pathlib import Path
 import logging
 import argparse
-from typing import Set, Optional, Dict, Any, TYPE_CHECKING, List, Iterable
+from typing import Set, Optional, Dict, Any, TYPE_CHECKING, List, Iterable, Tuple
 
 try:
     import pathspec
@@ -20,58 +20,31 @@ if TYPE_CHECKING:
 
 from utils.core import (
     get_submodule_paths,
-    parse_gitignore, 
+    parse_gitignore,
     resolve_config_value,
-    resolve_config_list, 
-    compile_spec_from_patterns, 
+    resolve_config_list,
+    compile_spec_from_patterns,
     parse_comma_list,
-    resolve_set_modification 
+    resolve_set_modification
 )
 
 from .tree_config import (
     DEFAULT_IGNORE, DEFAULT_PRUNE, DEFAULT_DIRS_ONLY_LOGIC,
     DEFAULT_MAX_LEVEL, CONFIG_SECTION_NAME,
     FALLBACK_SHOW_SUBMODULES, FALLBACK_USE_GITIGNORE,
-    DEFAULT_EXTENSIONS 
+    DEFAULT_EXTENSIONS
 )
 
 __all__ = ["merge_config_sources"]
 
 
-def merge_config_sources(
+# --- Helper Functions for Merging Specific Configs ---
+
+def _resolve_simple_flags(
     args: argparse.Namespace,
-    file_config: Dict[str, Any], 
-    start_dir: Path,
-    logger: logging.Logger,
-    is_git_repo: bool
+    file_config: Dict[str, Any]
 ) -> Dict[str, Any]:
-    """
-    Hợp nhất cấu hình từ các nguồn: mặc định, file, và đối số CLI.
-    """
-
-    if args.full_view:
-        logger.info("⚡ Chế độ xem đầy đủ. Bỏ qua mọi bộ lọc và giới hạn.")
-        return {
-            "max_level": None,
-            "ignore_spec": None,
-            "submodules": set(),
-            "prune_spec": None,
-            "dirs_only_spec": None,
-            "extensions_filter": None,
-            "is_in_dirs_only_zone": False,
-            "global_dirs_only_flag": False,
-            "using_gitignore": False,
-            "filter_lists": {
-                "ignore": set(),
-                "prune": set(),
-                "dirs_only": set(),
-                "submodules": set(),
-                "extensions": set()
-            }
-        }
-
-    # --- 3. Merge Configs (CLI > File > Default) ---
-
+    """Resolves level, show_submodules, and use_gitignore."""
     final_level = resolve_config_value(
         cli_value=args.level,
         file_value=file_config.get('level'),
@@ -85,28 +58,29 @@ def merge_config_sources(
     )
     final_use_gitignore = False if args.no_gitignore else use_gitignore_from_config
 
-    gitignore_patterns: List[str] = []
-    if is_git_repo and final_use_gitignore:
-        logger.debug("Phát hiện kho Git. Đang tải patterns .gitignore.")
-        gitignore_patterns = parse_gitignore(start_dir) 
-    elif is_git_repo and not final_use_gitignore:
-        logger.debug("Phát hiện kho Git, nhưng bỏ qua .gitignore (do cờ hoặc cấu hình).")
-    else:
-        logger.debug("Không phải kho Git. Bỏ qua .gitignore.")
+    return {
+        "max_level": final_level,
+        "show_submodules": show_submodules,
+        "use_gitignore": final_use_gitignore
+    }
 
-
-    final_ignore_list = resolve_config_list(
-        cli_str_value=args.ignore,
-        file_list_value=file_config.get('ignore'), 
-        default_set_value=DEFAULT_IGNORE
+def _resolve_filter_list(
+    cli_str_value: Optional[str],
+    file_list_value: Optional[List[str]],
+    default_set_value: Set[str]
+) -> List[str]:
+    """Generic resolver for ignore and prune lists using resolve_config_list."""
+    return resolve_config_list(
+        cli_str_value=cli_str_value,
+        file_list_value=file_list_value,
+        default_set_value=default_set_value
     )
 
-    final_prune_list = resolve_config_list(
-        cli_str_value=args.prune,
-        file_list_value=file_config.get('prune'), 
-        default_set_value=DEFAULT_PRUNE
-    )
-
+def _resolve_dirs_only(
+    args: argparse.Namespace,
+    file_config: Dict[str, Any]
+) -> Tuple[Set[str], bool]:
+    """Resolves dirs_only logic, returning the final set and global flag."""
     dirs_only_cli = args.dirs_only
     dirs_only_file = file_config.get('dirs-only', None)
     final_dirs_only_mode = dirs_only_cli if dirs_only_cli is not None else dirs_only_file
@@ -120,8 +94,14 @@ def merge_config_sources(
         dirs_only_list_custom = parse_comma_list(final_dirs_only_mode)
 
     final_dirs_only_set = DEFAULT_DIRS_ONLY_LOGIC.union(dirs_only_list_custom)
+    return final_dirs_only_set, global_dirs_only
 
-
+def _resolve_extensions(
+    logger: logging.Logger,
+    args: argparse.Namespace,
+    file_config: Dict[str, Any]
+) -> Optional[Set[str]]:
+    """Resolves the extensions filter using resolve_set_modification."""
     cli_ext_str = args.extensions
     file_ext_list: Optional[List[str]] = file_config.get('extensions')
 
@@ -134,7 +114,7 @@ def merge_config_sources(
          logger.debug("Sử dụng danh sách 'extensions' mặc định (None) làm cơ sở.")
 
     extensions_filter: Optional[Set[str]]
-    if cli_ext_str is None and tentative_extensions is None: 
+    if cli_ext_str is None and tentative_extensions is None:
         extensions_filter = None
         logger.debug("Không áp dụng bộ lọc 'extensions'.")
     else:
@@ -147,37 +127,119 @@ def merge_config_sources(
              logger.debug(f"Đã áp dụng logic 'extensions' CLI: '{cli_ext_str}'. Set cuối cùng: {extensions_filter}")
         else:
              logger.debug(f"Set 'extensions' cuối cùng (từ config/default): {extensions_filter}")
+    return extensions_filter
 
-    all_ignore_patterns_list: List[str] = final_ignore_list + gitignore_patterns
-    all_prune_patterns_list: List[str] = final_prune_list
-    all_dirs_only_patterns_list: List[str] = sorted(list(final_dirs_only_set))
+def _compile_specs(
+    start_dir: Path,
+    ignore_list: List[str],
+    prune_list: List[str],
+    dirs_only_set: Set[str],
+    gitignore_patterns: List[str]
+) -> Dict[str, Optional['pathspec.PathSpec']]:
+    """Compiles ignore, prune, and dirs_only patterns into PathSpec objects."""
+    all_ignore_patterns_list: List[str] = ignore_list + gitignore_patterns
+    all_prune_patterns_list: List[str] = prune_list
+    all_dirs_only_patterns_list: List[str] = sorted(list(dirs_only_set))
 
-    final_ignore_spec = compile_spec_from_patterns(all_ignore_patterns_list, start_dir)
-    final_prune_spec = compile_spec_from_patterns(all_prune_patterns_list, start_dir)
-    final_dirs_only_spec = compile_spec_from_patterns(all_dirs_only_patterns_list, start_dir)
+    return {
+        "ignore_spec": compile_spec_from_patterns(all_ignore_patterns_list, start_dir),
+        "prune_spec": compile_spec_from_patterns(all_prune_patterns_list, start_dir),
+        "dirs_only_spec": compile_spec_from_patterns(all_dirs_only_patterns_list, start_dir)
+    }
 
+def _get_submodule_info(
+    start_dir: Path,
+    show_submodules: bool,
+    logger: logging.Logger
+) -> Tuple[Set[Path], Set[str]]:
+    """Gets submodule paths and names based on the show_submodules flag."""
     submodule_paths: Set[Path] = set()
     submodule_names: Set[str] = set()
     if not show_submodules:
         submodule_paths = get_submodule_paths(start_dir, logger=logger)
         submodule_names = {p.name for p in submodule_paths}
+    return submodule_paths, submodule_names
 
-    # 4. Return a dict
+
+# --- Main Merging Function (Refactored) ---
+
+def merge_config_sources(
+    args: argparse.Namespace,
+    file_config: Dict[str, Any],
+    start_dir: Path,
+    logger: logging.Logger,
+    is_git_repo: bool
+) -> Dict[str, Any]:
+    """
+    Hợp nhất cấu hình từ các nguồn: mặc định, file, và đối số CLI,
+    sử dụng các hàm helper.
+    """
+
+    # Handle full_view early exit
+    if args.full_view:
+        logger.info("⚡ Chế độ xem đầy đủ. Bỏ qua mọi bộ lọc và giới hạn.")
+        return {
+            "max_level": None, "ignore_spec": None, "submodules": set(),
+            "prune_spec": None, "dirs_only_spec": None, "extensions_filter": None,
+            "is_in_dirs_only_zone": False, "global_dirs_only_flag": False,
+            "using_gitignore": False,
+            "filter_lists": { # Return empty sets for consistency
+                "ignore": set(), "prune": set(), "dirs_only": set(),
+                "submodules": set(), "extensions": set()
+            }
+        }
+
+    # 1. Resolve simple flags
+    simple_flags = _resolve_simple_flags(args, file_config)
+    final_level = simple_flags["max_level"]
+    show_submodules = simple_flags["show_submodules"]
+    final_use_gitignore = simple_flags["use_gitignore"]
+
+    # 2. Parse .gitignore if needed
+    gitignore_patterns: List[str] = []
+    if is_git_repo and final_use_gitignore:
+        logger.debug("Phát hiện kho Git. Đang tải patterns .gitignore.")
+        gitignore_patterns = parse_gitignore(start_dir)
+    elif is_git_repo and not final_use_gitignore:
+        logger.debug("Phát hiện kho Git, nhưng bỏ qua .gitignore (do cờ hoặc cấu hình).")
+    else:
+        logger.debug("Không phải kho Git. Bỏ qua .gitignore.")
+
+    # 3. Resolve filter lists
+    final_ignore_list = _resolve_filter_list(
+        args.ignore, file_config.get('ignore'), DEFAULT_IGNORE
+    )
+    final_prune_list = _resolve_filter_list(
+        args.prune, file_config.get('prune'), DEFAULT_PRUNE
+    )
+    final_dirs_only_set, global_dirs_only_flag = _resolve_dirs_only(args, file_config)
+    final_extensions_filter = _resolve_extensions(logger, args, file_config)
+
+    # 4. Compile specs
+    specs = _compile_specs(
+        start_dir, final_ignore_list, final_prune_list,
+        final_dirs_only_set, gitignore_patterns
+    )
+
+    # 5. Get submodule info
+    submodule_paths, submodule_names = _get_submodule_info(start_dir, show_submodules, logger)
+
+    # 6. Construct and return the final result dictionary
     return {
         "max_level": final_level,
-        "ignore_spec": final_ignore_spec,
-        "prune_spec": final_prune_spec,
-        "dirs_only_spec": final_dirs_only_spec,
-        "extensions_filter": extensions_filter,
+        "ignore_spec": specs["ignore_spec"],
+        "prune_spec": specs["prune_spec"],
+        "dirs_only_spec": specs["dirs_only_spec"],
+        "extensions_filter": final_extensions_filter,
         "submodules": submodule_paths,
-        "is_in_dirs_only_zone": global_dirs_only,
+        "is_in_dirs_only_zone": global_dirs_only_flag, # Initial state for generate_tree
         "using_gitignore": is_git_repo and final_use_gitignore and (len(gitignore_patterns) > 0),
-        "global_dirs_only_flag": global_dirs_only,
-        "filter_lists": {
+        "global_dirs_only_flag": global_dirs_only_flag, # For final result printout
+        "filter_lists": { # For status header printout
             "ignore": set(final_ignore_list),
             "prune": set(final_prune_list),
             "dirs_only": final_dirs_only_set,
             "submodules": submodule_names,
-            "extensions": extensions_filter if extensions_filter is not None else set()
+            "extensions": final_extensions_filter if final_extensions_filter is not None else set()
         }
     }
