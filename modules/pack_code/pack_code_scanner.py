@@ -1,8 +1,8 @@
 # Path: modules/pack_code/pack_code_scanner.py
 
 """
-File Scanning logic for the Pack Code module.
-(Internal module, imported by pack_code_core)
+Logic quét file cho module Pack Code.
+(Module nội bộ, được import bởi pack_code_core)
 """
 
 import logging
@@ -44,19 +44,19 @@ def scan_files(
     if start_path.is_file():
         # Nếu start_path là file, chỉ xử lý file đó
         all_files = [start_path]
-        logger.debug(f"Bắt đầu quét từ file: {start_path.as_posix()}")
+        logger.debug(f"Bắt đầu quét từ file: {start_path.as_posix()}") #
     elif start_path.is_dir():
         # Nếu là thư mục, quét đệ quy
         all_files = list(start_path.rglob("*"))
-        logger.debug(f"Bắt đầu quét từ thư mục: {start_path.as_posix()}")
+        logger.debug(f"Bắt đầu quét từ thư mục: {start_path.as_posix()}") #
     else:
         # Trường hợp không tồn tại đã được xử lý ở resolver
-        logger.error(f"Đường dẫn bắt đầu không hợp lệ: {start_path}")
+        logger.error(f"Đường dẫn bắt đầu không hợp lệ: {start_path}") #
         return []
 
-    logger.debug(f"Số lượng file/thư mục thô tìm thấy: {len(all_files)}")
-    logger.debug(f"Bộ lọc extension: {ext_filter_set}")
-    logger.debug(f"Scan root cho ignore rules: {scan_root.as_posix()}")
+    logger.debug(f"Số lượng file/thư mục thô tìm thấy: {len(all_files)}") #
+    logger.debug(f"Bộ lọc extension: {ext_filter_set}") #
+    logger.debug(f"Scan root cho quy tắc ignore: {scan_root.as_posix()}") #
 
     processed_count = 0
     ignored_count = 0
@@ -72,13 +72,13 @@ def scan_files(
 
         # 1. Bỏ qua file trong submodule
         if any(abs_file_path.is_relative_to(p.resolve()) for p in submodule_paths):
-            logger.debug(f"Skipping (submodule): {file_path.relative_to(scan_root).as_posix()}") #
+            logger.debug(f"Bỏ qua (submodule): {file_path.relative_to(scan_root).as_posix()}") #
             submodule_skip_count += 1
             continue
 
         # 2. Bỏ qua file bị ignore (Config + .gitignore)
         if is_path_matched(file_path, ignore_spec, scan_root):
-            logger.debug(f"Skipping (ignored): {file_path.relative_to(scan_root).as_posix()}") #
+            logger.debug(f"Bỏ qua (bị ignore): {file_path.relative_to(scan_root).as_posix()}") #
             ignored_count += 1
             continue
 
@@ -89,17 +89,17 @@ def scan_files(
             if start_path.is_file() and abs_file_path.samefile(start_path.resolve()):
                 logger.warning(f"File chỉ định {start_path.name} bị bỏ qua do không khớp extension.") #
                 return []
-            logger.debug(f"Skipping (extension mismatch): {file_path.relative_to(scan_root).as_posix()}") #
+            logger.debug(f"Bỏ qua (không khớp extension): {file_path.relative_to(scan_root).as_posix()}") #
             ext_mismatch_count +=1
             continue
 
         files_to_pack.append(file_path)
 
-    logger.debug(f"Quét hoàn tất: Đã xử lý {processed_count} mục.")
-    logger.debug(f" -> Bỏ qua (ignore rule): {ignored_count}") #
-    logger.debug(f" -> Bỏ qua (submodule): {submodule_skip_count}") #
-    logger.debug(f" -> Bỏ qua (extension): {ext_mismatch_count}") #
-    logger.debug(f" -> File hợp lệ: {len(files_to_pack)}") #
+    logger.debug(f"Quét hoàn tất: Đã xử lý {processed_count} mục.") #
+    logger.debug(f" -> Bỏ qua (quy tắc ignore): {ignored_count}")
+    logger.debug(f" -> Bỏ qua (submodule): {submodule_skip_count}")
+    logger.debug(f" -> Bỏ qua (extension): {ext_mismatch_count}")
+    logger.debug(f" -> File hợp lệ: {len(files_to_pack)}")
 
     # Sắp xếp file theo thứ tự alphabet để đảm bảo output ổn định
     files_to_pack.sort(key=lambda p: p.as_posix())

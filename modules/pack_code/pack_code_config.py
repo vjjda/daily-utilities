@@ -1,8 +1,8 @@
 # Path: modules/pack_code/pack_code_config.py
 
 """
-Configuration constants for pack_code.
-(Single Source of Truth)
+Các hằng số cấu hình cho pack_code.
+(Nguồn chân lý duy nhất - Single Source of Truth)
 """
 
 from pathlib import Path
@@ -14,13 +14,13 @@ __all__ = [
     "PROJECT_CONFIG_FILENAME", "CONFIG_FILENAME", "CONFIG_SECTION_NAME"
 ]
 
-# --- Default Values (used if no CLI/Config) ---
+# --- Giá trị Mặc định (sử dụng nếu không có CLI/Config) ---
 DEFAULT_START_PATH: Final[str] = '.'
-DEFAULT_EXTENSIONS: Final[str] = 'md,py,txt,json,xml,yaml,yml,ini,cfg,cfg.py,sh,bash,zsh' # Comma-separated string
-DEFAULT_IGNORE: Final[str] = '.venv,venv,__pycache__,.git,.hg,.svn,.DS_Store' # Comma-separated string
-DEFAULT_OUTPUT_DIR: Final[str] = "~/Documents/code.context" # Path string, potentially with '~'
+DEFAULT_EXTENSIONS: Final[str] = 'md,py,txt,json,xml,yaml,yml,ini,cfg,cfg.py,sh,bash,zsh' # Chuỗi ngăn cách bởi dấu phẩy
+DEFAULT_IGNORE: Final[str] = '.venv,venv,__pycache__,.git,.hg,.svn,.DS_Store' # Chuỗi ngăn cách bởi dấu phẩy
+DEFAULT_OUTPUT_DIR: Final[str] = "~/Documents/code.context" # Chuỗi đường dẫn, có thể chứa '~'
 
-# --- Config File Names ---
+# --- Tên File Cấu hình ---
 PROJECT_CONFIG_FILENAME: Final[str] = ".project.toml"
 CONFIG_FILENAME: Final[str] = ".pcode.toml"
 CONFIG_SECTION_NAME: Final[str] = "pcode"

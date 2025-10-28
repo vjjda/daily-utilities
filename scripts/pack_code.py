@@ -2,16 +2,16 @@
 # Path: scripts/pack_code.py
 
 """
-Entrypoint (command-line interface) for pcode (Pack Code).
+Cổng vào (entrypoint) cho pcode (Pack Code).
 
-This script handles:
-1. Setting up `sys.path` for project imports.
-2. Parsing command-line arguments using Argparse.
-3. Configuring logging.
-4. Handling configuration initialization requests (`--config-local`, `--config-project`).
-5. Preparing a dictionary of basic CLI arguments for the core logic.
-6. Invoking the core processing logic (`process_pack_code_logic`).
-7. Invoking the execution logic (`execute_pack_code_action`) based on the results.
+Script này xử lý:
+1. Thiết lập `sys.path` để import các module dự án.
+2. Phân tích đối số dòng lệnh (Argparse).
+3. Cấu hình logging.
+4. Xử lý yêu cầu khởi tạo config (--config-local, --config-project).
+5. Chuẩn bị dict `cli_args` cơ bản cho Core.
+6. Gọi logic cốt lõi (`process_pack_code_logic`).
+7. Gọi logic thực thi (`execute_pack_code_action`) dựa trên kết quả.
 """
 
 import sys
@@ -20,17 +20,17 @@ import logging
 from pathlib import Path
 from typing import Optional, List, Dict, Any, Final
 
-# Set up sys.path to allow importing project modules
+# Thiết lập sys.path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.append(str(PROJECT_ROOT))
 
 try:
-    # Import shared utilities
+    # Import các tiện ích dùng chung
     from utils.logging_config import setup_logging, log_success
     from utils.cli import handle_config_init_request
     from utils.core import parse_comma_list
 
-    # Import pack_code specific components
+    # Import các thành phần của module pack_code
     from modules.pack_code.pack_code_config import (
         DEFAULT_START_PATH, DEFAULT_EXTENSIONS, DEFAULT_IGNORE,
         DEFAULT_OUTPUT_DIR,
@@ -41,107 +41,107 @@ try:
         execute_pack_code_action,
     )
 except ImportError as e:
-    print(f"Error: Failed to import project utilities/modules. Error: {e}", file=sys.stderr)
+    print(f"Lỗi: Không thể import các tiện ích/module dự án. Lỗi: {e}", file=sys.stderr) #
     sys.exit(1)
 
-# --- Constants Specific to this Entrypoint ---
+# --- Hằng số Cụ thể cho Entrypoint ---
 MODULE_DIR: Final[Path] = PROJECT_ROOT / "modules" / "pack_code"
 TEMPLATE_FILENAME: Final[str] = "pack_code.toml.template"
 
-# Default values used for populating the config template during initialization
+# Giá trị mặc định dùng để tạo template config
 PCODE_DEFAULTS: Final[Dict[str, Any]] = {
     "output_dir": DEFAULT_OUTPUT_DIR,
-    "extensions": list(parse_comma_list(DEFAULT_EXTENSIONS)), # Convert to list for TOML
-    "ignore": list(parse_comma_list(DEFAULT_IGNORE)),       # Convert to list for TOML
+    "extensions": list(parse_comma_list(DEFAULT_EXTENSIONS)), # Chuyển sang list cho TOML
+    "ignore": list(parse_comma_list(DEFAULT_IGNORE)),       # Chuyển sang list cho TOML
 }
 
 def main():
-    """Main function orchestrating the CLI execution."""
+    """Hàm điều phối chính cho CLI."""
 
-    # 1. Define Command-Line Argument Parser
+    # 1. Định nghĩa Parser
     parser = argparse.ArgumentParser(
-        description="Packs the content of multiple files/directories into a single text file.",
-        epilog="Example: pcode ./src -e 'py,md' -o context.txt"
+        description="Đóng gói nội dung của nhiều file/thư mục thành một file văn bản duy nhất.",
+        epilog="Ví dụ: pcode ./src -e 'py,md' -o context.txt"
     )
 
-    # --- Packing Options Group ---
-    pack_group = parser.add_argument_group("Packing Options")
+    # --- Nhóm Tùy chọn Đóng gói ---
+    pack_group = parser.add_argument_group("Tùy chọn Đóng gói") #
     pack_group.add_argument(
         "start_path",
         type=str,
-        nargs="?", # Optional positional argument
-        default=None, # Core logic will handle default/config value
-        help='Path (file or directory) to start scanning. Defaults to "." or config value.'
+        nargs="?", # Tùy chọn
+        default=None, # Core sẽ xử lý default/config
+        help='Đường dẫn (file hoặc thư mục) để bắt đầu quét. Mặc định: "." hoặc giá trị trong config.'
     )
     pack_group.add_argument(
         "-o", "--output",
         type=str,
-        default=None, # Core logic will calculate default if None
-        help="Output file path. Defaults to '[output_dir]/<start_name>_context.txt' based on config."
+        default=None, # Core sẽ tính toán nếu None
+        help="File output để ghi. Mặc định: '[output_dir]/<start_name>_context.txt' (từ config)."
     )
     pack_group.add_argument(
         "-S", "--stdout",
         action="store_true",
-        help='Print the packed content to stdout instead of writing to a file.'
+        help='In kết quả ra stdout (console) thay vì ghi file.'
     )
     pack_group.add_argument(
         "-e", "--extensions",
         type=str,
-        default=None, # Core logic merges this with config/defaults
-        help="Include only these file extensions (e.g., 'py,md'). Supports +/-/~ operators."
+        default=None, # Core sẽ hợp nhất
+        help="Chỉ bao gồm các đuôi file này (vd: 'py,md'). Hỗ trợ +/-/~."
     )
     pack_group.add_argument(
         "-I", "--ignore",
         type=str,
-        default=None, # Core logic merges this with config/defaults
-        help='Patterns (like .gitignore) to ignore (appended to config/defaults).'
+        default=None, # Core sẽ hợp nhất
+        help='Các pattern (giống .gitignore) để bỏ qua (THÊM vào config).'
     )
     pack_group.add_argument(
         "-N", "--no-gitignore",
         action="store_true",
-        help='Do not respect .gitignore files.'
+        help='Không tôn trọng các file .gitignore.'
     )
     pack_group.add_argument(
         "-d", "--dry-run",
         action="store_true",
-        help='Print the list of files that would be packed, without content.'
+        help='Chỉ in danh sách file sẽ được đóng gói (không đọc/in nội dung).'
     )
     pack_group.add_argument(
         "--no-header",
         action="store_true",
-        help="Do not print separator headers ('===== path/to/file.py =====')."
+        help="Không in header phân tách ('===== path/to/file.py =====')."
     )
     pack_group.add_argument(
         "--no-tree",
         action="store_true",
-        help='Do not print the directory tree at the beginning of the output.'
+        help='Không in cây thư mục của các file được chọn ở đầu output.'
     )
     pack_group.add_argument(
         "--copy",
         action="store_true",
-        help="Copy the output *file* (not content) to the system clipboard after writing."
+        help="Sao chép file output (không phải nội dung) vào clipboard hệ thống."
     )
 
-    # --- Config Initialization Group (mutually exclusive with packing) ---
-    config_group = parser.add_argument_group("Config Initialization (run separately)")
+    # --- Nhóm Khởi tạo Config (chạy riêng) ---
+    config_group = parser.add_argument_group("Khởi tạo Cấu hình (chạy riêng)") #
     config_group.add_argument(
         "-c", "--config-project",
         action="store_true",
-        help=f"Initialize/update the [{CONFIG_SECTION_NAME}] section in {PROJECT_CONFIG_FILENAME}."
+        help=f"Khởi tạo/cập nhật section [{CONFIG_SECTION_NAME}] trong {PROJECT_CONFIG_FILENAME}."
     )
     config_group.add_argument(
         "-C", "--config-local",
         action="store_true",
-        help=f"Initialize/update the local {CONFIG_FILENAME} file."
+        help=f"Khởi tạo/cập nhật file {CONFIG_FILENAME} cục bộ." #
     )
 
     args = parser.parse_args()
 
-    # 2. Setup Logging
+    # 2. Cấu hình Logging
     logger = setup_logging(script_name="pcode")
-    logger.debug("pcode script started.")
+    logger.debug("Script pcode bắt đầu.") #
 
-    # 3. Handle Configuration Initialization Request (if flags are present)
+    # 3. Xử lý Yêu cầu Khởi tạo Config
     try:
         config_action_taken = handle_config_init_request(
             logger=logger,
@@ -155,19 +155,17 @@ def main():
             base_defaults=PCODE_DEFAULTS
         )
         if config_action_taken:
-            sys.exit(0) # Exit successfully after config initialization
+            sys.exit(0) # Kết thúc thành công sau khi init config
     except Exception as e:
-        logger.error(f"❌ Error during config initialization: {e}")
+        logger.error(f"❌ Đã xảy ra lỗi khi khởi tạo config: {e}") #
         logger.debug("Traceback:", exc_info=True)
         sys.exit(1)
 
-    # 4. Prepare Basic Path Objects from CLI args
-    # Core logic will handle resolving and further validation
+    # 4. Chuẩn bị Path Objects từ CLI (chỉ expanduser)
     start_path_obj = Path(args.start_path).expanduser() if args.start_path else None
     output_path_obj = Path(args.output).expanduser() if args.output else None
 
-    # 5. Prepare `cli_args` dictionary for Core Logic
-    # Pass basic types and minimally processed paths
+    # 5. Chuẩn bị dict `cli_args` cho Core
     cli_args_dict = {
         "start_path": start_path_obj, # Optional[Path]
         "output": output_path_obj,     # Optional[Path]
@@ -181,27 +179,27 @@ def main():
         "copy_to_clipboard": args.copy,
     }
 
-    # 6. Run Core Logic and Executor
+    # 6. Chạy Core Logic và Executor
     try:
-        # Core logic handles config loading, merging, scanning, packing
+        # Core tự xử lý việc tải config, hợp nhất, quét, đóng gói
         result = process_pack_code_logic(
             logger=logger,
             cli_args=cli_args_dict,
         )
 
-        # Executor handles side-effects based on the result
+        # Executor xử lý side-effects dựa trên kết quả
         if result:
             execute_pack_code_action(
                 logger=logger,
                 result=result
             )
 
-        # Print success message unless in dry-run or stdout mode
+        # In thông báo hoàn thành (trừ dry-run và stdout)
         if not (args.dry_run or args.stdout) and result and result.get('status') == 'ok':
-            log_success(logger, "Operation completed successfully.")
+            log_success(logger, "Hoạt động hoàn tất thành công.") #
 
     except Exception as e:
-        logger.error(f"❌ An unexpected error occurred: {e}")
+        logger.error(f"❌ Đã xảy ra lỗi không mong muốn: {e}") #
         logger.debug("Traceback:", exc_info=True)
         sys.exit(1)
 
@@ -209,5 +207,5 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print("\n\n❌ Operation interrupted by user.")
+        print("\n\n❌ Hoạt động bị dừng bởi người dùng.") #
         sys.exit(1)

@@ -1,8 +1,8 @@
 # Path: modules/pack_code/pack_code_tree.py
 
 """
-Tree Generation logic for the Pack Code module.
-(Internal module, imported by pack_code_core)
+Logic tạo cây thư mục cho module Pack Code.
+(Module nội bộ, được import bởi pack_code_core)
 """
 
 from pathlib import Path
@@ -38,10 +38,10 @@ def generate_tree_string(
         root_display = start_path.relative_to(scan_root).as_posix()
         if root_display == ".":
             # Nếu quét từ gốc, hiển thị tên thư mục gốc
-            root_display = scan_root.name #
+            root_display = scan_root.name
     except ValueError:
         # Nếu start_path nằm ngoài scan_root, chỉ hiển thị tên của nó
-        root_display = start_path.name #
+        root_display = start_path.name
 
     tree_lines.append(f"{root_display}{'/' if start_path.is_dir() else ''}")
 
@@ -56,12 +56,12 @@ def generate_tree_string(
     all_relative_parts: Set[Path] = set()
     for p in file_paths:
         try:
-            rel_p = p.relative_to(start_path) #
+            rel_p = p.relative_to(start_path)
             all_relative_parts.add(rel_p)
             # Thêm tất cả thư mục cha của file vào set
             for parent in rel_p.parents:
                 if parent != Path('.'): # Bỏ qua gốc '.'
-                    all_relative_parts.add(parent) #
+                    all_relative_parts.add(parent)
         except ValueError:
             # Bỏ qua file nếu nó không nằm trong start_path (hiếm khi xảy ra)
             continue
@@ -93,7 +93,7 @@ def generate_tree_string(
 
         # Xác định xem 'part' này có phải là thư mục không
         # (Nó là thư mục nếu nó là cha của một 'part' khác trong danh sách)
-        is_directory = any(p.parent == part for p in sorted_parts) #
+        is_directory = any(p.parent == part for p in sorted_parts)
 
         # Tạo dòng hiển thị
         line = f"{prefix}{pointer}{part.name}{'/' if is_directory else ''}"
@@ -102,7 +102,7 @@ def generate_tree_string(
         # Cập nhật/Xóa prefix cho các cấp độ sau
         if is_directory:
             # Lưu prefix cho cấp độ hiện tại để các cấp con sử dụng
-            level_prefixes[level] = "    " if is_last else "│   " #
+            level_prefixes[level] = "    " if is_last else "│   "
         elif is_last:
             # Nếu là file cuối cùng, xóa prefix của các cấp sâu hơn (nếu có)
             # để tránh vẽ đường dọc thừa

@@ -1,6 +1,6 @@
 # Path: modules/pack_code/__init__.py
 """
-Module Gateway (Facade) for pack_code.
+Cổng giao tiếp (Facade) cho module pack_code.
 
 Tự động export tất cả các thành phần public (`__all__`)
 từ các submodule bên trong.
@@ -10,7 +10,7 @@ from pathlib import Path
 from importlib import import_module
 from typing import List
 
-# --- Dynamic Re-export ---
+# --- Tự động Tái xuất (Dynamic Re-export) ---
 current_dir = Path(__file__).parent
 
 # Định nghĩa thứ tự load các module nội bộ
@@ -39,9 +39,9 @@ for submodule_stem in modules_to_export:
             __all__.extend(public_symbols)
 
     except ImportError as e:
-        print(f"Warning: Could not import symbols from {submodule_stem}: {e}")
+        print(f"Cảnh báo: Không thể import từ {submodule_stem}: {e}") #
 
-# Cleanup
+# Dọn dẹp
 del Path, import_module, List, current_dir, modules_to_export, submodule_stem
 if 'module' in locals():
     del module

@@ -1,8 +1,8 @@
 # Path: modules/pack_code/pack_code_loader.py
 
 """
-File Loading logic for pack_code.
-(Responsible for reading config files and source file content)
+Logic tải file cho pack_code.
+(Chịu trách nhiệm đọc file cấu hình và nội dung file nguồn)
 """
 
 import logging
@@ -68,7 +68,7 @@ def load_files_content(
     Returns:
         Một dict ánh xạ từ Path đến nội dung (str) của file.
     """
-    logger.info(f"Đang đọc nội dung từ {len(file_paths)} file...")
+    logger.info(f"Đang đọc nội dung từ {len(file_paths)} file...") #
     content_map: Dict[Path, str] = {}
     skipped_count = 0
 
@@ -78,16 +78,16 @@ def load_files_content(
             content = file_path.read_text(encoding='utf-8')
             content_map[file_path] = content
         except UnicodeDecodeError:
-            logger.warning(f"   -> Bỏ qua (lỗi encoding): {file_path.relative_to(base_dir).as_posix()}") #
+            logger.warning(f"   -> Bỏ qua (lỗi encoding): {file_path.relative_to(base_dir).as_posix()}")
             skipped_count += 1
         except IOError as e:
-            logger.warning(f"   -> Bỏ qua (lỗi I/O: {e}): {file_path.relative_to(base_dir).as_posix()}") #
+            logger.warning(f"   -> Bỏ qua (lỗi I/O: {e}): {file_path.relative_to(base_dir).as_posix()}")
             skipped_count += 1
         except Exception as e:
-            logger.warning(f"   -> Bỏ qua (lỗi không xác định: {e}): {file_path.relative_to(base_dir).as_posix()}") #
+            logger.warning(f"   -> Bỏ qua (lỗi không xác định: {e}): {file_path.relative_to(base_dir).as_posix()}")
             skipped_count += 1
 
     if skipped_count > 0:
-        logger.warning(f"Đã bỏ qua tổng cộng {skipped_count} file không thể đọc.")
+        logger.warning(f"Đã bỏ qua tổng cộng {skipped_count} file không thể đọc.") #
 
     return content_map

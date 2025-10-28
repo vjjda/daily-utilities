@@ -1,7 +1,7 @@
 # Path: modules/pack_code/pack_code_resolver.py
 """
-Logic for resolving paths and filters for pack_code.
-(Internal module, imported by pack_code_core)
+Logic xác định đường dẫn và bộ lọc cho pack_code.
+(Module nội bộ, được import bởi pack_code_core)
 """
 
 import logging
@@ -53,11 +53,11 @@ def resolve_start_and_scan_paths(
     start_path: Path
     if start_path_from_cli:
         start_path = start_path_from_cli
-        logger.debug(f"Sử dụng start path từ CLI: {start_path.as_posix()}")
+        logger.debug(f"Sử dụng đường dẫn bắt đầu từ CLI: {start_path.as_posix()}") #
     else:
         # Nếu CLI không cung cấp, dùng default (thường là '.')
         start_path = Path(DEFAULT_START_PATH).expanduser().resolve()
-        logger.debug(f"Sử dụng start path mặc định: {start_path.as_posix()}")
+        logger.debug(f"Sử dụng đường dẫn bắt đầu mặc định: {start_path.as_posix()}") #
 
     # 2. Xác định Scan Root
     scan_root: Path
@@ -73,11 +73,11 @@ def resolve_start_and_scan_paths(
 
     # 3. Validation cuối cùng
     if not start_path.exists():
-         logger.error(f"❌ Lỗi: Đường dẫn bắt đầu không tồn tại: {start_path.as_posix()}")
-         raise FileNotFoundError(f"Start path not found: {start_path.as_posix()}") #
+         logger.error(f"❌ Lỗi: Đường dẫn bắt đầu không tồn tại: {start_path.as_posix()}") #
+         raise FileNotFoundError(f"Đường dẫn bắt đầu không tồn tại: {start_path.as_posix()}") #
 
-    logger.debug(f"Scan Root (cho quy tắc .gitignore): {scan_root.as_posix()}")
-    logger.debug(f"Start Path (nơi bắt đầu quét): {start_path.as_posix()}")
+    logger.debug(f"Gốc quét (cho quy tắc .gitignore): {scan_root.as_posix()}") #
+    logger.debug(f"Đường dẫn bắt đầu quét: {start_path.as_posix()}") #
 
     return start_path, scan_root
 
@@ -111,15 +111,15 @@ def resolve_filters(
     tentative_extensions: Set[str]
     if file_ext_list is not None:
         tentative_extensions = set(file_ext_list)
-        logger.debug("Sử dụng 'extensions' từ file config làm cơ sở.")
+        logger.debug("Sử dụng 'extensions' từ file config làm cơ sở.") #
     else:
         tentative_extensions = default_ext_set
-        logger.debug("Sử dụng 'extensions' mặc định làm cơ sở.")
+        logger.debug("Sử dụng 'extensions' mặc định làm cơ sở.") #
 
     ext_filter_set = resolve_set_modification(
         tentative_extensions, cli_args.get("extensions") # cli_args["extensions"] là string
     )
-    logger.debug(f"Set 'extensions' cuối cùng: {sorted(list(ext_filter_set))}")
+    logger.debug(f"Set 'extensions' cuối cùng: {sorted(list(ext_filter_set))}") #
 
     # 2. Hợp nhất Ignore (File GHI ĐÈ Default) + (CLI NỐI VÀO) + (.gitignore)
     default_ignore_set = parse_comma_list(DEFAULT_IGNORE)
@@ -136,21 +136,21 @@ def resolve_filters(
     if not cli_args.get("no_gitignore", False):
         gitignore_patterns = parse_gitignore(scan_root)
         if gitignore_patterns:
-             logger.debug(f"Đã tải {len(gitignore_patterns)} quy tắc từ .gitignore")
+             logger.debug(f"Đã tải {len(gitignore_patterns)} quy tắc từ .gitignore") #
         else:
-             logger.debug("Không tìm thấy .gitignore hoặc không thể đọc.")
+             logger.debug("Không tìm thấy .gitignore hoặc không thể đọc.") #
     else:
-        logger.info("Bỏ qua .gitignore do cờ --no-gitignore.")
+        logger.info("Bỏ qua .gitignore do cờ --no-gitignore.") #
 
     # Bước 2c: Biên dịch thành PathSpec
     all_ignore_patterns_list: List[str] = config_cli_ignore_list + gitignore_patterns
     ignore_spec = compile_spec_from_patterns(all_ignore_patterns_list, scan_root)
-    logger.debug(f"Tổng cộng {len(all_ignore_patterns_list)} quy tắc ignore đã biên dịch.")
+    logger.debug(f"Tổng cộng {len(all_ignore_patterns_list)} quy tắc ignore đã biên dịch.") #
 
     # 3. Lấy đường dẫn Submodules
     submodule_paths = get_submodule_paths(scan_root, logger)
     if submodule_paths:
-        logger.debug(f"Tìm thấy {len(submodule_paths)} submodule(s). Sẽ bỏ qua nội dung của chúng.")
+        logger.debug(f"Tìm thấy {len(submodule_paths)} submodule. Sẽ bỏ qua nội dung của chúng.") #
 
     return ext_filter_set, ignore_spec, submodule_paths
 
@@ -181,7 +181,7 @@ def resolve_output_path(
         start_path: Đường dẫn bắt đầu quét (để lấy tên file mặc định).
 
     Returns:
-        Path object đến file output, hoặc None.
+        Path object đến file output (chưa expand), hoặc None.
     """
     if cli_args.get("stdout", False) or cli_args.get("dry_run", False):
         return None # Không cần path nếu in ra stdout hoặc dry run
@@ -189,7 +189,7 @@ def resolve_output_path(
     # 1. Ưu tiên CLI
     output_path_from_cli: Optional[Path] = cli_args.get("output")
     if output_path_from_cli:
-        logger.debug(f"Sử dụng đường dẫn output từ CLI: {output_path_from_cli.as_posix()}")
+        logger.debug(f"Sử dụng đường dẫn output từ CLI: {output_path_from_cli.as_posix()}") #
         return output_path_from_cli
 
     # 2. Xây dựng đường dẫn mặc định
@@ -205,5 +205,5 @@ def resolve_output_path(
     start_name = start_path.stem if start_path.is_file() else start_path.name
     final_output_path = default_output_dir_path / f"{start_name}_context.txt"
 
-    logger.debug(f"Sử dụng đường dẫn output mặc định (chưa expand): {final_output_path.as_posix()}")
+    logger.debug(f"Sử dụng đường dẫn output mặc định (chưa expand): {final_output_path.as_posix()}") #
     return final_output_path
