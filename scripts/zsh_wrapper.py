@@ -8,25 +8,23 @@ from typing import Optional
 # (Xóa import typer)
 
 # --- 1. Tự xác định Project Root của tool (daily-utilities) để import ---
-# PROJECT_ROOT sẽ là thư mục cha của thư mục scripts.
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-sys.path.append(str(PROJECT_ROOT))
+PROJECT_ROOT = Path(__file__).resolve().parent.parent # 
+sys.path.append(str(PROJECT_ROOT)) # 
 
 try:
     from utils.logging_config import setup_logging, log_success
     
+    # --- MODIFIED: Import hàm điều phối mới ---
     from modules.zsh_wrapper import (
         DEFAULT_MODE, 
         DEFAULT_VENV, 
-        process_zsh_wrapper_logic,
-        execute_zsh_wrapper_action,
-        # Import helpers cho logic tương tác
-        resolve_output_path_interactively,
-        resolve_root_interactively
+        run_zsh_wrapper # <-- Hàm điều phối chính
+        # (Xóa các import không cần thiết khác)
     )
+    # --- END MODIFIED ---
     
 except ImportError as e:
-    print(f"Lỗi: Không thể import utils/modules. Đảm bảo bạn đang chạy từ Project Root: {e}", file=sys.stderr)
+    print(f"Lỗi: Không thể import utils/modules. Đảm bảo bạn đang chạy từ Project Root: {e}", file=sys.stderr) # 
     sys.exit(1)
 
 # --- CONSTANTS ---
@@ -39,17 +37,17 @@ def main():
     (Phiên bản Argparse)
     """
     
-    # 1. Định nghĩa Parser
+    # 1. Định nghĩa Parser (Giữ nguyên)
     parser = argparse.ArgumentParser(
         description="Tạo một wrapper Zsh cho một script Python, tự động quản lý venv và PYTHONPATH.",
-        formatter_class=argparse.RawTextHelpFormatter
+        formatter_class=argparse.RawTextHelpFormatter # 
     )
     
     # Arguments
     parser.add_argument(
         "script_path_arg", 
         type=str,
-        help="Đường dẫn đến file Python cần wrap. Use '~' for home directory."
+        help="Đường dẫn đến file Python cần wrap.\nUse '~' for home directory." # [cite: 559-560]
     )
     
     # Options
@@ -57,120 +55,72 @@ def main():
         "-o", "--output", 
         type=str,
         default=None,
-        help="Đường dẫn tạo wrapper. [Mặc định: bin/ (cho relative) hoặc $HOME/bin (cho absolute)]. Use '~' for home directory."
+        help="Đường dẫn tạo wrapper. [Mặc định: bin/ (cho relative) hoặc $HOME/bin (cho absolute)].\nUse '~' for home directory." # 
     )
     
     parser.add_argument(
         "-m", "--mode", 
-        type=str,
+        type=str, # 
         default=DEFAULT_MODE, 
         choices=['relative', 'absolute'],
-        help="Loại wrapper: 'relative' (project di chuyển được) hoặc 'absolute' (wrapper di chuyển được)."
+        help="Loại wrapper: 'relative' (project di chuyển được) hoặc 'absolute' (wrapper di chuyển được)." # 
     )
     
     parser.add_argument(
         "-r", "--root", 
         type=str,
         default=None,
-        help="Chỉ định Project Root. Mặc định: tự động tìm (find_git_root() từ file script). Use '~' for home directory."
+        help="Chỉ định Project Root. Mặc định: tự động tìm (find_git_root() từ file script).\nUse '~' for home directory." # [cite: 561-562]
     )
     
     parser.add_argument(
         "-v", "--venv", 
         type=str,
         default=DEFAULT_VENV, 
-        help="Tên thư mục virtual environment."
+        help="Tên thư mục virtual environment." # 
     )
     
     parser.add_argument(
         "-f", "--force", 
         action="store_true",
-        help="Ghi đè file output nếu đã tồn tại."
+        help="Ghi đè file output nếu đã tồn tại." # [cite: 562-563]
     )
     
     args = parser.parse_args()
     
-    # --- 2. Setup Logging & Initial Path Expansion (Manual) ---
+    # --- 2. Setup Logging (Giữ nguyên) ---
     logger = setup_logging(script_name="Zrap")
     logger.debug("Zrap script started.")
 
-    # Mở rộng `~` cho tất cả Path, chuyển Argparse str sang Path/str
-    script_path = Path(args.script_path_arg).expanduser()
-    output_arg_path = Path(args.output).expanduser() if args.output else None
-    root_arg_path = Path(args.root).expanduser() if args.root else None
-    
-    # --- 3. TẠO args Lần 1 (Root Determination) ---
-    # Chạy Core Logic lần 1 với output=None chỉ để xác định Project Root/Fallback.
-    args_for_core_temp = argparse.Namespace(
-        script_path=str(script_path), 
-        output=None, # Tạm thời là None
-        mode=args.mode,
-        root=str(root_arg_path) if root_arg_path else None, 
-        venv=args.venv,
-        force=args.force
-    )
+    # --- REMOVED: Initial Path Expansion (chuyển vào core) ---
+    # --- REMOVED: Gọi core lần 1 ---
+    # --- REMOVED: Xử lý fallback ---
+    # --- REMOVED: Gọi resolve_root_interactively ---
+    # --- REMOVED: Gọi resolve_output_path_interactively ---
+    # --- REMOVED: Tạo args_for_core_final ---
+    # --- REMOVED: Gọi core lần 2 và executor ---
 
-    # --- 4. XÁC ĐỊNH & XỬ LÝ PROJECT ROOT (BƯỚC ƯU TIÊN) ---
-    final_root: Path
-    temp_result = process_zsh_wrapper_logic( logger=logger, args=args_for_core_temp )
-    
-    if temp_result and temp_result.get("status") == "fallback_required":
-        # Cần tương tác để xác định Project Root (S/I/Q)
-        fallback_path: Path = temp_result["fallback_path"]
-        final_root = resolve_root_interactively(
-            logger=logger,
-            fallback_path=fallback_path
-        )
-        # resolve_root_interactively sẽ tự động gọi sys.exit(0) nếu người dùng chọn 'Q'
-    elif temp_result and temp_result.get("status") == "ok":
-        # Project Root đã được tìm thấy (hoặc chỉ định) trong lần chạy Core 1
-        final_root = temp_result["project_root_abs"] 
-    else:
-        # Xảy ra lỗi nghiêm trọng khác (Core Logic đã log)
-        sys.exit(1)
+    # --- 3. Gọi Hàm Điều Phối Chính (Mới) ---
+    try:
+        success = run_zsh_wrapper(logger=logger, cli_args=args)
         
-    logger.info(f"Root đã xác định cuối cùng: {final_root.as_posix()}")
-
-    # --- 5. XỬ LÝ OUTPUT PATH (Sử dụng final_root đã xác định) ---
-    # Logic S/I/Q cho Output Path (-o)
-    final_output_path: Path = resolve_output_path_interactively(
-        logger=logger, 
-        script_path=script_path, 
-        output_arg=output_arg_path, 
-        mode=args.mode,
-        project_root=final_root
-    )
-    # resolve_output_path_interactively sẽ tự động gọi sys.exit(0) nếu người dùng chọn 'Q'
-    
-    # --- 6. TẠO args & CHẠY CORE LẦN CUỐI (Tạo wrapper) ---
-    args_for_core_final = argparse.Namespace(
-        script_path=str(script_path), 
-        output=str(final_output_path), 
-        mode=args.mode,
-        root=str(final_root), # LUÔN CÓ GIÁ TRỊ TƯỜNG MINH
-        venv=args.venv,
-        force=args.force
-    )
-    
-    # Chạy Core Logic lần cuối để tạo nội dung wrapper
-    result = process_zsh_wrapper_logic( logger=logger, args=args_for_core_final )
-    
-    # --- 7. Execute Action ---
-    if result and result.get("status") == "ok": 
-        execute_zsh_wrapper_action( logger=logger, result=result )
-        log_success(logger, "Hoàn thành.")
-    elif result and result.get("status") == "error":
-         # Log lỗi cuối cùng nếu Core Logic không trả về 'ok' (ví dụ: lỗi relpath)
-         logger.error(f"❌ Core logic failed during final execution: {result.get('message', 'Unknown error')}")
-         sys.exit(1)
-    else:
-        # Nếu result là None, có thể Core Logic đã tự thoát hoặc lỗi nghiêm trọng
+        if success:
+            log_success(logger, "Hoàn thành.") # 
+        else:
+            # Lỗi đã được log bên trong run_zsh_wrapper
+            sys.exit(1) # Thoát với mã lỗi
+            
+    except Exception as e:
+        # Bắt các lỗi không mong muốn khác
+        logger.error(f"❌ Đã xảy ra lỗi không mong muốn ở entrypoint: {e}")
+        logger.debug("Traceback:", exc_info=True)
         sys.exit(1)
+    # --- END MODIFIED ---
 
 
 if __name__ == "__main__":
     try: 
         main()
     except KeyboardInterrupt: 
-        print("\n\n❌ [Lệnh dừng] Hoạt động của tool đã bị dừng bởi người dùng (Ctrl+C).")
+        print("\n\n❌ [Lệnh dừng] Hoạt động của tool đã bị dừng bởi người dùng (Ctrl+C).") # 
         sys.exit(1)

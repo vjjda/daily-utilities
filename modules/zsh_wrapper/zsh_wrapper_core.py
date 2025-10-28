@@ -2,19 +2,27 @@
 
 """
 Core logic for zsh_wrapper (zrap).
+Handles orchestration and content generation.
 """
 
 import logging
 import os
+import argparse # <-- NEW
 from pathlib import Path
-# --- MODIFIED: Thêm Tuple vào import ---
 from typing import Dict, Any, List, Optional, Tuple
-# --- END MODIFIED ---
 
-# Import từ utils
+# Import utils
 from utils.core import find_git_root
 
-__all__ = ["process_zsh_wrapper_logic"]
+# --- MODIFIED: Import helpers and executor ---
+from .zsh_wrapper_helpers import resolve_output_path_interactively, resolve_root_interactively
+from .zsh_wrapper_executor import execute_zsh_wrapper_action
+from .zsh_wrapper_config import DEFAULT_MODE, DEFAULT_VENV # Import defaults nếu cần
+# --- END MODIFIED ---
+
+# --- MODIFIED: Cập nhật __all__ ---
+__all__ = ["run_zsh_wrapper"]
+# --- END MODIFIED ---
 
 # Thư mục chứa template của module này
 TEMPLATE_DIR = Path(__file__).parent / "templates"
@@ -26,8 +34,7 @@ def _load_template(template_name: str) -> str:
         raise FileNotFoundError(f"Không tìm thấy template: {template_name}")
     return path.read_text(encoding='utf-8')
 
-# --- MODIFIED: Thay đổi hàm để trả về Tuple[Path, bool] ---
-def _find_project_root(logger: logging.Logger, script_path: Path, root_arg: Optional[str]) -> Tuple[Path, bool]:
+def _find_project_root(logger: logging.Logger, script_path: Path, root_arg: Optional[str]) -> Tuple[Path, bool]: #
     """
     Tìm Project Root, ưu tiên --root, sau đó là find_git_root.
     Trả về (project_root, is_fallback_required).
@@ -37,17 +44,14 @@ def _find_project_root(logger: logging.Logger, script_path: Path, root_arg: Opti
         return Path(root_arg).resolve(), False
     
     logger.debug(f"Đang tự động tìm Project Root (Git) từ: {script_path.parent}")
-    # Chúng ta dùng find_git_root từ utils/core.py
     git_root = find_git_root(script_path.parent) 
     if git_root:
         logger.debug(f"Đã tìm thấy Git root: {git_root}")
         return git_root, False
     
-    # Fallback case (Git root not found)
-    fallback_path = script_path.parent.resolve()
-    logger.warning(f"Không tìm thấy Git root. Đề xuất Project Root dự phòng: {fallback_path}")
-    return fallback_path, True # <-- Trả về đường dẫn dự phòng VÀ cờ True
-# --- END MODIFIED ---
+    fallback_path = script_path.parent.resolve() #
+    logger.warning(f"Không tìm thấy Git root. Đề xuất Project Root dự phòng: {fallback_path}") #
+    return fallback_path, True #
 
 def _prepare_absolute_mode(
     template_content: str, 
@@ -57,7 +61,7 @@ def _prepare_absolute_mode(
     return template_content.format(
         project_root_abs=str(paths["project_root"]),
         venv_path_abs=str(paths["venv_path"]),
-        script_path_abs=str(paths["script_path"])
+        script_path_abs=str(paths["script_path"]) #
     )
 
 def _prepare_relative_mode(
@@ -66,116 +70,160 @@ def _prepare_relative_mode(
     paths: Dict[str, Path]
 ) -> str:
     """Điền template cho mode 'relative'."""
-    
-    # 1. Path từ thư mục output -> project root
     output_dir = paths["output_path"].parent
     try:
         project_root_rel_to_output = os.path.relpath(
             paths["project_root"], 
             start=output_dir
-        )
+        ) #
     except ValueError:
-        logger.error("Lỗi: Không thể tính đường dẫn tương đối. Project Root và Output dường như ở 2 ổ đĩa khác nhau.")
+        logger.error("Lỗi: Không thể tính đường dẫn tương đối.") #
+        logger.error("Project Root và Output dường như ở 2 ổ đĩa khác nhau.") #
         raise
     
-    # 2. Path từ project root -> script
     script_path_rel_to_project = paths["script_path"].relative_to(paths["project_root"])
-    
-    # 3. Path từ project root -> venv
     venv_path_rel_to_project = paths["venv_path"].relative_to(paths["project_root"])
-    
-    # 4. Path từ project root -> output file (cho # Path: comment)
     output_path_rel_to_project = paths["output_path"].relative_to(paths["project_root"])
 
     return template_content.format(
-        project_root_rel_to_output=project_root_rel_to_output,
-        venv_path_rel_to_project=venv_path_rel_to_project.as_posix(),
-        script_path_rel_to_project=script_path_rel_to_project.as_posix(),
-        output_path_rel_to_project=output_path_rel_to_project.as_posix()
+        project_root_rel_to_output=project_root_rel_to_output, #
+        venv_path_rel_to_project=venv_path_rel_to_project.as_posix(), #
+        script_path_rel_to_project=script_path_rel_to_project.as_posix(), #
+        output_path_rel_to_project=output_path_rel_to_project.as_posix() #
     )
 
-# --- MODIFIED: Cập nhật hàm chính để trả về trạng thái fallback ---
-def process_zsh_wrapper_logic(
+# --- MODIFIED: Hàm logic gốc được đổi tên và đơn giản hóa ---
+def _generate_wrapper_content(
     logger: logging.Logger, 
-    args: Any
-) -> Dict[str, Any]:
+    script_path: Path,
+    output_path: Path,
+    project_root: Path,
+    venv_name: str,
+    mode: str
+) -> Optional[str]:
     """
-    Hàm logic chính, phân tích, tính toán và tạo nội dung wrapper.
-    
-    Nếu args.output là None, chỉ chạy logic xác định Project Root.
+    Tạo nội dung wrapper dựa trên các đường dẫn đã được xác định đầy đủ.
+    Trả về nội dung (str) nếu thành công, None nếu lỗi.
     """
-    
-    # 1. Lấy và kiểm tra các đường dẫn cơ bản
-    script_path = Path(args.script_path).resolve()
-    
-    # 2. Xác định Project Root
-    project_root, is_fallback = _find_project_root(logger, script_path, args.root)
-
-    # 2.5. Nếu cần fallback VÀ người dùng CHƯA chỉ định root tường minh
-    if is_fallback and args.root is None: # Thêm kiểm tra args.root is None để chỉ chạy khi tự động tìm thấy
-        # Trả về đối tượng báo hiệu cho entry point (scripts/zsh_wrapper.py)
-        # để nó tiến hành hỏi người dùng.
-        return {
-            "status": "fallback_required",
-            "fallback_path": project_root, # Đường dẫn dự phòng
-            "script_path": script_path,
-            "output_path": None, # Chưa có
-            "venv": args.venv,
-            "mode": args.mode,
-            "force": args.force,
-        }
-    
-    # --- NEW: BƯỚC THOÁT SỚM (Chỉ chạy để xác định Project Root) ---
-    if args.output is None:
-        return {
-            "status": "ok",
-            "project_root_abs": project_root.resolve(), # Trả về Root đã resolve/tìm được
-            # Không có final_content/output_path
-        }
-    # --- END NEW ---
-
-    # (Tiếp tục xử lý nếu Project Root đã được xác định hợp lệ VÀ args.output đã có)
-    output_path = Path(args.output).resolve()
-    venv_path = project_root / args.venv
+    venv_path = project_root / venv_name
     
     paths = {
         "script_path": script_path,
-        "output_path": output_path,
-        "project_root": project_root,
-        "venv_path": venv_path
+        "output_path": output_path, #
+        "project_root": project_root, #
+        "venv_path": venv_path #
     }
-    logger.debug(f"Đã giải quyết các đường dẫn: {paths}")
+    logger.debug(f"Đã giải quyết các đường dẫn cuối cùng: {paths}") #
     
     final_content = ""
-
-    # 3. Xử lý theo mode
-    # ... (Phần này không đổi: Tạo final_content) ...
-    if args.mode == "absolute":
-        logger.info("Chế độ 'absolute': Tạo wrapper với đường dẫn tuyệt đối.")
-        template = _load_template("absolute.zsh.template")
-        final_content = _prepare_absolute_mode(template, paths)
+    try:
+        if mode == "absolute":
+            logger.info("Chế độ 'absolute': Tạo wrapper với đường dẫn tuyệt đối.")
+            template = _load_template("absolute.zsh.template")
+            final_content = _prepare_absolute_mode(template, paths) #
+            
+        elif mode == "relative":
+            logger.info("Chế độ 'relative': Tạo wrapper với đường dẫn tương đối.")
+            template = _load_template("relative.zsh.template")
+            final_content = _prepare_relative_mode(logger, template, paths) #
         
-    elif args.mode == "relative":
-        logger.info("Chế độ 'relative': Tạo wrapper với đường dẫn tương đối.")
-        template = _load_template("relative.zsh.template")
-        try:
-            final_content = _prepare_relative_mode(logger, template, paths)
-        except ValueError:
-            logger.error("❌ ERROR: When using 'relative' mode, the output file must be INSIDE the Project Root directory.")
-            logger.error(f"   Output path: {paths['output_path'].as_posix()}")
-            logger.error(f"   Project Root: {paths['project_root'].as_posix()}")
-            logger.error("   Suggestion: Create the wrapper inside the project's 'bin' directory HOẶC sử dụng 'absolute' mode (-m absolute).")
-            return {
-                "status": "error",
-                "message": "Relative path calculation failed."
-            }
+        return final_content
 
-    # 4. Trả về kết quả cho executor
-    return {
-        "status": "ok",
+    except ValueError: # Bắt lỗi từ _prepare_relative_mode
+        logger.error("❌ ERROR: When using 'relative' mode, the output file must be INSIDE the Project Root directory.") #
+        logger.error(f"   Output path: {paths['output_path'].as_posix()}") #
+        logger.error(f"   Project Root: {paths['project_root'].as_posix()}") #
+        logger.error("   Suggestion: Create the wrapper inside the project's 'bin' directory HOẶC sử dụng 'absolute' mode (-m absolute).") #
+        return None # Trả về None báo lỗi
+    except Exception as e:
+        logger.error(f"❌ Lỗi không mong muốn khi tạo nội dung wrapper: {e}")
+        return None
+
+# --- NEW: Hàm điều phối chính (Orchestrator) ---
+def run_zsh_wrapper(logger: logging.Logger, cli_args: argparse.Namespace) -> bool:
+    """
+    Hàm điều phối chính cho zsh_wrapper.
+    Xử lý việc xác định đường dẫn (tương tác nếu cần),
+    tạo nội dung wrapper và thực thi ghi file.
+    Trả về True nếu thành công, False nếu thất bại.
+    """
+    
+    # 1. Lấy và kiểm tra đường dẫn script ban đầu
+    try:
+        script_path_str = getattr(cli_args, 'script_path_arg')
+        script_path = Path(script_path_str).expanduser().resolve()
+        if not script_path.is_file():
+            logger.error(f"❌ Lỗi: Script path không tồn tại hoặc không phải là file: {script_path}")
+            return False
+    except Exception as e:
+        logger.error(f"❌ Lỗi xử lý đường dẫn script: {e}")
+        return False
+
+    # 2. Xác định Project Root (tương tác nếu cần)
+    root_arg_str: Optional[str] = getattr(cli_args, 'root', None)
+    initial_root, is_fallback = _find_project_root(logger, script_path, root_arg_str)
+    
+    final_root: Path
+    if is_fallback and root_arg_str is None: # Chỉ hỏi nếu root chưa được chỉ định và cần fallback
+        try:
+            final_root = resolve_root_interactively(logger=logger, fallback_path=initial_root) #
+        except SystemExit: # Bắt SystemExit nếu người dùng chọn Quit
+            return False # Coi như thất bại
+    else:
+        final_root = initial_root #
+
+    logger.info(f"Root đã xác định cuối cùng: {final_root.as_posix()}") #
+
+    # 3. Xác định Output Path (tương tác nếu cần)
+    output_arg_str: Optional[str] = getattr(cli_args, 'output', None)
+    output_arg_path = Path(output_arg_str).expanduser() if output_arg_str else None
+    mode: str = getattr(cli_args, 'mode', DEFAULT_MODE) #
+    
+    try:
+        final_output_path = resolve_output_path_interactively( #
+            logger=logger, 
+            script_path=script_path, 
+            output_arg=output_arg_path, 
+            mode=mode,
+            project_root=final_root
+        )
+    except SystemExit: # Bắt SystemExit nếu người dùng chọn Quit
+        return False # Coi như thất bại
+
+    # 4. Lấy các tham số còn lại
+    venv_name: str = getattr(cli_args, 'venv', DEFAULT_VENV)
+    force: bool = getattr(cli_args, 'force', False)
+
+    # 5. Tạo nội dung wrapper
+    final_content = _generate_wrapper_content(
+        logger=logger,
+        script_path=script_path,
+        output_path=final_output_path,
+        project_root=final_root,
+        venv_name=venv_name,
+        mode=mode
+    )
+
+    if final_content is None:
+        logger.error("❌ Không thể tạo nội dung wrapper.")
+        return False # Lỗi đã được log bên trong _generate_wrapper_content
+
+    # 6. Chuẩn bị kết quả cho Executor
+    result_for_executor = {
+        "status": "ok", # Luôn ok nếu đến được đây
         "final_content": final_content,
-        "output_path": output_path,
-        "force": args.force,
-        "project_root_abs": project_root.resolve(), # Giữ lại để nhất quán
+        "output_path": final_output_path,
+        "force": force,
+        # "project_root_abs" không cần thiết cho executor nữa
     }
-# --- END MODIFIED ---
+
+    # 7. Thực thi (Ghi file)
+    try:
+        execute_zsh_wrapper_action(logger=logger, result=result_for_executor) #
+        return True # Thành công
+    except Exception as e:
+        # Lỗi I/O hoặc chmod đã được log bên trong executor
+        # hoặc lỗi không mong muốn khác
+        logger.error(f"❌ Lỗi trong quá trình thực thi ghi file: {e}") #
+        return False # Thất bại
+# --- END NEW ---
