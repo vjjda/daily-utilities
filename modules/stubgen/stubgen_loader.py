@@ -1,16 +1,13 @@
 # Path: modules/stubgen/stubgen_loader.py
 
 """
-File Scanning logic for the Stub Generator (sgen) module.
+File Scanning and Config Loading logic for the Stub Generator (sgen) module.
 """
 
 import logging
 from pathlib import Path
-# --- MODIFIED: Thêm Optional ---
 from typing import List, Set, Dict, Any, TYPE_CHECKING, Iterable, Optional
-# --- END MODIFIED ---
 
-# --- NEW: Import pathspec (cho TYPE_CHECKING) ---
 try:
     import pathspec
 except ImportError:
@@ -18,10 +15,7 @@ except ImportError:
 
 if TYPE_CHECKING:
     import pathspec
-# --- END NEW ---
 
-
-# Tái sử dụng các tiện ích Git, Filtering
 from utils.core import (
     get_submodule_paths,
     parse_gitignore, 
@@ -30,12 +24,9 @@ from utils.core import (
     compile_spec_from_patterns 
 )
 
-
-# Import Configs
 from .stubgen_config import (
     PROJECT_CONFIG_FILENAME, CONFIG_FILENAME, CONFIG_SECTION_NAME
 )
-
 
 __all__ = ["find_gateway_files", "load_config_files"]
 
@@ -45,8 +36,14 @@ def load_config_files(
     logger: logging.Logger
 ) -> Dict[str, Any]:
     """
-    Tải file .project.toml VÀ .sgen.toml,
-    trích xuất và merge section [sgen].
+    Tải và hợp nhất cấu hình từ .project.toml và .sgen.toml.
+    
+    Args:
+        start_dir: Thư mục bắt đầu quét config.
+        logger: Logger để ghi log.
+
+    Returns:
+        Một dict chứa cấu hình [sgen] đã được hợp nhất.
     """
     return load_and_merge_configs(
         start_dir=start_dir,
@@ -62,7 +59,10 @@ def _is_dynamic_gateway(
     dynamic_import_indicators: List[str]
 ) -> bool:
     """
-    Checks if an __init__.py file uses dynamic import (import_module + globals()).
+    Kiểm tra (heuristic) xem file __init__.py có phải là gateway động không.
+    
+    Kiểm tra bằng cách đọc nội dung file và tìm tất cả các chuỗi
+    trong `dynamic_import_indicators`.
     """
     try:
         content = path.read_text(encoding='utf-8')
@@ -70,19 +70,35 @@ def _is_dynamic_gateway(
     except Exception:
         return False
 
-# --- MODIFIED: Cập nhật chữ ký hàm ---
 def find_gateway_files(
     logger: logging.Logger,
     scan_root: Path,
     ignore_list: List[str], 
     restrict_list: List[str],
-    include_spec: Optional['pathspec.PathSpec'], # <-- NEW
+    include_spec: Optional['pathspec.PathSpec'],
     dynamic_import_indicators: List[str],
     script_file_path: Path
 ) -> List[Path]:
-# --- END MODIFIED ---
     """
-    Finds all relevant __init__.py files, respecting ignore rules and scan roots.
+    Tìm tất cả các file __init__.py là "gateway động".
+    
+    Logic lọc nhiều bước:
+    1. Chỉ quét trong các thư mục `restrict_list`.
+    2. Áp dụng `ignore_list` (config) và `.gitignore`.
+    3. (Nếu có) Áp dụng `include_spec` (bộ lọc dương).
+    4. Kiểm tra xem file có phải là gateway động không (`_is_dynamic_gateway`).
+
+    Args:
+        logger: Logger.
+        scan_root: Thư mục gốc để quét.
+        ignore_list: Danh sách pattern (config/cli) để bỏ qua.
+        restrict_list: Danh sách thư mục con (config/cli) để giới hạn quét.
+        include_spec: PathSpec (đã biên dịch) cho bộ lọc dương.
+        dynamic_import_indicators: Danh sách chuỗi để nhận diện gateway động.
+        script_file_path: Đường dẫn của chính script sgen (để bỏ qua).
+
+    Returns:
+        Danh sách các đối tượng Path đến file __init__.py hợp lệ.
     """
 
     gitignore_patterns: List[str] = parse_gitignore(scan_root) 
@@ -93,10 +109,9 @@ def find_gateway_files(
     submodule_paths = get_submodule_paths(scan_root, logger)
     search_sub_roots = restrict_list
     logger.debug(f"Scanning within sub-roots (restrict): {search_sub_roots}")
-    # --- NEW: Log nếu có include_spec ---
+    
     if include_spec:
         logger.debug(f"Applying inclusion filter (include).")
-    # --- END NEW ---
     
     gateway_files: List[Path] = []
 
@@ -105,6 +120,7 @@ def find_gateway_files(
         if not root_path.exists():
             logger.debug(f"Skipping non-existent root: {sub_root_str}")
             continue
+        
         for path in root_path.rglob('*'):
             if not path.is_file() or path.name != '__init__.py':
                 continue
@@ -117,17 +133,17 @@ def find_gateway_files(
             if is_in_submodule: continue
 
             # 1. Lọc Âm (Ignore)
+            # Kiểm tra cả file và thư mục cha
             if is_path_matched(path.parent, ignore_spec, scan_root) or \
                is_path_matched(path, ignore_spec, scan_root):
                 continue
 
-            # --- NEW: 2. Lọc Dương (Include) ---
+            # 2. Lọc Dương (Include)
             if include_spec:
                 # Nếu file KHÔNG khớp với bộ lọc dương -> Bỏ qua
                 if not is_path_matched(path, include_spec, scan_root):
                     logger.debug(f"Skipping (not in include_spec): {path.relative_to(scan_root).as_posix()}")
                     continue
-            # --- END NEW ---
 
             # 3. Kiểm tra Gateway
             if _is_dynamic_gateway(path, dynamic_import_indicators):

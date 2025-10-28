@@ -7,14 +7,12 @@ Configuration Merging logic for the Stub Generator (sgen) module.
 import logging
 from typing import Dict, Any, List, Optional
 
-# Import utils
 from utils.core import (
     resolve_config_value, 
     resolve_config_list, 
     parse_comma_list
 )
 
-# Import config defaults
 from .stubgen_config import (
     DEFAULT_IGNORE, 
     DEFAULT_RESTRICT, 
@@ -34,33 +32,49 @@ def merge_stubgen_configs(
 ) -> Dict[str, Any]:
     """
     Hợp nhất cấu hình từ CLI và File, trả về một dict chứa các giá trị "final".
-    (Hàm này được chuyển từ stubgen_core.py)
+    
+    Logic hợp nhất:
+    - ignore: (File GHI ĐÈ Default) + (CLI NỐI VÀO)
+    - restrict: CLI GHI ĐÈ File GHI ĐÈ Default
+    - include: (File GHI ĐÈ Default) + (CLI NỐI VÀO)
+    - (Các hằng số AST): File GHI ĐÈ Default
+
+    Args:
+        logger: Logger.
+        cli_config: Dict chứa các giá trị thô (str) từ CLI.
+        file_config: Dict chứa cấu hình [sgen] đã load từ file.
+
+    Returns:
+        Dict chứa các giá trị "final" đã được hợp nhất và xử lý.
     """
     
-    # 2.1. Ignore (Âm)
+    # 1. Ignore (Âm)
     final_ignore_list = resolve_config_list(
         cli_str_value=cli_config.get('ignore'),
         file_list_value=file_config.get('ignore'), 
         default_set_value=DEFAULT_IGNORE
     )
     
-    # 2.2. Restrict (Scan Roots)
+    # 2. Restrict (Scan Roots)
     cli_restrict_str = cli_config.get('restrict')
     final_restrict_list: List[str]
     if cli_restrict_str is not None:
+        # CLI ghi đè tất cả
         final_restrict_list = list(parse_comma_list(cli_restrict_str))
         logger.debug("Sử dụng danh sách 'restrict' từ CLI.")
     elif file_config.get('restrict') is not None:
+        # File ghi đè Default
         final_restrict_list = file_config['restrict']
         logger.debug("Sử dụng danh sách 'restrict' từ file config.")
     else:
+        # Dùng Default
         final_restrict_list = DEFAULT_RESTRICT 
         logger.debug("Sử dụng danh sách 'restrict' (DEFAULT_RESTRICT) mặc định.")
 
-    # 2.3. Include (Dương)
+    # 3. Include (Dương)
     default_include_set = DEFAULT_INCLUDE if DEFAULT_INCLUDE is not None else set()
     final_include_list = resolve_config_list(
-        cli_str_value=cli_config.get('include'),
+         cli_str_value=cli_config.get('include'),
         file_list_value=file_config.get('include'),
         default_set_value=default_include_set
     )
@@ -70,9 +84,9 @@ def merge_stubgen_configs(
     else:
         logger.debug("Không áp dụng bộ lọc 'include'.")
 
-    # 2.4. AST/Dynamic Configs
+    # 4. AST/Dynamic Configs
     final_indicators = resolve_config_value(
-        cli_value=None, 
+        cli_value=None, # Không hỗ trợ qua CLI
         file_value=file_config.get('dynamic_import_indicators'),
         default_value=DYNAMIC_IMPORT_INDICATORS
     )

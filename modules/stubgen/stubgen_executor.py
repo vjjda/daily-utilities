@@ -2,27 +2,21 @@
 
 """
 Execution/Action logic for the Stub Generator (sgen) module.
-Handles reporting, user confirmation, and file writing (I/O).
+(Side-effects: Báo cáo, Xác nhận người dùng, Ghi file, Git commit)
 """
 
 import logging
 import sys
 from pathlib import Path
-# --- MODIFIED: Thêm Optional ---
 from typing import Dict, Any, List, Optional
-# --- END MODIFIED ---
 
 from utils.logging_config import log_success
-# --- MODIFIED: Import hàm git mới từ utils ---
 from utils.core import git_add_and_commit
-# --- END MODIFIED ---
 
-# --- Type Hint cho Result ---
+# Type Hint cho Result Object
 StubResult = Dict[str, Any]
 
 __all__ = ["execute_stubgen_action"]
-
-# --- REMOVED: Hàm _handle_git_commit đã được chuyển sang utils/core/git.py ---
 
 
 def execute_stubgen_action(
@@ -33,12 +27,25 @@ def execute_stubgen_action(
 ) -> None:
     """
     Hàm thực thi, nhận kết quả từ core, xử lý tương tác và ghi file.
+
+    Luồng xử lý:
+    1. Phân loại file (create, overwrite, no_change) bằng cách đọc I/O.
+    2. Báo cáo cho người dùng.
+    3. Hỏi xác nhận (nếu `force=False`).
+    4. Ghi file (I/O Ghi).
+    5. Tự động `git add` và `git commit` các file đã thay đổi.
+
+    Args:
+        logger: Logger.
+        results: Danh sách StubResult từ core.
+        force: Cờ --force từ CLI.
+        scan_root: Thư mục gốc (dùng để tính relpath và chạy git).
     """
     
     if not results:
         return
 
-    # --- (Logic phân loại file, báo cáo, và prompt 'y/n' giữ nguyên) ---
+    # 1. Phân loại file (I/O Đọc)
     files_to_create: List[StubResult] = []
     files_to_overwrite: List[StubResult] = []
     files_no_change: List[StubResult] = []
@@ -61,6 +68,7 @@ def execute_stubgen_action(
                 logger.warning(f"Could not read existing stub {stub_path.name}: {e}")
                 files_to_overwrite.append(result)
 
+    # 2. Báo cáo cho người dùng
     if files_no_change:
         logger.info(f"\n✅ Files up-to-date ({len(files_no_change)}):")
         for r in files_no_change:
@@ -80,6 +88,7 @@ def execute_stubgen_action(
         log_success(logger, "\n✨ Stub generation complete. All stubs are up-to-date.")
         return 
     
+    # 3. Hỏi xác nhận
     proceed_to_write = False
     if force:
         proceed_to_write = True
@@ -95,22 +104,18 @@ def execute_stubgen_action(
             logger.warning("Stub generation operation cancelled by user.")
             sys.exit(0)
     
-    # 3. Ghi file (I/O Write)
+    # 4. Ghi file (I/O Write)
     if proceed_to_write:
         written_count = 0
-        # --- MODIFIED: Đổi tên biến để rõ ràng hơn ---
         files_written_results: List[StubResult] = []
-        # --- END MODIFIED ---
+        result_being_processed: Optional[StubResult] = None # Để debug khi lỗi
         
         logger.info("✍️ Writing .pyi stub files...")
-        
-        # --- NEW: Khởi tạo result để tránh NameError trong except ---
-        result: Optional[StubResult] = None 
-        # --- END NEW ---
         
         try:
             # Vòng 1: Tạo file mới
             for result in files_to_create:
+                result_being_processed = result
                 stub_path: Path = result["stub_path"]
                 content: str = result["content"]
                 stub_path.write_text(content, encoding='utf-8')
@@ -120,6 +125,7 @@ def execute_stubgen_action(
                 
             # Vòng 2: Ghi đè file
             for result in files_to_overwrite:
+                result_being_processed = result
                 stub_path: Path = result["stub_path"]
                 content: str = result["content"]
                 stub_path.write_text(content, encoding='utf-8')
@@ -128,16 +134,12 @@ def execute_stubgen_action(
                 files_written_results.append(result)
                 
         except IOError as e:
-            # --- MODIFIED: Xử lý trường hợp 'result' có thể là None ---
-            file_name = result['rel_path'] if result else "UNKNOWN FILE"
+            file_name = result_being_processed['rel_path'] if result_being_processed else "UNKNOWN FILE"
             logger.error(f"❌ Failed to write file {file_name}: {e}")
-            # --- END MODIFIED ---
             return 
         except Exception as e:
-            # --- MODIFIED: Xử lý trường hợp 'result' có thể là None ---
-            file_name = result['rel_path'] if result else "UNKNOWN FILE"
+            file_name = result_being_processed['rel_path'] if result_being_processed else "UNKNOWN FILE"
             logger.error(f"❌ Unknown error while writing file {file_name}: {e}")
-            # --- END MODIFIED ---
             return 
                 
         if written_count > 0:
@@ -145,7 +147,7 @@ def execute_stubgen_action(
         else:
             log_success(logger, f"\n✨ Stub generation complete. No files needed writing.")
 
-        # --- MODIFIED: Gọi hàm git_add_and_commit từ utils.core ---
+        # 5. Tự động Git Commit
         if files_written_results:
             # 1. Chuẩn bị danh sách đường dẫn tương đối
             relative_paths = [
@@ -163,4 +165,3 @@ def execute_stubgen_action(
                 file_paths_relative=relative_paths,
                 commit_message=commit_msg
             )
-        # --- END MODIFIED ---

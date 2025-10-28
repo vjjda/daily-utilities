@@ -3,16 +3,11 @@
 """
 Core logic for the Stub Generator (sgen) module.
 Handles Orchestration (Pure Logic).
-(Config logic is in stubgen_merger.py)
-(Formatting logic is in stubgen_formatter.py)
-(AST Parsing logic is in stubgen_parser.py)
 """
 
 import logging
 import ast
-# --- MODIFIED: Thêm argparse ---
 import argparse
-# --- END MODIFIED ---
 from pathlib import Path
 from typing import Dict, Any, List, Optional, Set
 
@@ -20,16 +15,16 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     import pathspec
 
+# Import các thành phần của module
 from .stubgen_parser import (
     extract_module_list,
     collect_all_exported_symbols
 )
-# --- MODIFIED: Import load_config_files ---
 from .stubgen_loader import find_gateway_files, load_config_files
-# --- END MODIFIED ---
 from .stubgen_merger import merge_stubgen_configs
 from .stubgen_formatter import format_stub_content
 
+# Import tiện ích chung
 from utils.core import (
     load_text_template,
     compile_spec_from_patterns
@@ -43,27 +38,37 @@ StubResult = Dict[str, Any]
 __all__ = ["process_stubgen_logic"]
 
 
-# --- MODIFIED: Cập nhật chữ ký hàm (nhận cli_args) ---
 def process_stubgen_logic(
     logger: logging.Logger, 
     scan_root: Path,
-    cli_args: argparse.Namespace, # <-- THAY ĐỔI
+    cli_args: argparse.Namespace,
     script_file_path: Path
 ) -> List[StubResult]:
-# --- END MODIFIED ---
     """
-    Orchestrates the stub generation process (No I/O).
-    1. Loads template
-    2. Loads file config
-    3. Prepares CLI config
-    4. Merges configs
-    5. Compiles specs
-    6. Loads (finds files)
-    7. Parses (analyzes AST)
-    8. Formats (generates content)
+    Điều phối toàn bộ quá trình tạo stub (Logic thuần túy, không I/O ghi).
+
+    Luồng xử lý:
+    1. Tải template .pyi.template.
+    2. Tải cấu hình từ file .toml (gọi Loader).
+    3. Chuẩn bị config từ CLI.
+    4. Hợp nhất config (gọi Merger).
+    5. Biên dịch PathSpecs.
+    6. Tìm các file gateway (gọi Loader).
+    7. Phân tích AST (gọi Parser).
+    8. Định dạng nội dung stub (gọi Formatter).
+    9. Trả về danh sách các đối tượng kết quả (StubResult).
+
+    Args:
+        logger: Logger.
+        scan_root: Thư mục gốc để quét.
+        cli_args: Namespace đối số thô từ entrypoint.
+        script_file_path: Đường dẫn của chính script sgen (để bỏ qua).
+
+    Returns:
+        List[StubResult]: Danh sách các dict chứa thông tin file stub.
     """
     
-    # 1. Load Template
+    # 1. Load Template (I/O Đọc)
     try:
         template_path = MODULE_DIR / TEMPLATE_FILENAME
         stub_template_str = load_text_template(template_path, logger)
@@ -71,19 +76,17 @@ def process_stubgen_logic(
         logger.error(f"❌ Không thể tải PYI template: {e}")
         raise
 
-    # --- NEW: 2. Load File Config (Chuyển vào từ entrypoint) ---
+    # 2. Load File Config (I/O Đọc)
     file_config = load_config_files(scan_root, logger)
-    # --- END NEW ---
 
-    # --- NEW: 3. Prepare CLI Config (Chuyển vào từ entrypoint) ---
+    # 3. Chuẩn bị CLI Config
     cli_config: Dict[str, Optional[str]] = {
         "ignore": getattr(cli_args, 'ignore', None),
         "restrict": getattr(cli_args, 'restrict', None),
         "include": getattr(cli_args, 'include', None)
     }
-    # --- END NEW ---
 
-    # 4. Merge Configs
+    # 4. Hợp nhất Configs (gọi Merger)
     merged_config = merge_stubgen_configs(logger, cli_config, file_config)
 
     # 5. Biên dịch Specs
@@ -92,7 +95,7 @@ def process_stubgen_logic(
         scan_root
     )
     
-    # 6. Load: Tìm file gateway (I/O)
+    # 6. Load: Tìm file gateway (I/O Đọc)
     gateway_files = find_gateway_files(
         logger=logger, 
         scan_root=scan_root,
@@ -126,7 +129,7 @@ def process_stubgen_logic(
             logger.warning(f"Skipping {init_file.name}: No exported symbols found.")
             continue
 
-        # 8. Format
+        # 8. Format (gọi Formatter)
         stub_content = format_stub_content(
             init_file, 
             scan_root, 
@@ -136,7 +139,7 @@ def process_stubgen_logic(
 
         stub_path = init_file.with_suffix(".pyi")
         
-        # 9. Collate Pure Result
+        # 9. Gom kết quả (Pure Result Object)
         results.append({
             "init_path": init_file,
             "stub_path": stub_path,
@@ -145,5 +148,4 @@ def process_stubgen_logic(
             "rel_path": stub_path.relative_to(scan_root).as_posix()
         })
         
-    # 10. Return
     return results
