@@ -60,6 +60,7 @@ help = "Chỉ bao gồm các đuôi file này (vd: 'py,md'). Hỗ trợ +/-."
 name = "ignore"
 short = "-I"
 type = "str"
+default = ".venv,venv,__pycache__,.git,.hg,.svn,.DS_Store"
 help = "Các pattern (giống .gitignore) để bỏ qua (THÊM vào config)."
 
 # --- Filter 3: Gitignore Flag ---

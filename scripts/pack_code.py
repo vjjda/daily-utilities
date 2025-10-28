@@ -11,7 +11,7 @@ sys.path.append(str(PROJECT_ROOT))
 
 try:
     from utils.logging_config import setup_logging, log_success
-    from modules.pack_code.pack_code_config import DEFAULT_START_PATH, DEFAULT_EXTENSIONS
+    from modules.pack_code.pack_code_config import DEFAULT_START_PATH, DEFAULT_EXTENSIONS, DEFAULT_IGNORE
     from modules.pack_code import (
         process_pack_code_logic,
         execute_pack_code_action
@@ -57,7 +57,7 @@ def main():
     parser.add_argument(
         "-I", "--ignore",
         type=str,
-        default=None,
+        default='.venv,venv,__pycache__,.git,.hg,.svn,.DS_Store',
         help='Các pattern (giống .gitignore) để bỏ qua (THÊM vào config).'
     )
     parser.add_argument(
