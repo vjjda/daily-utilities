@@ -87,7 +87,7 @@ def generate_script_entrypoint(config: Dict[str, Any]) -> str:
    
     else:
         # --- Logic cho TYPER (mặc định) ---
-        template = load_template("script_entrypoint.py.template")
+        template = load_template("script_entrypoint_typer.py.template")
 
         # Tạo các code snippet
         typer_app_code = build_typer_app_code(config)
