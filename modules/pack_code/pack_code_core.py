@@ -7,7 +7,9 @@ Core logic for pack_code (Orchestrator).
 import logging
 from pathlib import Path
 import os
-from typing import Dict, Any, List, Optional, Set, TYPE_CHECKING
+# --- MODIFIED: Thêm Iterable ---
+from typing import Dict, Any, List, Optional, Set, TYPE_CHECKING, Iterable
+# --- END MODIFIED ---
 
 # Import pathspec for type checking
 if TYPE_CHECKING:
@@ -16,9 +18,8 @@ if TYPE_CHECKING:
 # --- MODIFIED: Import các hàm từ utils và module con ---
 from utils.core import (
     find_git_root,
-    parse_gitignore,
-    compile_spec_from_patterns,
-    # is_path_matched, # Không cần trực tiếp nữa
+    parse_gitignore, # Trả về List[str]
+    compile_spec_from_patterns, # Nhận Iterable[str]
     resolve_set_modification,
     get_submodule_paths,
     parse_comma_list
@@ -29,12 +30,11 @@ from .pack_code_scanner import scan_files
 from .pack_code_tree import generate_tree_string
 # Import loader và config
 from .pack_code_loader import load_files_content
-from .pack_code_config import DEFAULT_EXTENSIONS, DEFAULT_IGNORE
+from .pack_code_config import DEFAULT_EXTENSIONS, DEFAULT_IGNORE, DEFAULT_START_PATH
 # --- END MODIFIED ---
 
 __all__ = ["process_pack_code_logic"]
 
-# --- REMOVED: Hàm _scan_files và _generate_tree_string đã được di chuyển ---
 
 def process_pack_code_logic(logger: logging.Logger, **cli_args) -> Dict[str, Any]:
     """
@@ -44,7 +44,9 @@ def process_pack_code_logic(logger: logging.Logger, **cli_args) -> Dict[str, Any
     logger.info("Core logic running...")
 
     # 1. Trích xuất tham số CLI (Giữ nguyên)
-    start_path: Path = cli_args.get("start_path") # Đã expanduser và resolve
+    start_path_from_args = cli_args.get("start_path")
+    start_path: Path = start_path_from_args if isinstance(start_path_from_args, Path) else Path(DEFAULT_START_PATH).resolve()
+
     output_path_arg: Optional[Path] = cli_args.get("output") # Đã expanduser
     stdout: bool = cli_args.get("stdout", False)
     ext_cli_str: Optional[str] = cli_args.get("extensions")
@@ -59,29 +61,44 @@ def process_pack_code_logic(logger: logging.Logger, **cli_args) -> Dict[str, Any
     if start_path.is_file():
         scan_root = find_git_root(start_path.parent) or start_path.parent
     else:
-        scan_root = find_git_root(start_path) or start_path
+        effective_start_dir = start_path if start_path.exists() else Path.cwd()
+        scan_root = find_git_root(effective_start_dir) or effective_start_dir
+
+    if not start_path.exists():
+         logger.error(f"❌ Lỗi: Đường dẫn bắt đầu không tồn tại: {start_path.as_posix()}")
+         return {'status': 'error', 'message': f"Start path not found: {start_path.as_posix()}"}
+
     logger.debug(f"Scan Root (cho quy tắc .gitignore): {scan_root.as_posix()}")
     logger.debug(f"Start Path (nơi bắt đầu quét): {start_path.as_posix()}")
 
-    # 3. Hợp nhất bộ lọc (Giữ nguyên)
-    # 3.1. Extensions
+
+    # 3. Hợp nhất bộ lọc
+    # 3.1. Extensions (Giữ nguyên)
     default_ext_set = parse_comma_list(DEFAULT_EXTENSIONS)
     ext_filter_set = resolve_set_modification(default_ext_set, ext_cli_str)
 
     # 3.2. Ignore
     default_ignore_set = parse_comma_list(DEFAULT_IGNORE)
     cli_ignore_set = parse_comma_list(ignore_cli_str)
-    gitignore_patterns: Set[str] = set()
+    gitignore_patterns: List[str] = [] # <-- List
     if not no_gitignore:
-        gitignore_patterns = parse_gitignore(scan_root)
+        gitignore_patterns = parse_gitignore(scan_root) # <-- List
         logger.debug(f"Đã tải {len(gitignore_patterns)} quy tắc từ .gitignore")
-    all_ignore_patterns = default_ignore_set.union(cli_ignore_set).union(gitignore_patterns)
-    ignore_spec = compile_spec_from_patterns(all_ignore_patterns, scan_root)
 
-    # 3.3. Submodules
+    # --- MODIFIED: Gộp thành List ---
+    # Ưu tiên: Default -> CLI -> Gitignore
+    all_ignore_patterns_list: List[str] = (
+        sorted(list(default_ignore_set)) +
+        sorted(list(cli_ignore_set)) +
+        gitignore_patterns
+    )
+    ignore_spec = compile_spec_from_patterns(all_ignore_patterns_list, scan_root)
+    # --- END MODIFIED ---
+
+    # 3.3. Submodules (Giữ nguyên)
     submodule_paths = get_submodule_paths(scan_root, logger)
 
-    # 4. Quét File (Gọi Scanner)
+    # 4. Quét File (Gọi Scanner - Giữ nguyên)
     files_to_pack = scan_files(
         logger, start_path, ignore_spec, ext_filter_set, submodule_paths, scan_root
     )
@@ -92,22 +109,20 @@ def process_pack_code_logic(logger: logging.Logger, **cli_args) -> Dict[str, Any
 
     logger.info(f"Tìm thấy {len(files_to_pack)} file để đóng gói.")
 
-    # 5. Tạo cây (Gọi Tree Generator)
+    # 5. Tạo cây (Gọi Tree Generator - Giữ nguyên)
     tree_str = ""
     if not no_tree:
         logger.debug("Đang tạo cây thư mục...")
-        # --- MODIFIED: Truyền scan_root ---
         tree_str = generate_tree_string(start_path, files_to_pack, scan_root)
-        # --- END MODIFIED ---
 
     # 6. Đọc nội dung file (Gọi Loader - Giữ nguyên)
     files_content: Dict[Path, str] = {}
     if not (dry_run and no_tree): # Chỉ đọc nếu không phải dry-run HOẶC cần cây
         files_content = load_files_content(logger, files_to_pack, scan_root)
 
-    # 7. Đóng gói (Packing - Logic chính còn lại)
+    # 7. Đóng gói (Packing - Giữ nguyên)
     final_content_lines: List[str] = []
-
+    # ... (logic đóng gói giữ nguyên) ...
     if tree_str:
         final_content_lines.append(tree_str)
         final_content_lines.append("\n" + ("=" * 80) + "\n")
@@ -118,7 +133,6 @@ def process_pack_code_logic(logger: logging.Logger, **cli_args) -> Dict[str, Any
             if content is None:
                 continue
 
-            # Tính rel_path từ scan_root (nhất quán)
             try:
                 rel_path_str = file_path.relative_to(scan_root).as_posix()
             except ValueError:
@@ -131,9 +145,10 @@ def process_pack_code_logic(logger: logging.Logger, **cli_args) -> Dict[str, Any
             final_content_lines.append(content)
 
             if not no_header:
-                final_content_lines.append("\n") # Thêm dòng trống sau file
+                final_content_lines.append("\n")
 
     final_content = "\n".join(final_content_lines)
+
 
     # 8. Tính toán Output Path (Giữ nguyên)
     final_output_path: Optional[Path] = None
@@ -153,8 +168,6 @@ def process_pack_code_logic(logger: logging.Logger, **cli_args) -> Dict[str, Any
         'output_path': final_output_path,
         'stdout': stdout,
         'dry_run': dry_run,
-        # --- MODIFIED: Tính relative path chuẩn ---
         'file_list_relative': [p.relative_to(scan_root) for p in files_to_pack],
-        # --- END MODIFIED ---
         'scan_root': scan_root
     }
