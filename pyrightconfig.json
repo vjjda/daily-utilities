@@ -3,18 +3,20 @@
   // 1. Cấu hình môi trường thực thi để Pyright hiểu PYTHONPATH
   "executionEnvironments": [
     {
-      "root": ".",
-      "pythonVersion": "3.14", // Hoặc phiên bản Python bạn đang sử dụng
+      "root": ".", // Thư mục gốc của dự án
+      "pythonVersion": "3.14", // Phiên bản Python bạn đang sử dụng
 
-      // Khai báo các thư mục nên được coi là thư viện cấp cao nhất (top-level packages)
+      // Khai báo các thư mục nên được coi là package cấp cao nhất (top-level)
+      // Giúp Pyright tìm thấy các module import dạng `from utils.core import ...`
       "extraPaths": ["modules", "utils", "scripts"]
     }
   ],
 
-  // Chuyển sang "basic"
+  // Chuyển sang chế độ kiểm tra type cơ bản (ít nghiêm ngặt hơn "strict")
   "typeCheckingMode": "basic",
 
-  // 3. Xử lý các lỗi liên quan đến Dynamic Import và Lỗi Type
+  // 3. Tắt các báo cáo lỗi/cảnh báo cụ thể liên quan đến Dynamic Import và Type Hinting
+  // Giúp giảm "nhiễu" khi làm việc với code có nhiều dynamic import.
   "reportUnknownArgumentType": "none",
   "reportUnknownMemberType": "none",
   "reportUnusedImport": "none",
@@ -22,18 +24,15 @@
   "reportPossiblyUnboundVariable": "none",
   "reportUnknownVariableType": "none",
   "reportInvalidTypeForm": "none",
+  "reportArgumentType": "none", // Tắt cảnh báo "Argument of type ... cannot be assigned..."
 
-  // --- NEW: Tắt cảnh báo "Argument of type ... cannot be assigned..." ---
-  "reportArgumentType": "none",
-  // --- END NEW ---
-
-  // Tùy chọn: Thêm các thư mục cần kiểm tra
-  "include": ["utils", "modules", "scripts"],
-  "exclude": [
+  // 4. Chỉ định các thư mục cần bao gồm và loại trừ khỏi việc kiểm tra
+  "include": ["utils", "modules", "scripts"], // Chỉ kiểm tra các thư mục này
+  "exclude": [ // Loại trừ các thư mục/file không cần kiểm tra
     "**/__pycache__",
     "**/.venv",
     "**/venv",
     "**/node_modules",
-    "/scripts/internal/bootstrap_templates/*"
+    "/scripts/internal/bootstrap_templates/*" // Loại trừ các file template
   ]
 }
