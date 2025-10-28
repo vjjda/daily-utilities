@@ -17,7 +17,7 @@ try:
     from modules.stubgen import (
         DEFAULT_IGNORE, 
         DEFAULT_RESTRICT, 
-        DEFAULT_INCLUDE, # <-- NEW
+        DEFAULT_INCLUDE,
         DYNAMIC_IMPORT_INDICATORS,
         AST_MODULE_LIST_NAME,
         AST_ALL_LIST_NAME,
@@ -38,16 +38,14 @@ except ImportError as e:
 THIS_SCRIPT_PATH = Path(__file__).resolve()
 MODULE_DIR = PROJECT_ROOT / "modules" / "stubgen"
 TEMPLATE_FILENAME = "stubgen.toml.template" 
-# --- MODIFIED: Cập nhật SGEN_DEFAULTS ---
 SGEN_DEFAULTS: Dict[str, Any] = {
     "ignore": DEFAULT_IGNORE,
     "restrict": DEFAULT_RESTRICT,
-    "include": DEFAULT_INCLUDE, # <-- NEW
+    "include": DEFAULT_INCLUDE or set(), 
     "dynamic_import_indicators": DYNAMIC_IMPORT_INDICATORS,
     "ast_module_list_name": AST_MODULE_LIST_NAME,
     "ast_all_list_name": AST_ALL_LIST_NAME
 }
-# --- END MODIFIED ---
 
 
 def main():
@@ -59,13 +57,9 @@ def main():
     # 1. Định nghĩa Parser
     parser = argparse.ArgumentParser(
         description="Tự động tạo file .pyi stub cho các module gateway động.",
-        # --- MODIFIED: Cập nhật epilog ---
         epilog="Ví dụ: sgen . -R modules -i 'modules/auth/*' -f",
-        # --- END MODIFIED ---
         formatter_class=argparse.RawTextHelpFormatter 
     )
-
-    # --- MODIFIED: Tách thành 2 Argument Groups ---
 
     # Group 2: Stub Generation Options
     stubgen_group = parser.add_argument_group("Stub Generation Options")
@@ -94,14 +88,14 @@ def main():
         help="Danh sách thư mục con (so với target_dir) ngăn cách bởi dấu phẩy để giới hạn quét (GHI ĐÈ config)."
     )
     
-    # --- NEW: Thêm cờ -i/--include ---
+    # --- MODIFIED: Cập nhật help text ---
     stubgen_group.add_argument(
         "-i", "--include",
         type=str,
         default=None,
-        help="Bộ lọc dương (inclusion filter). Chỉ giữ lại các file khớp. Hỗ trợ +/-/~."
+        help="Bộ lọc dương (inclusion filter). Chỉ giữ lại các file khớp (THÊM vào config)."
     )
-    # --- END NEW ---
+    # --- END MODIFIED ---
 
     # Group 1: Config Flags
     config_group = parser.add_argument_group("Config Initialization (Chạy riêng lẻ)")
@@ -115,7 +109,6 @@ def main():
         action="store_true",
         help=f"Khởi tạo/cập nhật file {CONFIG_FILENAME} (scope 'local')."
     )
-    # --- END MODIFIED ---
     
     args = parser.parse_args()
     
@@ -164,13 +157,11 @@ def main():
     # 5. Load Configs và Chạy Core Logic
     file_config = load_config_files(effective_scan_root, logger)
     
-    # --- MODIFIED: Cập nhật cli_config ---
     cli_config: Dict[str, Optional[str]] = {
         "ignore": args.ignore,
         "restrict": args.restrict,
-        "include": args.include # <-- NEW
+        "include": args.include
     }
-    # --- END MODIFIED ---
     
     try:
         results = process_stubgen_logic(

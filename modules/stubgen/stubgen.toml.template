@@ -1,38 +1,42 @@
 # Path: modules/stubgen/stubgen.toml.template
 #
-# Optional configuration for sgen (Stub Generator)
-# Created by `sgen --config-project` or `sgen --config-local`
+# Cấu hình cho Stub Generator (sgen).
+#
+# Chạy `sgen -C` (local) hoặc `sgen -c` (project) để
+# tự động điền các giá trị mặc định vào file .toml này.
 #
 
+# Section header (nếu dùng trong .project.toml)
 [{config_section_name}]
 
-# --- Scanning Configuration ---
-
-# --- MODIFIED: Mention pathspec/gitwildmatch ---
-# ignore: List of gitignore-style patterns (pathspec/gitwildmatch)
-#         to ignore during scanning.
-#         OVERRIDES the default ignore list (DEFAULT_IGNORE).
-# Example: ["*.log", "/temp_files/"]
-# --- END MODIFIED ---
-ignore = {toml_ignore}
-
-# restrict: List of subdirectories (relative to root) to limit scanning.
-#           OVERRIDES the default restrict list (DEFAULT_RESTRICT).
-# Example: ["modules", "utils", "api"]
+# (Scan Roots)
+# Giới hạn quét vào các thư mục gốc này (để tăng tốc độ).
+# Mặc định (lấy từ .project.toml nếu có, nếu không): ["modules", "utils"]
 restrict = {toml_restrict}
 
+# (Inclusion Filter)
+# BỘ LỌC DƯƠNG. Nếu được đặt (không phải []), chỉ các file __init__.py
+# khớp với pattern (giống .gitignore) MỚI được xử lý.
+# CLI (-i) sẽ NỐI (append) vào danh sách này.
+# Mặc định: [] (tắt, xử lý mọi thứ trong 'restrict')
+# Ví dụ: ["modules/auth/*", "utils/core/*"]
+include = {toml_include}
 
-# --- Core Logic Configuration ---
-# (Change only if your project has different code conventions)
+# (Exclusion Filter)
+# Các pattern (giống .gitignore) để bỏ qua.
+# Sẽ được NỐI (append) vào .gitignore.
+# Mặc định (lấy từ .project.toml nếu có, nếu không): ["__pycache__", ".venv", ".git", ...]
+ignore = {toml_ignore}
 
-# dynamic_import_indicators: Code strings used to identify
-#                            if an __init__.py file is a dynamic gateway.
+
+# --- Cấu hình AST (Nâng cao) ---
+# Thường không cần thay đổi các giá trị này.
+
+# Các chuỗi dùng để xác định một __init__.py "động".
 dynamic_import_indicators = {toml_dynamic_import_indicators}
 
-# ast_module_list_name: Variable name (in AST) holding the list
-#                       of submodules (e.g., 'modules_to_export').
+# Tên biến (AST) chứa danh sách các file con (ví dụ: 'modules_to_export').
 ast_module_list_name = {toml_ast_module_list_name}
 
-# ast_all_list_name: Variable name (in AST) holding the list
-#                    of exported symbols (e.g., '__all__').
+# Tên biến (AST) chứa danh sách __all__ trong file con.
 ast_all_list_name = {toml_ast_all_list_name}

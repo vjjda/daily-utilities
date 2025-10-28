@@ -24,21 +24,19 @@ from utils.core import (
     resolve_config_list, 
     parse_comma_list,
     load_text_template,
-    resolve_set_modification, # <-- NEW
-    compile_spec_from_patterns # <-- NEW
+    resolve_set_modification, # Giữ lại (mặc dù không dùng cho include)
+    compile_spec_from_patterns
 )
 # --- END MODIFIED ---
 
-# --- MODIFIED: Cập nhật tên import ---
 from .stubgen_config import (
     DEFAULT_IGNORE, 
     DEFAULT_RESTRICT, 
-    DEFAULT_INCLUDE, # <-- NEW
+    DEFAULT_INCLUDE,
     DYNAMIC_IMPORT_INDICATORS,
     AST_MODULE_LIST_NAME,
     AST_ALL_LIST_NAME
 )
-# --- END MODIFIED ---
 
 MODULE_DIR = Path(__file__).parent
 TEMPLATE_FILENAME = "pyi.py.template"
@@ -127,30 +125,24 @@ def process_stubgen_logic(
         final_restrict_list = DEFAULT_RESTRICT 
         logger.debug("Sử dụng danh sách 'restrict' (DEFAULT_RESTRICT) mặc định.")
 
-    # --- NEW: 2.3. Include (Dương) ---
-    file_include_list = file_config.get('include') # Đây là List[str] hoặc None
+    # --- MODIFIED: 2.3. Include (Dương) - Dùng resolve_config_list ---
     
-    tentative_include_set: Optional[Set[str]]
-    if file_include_list is not None:
-        tentative_include_set = set(file_include_list)
-        logger.debug("Sử dụng 'include' từ file config làm cơ sở.")
+    # (Default set là set rỗng nếu DEFAULT_INCLUDE là None)
+    default_include_set = DEFAULT_INCLUDE if DEFAULT_INCLUDE is not None else set()
+
+    # Sử dụng resolve_config_list (giống như 'ignore')
+    # Logic: (File Config / Default) + (CLI)
+    final_include_list = resolve_config_list(
+        cli_str_value=cli_config.get('include'),
+        file_list_value=file_config.get('include'), # <-- Đây là List[str] hoặc None
+        default_set_value=default_include_set
+    )
+    
+    if final_include_list: # Chỉ log nếu list không rỗng
+        logger.debug(f"Danh sách 'include' cuối cùng (đã merge): {final_include_list}")
     else:
-        tentative_include_set = DEFAULT_INCLUDE # Default là None
-        logger.debug("Sử dụng 'include' mặc định (None) làm cơ sở.")
-    
-    final_include_set: Optional[Set[str]]
-    if cli_config.get('include') is None and tentative_include_set is None:
-        final_include_set = None # Không lọc
         logger.debug("Không áp dụng bộ lọc 'include'.")
-    else:
-        # Nếu một trong hai có giá trị, base_set không được là None
-        base_set = tentative_include_set if tentative_include_set is not None else set()
-        final_include_set = resolve_set_modification(
-            tentative_set=base_set,
-            cli_string=cli_config.get('include')
-        )
-        logger.debug(f"Bộ lọc 'include' cuối cùng: {final_include_set}")
-    # --- END NEW ---
+    # --- END MODIFIED ---
 
     # 2.4. AST/Dynamic Configs
     final_indicators = resolve_config_value(
@@ -170,13 +162,12 @@ def process_stubgen_logic(
     )
     # --- Kết thúc Merge Configs ---
 
-    # --- NEW: Biên dịch Specs ---
-    # (Hàm compile_spec_from_patterns xử lý None/rỗng an toàn)
+    # --- MODIFIED: Biên dịch Specs từ List ---
     final_include_spec = compile_spec_from_patterns(
-        final_include_set if final_include_set is not None else [], 
+        final_include_list, # <-- Truyền List
         scan_root
     )
-    # --- END NEW ---
+    # --- END MODIFIED ---
     
     # 3. Load: Tìm file gateway (I/O)
     gateway_files = find_gateway_files(
@@ -184,7 +175,7 @@ def process_stubgen_logic(
         scan_root=scan_root,
         ignore_list=final_ignore_list, 
         restrict_list=final_restrict_list,
-        include_spec=final_include_spec, # <-- NEW
+        include_spec=final_include_spec,
         dynamic_import_indicators=final_indicators,
         script_file_path=script_file_path
     )
