@@ -6,6 +6,7 @@ from pathlib import Path
 
 DEFAULT_EXTENSIONS: Any
 DEFAULT_IGNORE: Any
+DEFAULT_OUTPUT_DIR: Any
 DEFAULT_START_PATH: Any
 execute_pack_code_action: Any
 generate_tree_string: Any
@@ -17,6 +18,7 @@ scan_files: Any
 __all__: List[str] = [
     'DEFAULT_EXTENSIONS',
     'DEFAULT_IGNORE',
+    'DEFAULT_OUTPUT_DIR',
     'DEFAULT_START_PATH',
     'execute_pack_code_action',
     'generate_tree_string',
