@@ -1,90 +1,79 @@
+#!/usr/bin/env python3
 # Path: scripts/{script_file}
 
+"""
+Entrypoint (cổng vào) cho tool '{tool_name}'.
+(Tạo tự động bởi bootstrap_tool.py - Giao diện Typer)
+"""
+
 import sys
+import typer # Sử dụng Typer cho CLI
 import logging
 from pathlib import Path
-from typing import Optional, List # (Import các type phổ biến)
+from typing import Optional # Thêm Optional nếu cần
 
-import typer # (Sử dụng Typer)
-
-# --- Thêm PROJECT_ROOT vào sys.path để import utils/modules ---
+# --- Thiết lập sys.path để import utils/modules ---
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.append(str(PROJECT_ROOT))
 
 try:
     from utils.logging_config import setup_logging, log_success
-    
-    # --- CONFIG DEFAULTS ---
+    # Import các hằng số config (nếu có)
     {config_imports}
-    # --- END CONFIG DEFAULTS ---
-    
-    # --- MODULE IMPORTS (SRP) ---
-    from modules.{module_name} import (
-        # (Ví dụ: Import các hàm đã được export)
-        # load_data, 
-        process_{module_name}_logic,
-        execute_{module_name}_action
-    )
-    # ----------------------
-except ImportError:
-    print(f"Lỗi: Không thể import utils/modules. Đảm bảo PROJECT_ROOT đúng: {{PROJECT_ROOT}}", file=sys.stderr)
+    # Import các thành phần logic từ module
+    # from modules.{module_name} import process_{module_name}_logic, execute_{module_name}_action
+except ImportError as e:
+    print(f"Lỗi: Không thể import các module cần thiết: {e}", file=sys.stderr) #
     sys.exit(1)
 
-# --- CONSTANTS ---
-THIS_SCRIPT_PATH = Path(__file__).resolve()
-
-# --- TYPER APP ---
+# --- Khởi tạo Typer App ---
 {typer_app_code}
 
-@app.callback(invoke_without_command=True)
+# --- Định nghĩa lệnh chính ---
+@app.command()
 {typer_main_function_signature}
     """
-    Main orchestration function.
-    Parses args, sets up logging, and calls core logic.
+    Hàm xử lý chính cho lệnh CLI.
     """
-    if ctx.invoked_subcommand: return
-
-    # 1. Setup Logging
     logger = setup_logging(script_name="{logger_name}")
-    logger.debug("{logger_name} script started.")
-    
-    # --- NEW: Mở rộng `~` thủ công cho các tham số Path ---
-{typer_path_expands}
-    # --- END NEW ---
+    logger.debug("Script {logger_name} bắt đầu.") #
 
-    # 2. Execute Core Logic (SRP)
+    # --- Xử lý Path Expand ---
+{typer_path_expands}
+
     try:
-        # (Đây là ví dụ, bạn cần tùy chỉnh luồng)
-        
-        # 2.1. Load (từ _loader)
-        # (Ví dụ: data = load_data(logger, target_path_expanded))
-        
-        # 2.2. Process (từ _core)
-        # (Truyền các tham số Typer vào logic core)
-        result = process_{module_name}_logic(
-            logger=logger,
+        # --- Gọi Logic Cốt lõi ---
+        # result = process_{module_name}_logic(
+        #     logger=logger,
 {typer_args_pass_to_core}
-            # (Ví dụ: data=data)
-        )
-        
-        # 2.3. Execute (từ _executor)
-        if result:
-            execute_{module_name}_action(
-                logger=logger,
-                result=result
-            )
-        
-        log_success(logger, "Hoàn thành.")
-            
+        # )
+
+        # --- Gọi Executor (nếu cần) ---
+        # if result:
+        #     execute_{module_name}_action(logger=logger, result=result)
+        #     log_success(logger, "Hoạt động hoàn tất.")
+
+        # --- Xử lý Tạm thời (Xóa sau khi thêm logic) ---
+        logger.info("Logic xử lý chính chưa được triển khai.") #
+        # In các giá trị tham số để kiểm tra
+        args_dict = ctx.params.copy() # Lấy dict các tham số từ context
+        # Thay thế Path đã expand nếu có
+        for arg_name in [name for name, hint in main.__annotations__.items() if hint == Path or str(hint).startswith("Optional[Path")] : # Tìm tham số Path
+            expanded_var_name = f"{arg_name}_expanded"
+            if expanded_var_name in locals():
+                 args_dict[arg_name] = locals()[expanded_var_name]
+
+        logger.info(f"Các tham số nhận được: {args_dict}") #
+
     except Exception as e:
-        logger.error(f"❌ Đã xảy ra lỗi không mong muốn: {{e}}")
+        logger.error(f"❌ Đã xảy ra lỗi không mong muốn: {e}") #
         logger.debug("Traceback:", exc_info=True)
         sys.exit(1)
 
-
+# --- Chạy ứng dụng ---
 if __name__ == "__main__":
     try:
-        app() # (Sử dụng Typer runner)
+        app()
     except KeyboardInterrupt:
-        print("\n\n❌ [Lệnh dừng] Hoạt động của tool đã bị dừng.")
+        print("\n\n❌ Hoạt động bị dừng bởi người dùng.") #
         sys.exit(1)

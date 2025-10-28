@@ -1,20 +1,18 @@
 # Path: modules/{module_name}/{module_name}_config.py
-
 """
-Configuration constants for {module_name}.
+Các hằng số cấu hình cho module '{module_name}'.
+(Tạo tự động bởi bootstrap_tool.py)
 """
 
-import os
 from pathlib import Path
-# (Thêm Type Hint)
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional, List, Set, Final # Thêm các type cần thiết
 
-# --- NEW: __all__ definition ---
-__all__ = [{config_all_constants}] # (Auto-generated)
-# --- END NEW ---
+__all__ = [{config_all_constants}] # Danh sách các hằng số export
 
-# --- Constants generated from tool.spec.toml ---
+# --- Các hằng số được tạo từ tool.spec.toml ---
 {config_constants}
-# --- End generated constants ---
+# --- Kết thúc hằng số được tạo tự động ---
 
-# (Ví dụ: DEFAULT_OUTPUT_DIR = Path.home() / 'Documents' / '{module_name}_output')
+# Thêm các hằng số hoặc cấu hình khác cần thiết cho module tại đây
+# Ví dụ:
+# DEFAULT_API_ENDPOINT: Final[str] = "https://api.example.com"

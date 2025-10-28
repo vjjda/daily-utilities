@@ -1,16 +1,43 @@
-# Tool Guide: {tool_name}
+# Hướng dẫn sử dụng: {tool_name}
 
 {short_description}
 
-## Quick Start
+## Khởi động Nhanh
 
-(TBD)
-
-## Usage
+Cách dễ nhất để bắt đầu là khởi tạo một file cấu hình trong dự án của bạn:
 
 ```sh
-{tool_name} [options]
+# 1. Khởi tạo file cấu hình cục bộ (. {tool_name}.toml)
+{tool_name} --config-local
+
+# 2. Hoặc, cập nhật file cấu hình toàn dự án (.project.toml)
+{tool_name} --config-project
 ```
 
-## CLI Options
-(TBD - Sẽ được tự động điền dựa trên argparse trong tương lai)
+## Cách Sử Dụng
+
+```sh
+{tool_name} [options] [arguments]
+```
+
+*(Thêm mô tả chi tiết về cách sử dụng, các tùy chọn và đối số ở đây.)*
+
+## File Cấu Hình
+
+*(Giải thích cách cấu hình công cụ qua file `. {tool_name}.toml` hoặc `.project.toml`.)*
+
+## Ví dụ
+
+*(Thêm một vài ví dụ sử dụng cụ thể.)*
+
+````
+
+---
+Giờ đây template này gọn gàng hơn nhiều và chỉ chứa những phần cốt lõi nhất.
+
+Đây là lệnh `git` để commit tất cả các thay đổi của module `bootstrap` (bao gồm cả các template đã được dọn dẹp và Việt hóa):
+
+```sh
+git add modules/bootstrap/__init__.py modules/bootstrap/bootstrap_builder/__init__.py modules/bootstrap/bootstrap_builder/bootstrap_argparse_builder.py modules/bootstrap/bootstrap_builder/bootstrap_config_builder.py modules/bootstrap/bootstrap_builder/bootstrap_typer_builder.py modules/bootstrap/bootstrap_config.py modules/bootstrap/bootstrap_utils.py modules/bootstrap/bootstrap_loader.py modules/bootstrap/bootstrap_core.py modules/bootstrap/bootstrap_executor.py scripts/bootstrap_tool.py modules/bootstrap/bootstrap_templates/bin_wrapper.zsh.template modules/bootstrap/bootstrap_templates/script_entrypoint.py.template modules/bootstrap/bootstrap_templates/script_entrypoint_argparse.py.template modules/bootstrap/bootstrap_templates/module_config.py.template modules/bootstrap/bootstrap_templates/module_core.py.template modules/bootstrap/bootstrap_templates/module_executor.py.template modules/bootstrap/bootstrap_templates/module_loader.py.template modules/bootstrap/bootstrap_templates/module_init.py.template modules/bootstrap/bootstrap_templates/doc_file.md.template
+git commit -m "style(bootstrap): Việt hóa và dọn dẹp comment, docstring, giao diện, templates"
+````

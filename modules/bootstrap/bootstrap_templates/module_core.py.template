@@ -1,29 +1,50 @@
 # Path: modules/{module_name}/{module_name}_core.py
-
 """
-Core logic for {module_name}.
+Logic cốt lõi (Orchestrator) cho module '{module_name}'.
+(Tạo tự động bởi bootstrap_tool.py)
+
+Chứa logic nghiệp vụ thuần túy, không có side-effect (I/O, print).
 """
 
 import logging
 from pathlib import Path
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional # Thêm các type hint cần thiết
 
-# --- NEW: __all__ definition ---
-__all__ = ["process_{module_name}_logic"]
-# --- END NEW ---
+# Import các thành phần khác của module (nếu cần)
+# from . {module_name}_config import ...
+# from . {module_name}_loader import ...
 
-# --- MODIFIED: Renamed **kwargs to **cli_args to avoid .format() conflict ---
-def process_{module_name}_logic(logger: logging.Logger, **cli_args) -> Dict[str, Any]:
+__all__ = ["process_{module_name}_logic"] # Hàm logic chính
+
+# Định nghĩa cấu trúc dữ liệu trả về (nếu cần)
+# class {module_name.capitalize()}Result:
+#     pass
+
+def process_{module_name}_logic(
+    logger: logging.Logger,
+    # Thêm các tham số đầu vào cần thiết từ entrypoint
+    **kwargs: Any
+) -> Optional[Dict[str, Any]]: # Hoặc kiểu trả về cụ thể hơn
     """
-    Hàm logic chính, chỉ phân tích, không có side-effect.
+    Hàm điều phối logic chính cho {module_name}.
+
+    Args:
+        logger: Instance logger.
+        **kwargs: Các tham số đầu vào đã được xử lý.
+
+    Returns:
+        Một đối tượng kết quả (ví dụ: Dict, class) chứa dữ liệu
+        cho Executor, hoặc None nếu không có gì cần thực thi.
     """
-    logger.info("Core logic running...")
-    # --- MODIFIED: Escaped braces {{...}} AND renamed variable ---
-    logger.debug(f"Received cli_args: {{cli_args}}")
-    
-    # (TODO: Thêm logic phân tích ở đây)
-    # data = cli_args.get("data")
-    # fix_mode = cli_args.get("fix")
-    
-    # --- MODIFIED: Renamed variable AND escaped dict braces ---
-    return {{'status': 'ok', 'data': cli_args}}
+    logger.info("Đang chạy logic cốt lõi cho {module_name}...") #
+    logger.debug(f"Tham số nhận được: {kwargs}") #
+
+    # --- Triển khai logic nghiệp vụ tại đây ---
+    # Ví dụ:
+    # 1. Validate inputs
+    # 2. Call loader functions
+    # 3. Perform calculations/transformations
+    # 4. Prepare result object for executor
+
+    # Trả về kết quả (hoặc None)
+    return {{}} # Placeholder

@@ -1,33 +1,40 @@
 # Path: modules/{module_name}/{module_name}_executor.py
-
 """
-Execution/Action logic for {module_name}.
-(Ghi file, chạy lệnh, in ra console, v.v...)
+Logic thực thi/hành động cho module '{module_name}'.
+(Tạo tự động bởi bootstrap_tool.py)
+
+Chịu trách nhiệm thực hiện các side-effect (I/O, print, gọi API,...).
 """
 
 import logging
 from pathlib import Path
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional # Thêm các type hint cần thiết
 
-# --- NEW: __all__ definition ---
-__all__ = ["execute_{module_name}_action"]
-# --- END NEW ---
+# Import các tiện ích cần thiết (ví dụ: ghi file, chạy lệnh)
+# from utils.core import run_command
+# from utils.logging_config import log_success
 
-def execute_{module_name}_action(logger: logging.Logger, result: Dict[str, Any]) -> None:
+__all__ = ["execute_{module_name}_action"] # Hàm thực thi chính
+
+def execute_{module_name}_action(
+    logger: logging.Logger,
+    result: Dict[str, Any] # Hoặc kiểu dữ liệu cụ thể từ Core
+) -> None:
     """
-    Hàm thực thi, nhận kết quả từ _core và thực hiện side-effect.
+    Thực thi các hành động dựa trên kết quả từ logic cốt lõi.
+
+    Args:
+        logger: Instance logger.
+        result: Đối tượng kết quả trả về từ `process_{module_name}_logic`.
     """
-    logger.info(f"Executor running with result:")
-    
-    # (TODO: Thêm logic thực thi ở đây)
-    # (Đây là ví dụ in kết quả)
-    if result.get('status') == 'ok':
-        data = result.get('data', {{}}) # (Escaped braces)
-        for key, value in data.items():
-            # --- MODIFIED: Escaped f-string braces ---
-            logger.info(f"   -> {{key}}: {{value}}")
-            # --- END MODIFIED ---
-    else:
-        logger.error("Core logic failed, executor aborted.")
-    
-    pass
+    logger.info("Đang thực thi hành động cho {module_name}...") #
+    logger.debug(f"Dữ liệu nhận được từ core: {result}") #
+
+    # --- Triển khai logic thực thi tại đây ---
+    # Ví dụ:
+    # 1. Ghi file output
+    # 2. In kết quả ra console
+    # 3. Chạy lệnh hệ thống
+    # 4. Gọi API bên ngoài
+
+    pass # Placeholder

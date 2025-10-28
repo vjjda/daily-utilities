@@ -1,29 +1,29 @@
 # Path: modules/{module_name}/{module_name}_loader.py
-
 """
-File Loading logic for {module_name}.
-(Responsible for all read I/O)
+Logic tải dữ liệu cho module '{module_name}'.
+(Tạo tự động bởi bootstrap_tool.py)
+
+Chịu trách nhiệm cho các hoạt động I/O đọc (đọc file, gọi API GET,...).
 """
 
 import logging
 from pathlib import Path
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional # Thêm các type hint cần thiết
 
-__all__ = ["load_data"] # (Example, user can change)
+# Import các tiện ích cần thiết (ví dụ: đọc TOML)
+# from utils.core import load_toml_file
 
-def load_data(logger: logging.Logger, path_to_load: Path) -> Any:
-    """
-    (Example) Loads data from the target path.
-    """
-    # --- MODIFIED: Escaped braces ({{...}}) for .format() ---
-    logger.info(f"Loader running on: {{path_to_load.name}}")
-    
-    # (TODO: Thêm logic đọc file (read I/O) ở đây)
-    # Ví dụ:
-    # if not path_to_load.exists():
-    #    logger.error("Target path does not exist.")
-    #    return None
-    # return path_to_load.read_text()
-    
-    return f"Data from {{path_to_load.name}}"
-    # --- END MODIFIED ---
+__all__ = [] # Thêm tên các hàm loader vào đây
+
+# Ví dụ một hàm loader:
+# def load_data_from_file(logger: logging.Logger, file_path: Path) -> Optional[str]:
+#     """Tải nội dung từ một file text."""
+#     logger.info(f"Đang tải dữ liệu từ: {file_path.name}")
+#     try:
+#         return file_path.read_text(encoding='utf-8')
+#     except FileNotFoundError:
+#         logger.error(f"❌ Lỗi: Không tìm thấy file: {file_path}")
+#         return None
+#     except Exception as e:
+#         logger.error(f"❌ Lỗi khi đọc file {file_path.name}: {e}")
+#         return None

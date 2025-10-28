@@ -1,71 +1,87 @@
-# Path: modules/bootstrap/bootstrap_templates/script_entrypoint_argparse.py.template
+#!/usr/bin/env python3
+# Path: scripts/{script_file}
+
+"""
+Entrypoint (cổng vào) cho tool '{tool_name}'.
+(Tạo tự động bởi bootstrap_tool.py - Giao diện Argparse)
+"""
 
 import sys
-import argparse
+import argparse # Sử dụng Argparse cho CLI
 import logging
 from pathlib import Path
-from typing import Optional, List
+from typing import Optional, List, Dict, Any # Thêm các type hint cần thiết
 
+# --- Thiết lập sys.path để import utils/modules ---
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.append(str(PROJECT_ROOT))
 
 try:
     from utils.logging_config import setup_logging, log_success
+    # Import các hằng số config (nếu có)
     {config_imports}
-    from modules.{module_name} import (
-        process_{module_name}_logic,
-        execute_{module_name}_action
-    )
-except ImportError:
-    print(f"Lỗi: Không thể import utils/modules...", file=sys.stderr)
+    # Import các thành phần logic từ module
+    # from modules.{module_name} import process_{module_name}_logic, execute_{module_name}_action
+except ImportError as e:
+    print(f"Lỗi: Không thể import các module cần thiết: {e}", file=sys.stderr) #
     sys.exit(1)
 
-def main():
-    """Hàm điều phối chính."""
 
-    # 1. Định nghĩa Parser
+def main():
+    """Hàm điều phối chính cho script."""
+
+    # --- 1. Định nghĩa Parser ---
     parser = argparse.ArgumentParser(
         description="{cli_description}",
-        epilog="{cli_epilog}"
+        epilog="{cli_epilog}",
+        formatter_class=argparse.RawTextHelpFormatter # Giữ nguyên format help text
     )
 
-    # --- Các arguments được tạo tự động ---
+    # --- Thêm các đối số vào parser ---
 {argparse_arguments}
-    # --- Hết arguments ---
 
+    # --- 2. Phân tích đối số ---
     args = parser.parse_args()
 
-    # 2. Setup Logging
+    # --- 3. Cấu hình Logging ---
     logger = setup_logging(script_name="{logger_name}")
-    logger.debug("{logger_name} script started.")
+    logger.debug("Script {logger_name} (Argparse) bắt đầu.") #
 
-    # --- Mở rộng Path (nếu có) ---
+    # --- 4. Xử lý Path Expand ---
 {argparse_path_expands}
-    # --- Hết mở rộng Path ---
 
-    # 3. Chạy Core Logic
     try:
-        result = process_{module_name}_logic(
-            logger=logger,
+        # --- 5. Gọi Logic Cốt lõi ---
+        # result = process_{module_name}_logic(
+        #     logger=logger,
 {argparse_args_pass_to_core}
-        )
+        # )
 
-        if result:
-            execute_{module_name}_action(
-                logger=logger,
-                result=result
-            )
+        # --- 6. Gọi Executor (nếu cần) ---
+        # if result:
+        #     execute_{module_name}_action(logger=logger, result=result)
+        #     log_success(logger, "Hoạt động hoàn tất.")
 
-        log_success(logger, "Hoàn thành.")
+        # --- Xử lý Tạm thời (Xóa sau khi thêm logic) ---
+        logger.info("Logic xử lý chính chưa được triển khai.") #
+        # In các giá trị tham số đã xử lý để kiểm tra
+        processed_args = vars(args).copy()
+        for key, value in processed_args.items():
+             expanded_var_name = f"{key}_path"
+             if expanded_var_name in locals():
+                 processed_args[key] = locals()[expanded_var_name]
+        logger.info(f"Các tham số đã xử lý: {processed_args}") #
+
 
     except Exception as e:
-        logger.error(f"❌ Đã xảy ra lỗi không mong muốn: {{e}}")
+        logger.error(f"❌ Đã xảy ra lỗi không mong muốn: {e}") #
         logger.debug("Traceback:", exc_info=True)
         sys.exit(1)
 
+# --- Chạy ứng dụng ---
 if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print("\n\n❌ [Lệnh dừng] Hoạt động của tool đã bị dừng.")
+        print("\n\n❌ Hoạt động bị dừng bởi người dùng.") #
         sys.exit(1)
