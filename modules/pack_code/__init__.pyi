@@ -11,11 +11,15 @@ DEFAULT_IGNORE: Any
 DEFAULT_OUTPUT_DIR: Any
 DEFAULT_START_PATH: Any
 PROJECT_CONFIG_FILENAME: Any
+assemble_packed_content: Any
 execute_pack_code_action: Any
 generate_tree_string: Any
 load_config_files: Any
 load_files_content: Any
 process_pack_code_logic: Any
+resolve_filters: Any
+resolve_output_path: Any
+resolve_start_and_scan_paths: Any
 scan_files: Any
 
 # Static declaration of exported symbols (for Pylance)
@@ -27,10 +31,14 @@ __all__: List[str] = [
     'DEFAULT_OUTPUT_DIR',
     'DEFAULT_START_PATH',
     'PROJECT_CONFIG_FILENAME',
+    'assemble_packed_content',
     'execute_pack_code_action',
     'generate_tree_string',
     'load_config_files',
     'load_files_content',
     'process_pack_code_logic',
+    'resolve_filters',
+    'resolve_output_path',
+    'resolve_start_and_scan_paths',
     'scan_files'
 ]
