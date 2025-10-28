@@ -4,7 +4,7 @@
 Configuration constants for pack_code.
 """
 
-import os
+import os # <-- XÓA DÒNG NÀY
 from pathlib import Path
 # (Thêm Type Hint)
 from typing import Dict, Any, Optional, List
@@ -12,7 +12,7 @@ from typing import Dict, Any, Optional, List
 # --- NEW: __all__ definition ---
 __all__ = [
     "DEFAULT_START_PATH", "DEFAULT_EXTENSIONS", "DEFAULT_IGNORE",
-    "DEFAULT_OUTPUT_DIR" # <-- THÊM MỚI
+    "DEFAULT_OUTPUT_DIR" 
 ]
 # --- END NEW ---
 
@@ -26,7 +26,7 @@ DEFAULT_IGNORE = '.venv,venv,__pycache__,.git,.hg,.svn,.DS_Store'
 
 # --- End generated constants ---
 
-# --- THÊM MỚI: Đường dẫn output mặc định ---
-# (Sử dụng os.path.expanduser để xử lý '~')
-DEFAULT_OUTPUT_DIR: Path = Path(os.path.expanduser("~/Documents/code.context"))
-# --- KẾT THÚC THÊM MỚI ---
+# --- SỬA ĐỔI: Chuyển thành string thuần túy ---
+# (Logic expanduser sẽ được xử lý trong _core.py)
+DEFAULT_OUTPUT_DIR: str = "~/Documents/code.context"
+# --- KẾT THÚC SỬA ĐỔI ---

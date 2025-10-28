@@ -9,7 +9,7 @@ File Filtering and Path Matching Utilities
 
 # --- MODIFIED: Thêm imports ---
 from pathlib import Path
-from typing import Set, TYPE_CHECKING, Optional, Iterable # <-- Thêm Iterable
+from typing import List, TYPE_CHECKING, Optional, Iterable # <-- Thêm Iterable
 # --- END MODIFIED ---
 
 # --- NEW: Import pathspec ---

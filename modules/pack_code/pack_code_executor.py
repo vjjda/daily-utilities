@@ -48,7 +48,9 @@ def execute_pack_code_action(logger: logging.Logger, result: Dict[str, Any]) -> 
         
         logger.info(f"\nTổng cộng: {len(result.get('file_list_relative', []))} file.")
         if output_path:
-             logger.info(f"Output dự kiến: {output_path.relative_to(scan_root).as_posix()}")
+             # --- MODIFIED: Hiển thị đường dẫn tuyệt đối cho dry run ---
+             logger.info(f"Output dự kiến: {output_path.as_posix()}")
+             # --- END MODIFIED ---
         return
 
     # --- 2. Chế độ Stdout ---
@@ -61,8 +63,12 @@ def execute_pack_code_action(logger: logging.Logger, result: Dict[str, Any]) -> 
     # --- 3. Chế độ Ghi File (Mặc định) ---
     if output_path:
         try:
-            logger.info(f"Đang ghi vào file: {output_path.relative_to(scan_root).as_posix()}")
-            # Đảm bảo thư mục (ví dụ: tmp/) tồn tại
+            # --- MODIFIED: Log đường dẫn tuyệt đối (as_posix) ---
+            # Vì output_path có thể không nằm trong scan_root
+            logger.info(f"Đang ghi vào file: {output_path.as_posix()}")
+            # --- END MODIFIED ---
+            
+            # Đảm bảo thư mục (ví dụ: ~/Documents/code.context) tồn tại
             output_path.parent.mkdir(parents=True, exist_ok=True)
             
             output_path.write_text(final_content, encoding='utf-8')
