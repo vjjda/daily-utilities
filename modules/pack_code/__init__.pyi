@@ -8,7 +8,7 @@ DEFAULT_EXTENSIONS: Any
 DEFAULT_IGNORE: Any
 DEFAULT_START_PATH: Any
 execute_pack_code_action: Any
-load_data: Any
+load_files_content: Any
 process_pack_code_logic: Any
 
 # Static declaration of exported symbols (for Pylance)
@@ -17,6 +17,6 @@ __all__: List[str] = [
     'DEFAULT_IGNORE',
     'DEFAULT_START_PATH',
     'execute_pack_code_action',
-    'load_data',
+    'load_files_content',
     'process_pack_code_logic'
 ]
