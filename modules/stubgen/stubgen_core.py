@@ -18,17 +18,22 @@ from .stubgen_parser import (
 
 from .stubgen_loader import find_gateway_files
 
+# --- MODIFIED: Import thêm utils ---
 from utils.core import (
     resolve_config_value, 
-    resolve_config_list, # <-- Hàm này giờ trả về List
+    resolve_config_list, 
     parse_comma_list,
-    load_text_template 
+    load_text_template,
+    resolve_set_modification, # <-- NEW
+    compile_spec_from_patterns # <-- NEW
 )
+# --- END MODIFIED ---
 
 # --- MODIFIED: Cập nhật tên import ---
 from .stubgen_config import (
     DEFAULT_IGNORE, 
-    DEFAULT_RESTRICT, # <-- MODIFIED
+    DEFAULT_RESTRICT, 
+    DEFAULT_INCLUDE, # <-- NEW
     DYNAMIC_IMPORT_INDICATORS,
     AST_MODULE_LIST_NAME,
     AST_ALL_LIST_NAME
@@ -101,14 +106,15 @@ def process_stubgen_logic(
         raise
 
     # --- 2. Merge Configs ---
-    # --- MODIFIED: Cập nhật logic 'ignore' để nhận List ---
+    
+    # 2.1. Ignore (Âm)
     final_ignore_list = resolve_config_list(
         cli_str_value=cli_config.get('ignore'),
-        file_list_value=file_config.get('ignore'), # <-- Đây là List[str] hoặc None
+        file_list_value=file_config.get('ignore'), 
         default_set_value=DEFAULT_IGNORE
     )
-    # --- END MODIFIED ---
     
+    # 2.2. Restrict (Scan Roots)
     cli_restrict_str = cli_config.get('restrict')
     final_restrict_list: List[str]
     if cli_restrict_str is not None:
@@ -118,11 +124,35 @@ def process_stubgen_logic(
         final_restrict_list = file_config['restrict']
         logger.debug("Sử dụng danh sách 'restrict' từ file config.")
     else:
-        # --- MODIFIED: Sử dụng tên mới ---
         final_restrict_list = DEFAULT_RESTRICT 
         logger.debug("Sử dụng danh sách 'restrict' (DEFAULT_RESTRICT) mặc định.")
-        # --- END MODIFIED ---
 
+    # --- NEW: 2.3. Include (Dương) ---
+    file_include_list = file_config.get('include') # Đây là List[str] hoặc None
+    
+    tentative_include_set: Optional[Set[str]]
+    if file_include_list is not None:
+        tentative_include_set = set(file_include_list)
+        logger.debug("Sử dụng 'include' từ file config làm cơ sở.")
+    else:
+        tentative_include_set = DEFAULT_INCLUDE # Default là None
+        logger.debug("Sử dụng 'include' mặc định (None) làm cơ sở.")
+    
+    final_include_set: Optional[Set[str]]
+    if cli_config.get('include') is None and tentative_include_set is None:
+        final_include_set = None # Không lọc
+        logger.debug("Không áp dụng bộ lọc 'include'.")
+    else:
+        # Nếu một trong hai có giá trị, base_set không được là None
+        base_set = tentative_include_set if tentative_include_set is not None else set()
+        final_include_set = resolve_set_modification(
+            tentative_set=base_set,
+            cli_string=cli_config.get('include')
+        )
+        logger.debug(f"Bộ lọc 'include' cuối cùng: {final_include_set}")
+    # --- END NEW ---
+
+    # 2.4. AST/Dynamic Configs
     final_indicators = resolve_config_value(
         cli_value=None, 
         file_value=file_config.get('dynamic_import_indicators'),
@@ -140,12 +170,21 @@ def process_stubgen_logic(
     )
     # --- Kết thúc Merge Configs ---
 
+    # --- NEW: Biên dịch Specs ---
+    # (Hàm compile_spec_from_patterns xử lý None/rỗng an toàn)
+    final_include_spec = compile_spec_from_patterns(
+        final_include_set if final_include_set is not None else [], 
+        scan_root
+    )
+    # --- END NEW ---
+    
     # 3. Load: Tìm file gateway (I/O)
     gateway_files = find_gateway_files(
         logger=logger, 
         scan_root=scan_root,
-        ignore_list=final_ignore_list, # <-- MODIFIED: Đổi tên
+        ignore_list=final_ignore_list, 
         restrict_list=final_restrict_list,
+        include_spec=final_include_spec, # <-- NEW
         dynamic_import_indicators=final_indicators,
         script_file_path=script_file_path
     )

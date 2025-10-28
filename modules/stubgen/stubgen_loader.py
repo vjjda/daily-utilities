@@ -6,8 +6,8 @@ File Scanning logic for the Stub Generator (sgen) module.
 
 import logging
 from pathlib import Path
-# --- MODIFIED: Thêm Iterable ---
-from typing import List, Set, Dict, Any, TYPE_CHECKING, Iterable
+# --- MODIFIED: Thêm Optional ---
+from typing import List, Set, Dict, Any, TYPE_CHECKING, Iterable, Optional
 # --- END MODIFIED ---
 
 # --- NEW: Import pathspec (cho TYPE_CHECKING) ---
@@ -22,22 +22,19 @@ if TYPE_CHECKING:
 
 
 # Tái sử dụng các tiện ích Git, Filtering
-# --- MODIFIED: Import các hàm cập nhật ---
 from utils.core import (
     get_submodule_paths,
-    parse_gitignore, # Trả về List[str]
+    parse_gitignore, 
     is_path_matched,
     load_and_merge_configs,
-    compile_spec_from_patterns # Nhận Iterable[str]
+    compile_spec_from_patterns 
 )
 
 
 # Import Configs
-# --- MODIFIED: Import đúng tên hằng số ---
 from .stubgen_config import (
     PROJECT_CONFIG_FILENAME, CONFIG_FILENAME, CONFIG_SECTION_NAME
 )
-# --- END MODIFIED ---
 
 
 __all__ = ["find_gateway_files", "load_config_files"]
@@ -73,32 +70,34 @@ def _is_dynamic_gateway(
     except Exception:
         return False
 
+# --- MODIFIED: Cập nhật chữ ký hàm ---
 def find_gateway_files(
     logger: logging.Logger,
     scan_root: Path,
-    # --- MODIFIED: Đổi tên ignore_set -> ignore_list ---
-    ignore_list: List[str], # Ignore từ config/CLI (List đã giữ trật tự)
-    # --- END MODIFIED ---
+    ignore_list: List[str], 
     restrict_list: List[str],
+    include_spec: Optional['pathspec.PathSpec'], # <-- NEW
     dynamic_import_indicators: List[str],
     script_file_path: Path
 ) -> List[Path]:
+# --- END MODIFIED ---
     """
     Finds all relevant __init__.py files, respecting ignore rules and scan roots.
     """
 
-    # --- MODIFIED: Gộp logic ignore ---
-    gitignore_patterns: List[str] = parse_gitignore(scan_root) # <-- List
+    gitignore_patterns: List[str] = parse_gitignore(scan_root) 
 
-    # --- MODIFIED: Gộp thành List (đã giữ trật tự) ---
-    # Ưu tiên: Config/CLI patterns -> Gitignore patterns
     all_ignore_patterns_list: List[str] = ignore_list + gitignore_patterns
     ignore_spec = compile_spec_from_patterns(all_ignore_patterns_list, scan_root)
-    # --- END MODIFIED ---
 
     submodule_paths = get_submodule_paths(scan_root, logger)
     search_sub_roots = restrict_list
-    logger.debug(f"Scanning within sub-roots: {search_sub_roots}")
+    logger.debug(f"Scanning within sub-roots (restrict): {search_sub_roots}")
+    # --- NEW: Log nếu có include_spec ---
+    if include_spec:
+        logger.debug(f"Applying inclusion filter (include).")
+    # --- END NEW ---
+    
     gateway_files: List[Path] = []
 
     for sub_root_str in search_sub_roots:
@@ -106,26 +105,31 @@ def find_gateway_files(
         if not root_path.exists():
             logger.debug(f"Skipping non-existent root: {sub_root_str}")
             continue
-        # --- MODIFIED: Dùng rglob('*') và kiểm tra tên sau ---
         for path in root_path.rglob('*'):
-            # Chỉ xử lý file __init__.py
             if not path.is_file() or path.name != '__init__.py':
                 continue
-            # --- END MODIFIED ---
 
-            abs_path = path.resolve() # Resolve một lần
+            abs_path = path.resolve() 
 
             if abs_path.samefile(script_file_path): continue
 
             is_in_submodule = any(abs_path.is_relative_to(p) for p in submodule_paths)
             if is_in_submodule: continue
 
-            # Sử dụng scan_root làm gốc so sánh cho ignore_spec
-            # Kiểm tra cả file và thư mục cha
+            # 1. Lọc Âm (Ignore)
             if is_path_matched(path.parent, ignore_spec, scan_root) or \
                is_path_matched(path, ignore_spec, scan_root):
                 continue
 
+            # --- NEW: 2. Lọc Dương (Include) ---
+            if include_spec:
+                # Nếu file KHÔNG khớp với bộ lọc dương -> Bỏ qua
+                if not is_path_matched(path, include_spec, scan_root):
+                    logger.debug(f"Skipping (not in include_spec): {path.relative_to(scan_root).as_posix()}")
+                    continue
+            # --- END NEW ---
+
+            # 3. Kiểm tra Gateway
             if _is_dynamic_gateway(path, dynamic_import_indicators):
                 gateway_files.append(path)
 

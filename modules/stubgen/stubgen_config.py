@@ -4,16 +4,19 @@
 Configuration constants for stubgen.
 """
 
-from typing import List, Set, Final
+# --- MODIFIED: Thêm Optional và Set ---
+from typing import List, Set, Final, Optional
+# --- END MODIFIED ---
 from pathlib import Path
 
-# --- NEW: __all__ definition ---
+# --- MODIFIED: Cập nhật __all__ ---
 __all__ = [
     # Defaults
     "DEFAULT_IGNORE", 
-    "DEFAULT_RESTRICT", # <-- MODIFIED: Đổi tên
+    "DEFAULT_RESTRICT",
+    "DEFAULT_INCLUDE", # <-- NEW
     "DYNAMIC_IMPORT_INDICATORS",
-    "AST_MODULE_LIST_NAME",
+    "AST_MODULE_LIST_NAME", 
     "AST_ALL_LIST_NAME",
     
     # Config File Names
@@ -21,7 +24,7 @@ __all__ = [
     "CONFIG_FILENAME",
     "CONFIG_SECTION_NAME"
 ]
-# --- END NEW ---
+# --- END MODIFIED ---
 
 # --- Scanning Configuration ---
 
@@ -30,13 +33,16 @@ DEFAULT_IGNORE: Final[Set[str]] = {
     "dist", "build", "out", "*.pyc", "*.pyo"
 }
 
-# --- MODIFIED: Đổi tên SCAN_ROOTS ---
 # Các thư mục con (tương đối với scan_root) để tìm kiếm các module gateway.
 DEFAULT_RESTRICT: Final[List[str]] = [
     "modules", 
     "utils",
 ]
-# --- END MODIFIED ---
+
+# --- NEW: Inclusion Filter ---
+# Mặc định là None (không lọc)
+DEFAULT_INCLUDE: Final[Optional[Set[str]]] = None
+# --- END NEW ---
 
 DYNAMIC_IMPORT_INDICATORS: Final[List[str]] = [
     "import_module", 
