@@ -4,6 +4,7 @@
 from typing import Any, List, Optional, Set, Dict, Union
 from pathlib import Path
 
+DEFAULT_EXTENSIONS: Any
 DEFAULT_START_PATH: Any
 execute_pack_code_action: Any
 load_data: Any
@@ -11,6 +12,7 @@ process_pack_code_logic: Any
 
 # Static declaration of exported symbols (for Pylance)
 __all__: List[str] = [
+    'DEFAULT_EXTENSIONS',
     'DEFAULT_START_PATH',
     'execute_pack_code_action',
     'load_data',
