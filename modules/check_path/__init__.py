@@ -11,11 +11,12 @@ from typing import List
 # --- Dynamic Re-export ---
 current_dir = Path(__file__).parent
 
-# Define the explicit order of internal modules to load
-# --- MODIFIED: Xóa config_io ---
+# --- MODIFIED: Thêm merger và analyzer ---
 modules_to_export: List[str] = [
     "check_path_config",
     "check_path_loader",
+    "check_path_merger",    # <-- NEW
+    "check_path_analyzer",  # <-- NEW
     "check_path_core",
     "check_path_executor",
     "check_path_rules",

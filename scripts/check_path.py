@@ -31,8 +31,8 @@ from modules.check_path import (
     DEFAULT_IGNORE,
     PROJECT_CONFIG_FILENAME, 
     CONFIG_SECTION_NAME,
-    CONFIG_FILENAME,
-    load_config_files
+    CONFIG_FILENAME
+    # --- MODIFIED: Xóa load_config_files ---
 )
 
 # --- CONSTANTS ---
@@ -54,8 +54,6 @@ def main():
         formatter_class=argparse.RawTextHelpFormatter
     )
 
-    # --- MODIFIED: Tách thành 2 Argument Groups (theo thứ tự) ---
-
     # Group 1: Path Checking Options
     path_check_group = parser.add_argument_group("Path Checking Options")
     path_check_group.add_argument(
@@ -68,7 +66,7 @@ def main():
         "-e", "--extensions",
         type=str,
         default=None,
-        help="Các đuôi file. Mặc định (không có +/-): Ghi đè config/default. Dùng + (thêm) hoặc ~ (bớt) để chỉnh sửa. Ví dụ: 'py,js' (ghi đè), '+ts,md' (thêm), '~py' (bớt)."
+        help="Các đuôi file. Mặc định (không có +/-): Ghi đè config/default.\nDùng + (thêm) hoặc ~ (bớt) để chỉnh sửa. Ví dụ: 'py,js' (ghi đè), '+ts,md' (thêm), '~py' (bớt)."
     )
     path_check_group.add_argument(
         "-I", "--ignore",
@@ -94,8 +92,6 @@ def main():
         action="store_true",
         help=f"Khởi tạo/cập nhật file {CONFIG_FILENAME} (scope 'local')."
     )
-    
-    # --- END MODIFIED ---
     
     args = parser.parse_args()
 
@@ -151,10 +147,9 @@ def main():
     # dry_run (True/False) -> check_mode
     check_mode = args.dry_run
 
-    file_config_data = load_config_files(effective_scan_root, logger)
+    # --- REMOVED: Xóa load_config_files (core sẽ tự làm) ---
     
     # Tái tạo chuỗi lệnh fix_command_str cho output của executor
-    # Lấy các arguments gốc và lọc các cờ config/dry-run
     original_args = sys.argv[1:]
     excluded_flags = ['-d', '--dry-run', '-c', '--config-project', '-C', '--config-local']
     
@@ -167,17 +162,14 @@ def main():
     fix_command_str = "cpath " + " ".join(fix_command_args)
 
     try:
+        # --- MODIFIED: Truyền thẳng 'args' vào core ---
         files_to_fix = process_check_path_logic(
             logger=logger, 
             project_root=effective_scan_root,
-            # Chỉ truyền target_dir_str nếu nó khác default (".") và không phải là thư mục gốc đã được tự động tìm
-            target_dir_str=scan_root_str if scan_root_str != "." and effective_scan_root == scan_root else None,
-            cli_extensions=args.extensions,
-            cli_ignore=args.ignore,
-            file_config_data=file_config_data,
-            script_file_path=THIS_SCRIPT_PATH,
-            check_mode=check_mode
+            cli_args=args, # <-- THAY ĐỔI
+            script_file_path=THIS_SCRIPT_PATH
         )
+        # --- END MODIFIED ---
         
         execute_check_path_action(
             logger=logger, 
