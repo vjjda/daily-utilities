@@ -8,8 +8,10 @@ DEFAULT_EXTENSIONS: Any
 DEFAULT_IGNORE: Any
 DEFAULT_START_PATH: Any
 execute_pack_code_action: Any
+generate_tree_string: Any
 load_files_content: Any
 process_pack_code_logic: Any
+scan_files: Any
 
 # Static declaration of exported symbols (for Pylance)
 __all__: List[str] = [
@@ -17,6 +19,8 @@ __all__: List[str] = [
     'DEFAULT_IGNORE',
     'DEFAULT_START_PATH',
     'execute_pack_code_action',
+    'generate_tree_string',
     'load_files_content',
-    'process_pack_code_logic'
+    'process_pack_code_logic',
+    'scan_files'
 ]
