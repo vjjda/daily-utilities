@@ -2,6 +2,9 @@
 
 """
 Module Gateway (Facade) for the Tree (ctree) module.
+
+Tự động export tất cả các thành phần public (`__all__`) 
+từ các submodule bên trong.
 """
 
 from pathlib import Path
@@ -11,22 +14,21 @@ from typing import List
 # --- Dynamic Re-export ---
 current_dir = Path(__file__).parent
 
-# --- MODIFIED: Thêm 'tree_merger' và 'tree_core' mới ---
+# Danh sách các submodule nội bộ để load
 modules_to_export: List[str] = [
     "tree_config",
     "tree_loader",
-    "tree_merger",    # <-- Đổi tên từ tree_core cũ
-    "tree_core",      # <-- Orchestrator mới
+    "tree_merger",
+    "tree_core",
     "tree_executor",
 ]
-# --- END MODIFIED ---
 
 __all__: List[str] = []
 
-# (Logic import giữ nguyên)
 for module_name in modules_to_export:
     try:
         module = import_module(f".{module_name}", package=__name__)
+        
         if hasattr(module, '__all__'):
             public_symbols = getattr(module, '__all__')
             for name in public_symbols:
@@ -36,7 +38,7 @@ for module_name in modules_to_export:
     except ImportError as e:
         print(f"Warning: Could not import symbols from {module_name}: {e}")
 
-# (Cleanup giữ nguyên)
+# Cleanup
 del Path, import_module, List, current_dir, modules_to_export, module_name
 if 'module' in locals(): del module
 if 'public_symbols' in locals(): del public_symbols

@@ -2,7 +2,7 @@
 
 """
 Tiện ích tải file cho module Tree (ctree).
-(Chịu trách nhiệm cho mọi hoạt động I/O đọc)
+(Chịu trách nhiệm cho mọi hoạt động I/O đọc cấu hình)
 """
 
 import logging
@@ -20,9 +20,7 @@ from .tree_config import (
     CONFIG_FILENAME, PROJECT_CONFIG_FILENAME, CONFIG_SECTION_NAME
 )
 
-# --- MODIFIED: Xóa load_config_template ---
 __all__ = ["load_config_files"]
-# --- END MODIFIED ---
 
 
 def load_config_files(
@@ -30,8 +28,17 @@ def load_config_files(
     logger: logging.Logger
 ) -> Dict[str, Any]:
     """
-    Tải các file cấu hình .toml (.project.toml và .tree.toml).
-    (Logic này đã được chuyển vào utils.core.load_and_merge_configs)
+    Tải và hợp nhất cấu hình từ .project.toml và .tree.toml.
+
+    Sử dụng logic chung từ `utils.core` để tìm `PROJECT_CONFIG_FILENAME`
+    và `CONFIG_FILENAME`, sau đó trích xuất section `CONFIG_SECTION_NAME`.
+    
+    Args:
+        start_dir: Thư mục bắt đầu quét config.
+        logger: Logger để ghi log.
+
+    Returns:
+        Một dict chứa cấu hình đã được hợp nhất (local ưu tiên hơn project).
     """
     return load_and_merge_configs(
         start_dir=start_dir,
@@ -40,8 +47,3 @@ def load_config_files(
         local_config_filename=CONFIG_FILENAME,
         config_section_name=CONFIG_SECTION_NAME
     )
-
-# --- REMOVED: load_config_template ---
-# (Hàm này đã bị xóa. utils.cli.config_writer sẽ
-#  sử dụng 'load_text_template' chung của utils.core)
-# --- END REMOVED ---

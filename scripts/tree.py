@@ -1,8 +1,16 @@
 # Path: scripts/tree.py
 
 """
-Phiên bản Argparse của ctree (aptree).
-Mô phỏng 1:1 chức năng của scripts/tree.py
+Entrypoint (cổng vào) cho ctree (phiên bản Argparse).
+
+Script này chịu trách nhiệm:
+1. Thiết lập `sys.path` để import `utils` và `modules`.
+2. Phân tích đối số dòng lệnh (Argparse).
+3. Cấu hình logging.
+4. Xử lý các yêu cầu khởi tạo config (`--config-local`, `--config-project`).
+5. Gọi `process_tree_logic` (từ Core) để lấy các tham số đã hợp nhất.
+6. Gọi các hàm `Executor` (`print_status_header`, `generate_tree`, `print_final_result`)
+   để thực hiện side-effect (in ra console).
 """
 
 import sys
@@ -19,18 +27,15 @@ except ImportError:
     except ImportError:
         tomllib = None
 
+# Thiết lập `sys.path` để import các module của dự án
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.append(str(PROJECT_ROOT))
-# --- END BOOTSTRAPPING ---
 
-# Common utilities
+# Import các tiện ích chung
 from utils.logging_config import setup_logging, log_success
-# --- MODIFIED: Xóa import không cần thiết ---
-# (is_git_repository đã chuyển vào core)
-# --- END MODIFIED ---
 from utils.cli import handle_config_init_request
 
-# Module Imports
+# Import các thành phần của module 'tree'
 from modules.tree import (
     CONFIG_FILENAME,
     PROJECT_CONFIG_FILENAME,
@@ -39,18 +44,20 @@ from modules.tree import (
     DEFAULT_MAX_LEVEL, FALLBACK_SHOW_SUBMODULES, FALLBACK_USE_GITIGNORE,
     DEFAULT_EXTENSIONS,
 
-    # --- MODIFIED: Import các hàm ---
-    process_tree_logic, # <-- NEW (Orchestrator)
+    # Các hàm chức năng SRP
+    process_tree_logic,
     generate_tree,
     print_status_header,
     print_final_result,
-    # (Xóa load_config_files, merge_config_sources)
-    # --- END MODIFIED ---
 )
 
-# --- CONSTANTS ---
+# --- HẰNG SỐ CỤ THỂ CHO ENTRYPOINT ---
+
+# Đường dẫn đến module 'tree' để tải template config
 MODULE_DIR = PROJECT_ROOT / "modules" / "tree"
 TEMPLATE_FILENAME = "tree.toml.template"
+
+# Cấu hình mặc định để điền vào file template .toml khi khởi tạo
 TREE_DEFAULTS: Dict[str, Any] = {
     "level": DEFAULT_MAX_LEVEL,
     "show-submodules": FALLBACK_SHOW_SUBMODULES,
@@ -65,7 +72,7 @@ TREE_DEFAULTS: Dict[str, Any] = {
 def main():
     """ Hàm điều phối chính (phiên bản Argparse) """
 
-    # --- 1. Định nghĩa Argparse (Giữ nguyên) ---
+    # --- 1. Định nghĩa Argparse ---
     parser = argparse.ArgumentParser(
         description="Một công cụ tạo cây thư mục thông minh hỗ trợ file cấu hình .tree.toml (Phiên bản Argparse).",
         epilog="Ví dụ: tree . -L 3 -I '*.log' -e 'py,md'", 
@@ -81,7 +88,7 @@ def main():
     tree_group.add_argument("-L", "--level", type=int, help="Giới hạn độ sâu hiển thị.")
 
     tree_group.add_argument(
-        "-e", "--extensions",
+         "-e", "--extensions",
         type=str,
         default=None,
         help="Danh sách đuôi file (phân cách bởi dấu phẩy) để hiển thị. Hỗ trợ + (thêm) hoặc ~ (bớt). Ví dụ: 'py,js', '+md', '~log'"
@@ -103,7 +110,7 @@ def main():
         help="Chỉ hiển thị thư mục cho toàn bộ cây."
     )
     dirs_only_group.add_argument(
-        "-D", "--dirs-patterns",
+         "-D", "--dirs-patterns",
         help="Chỉ hiển thị thư mục con cho các pattern cụ thể (ví dụ: 'assets')."
     )
 
@@ -132,7 +139,7 @@ def main():
     logger = setup_logging(script_name="APTree")
     logger.debug("APTree script (argparse) started.")
 
-    # --- 3. Xử lý Config Init (Giữ nguyên) ---
+    # --- 3. Xử lý Config Init ---
     try:
         config_action_taken = handle_config_init_request(
             logger=logger,
@@ -152,15 +159,15 @@ def main():
         logger.debug("Traceback:", exc_info=True)
         sys.exit(1)
 
-    # --- 4. Logic chạy ctree (Đã refactor) ---
+    # --- 4. Logic chạy ctree ---
     start_path_obj = Path(args.start_path).expanduser()
     if not start_path_obj.exists():
         logger.error(f"❌ Lỗi: Đường dẫn bắt đầu không tồn tại: {start_path_obj}")
         sys.exit(1)
 
-    # --- MODIFIED: Toàn bộ logic nghiệp vụ được chuyển vào 'core' ---
     try:
         # 1. Gọi Core Logic (truyền args thô)
+        # Core sẽ chịu trách nhiệm tải config, hợp nhất, và trả về kết quả
         result_data = process_tree_logic(
             logger=logger,
             cli_args=args,
@@ -177,7 +184,7 @@ def main():
         is_git_repo = result_data["is_git_repo"]
         cli_no_gitignore = result_data["cli_no_gitignore"]
         
-        # 3. Gọi Executor (In kết quả)
+        # 3. Gọi Executor (In kết quả ra console)
         print_status_header(
             config_params=config_params,
             start_dir=start_dir,
@@ -187,6 +194,7 @@ def main():
         
         counters = {'dirs': 0, 'files': 0}
 
+        # Gọi hàm đệ quy chính
         generate_tree(
             start_dir, start_dir, counters=counters,
             max_level=config_params["max_level"],
@@ -198,11 +206,12 @@ def main():
             is_in_dirs_only_zone=config_params["is_in_dirs_only_zone"]
         )
 
+        # In tổng kết
         print_final_result(
             counters=counters,
             global_dirs_only=config_params["global_dirs_only_flag"]
         )
-    # --- END MODIFIED ---
+    
     except Exception as e:
         logger.error(f"❌ Đã xảy ra lỗi không mong muốn: {e}")
         logger.debug("Traceback:", exc_info=True)
@@ -213,5 +222,5 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print("\n\n❌ [Lệnh dừng] Đã dừng tạo cây.");
+        print("\n\n❌ [Lệnh dừng] Đã dừng tạo cây.")
         sys.exit(1)

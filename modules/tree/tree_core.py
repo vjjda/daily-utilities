@@ -2,6 +2,12 @@
 """
 Core Orchestration logic for the Tree (ctree) module.
 (Internal module, imported by tree gateway)
+
+Chịu trách nhiệm điều phối:
+1. Tải cấu hình
+2. Chuẩn bị tham số
+3. Gọi Merger
+4. Trả về Result Object cho Executor
 """
 
 import logging
@@ -9,10 +15,7 @@ import argparse
 from pathlib import Path
 from typing import Dict, Any, Optional
 
-# Import utils
 from utils.core import is_git_repository
-
-# Import module components
 from .tree_loader import load_config_files
 from .tree_merger import merge_config_sources
 
@@ -26,8 +29,17 @@ def process_tree_logic(
 ) -> Optional[Dict[str, Any]]:
     """
     Điều phối logic chính của ctree (tải, merge, chuẩn bị).
-    Trả về một dict "Result Object" chứa các tham số đã xử lý cho Executor.
-    (Logic này được chuyển từ scripts/tree.py)
+    
+    Đây là hàm logic thuần túy, không thực hiện I/O (ngoại trừ đọc config).
+
+    Args:
+        logger: Logger.
+        cli_args: Namespace các đối số thô từ entrypoint (scripts/tree.py).
+        start_path_obj: Đường dẫn bắt đầu đã được resolve.
+
+    Returns:
+        Một dict "Result Object" chứa các tham số đã xử lý cho Executor,
+        hoặc None nếu xảy ra lỗi.
     """
     
     # 1. Xác định đường dẫn và trạng thái Git
@@ -36,11 +48,11 @@ def process_tree_logic(
     is_git_repo = is_git_repository(start_dir)
 
     try:
-        # 2. Tải Config
+        # 2. Tải Config (I/O Đọc)
         file_config = load_config_files(start_dir, logger)
 
-        # 3. Chuẩn bị CLI args (Namespace đã có sẵn từ entrypoint)
-        # Cần chuẩn bị `dirs_only` từ hai cờ `all_dirs` và `dirs_patterns`
+        # 3. Chuẩn bị CLI args cho Merger
+        # Hợp nhất 2 cờ -d và -D thành một giá trị 'dirs_only'
         cli_dirs_only: Optional[str] = None
         if getattr(cli_args, 'all_dirs', False):
             cli_dirs_only = "_ALL_"
@@ -48,7 +60,7 @@ def process_tree_logic(
             cli_dirs_only = cli_args.dirs_patterns
         
         # Tạo một Namespace con chỉ chứa các cờ mà merge_config_sources cần
-        # để giữ cho hàm merge_config_sources không thay đổi
+        # để giữ cho hàm merge_config_sources có giao diện ổn định.
         merge_cli_args = argparse.Namespace(
             level=getattr(cli_args, 'level', None),
             extensions=getattr(cli_args, 'extensions', None),
