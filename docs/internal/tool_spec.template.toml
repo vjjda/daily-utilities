@@ -15,7 +15,9 @@ logger_name = "NewTool"
 # --- Phần [cli]: Cấu hình giao diện dòng lệnh ---
 [cli]
 # Loại giao diện: "typer" (mặc định) hoặc "argparse"
-interface = "typer"
+interface = "argparse"
+allow_interspersed_args = true
+
 
 # Cấu hình trợ giúp (help text)
 [cli.help]

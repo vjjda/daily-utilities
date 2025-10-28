@@ -66,11 +66,14 @@ def generate_script_entrypoint(config: Dict[str, Any]) -> str:
 
         # Điền vào template
         return template.format(
+            # --- SỬA LỖI: Thêm dòng này ---
+            tool_name=config['meta']['tool_name'],
+            # ---------------------------
             script_file=config['meta']['script_file'],
             logger_name=config['meta']['logger_name'],
             module_name=config['module_name'],
             config_imports=config_imports_code,
-            cli_description=cli_help_config.get('description', f"Mô tả cho {config['meta']['tool_name']}."), #
+            cli_description=cli_help_config.get('description', f"Mô tả cho {config['meta']['tool_name']}."),
             cli_epilog=cli_help_config.get('epilog', ""),
             argparse_arguments=argparse_args_code,
             argparse_path_expands=path_expands_code,

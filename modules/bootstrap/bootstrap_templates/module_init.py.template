@@ -43,7 +43,7 @@ for submodule_stem in modules_to_export:
             __all__.extend(public_symbols)
 
     except ImportError as e:
-        print(f"Cảnh báo: Không thể import từ {submodule_stem} trong module {__name__}: {e}") #
+        print(f"Cảnh báo: Không thể import từ {submodule_stem} trong module {__name__}: {{e}}") #
 
 # Dọn dẹp
 del Path, import_module, List, current_dir, modules_to_export, submodule_stem

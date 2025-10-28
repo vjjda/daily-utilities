@@ -22,7 +22,7 @@ try:
     # Import các thành phần logic từ module
     # from modules.{module_name} import process_{module_name}_logic, execute_{module_name}_action
 except ImportError as e:
-    print(f"Lỗi: Không thể import các module cần thiết: {e}", file=sys.stderr) #
+    print(f"Lỗi: Không thể import các module cần thiết: {{e}}", file=sys.stderr) 
     sys.exit(1)
 
 
@@ -44,7 +44,7 @@ def main():
 
     # --- 3. Cấu hình Logging ---
     logger = setup_logging(script_name="{logger_name}")
-    logger.debug("Script {logger_name} (Argparse) bắt đầu.") #
+    logger.debug("Script {logger_name} (Argparse) bắt đầu.") 
 
     # --- 4. Xử lý Path Expand ---
 {argparse_path_expands}
@@ -62,18 +62,18 @@ def main():
         #     log_success(logger, "Hoạt động hoàn tất.")
 
         # --- Xử lý Tạm thời (Xóa sau khi thêm logic) ---
-        logger.info("Logic xử lý chính chưa được triển khai.") #
+        logger.info("Logic xử lý chính chưa được triển khai.") 
         # In các giá trị tham số đã xử lý để kiểm tra
         processed_args = vars(args).copy()
         for key, value in processed_args.items():
-             expanded_var_name = f"{key}_path"
+             expanded_var_name = f"{{key}}_path"
              if expanded_var_name in locals():
                  processed_args[key] = locals()[expanded_var_name]
-        logger.info(f"Các tham số đã xử lý: {processed_args}") #
+        logger.info(f"Các tham số đã xử lý: {{processed_args}}") 
 
 
     except Exception as e:
-        logger.error(f"❌ Đã xảy ra lỗi không mong muốn: {e}") #
+        logger.error(f"❌ Đã xảy ra lỗi không mong muốn: {{e}}") 
         logger.debug("Traceback:", exc_info=True)
         sys.exit(1)
 
@@ -82,5 +82,5 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print("\n\n❌ Hoạt động bị dừng bởi người dùng.") #
+        print("\n\n❌ Hoạt động bị dừng bởi người dùng.") 
         sys.exit(1)
