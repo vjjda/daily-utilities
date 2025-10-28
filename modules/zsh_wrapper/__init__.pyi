@@ -9,9 +9,9 @@ DEFAULT_VENV: Any
 DEFAULT_WRAPPER_ABSOLUTE_PATH: Any
 DEFAULT_WRAPPER_RELATIVE_DIR: Any
 execute_zsh_wrapper_action: Any
-process_zsh_wrapper_logic: Any
 resolve_output_path_interactively: Any
 resolve_root_interactively: Any
+run_zsh_wrapper: Any
 
 # Static declaration of exported symbols (for Pylance)
 __all__: List[str] = [
@@ -20,7 +20,7 @@ __all__: List[str] = [
     'DEFAULT_WRAPPER_ABSOLUTE_PATH',
     'DEFAULT_WRAPPER_RELATIVE_DIR',
     'execute_zsh_wrapper_action',
-    'process_zsh_wrapper_logic',
     'resolve_output_path_interactively',
-    'resolve_root_interactively'
+    'resolve_root_interactively',
+    'run_zsh_wrapper'
 ]
