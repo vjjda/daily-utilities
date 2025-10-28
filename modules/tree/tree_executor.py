@@ -56,6 +56,17 @@ def print_status_header(
     filter_info = "Full view" if is_truly_full_view else "Filtered view"
     level_info = "full depth" if config_params["max_level"] is None else f"depth limit: {config_params['max_level']}"
     mode_info = ", dirs only" if config_params["global_dirs_only_flag"] else ""
+    
+    # --- NEW: Thêm thông tin extensions ---
+    ext_filter = config_params["filter_lists"].get("extensions")
+    ext_info = ""
+    if ext_filter is not None: # Chỉ hiển thị nếu filter được kích hoạt
+        if ext_filter:
+             ext_info = f", extensions: {','.join(sorted(list(ext_filter)))}"
+        else:
+             ext_info = ", extensions: (none)" # Hiển thị nếu filter rỗng
+    # --- END NEW ---
+
     git_info = ""
     if is_git_repo: 
         git_info = (
@@ -64,7 +75,7 @@ def print_status_header(
                   else ", Git project")
         )
         
-    print(f"{start_dir.name}/ [{filter_info}, {level_info}{mode_info}{git_info}]")
+    print(f"{start_dir.name}/ [{filter_info}, {level_info}{mode_info}{ext_info}{git_info}]")
     # --- END MODIFIED ---
 
 
@@ -102,6 +113,9 @@ def generate_tree(
     submodules: Optional[Set[Path]] = None, 
     prune_spec: Optional['pathspec.PathSpec'] = None,
     dirs_only_spec: Optional['pathspec.PathSpec'] = None,
+    # --- NEW: Thêm extensions_filter ---
+    extensions_filter: Optional[Set[str]] = None,
+    # --- END NEW ---
     # --- END MODIFIED ---
     is_in_dirs_only_zone: bool = False, 
     counters: Optional[Dict[str, int]] = None
@@ -135,10 +149,21 @@ def generate_tree(
     
     files: List[Path] = []
     if not is_in_dirs_only_zone: 
-        files = sorted(
-            [f for f in contents if f.is_file() and not is_ignored(f)], 
-            key=lambda p: p.name.lower()
-        )
+        # --- MODIFIED: Logic lọc file với extensions_filter ---
+        files_unfiltered = [f for f in contents if f.is_file() and not is_ignored(f)]
+        
+        if extensions_filter is not None:
+            files_filtered = []
+            for f in files_unfiltered:
+                # Dùng logic giống cpath: "".join(suffixes) -> '.tar.gz'
+                file_ext = "".join(f.suffixes).lstrip('.') 
+                if file_ext in extensions_filter:
+                    files_filtered.append(f)
+            files = sorted(files_filtered, key=lambda p: p.name.lower())
+        else:
+            # Không filter, chỉ sort
+            files = sorted(files_unfiltered, key=lambda p: p.name.lower())
+        # --- END MODIFIED ---
         
     items_to_print = dirs + files
     pointers = ["├── "] * (len(items_to_print) - 1) + ["└── "]
@@ -179,5 +204,6 @@ def generate_tree(
                 # (Sử dụng logic pathspec đã refactor)
                 ignore_spec, submodules, prune_spec, 
                 dirs_only_spec, 
+                extensions_filter, # <-- NEW: Truyền đệ quy
                 next_is_in_dirs_only_zone, counters
             )

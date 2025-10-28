@@ -9,7 +9,9 @@ import sys
 import argparse
 import logging
 from pathlib import Path
+# --- MODIFIED: Thêm Set ---
 from typing import Optional, Set, Dict, Any
+# --- END MODIFIED ---
 
 try:
     import tomllib
@@ -36,7 +38,10 @@ from modules.tree import (
     PROJECT_CONFIG_FILENAME,
     CONFIG_SECTION_NAME,
     DEFAULT_IGNORE, DEFAULT_PRUNE, DEFAULT_DIRS_ONLY_LOGIC,
+    # --- MODIFIED: Import DEFAULT_EXTENSIONS ---
     DEFAULT_MAX_LEVEL, FALLBACK_SHOW_SUBMODULES, FALLBACK_USE_GITIGNORE,
+    DEFAULT_EXTENSIONS,
+    # --- END MODIFIED ---
 
     load_config_files,
 
@@ -56,7 +61,8 @@ TREE_DEFAULTS: Dict[str, Any] = {
     "use-gitignore": FALLBACK_USE_GITIGNORE,
     "ignore": DEFAULT_IGNORE,
     "prune": DEFAULT_PRUNE,
-    "dirs-only": DEFAULT_DIRS_ONLY_LOGIC
+    "dirs-only": DEFAULT_DIRS_ONLY_LOGIC,
+    "extensions": DEFAULT_EXTENSIONS # <-- NEW
 }
 
 
@@ -66,7 +72,7 @@ def main():
     # --- 1. Định nghĩa Argparse ---
     parser = argparse.ArgumentParser(
         description="Một công cụ tạo cây thư mục thông minh hỗ trợ file cấu hình .tree.toml (Phiên bản Argparse).",
-        epilog="Ví dụ: tree . -L 3 -I '*.log'", # <-- Sửa ví dụ dùng dấu nháy đơn
+        epilog="Ví dụ: tree . -L 3 -I '*.log' -e 'py,md'", # <-- Sửa ví dụ
         formatter_class=argparse.RawTextHelpFormatter
     )
     tree_group = parser.add_argument_group("Tree Generation Options")
@@ -77,6 +83,15 @@ def main():
         help="Đường dẫn bắt đầu (file hoặc thư mục). Mặc định là thư mục hiện tại (.)."
     )
     tree_group.add_argument("-L", "--level", type=int, help="Giới hạn độ sâu hiển thị.")
+
+    # --- NEW: Thêm cờ -e/--extensions ---
+    tree_group.add_argument(
+        "-e", "--extensions",
+        type=str,
+        default=None,
+        help="Danh sách đuôi file (phân cách bởi dấu phẩy) để hiển thị. Hỗ trợ + (thêm) hoặc ~ (bớt). Ví dụ: 'py,js', '+md', '~log'"
+    )
+    # --- END NEW ---
 
     # --- MODIFIED: Cập nhật help text cho -I ---
     tree_group.add_argument(
@@ -166,6 +181,7 @@ def main():
 
     cli_args = argparse.Namespace(
         level=args.level,
+        extensions=args.extensions, # <-- NEW
         ignore=args.ignore,
         prune=args.prune,
         dirs_only=cli_dirs_only, # <-- Sửa tên biến
@@ -203,6 +219,9 @@ def main():
             submodules=config_params["submodules"],
             prune_spec=config_params["prune_spec"],
             dirs_only_spec=config_params["dirs_only_spec"],
+            # --- NEW: Truyền extensions_filter ---
+            extensions_filter=config_params["extensions_filter"],
+            # --- END NEW ---
             is_in_dirs_only_zone=config_params["is_in_dirs_only_zone"]
         )
 

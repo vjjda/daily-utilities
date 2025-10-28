@@ -13,11 +13,16 @@
 {toml_level}
 
 # show-submodules: Show the contents of submodule directories.
-show-submodules = {toml_show_submodules}
+show_submodules = {toml_show_submodules}
 
 # use-gitignore: Automatically read and apply rules from .gitignore.
-use-gitignore = {toml_use_gitignore}
+use_gitignore = {toml_use_gitignore}
 
+# --- Extensions Filter ---
+# extensions: List of extensions (without dot) to SHOW.
+# If omitted or empty (default), all file types are shown.
+# Example: extensions = ["py", "js", "md"]
+extensions = {toml_extensions}
 
 # --- FILTERING RULES ---
 # --- MODIFIED: Mention pathspec/gitwildmatch ---

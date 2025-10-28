@@ -11,6 +11,7 @@ from typing import Set, Optional
 __all__ = [
     # Logic Fallbacks
     "DEFAULT_IGNORE", "DEFAULT_PRUNE", "DEFAULT_DIRS_ONLY_LOGIC",
+    "DEFAULT_EXTENSIONS", # <-- NEW
     "FALLBACK_SHOW_SUBMODULES", "DEFAULT_MAX_LEVEL",
     "FALLBACK_USE_GITIGNORE",
     
@@ -28,6 +29,12 @@ DEFAULT_IGNORE: Set[str] = {
 }
 DEFAULT_PRUNE: Set[str] = {"dist", "build"}
 DEFAULT_DIRS_ONLY_LOGIC: Set[str] = set()
+
+# --- NEW: Extension Filter Default ---
+# Mặc định là None, có nghĩa là "không lọc", hiển thị tất cả file.
+DEFAULT_EXTENSIONS: Optional[Set[str]] = None
+# --- END NEW ---
+
 FALLBACK_SHOW_SUBMODULES: bool = False
 DEFAULT_MAX_LEVEL: Optional[int] = None
 

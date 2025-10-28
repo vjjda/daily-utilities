@@ -8,8 +8,8 @@ Logic nghiệp vụ cốt lõi cho module Tree (ctree).
 from pathlib import Path
 import logging 
 import argparse
-# --- MODIFIED: Thêm TYPE_CHECKING ---
-from typing import Set, Optional, Dict, Any, TYPE_CHECKING 
+# --- MODIFIED: Thêm TYPE_CHECKING, List ---
+from typing import Set, Optional, Dict, Any, TYPE_CHECKING, List
 # --- END MODIFIED ---
 
 # --- MODIFIED: Tách biệt import cho runtime và type-checking ---
@@ -23,21 +23,23 @@ if TYPE_CHECKING:
 # --- END MODIFIED ---
 
 # Import utilities
-# --- MODIFIED: Import các helper mới, xóa parse_comma_list ---
+# --- MODIFIED: Import các helper mới ---
 from utils.core import (
     get_submodule_paths, 
     parse_gitignore, 
     resolve_config_value, 
     resolve_config_list,
-    compile_spec_from_patterns, # <-- MỚI
-    parse_comma_list # <-- THÊM LẠI (cho dirs-only)
+    compile_spec_from_patterns, 
+    parse_comma_list,
+    resolve_set_modification # <-- NEW
 )
 # --- END MODIFIED ---
 
 from .tree_config import (
     DEFAULT_IGNORE, DEFAULT_PRUNE, DEFAULT_DIRS_ONLY_LOGIC,
     DEFAULT_MAX_LEVEL, CONFIG_SECTION_NAME, 
-    FALLBACK_SHOW_SUBMODULES, FALLBACK_USE_GITIGNORE
+    FALLBACK_SHOW_SUBMODULES, FALLBACK_USE_GITIGNORE,
+    DEFAULT_EXTENSIONS # <-- NEW
 )
 
 __all__ = ["merge_config_sources"]
@@ -63,6 +65,7 @@ def merge_config_sources(
             "submodules": set(),
             "prune_spec": None,
             "dirs_only_spec": None,
+            "extensions_filter": None, # <-- NEW
             # --- END MODIFIED ---
             "is_in_dirs_only_zone": False,
             "global_dirs_only_flag": False,
@@ -71,7 +74,8 @@ def merge_config_sources(
                 "ignore": set(),
                 "prune": set(),
                 "dirs_only": set(),
-                "submodules": set()
+                "submodules": set(),
+                "extensions": set() # <-- NEW
             }
         }
 
@@ -136,6 +140,41 @@ def merge_config_sources(
         dirs_only_list_custom = parse_comma_list(final_dirs_only_mode)
         
     final_dirs_only_list = DEFAULT_DIRS_ONLY_LOGIC.union(dirs_only_list_custom)
+
+    # --- NEW: Extensions List (Logic tương tự cpath) ---
+    cli_ext_str = args.extensions
+    file_ext_list: Optional[List[str]] = file_config.get('extensions')
+    
+    # 1. Lấy tentative set (File > Default)
+    tentative_extensions: Optional[Set[str]]
+    if file_ext_list is not None:
+         tentative_extensions = set(file_ext_list)
+         logger.debug("Sử dụng danh sách 'extensions' từ file config làm cơ sở.")
+    else:
+         tentative_extensions = DEFAULT_EXTENSIONS # Default là None
+         logger.debug("Sử dụng danh sách 'extensions' mặc định (None) làm cơ sở.")
+
+    # 2. Áp dụng logic +/-/overwrite từ CLI
+    extensions_filter: Optional[Set[str]]
+    
+    if cli_ext_str is None and file_ext_list is None:
+        # Case 1: Không có CLI, không có config -> Không filter
+        extensions_filter = None
+        logger.debug("Không áp dụng bộ lọc 'extensions'.")
+    else:
+        # Case 2: Có CLI hoặc config.
+        # Bắt đầu với set() nếu tentative là None, hoặc tentative
+        base_set = tentative_extensions if tentative_extensions is not None else set()
+        
+        extensions_filter = resolve_set_modification(
+            tentative_set=base_set,
+            cli_string=cli_ext_str
+        )
+        if cli_ext_str:
+             logger.debug(f"Đã áp dụng logic 'extensions' CLI: '{cli_ext_str}'. Set cuối cùng: {extensions_filter}")
+        else:
+             logger.debug(f"Set 'extensions' cuối cùng (từ config): {extensions_filter}")
+    # --- END NEW ---
     
     # --- NEW: Gộp và Biên dịch Specs ---
     # Gộp ignore từ config và .gitignore
@@ -160,6 +199,7 @@ def merge_config_sources(
         "ignore_spec": final_ignore_spec,
         "prune_spec": final_prune_spec,
         "dirs_only_spec": final_dirs_only_spec,
+        "extensions_filter": extensions_filter, # <-- NEW
         # --- END MODIFIED ---
         "submodules": submodule_paths,
         "is_in_dirs_only_zone": global_dirs_only,
@@ -170,6 +210,7 @@ def merge_config_sources(
             "ignore": final_ignore_list, # Giữ lại để in status
             "prune": final_prune_list,
             "dirs_only": final_dirs_only_list,
-            "submodules": submodule_names
+            "submodules": submodule_names,
+            "extensions": extensions_filter if extensions_filter is not None else set() # <-- NEW
         }
     }
