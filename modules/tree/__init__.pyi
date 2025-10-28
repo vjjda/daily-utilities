@@ -19,6 +19,7 @@ load_config_files: Any
 merge_config_sources: Any
 print_final_result: Any
 print_status_header: Any
+process_tree_logic: Any
 
 # Static declaration of exported symbols (for Pylance)
 __all__: List[str] = [
@@ -36,5 +37,6 @@ __all__: List[str] = [
     'load_config_files',
     'merge_config_sources',
     'print_final_result',
-    'print_status_header'
+    'print_status_header',
+    'process_tree_logic'
 ]
