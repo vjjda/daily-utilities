@@ -1,138 +1,162 @@
 # Path: modules/bootstrap/bootstrap_builder/bootstrap_argparse_builder.py
-
 """
-Code snippet generation logic for the Bootstrap module.
-(Builds code strings for Argparse)
+Logic tạo các đoạn mã (code snippet) cho giao diện Argparse.
+(Module nội bộ, được import bởi bootstrap_builder)
 """
 
-# --- MODIFIED: Thêm Path và List ---
 from typing import Dict, Any, List
 from pathlib import Path
-# --- END MODIFIED ---
 
-# --- MODIFIED: Import từ ..bootstrap_utils ---
+# Import hàm helper từ module utils cùng cấp
 from ..bootstrap_utils import get_cli_args
-# --- END MODIFIED ---
 
-# --- MODIFIED: Cập nhật __all__ ---
 __all__ = [
     "build_argparse_arguments",
-    "build_path_expands", 
+    "build_path_expands",
     "build_args_pass_to_core"
 ]
-# --- END MODIFIED ---
 
 
 def build_argparse_arguments(config: Dict[str, Any]) -> str:
     """
-    Tạo các khối code parser.add_argument(...)
-    dựa trên file .spec.toml.
+    Tạo các khối code `parser.add_argument(...)` dựa trên cấu hình `[[cli.args]]`
+    trong file `.spec.toml`.
+
+    Args:
+        config: Dict chứa nội dung đã parse của file `.spec.toml`.
+
+    Returns:
+        Chuỗi string chứa các dòng code `parser.add_argument(...)` đã được format.
     """
     code_lines: List[str] = []
-    args = get_cli_args(config)
-    
+    args = get_cli_args(config) # Lấy danh sách args từ config spec
+
     if not args:
-        # --- FIX: Thêm 4-space indent ---
-        code_lines.append("    # (No CLI arguments defined in spec)")
+        code_lines.append("    # (Không có đối số CLI nào được định nghĩa trong spec)") #
+        return "\n".join(code_lines)
 
     for arg in args:
         name = arg['name']
-        py_type_str = arg.get('type', 'str')
-        help_str = arg.get('help', f"Help text for {name}.")
-        
-        arg_params = []
-        
-        # 1. Name(s)
-        if arg.get('is_argument', False):
-            # --- FIX: Thêm 4-space indent (total 8) ---
+        py_type_str = arg.get('type', 'str') # 'str', 'int', 'bool', 'Path'
+        help_str = arg.get('help', f"Văn bản trợ giúp cho {name}.") #
+        is_argument = arg.get('is_argument', False) # True nếu là positional argument
+
+        arg_params: List[str] = [] # List chứa các dòng tham số cho add_argument
+
+        # 1. Tên (positional hoặc optional)
+        if is_argument:
+            # Argument dạng positional: "target_dir"
             arg_params.append(f"        \"{name}\",")
         else:
+            # Argument dạng optional: "--output", "-o"
             name_flags = [f"\"--{name}\""]
             if 'short' in arg:
                 name_flags.insert(0, f"\"{arg['short']}\"")
-            # --- FIX: Thêm 4-space indent (total 8) ---
             arg_params.append(f"        {', '.join(name_flags)},")
 
-        # 2. Type / Action
+        # 2. Loại (type) hoặc Hành động (action)
         if py_type_str == 'bool':
+            # Boolean flags dùng action store_true/store_false
             if arg.get('default', False) is True:
-                # --- FIX: Thêm 4-space indent (total 8) ---
+                # Nếu default là True, cờ sẽ làm nó thành False
                 arg_params.append(f"        action=\"store_false\",")
             else:
-                # --- FIX: Thêm 4-space indent (total 8) ---
+                # Nếu default là False (hoặc không có), cờ sẽ làm nó thành True
                 arg_params.append(f"        action=\"store_true\",")
-        else:
-            arg_type = "int" if py_type_str == "int" else "str"
-            # --- FIX: Thêm 4-space indent (total 8) ---
-            arg_params.append(f"        type={arg_type},")
+        elif py_type_str == 'int':
+             arg_params.append(f"        type=int,")
+        # elif py_type_str == 'Path':
+        #     # Path vẫn nhận vào là string, sẽ xử lý sau
+        #     arg_params.append(f"        type=str,")
+        else: # Mặc định là string
+            arg_params.append(f"        type=str,")
 
-        # 3. Default / Nargs
-        if arg.get('is_argument', False):
+        # 3. Giá trị mặc định (default) và Số lượng (nargs)
+        if is_argument:
+            # Positional argument
             if 'default' in arg:
-                # --- FIX: Thêm 4-space indent (total 8) ---
+                # Nếu có default, nó trở thành tùy chọn (nargs='?')
                 arg_params.append(f"        nargs=\"?\",")
                 arg_params.append(f"        default={repr(arg['default'])},")
+            # else: không cần nargs='1' vì đó là mặc định cho positional
         else:
-            if py_type_str != 'bool':
+            # Optional argument
+            if py_type_str != 'bool': # Boolean đã xử lý bằng action
                 if 'default' in arg:
-                    # --- FIX: Thêm 4-space indent (total 8) ---
                     arg_params.append(f"        default={repr(arg['default'])},")
                 else:
-                    # --- FIX: Thêm 4-space indent (total 8) ---
+                    # Nếu không có default, mặc định là None cho optional
                     arg_params.append(f"        default=None,")
 
-        # 4. Help
-        # --- FIX: Thêm 4-space indent (total 8) ---
+        # 4. Văn bản trợ giúp (help)
         arg_params.append(f"        help={repr(help_str)}")
 
-        # 5. Gộp lại
-        # --- FIX: Thêm 4-space indent ---
+        # 5. Ghép lại thành add_argument call
         code_lines.append(f"    parser.add_argument(")
         code_lines.extend(arg_params)
-        # --- FIX: Thêm 4-space indent ---
         code_lines.append(f"    )")
-            
+
     return "\n".join(code_lines)
 
-# --- NEW: Hàm (Di chuyển từ bootstrap_helpers.py) ---
 def build_path_expands(config: Dict[str, Any]) -> str:
-    """Tạo code để expanduser() cho các tham số loại Path (phiên bản Argparse)."""
+    """
+    Tạo code để gọi `Path(...).expanduser()` cho các tham số loại 'Path'
+    (phiên bản Argparse).
+
+    Args:
+        config: Dict chứa nội dung đã parse của file `.spec.toml`.
+
+    Returns:
+        Chuỗi string chứa code xử lý Path.
+    """
     code_lines: List[str] = []
     path_args = [arg for arg in get_cli_args(config) if arg.get('type') == 'Path']
+
     if not path_args:
-        # --- FIX: Thêm 4-space indent ---
-        code_lines.append("    # (No Path arguments to expand)")
-        
+        code_lines.append("    # (Không có đối số Path nào cần expand)") #
+        return "\n".join(code_lines)
+
     for arg in path_args:
         name = arg['name']
-        var_name = f"{name}_path" # (VD: target_dir_path)
-        
+        var_name = f"{name}_path" # Tạo biến mới, ví dụ: target_dir_path
+
+        # `args.name` chứa giá trị string từ CLI
+        # Nếu là positional bắt buộc, không cần kiểm tra None
         if arg.get('is_argument') and 'default' not in arg:
-             # --- FIX: Thêm 4-space indent ---
              code_lines.append(f"    {var_name} = Path(args.{name}).expanduser()")
         else:
-             # --- FIX: Thêm 4-space indent ---
+             # Nếu là optional hoặc positional có default, cần kiểm tra args.name có phải None không
              code_lines.append(f"    {var_name} = Path(args.{name}).expanduser() if args.{name} else None")
-            
-    return "\n".join(code_lines)
-# --- END NEW ---
 
-# --- NEW: Hàm (Di chuyển từ bootstrap_helpers.py) ---
+    return "\n".join(code_lines)
+
 def build_args_pass_to_core(config: Dict[str, Any]) -> str:
-    """Tạo các dòng key=value để truyền args vào hàm core logic (phiên bản Argparse)."""
+    """
+    Tạo các dòng `key=value` để truyền các đối số đã xử lý
+    vào hàm logic cốt lõi (phiên bản Argparse).
+
+    Args:
+        config: Dict chứa nội dung đã parse của file `.spec.toml`.
+
+    Returns:
+        Chuỗi string chứa các dòng `key=value,` đã được format.
+    """
     code_lines: List[str] = []
     args = get_cli_args(config)
+
     if not args:
-        code_lines.append("        # (No CLI args to pass)")
-        
+        code_lines.append("        # (Không có đối số CLI nào để truyền)") #
+        return "\n".join(code_lines)
+
     for arg in args:
         name = arg['name']
-        
+
         if arg.get('type') == 'Path':
-            # (Indent 8-spaces là chính xác cho vị trí này)
-            code_lines.append(f"        {name}={name}_path,")
+            # Đối với Path, truyền biến đã expanduser()
+            var_name = f"{name}_path"
+            code_lines.append(f"        {name}={var_name},")
         else:
+            # Các loại khác, truyền trực tiếp từ `args` namespace
             code_lines.append(f"        {name}=args.{name},")
-            
+
     return "\n".join(code_lines)
-# --- END NEW ---
