@@ -10,14 +10,19 @@ from typing import Optional, Dict, Any
 
 try:
     import tomlkit
+    # --- FIX: Import exceptions directly ---
+    from tomlkit import ParseError, ConvertError
+    # --- END FIX ---
 except ImportError:
     tomlkit = None
+    # Define dummy exceptions if tomlkit is not available to avoid NameError
+    class ParseError(Exception): pass
+    class ConvertError(Exception): pass
 
-# --- FIX: Correct relative import ---
+
 # Import UI helpers and logging utils from one level up
 from ..ui_helpers import prompt_config_overwrite
-# --- END FIX ---
-from utils.logging_config import log_success # This import is fine
+from utils.logging_config import log_success
 
 __all__ = ["write_project_config_section"]
 
@@ -33,7 +38,6 @@ def write_project_config_section(
     Parses the generated section string to get a TOML object with comments.
     Returns the path if written, None if cancelled.
     """
-    # ... (rest of the function remains the same) ...
     if tomlkit is None:
         logger.error("❌ Thiếu thư viện 'tomlkit'. Không thể cập nhật file project.")
         raise ImportError("Thư viện 'tomlkit' không được cài đặt.")
@@ -54,18 +58,22 @@ def write_project_config_section(
 
         if should_write:
             try:
+                # ParseError can happen here
                 parsed_section_doc = tomlkit.parse(new_section_content_string)
                 if config_section_name not in parsed_section_doc:
                      raise ValueError(
                          f"Generated content unexpectedly missing section [{config_section_name}] after parsing."
                      )
                 new_section_object = parsed_section_doc[config_section_name]
-            except (tomlkit.exceptions.ParseError, ValueError, Exception) as e:
+            # --- FIX: Use direct exception names ---
+            except (ParseError, ValueError, Exception) as e:
+            # --- END FIX ---
                  logger.error(f"❌ Lỗi khi phân tích nội dung section đã tạo: {e}")
                  raise # Re-raise
 
             main_doc[config_section_name] = new_section_object
 
+            # ConvertError can happen during dump if data is invalid
             with config_file_path.open('w', encoding='utf-8') as f:
                 tomlkit.dump(main_doc, f)
 
@@ -74,7 +82,9 @@ def write_project_config_section(
     except IOError as e:
         logger.error(f"❌ Lỗi I/O khi cập nhật file '{config_file_path.name}': {e}")
         raise
-    except (tomlkit.exceptions.ParseError, tomlkit.exceptions.ConvertError, Exception) as e:
+    # --- FIX: Use direct exception names ---
+    except (ParseError, ConvertError, Exception) as e:
+    # --- END FIX ---
         logger.error(f"❌ Lỗi không mong muốn khi cập nhật TOML (tomlkit): {e}")
         raise
 
