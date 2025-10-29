@@ -58,8 +58,8 @@ if LIBCST_AVAILABLE:
             """Xóa comment nếu all_clean=True (trừ shebang)."""
             if not self.all_clean or original_node.value.startswith("#!"):
                 return updated_node
-            # Trả về sentinel RemoveFromParent (không gọi như hàm)
-            return RemoveFromParent
+            # SỬA LỖI: Trả về thể hiện RemoveFromParent()
+            return RemoveFromParent() # Thêm dấu ngoặc đơn ()
 
         def _remove_docstring_from_body(
             self, body: Sequence[BaseStatement]
