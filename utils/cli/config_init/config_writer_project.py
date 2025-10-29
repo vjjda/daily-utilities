@@ -14,8 +14,8 @@ try:
     from tomlkit.exceptions import ParseError, ConvertError
 except ImportError:
     tomlkit = None
-    ParseError = Exception # type: ignore
-    ConvertError = Exception # type: ignore
+    ParseError = Exception
+    ConvertError = Exception
 
 
 # Import UI helpers and logging utils from one level up
