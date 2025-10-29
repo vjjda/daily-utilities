@@ -10,12 +10,10 @@ from typing import Optional, Dict, Any, Union, Sequence
 
 try:
     import libcst as cst
-    # Import các lớp cụ thể để type hint rõ ràng hơn
     from libcst import BaseStatement, RemovalSentinel, RemoveFromParent
     LIBCST_AVAILABLE = True
 except ImportError:
     LIBCST_AVAILABLE = False
-    # Không cần fallback class nữa, vì hàm analyze_ sẽ raise ImportError
 
 
 __all__ = ["analyze_file_for_docstrings"]
@@ -45,7 +43,7 @@ if LIBCST_AVAILABLE:
 
         def leave_Comment(
             self, original_node: cst.Comment, updated_node: cst.Comment
-        ) -> Union[cst.Comment, RemoveFromParent]:
+        ) -> Union[cst.Comment, RemovalSentinel]:
             """Xóa comment nếu all_clean=True (trừ shebang)."""
             if not self.all_clean or original_node.value.startswith("#!"):
                 return updated_node
@@ -117,9 +115,8 @@ def analyze_file_for_docstrings(
 
     try:
         original_content = file_path.read_text(encoding='utf-8')
-        # Thêm config parse để LibCST hiểu Python version (quan trọng!)
-        parser_config = cst.PartialParserConfig(python_version="3.11") # Hoặc version bạn dùng
-        cst_module = cst.parse_module(original_content, config=parser_config)
+        # SỬA LỖI: Bỏ config=parser_config, để libcst tự phát hiện version
+        cst_module = cst.parse_module(original_content)
 
     except (IOError, UnicodeDecodeError) as e:
         logger.warning(f"⚠️ Bỏ qua file '{file_path.name}' do lỗi đọc/encoding: {e}")
@@ -127,8 +124,21 @@ def analyze_file_for_docstrings(
     except cst.ParserSyntaxError as e:
         line = getattr(e, 'raw_line', '?')
         col = getattr(e, 'raw_column', '?')
-        logger.warning(f"⚠️ Bỏ qua file '{file_path.name}' do lỗi cú pháp (LibCST) tại dòng {line}, cột {col}: {e.message}")
+        # Sửa lại log để hiển thị rõ hơn lỗi cú pháp gốc
+        logger.warning(f"⚠️ Bỏ qua file '{file_path.name}' do lỗi cú pháp Python (LibCST) tại dòng {line}, cột {col}: {e.message}")
+        # Log thêm context dòng lỗi nếu có thể
+        try:
+            lines = original_content.splitlines()
+            if line != '?' and int(line) > 0 and int(line) <= len(lines):
+                 logger.warning(f"   | Lỗi gần dòng: {lines[int(line)-1]}")
+        except Exception:
+             pass # Bỏ qua nếu không lấy được dòng lỗi
         return None
+    # Sửa lỗi: Bắt cụ thể lỗi phiên bản grammar
+    except cst.exceptions.VersionCannotParseError as e:
+         logger.warning(f"⚠️ Bỏ qua file '{file_path.name}' do lỗi phiên bản grammar (LibCST): {e}")
+         logger.warning("   -> Có thể cần nâng cấp libcst hoặc kiểm tra cú pháp Python không tương thích.")
+         return None
     except Exception as e:
         logger.warning(f"⚠️ Bỏ qua file '{file_path.name}' do lỗi parse không xác định: {e}")
         return None
@@ -147,6 +157,5 @@ def analyze_file_for_docstrings(
         return None
     except Exception as e:
         logger.error(f"❌ Lỗi không mong muốn khi biến đổi CST file '{file_path.name}': {e}")
-        # Log thêm traceback để debug
         logger.debug("Traceback:", exc_info=True)
         return None
