@@ -12,6 +12,7 @@ GRAPHVIZ_PREFIX: Any
 MERMAID_PREFIX: Any
 MMC_PATH: Any
 execute_diagram_generation: Any
+process_clipboard_content: Any
 
 # Static declaration of exported symbols (for Pylance)
 __all__: List[str] = [
@@ -22,5 +23,6 @@ __all__: List[str] = [
     'GRAPHVIZ_PREFIX',
     'MERMAID_PREFIX',
     'MMC_PATH',
-    'execute_diagram_generation'
+    'execute_diagram_generation',
+    'process_clipboard_content'
 ]
