@@ -2,7 +2,13 @@
 
 """
 Entrypoint (cổng vào) cho ndoc (No Doc).
-# ... (docstring không đổi)
+Script này chịu trách nhiệm:
+1. Thiết lập `sys.path` để import `utils` và `modules`.
+2. Phân tích đối số dòng lệnh (Argparse).
+3. Cấu hình logging.
+4. Xử lý yêu cầu khởi tạo config (--config-local, --config-project).
+5. Gọi logic cốt lõi (`process_no_doc_logic`).
+6. Gọi logic thực thi (`execute_ndoc_action`) dựa trên kết quả.
 """
 
 import sys
