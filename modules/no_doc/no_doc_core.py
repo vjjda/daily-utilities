@@ -82,8 +82,14 @@ def process_no_doc_logic(
     # 3. Phân tích file (Xóa Docstring)
     files_needing_fix: List[FileResult] = []
     
+    # Trích xuất cờ all_clean
+    all_clean: bool = getattr(cli_args, 'all_clean', False)
+    if all_clean:
+        logger.info("⚠️ Chế độ ALL-CLEAN đã bật: Sẽ loại bỏ cả Docstring VÀ Comments.")
+
     for file_path in files_to_process:
-        result = analyze_file_for_docstrings(file_path, logger)
+        # Cập nhật hàm analyze_file_for_docstrings để nhận cờ all_clean
+        result = analyze_file_for_docstrings(file_path, logger, all_clean) 
         if result:
             files_needing_fix.append(result)
 

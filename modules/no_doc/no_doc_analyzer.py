@@ -62,84 +62,109 @@ def _find_all_docstrings(tree: ast.Module) -> List[Dict[str, Any]]:
 
 # --- Hàm chính ---
 
+def _remove_comments_from_content(content: str) -> str:
+    """Loại bỏ tất cả comments (#) khỏi nội dung, ngoại trừ Shebang."""
+    lines = content.splitlines(True) # Giữ dấu xuống dòng
+    new_lines: List[str] = []
+    
+    if lines and lines[0].startswith('#!'):
+        # Giữ lại Shebang
+        new_lines.append(lines[0])
+        lines.pop(0)
+
+    for line in lines:
+        stripped_line = line.lstrip() # Dùng lstrip để giữ indent của code
+        if stripped_line.startswith('#'):
+            # Bỏ qua dòng comment hoàn toàn
+            continue
+        
+        # Tìm comment nội tuyến
+        clean_line = line
+        try:
+            # Tách chuỗi theo dấu # (cần regex hoặc phân tích cú pháp để tránh string literals)
+            # Tuy nhiên, để đơn giản, ta chỉ loại bỏ dấu # đầu tiên (rủi ro với string literal)
+            # Dùng regex đơn giản để loại bỏ comment cuối dòng (thô sơ)
+            # Vì ta đã xóa docstring (thường là string dài), rủi ro này được giảm bớt.
+            # Tìm dấu '#' không nằm trong dấu nháy kép/đơn.
+            
+            # Giải pháp an toàn hơn: chỉ loại bỏ comment nếu nó đứng sau khoảng trắng
+            parts = clean_line.split('#', 1)
+            if len(parts) > 1:
+                # Nếu phần trước dấu # KHÔNG phải là dấu nháy (heuristic đơn giản)
+                if parts[0].strip() and not (parts[0].strip().endswith('"') or parts[0].strip().endswith("'")):
+                    clean_line = parts[0].rstrip() + '\n' # Loại bỏ comment và khoảng trắng thừa
+                else:
+                    # Nếu là comment bên trong string hoặc dấu # là code, giữ nguyên
+                    pass
+
+            new_lines.append(clean_line)
+        
+        except Exception:
+            new_lines.append(line) # Fallback
+
+    return "".join(new_lines)
+
+
+# --- Hàm chính ---
+
 def analyze_file_for_docstrings(
     file_path: Path, 
-    logger: logging.Logger
+    logger: logging.Logger,
+    all_clean: bool # Thêm cờ all_clean
 ) -> Optional[Dict[str, Any]]:
     """
-    Phân tích file Python, loại bỏ docstring bằng cách xóa dòng,
-    và trả về nội dung mới.
+    Phân tích file Python, loại bỏ docstring, và tùy chọn comments.
     """
     
+    # 1. Đọc nội dung gốc
     original_lines: List[str] = []
     try:
-        # Đọc file và giữ lại dấu xuống dòng (True)
         original_lines = file_path.read_text(encoding='utf-8').splitlines(keepends=True)
     except (IOError, UnicodeDecodeError) as e:
         logger.warning(f"⚠️ Bỏ qua file '{file_path.name}' do lỗi đọc/encoding: {e}")
         return None
+        
+    original_content = "".join(original_lines)
+    content_after_docstring_removal = original_content
+    docstring_removed = False
 
     try:
-        original_content = "".join(original_lines)
+        # 2. Xóa Docstrings (Dùng AST)
         tree = ast.parse(original_content)
         docstrings = _find_all_docstrings(tree)
         
-        if not docstrings:
-            return None # Không có docstring để xóa
-
-        new_lines = list(original_lines)
+        if docstrings:
+            # Logic xóa docstring (dựa trên sắp xếp ngược, giống code gốc)
+            new_lines = list(original_lines)
+            docstrings.sort(key=lambda d: d["end_line"], reverse=True)
+            
+            for doc_info in docstrings:
+                start = doc_info["start_line"]
+                end = doc_info["end_line"]
+                del new_lines[start - 1 : end] # Xóa dòng từ start đến end
+            
+            content_after_docstring_removal = "".join(new_lines)
+            docstring_removed = True
+            
+        # 3. Xóa Comments (Nếu all_clean=True)
+        content_after_all_cleaning = content_after_docstring_removal
+        if all_clean:
+            content_after_all_cleaning = _remove_comments_from_content(content_after_docstring_removal)
         
-        # Vì ta xóa dòng từ trên xuống, việc xóa có thể làm lệch vị trí 
-        # dòng của các node bên dưới. Ta phải xóa từ DƯỚI LÊN (Reverse).
-        # Docstrings có start_line và end_line khác nhau, nên ta chỉ cần
-        # lấy chúng và sắp xếp theo thứ tự giảm dần của dòng bắt đầu.
-        
-        # Sắp xếp theo dòng kết thúc giảm dần (để xóa từ dưới lên)
-        docstrings.sort(key=lambda d: d["end_line"], reverse=True)
-        
-        docstrings_removed_count = 0
-        
-        for doc_info in docstrings:
-            start = doc_info["start_line"]
-            end = doc_info["end_line"]
-            
-            # Chỉ số trong list (list index) = line number - 1
-            start_index = start - 1
-            end_index = end - 1
-            
-            # --- Xử lý xóa dòng ---
-            
-            # Dòng chứa docstring là: original_lines[start_index] đến original_lines[end_index]
-            
-            # Giả định: Docstring thường được bao quanh bởi dòng trống.
-            # Ta sẽ xóa docstring VÀ dòng trống ngay trước nó (nếu có).
-            
-            # Chuỗi docstring thô (có thể bao gồm dấu ngoặc kép/ba)
-            # Ta cần giữ lại dòng `def function():` 
-            
-            # Tìm dòng thực sự bắt đầu chuỗi (thường là dấu """)
-            
-            # Vì ta chỉ có dòng/cột: ta sẽ xóa toàn bộ các dòng từ start_index
-            # đến end_index.
-            del new_lines[start_index : end_index + 1]
-            docstrings_removed_count += 1
-            
-        if docstrings_removed_count > 0:
-            new_content = "".join(new_lines)
-            
-            logger.debug(f"Đã xóa {docstrings_removed_count} docstring khỏi file '{file_path.name}'")
+        # 4. So sánh và trả về kết quả
+        if docstring_removed or (all_clean and content_after_all_cleaning != original_content):
             
             return {
                 "path": file_path,
                 "original_content": original_content,
-                "new_content": new_content,
+                "new_content": content_after_all_cleaning,
             }
         
     except SyntaxError as e:
         logger.warning(f"⚠️ Bỏ qua file '{file_path.name}' do lỗi cú pháp (SyntaxError): {e}")
         return None
     except Exception as e:
-        logger.error(f"❌ Lỗi không mong muốn khi phân tích AST/xóa dòng file '{file_path.name}': {e}")
+        logger.error(f"❌ Lỗi không mong muốn khi phân tích/xóa file '{file_path.name}': {e}")
         return None
 
     return None

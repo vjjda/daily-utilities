@@ -72,6 +72,11 @@ def main():
         help='Đường dẫn (file hoặc thư mục) để bắt đầu quét. Mặc định: ".".'
     )
     pack_group.add_argument(
+        "-a", "--all-clean",
+        action="store_true",
+        help="Loại bỏ cả docstring và tất cả comments (#) khỏi file (ngoại trừ shebang)."
+    )
+    pack_group.add_argument(
         "-d", "--dry-run",
         action="store_true",
         help="Chỉ chạy ở chế độ kiểm tra (dry-run) và báo cáo các file cần sửa, không thực hiện ghi file."
