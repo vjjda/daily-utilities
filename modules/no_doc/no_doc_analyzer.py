@@ -24,7 +24,9 @@ def _get_docstring_info(node_body: List[ast.stmt]) -> Optional[Dict[str, Any]]:
         isinstance(node_body[0].value, (ast.Constant))
     ):
         expr_node: ast.Expr = node_body[0]
-        constant_node = expr_node.value
+        
+        # Thêm khai báo kiểu tường minh cho Type Checker
+        constant_node: ast.Constant = expr_node.value
         
         # Docstring phải là chuỗi
         if not isinstance(constant_node.value, str):
@@ -39,7 +41,7 @@ def _get_docstring_info(node_body: List[ast.stmt]) -> Optional[Dict[str, Any]]:
             "end_line": end_line,
             "col_offset": expr_node.col_offset,
             "end_col_offset": expr_node.end_col_offset,
-            "value": constant_node.value,
+            "value": constant_node.value, # Pylance giờ đã biết constant_node có 'value'
         }
     return None
 
