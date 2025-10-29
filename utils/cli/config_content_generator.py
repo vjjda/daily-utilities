@@ -19,20 +19,21 @@ def generate_config_content(
     logger: logging.Logger,
     module_dir: Path,
     template_filename: str,
-    config_section_name: str,
+    config_section_name: str, # Still needed for context if errors occur elsewhere
     effective_defaults: Dict[str, Any]
 ) -> str:
     """
     Tải template, giữ comment, và chèn giá trị mặc định chỉ khi chúng không None.
     Nếu giá trị mặc định là None, comment out dòng key = value đó trong template.
-    (This is the revised _generate_template_content function from the previous step)
     """
     template_path = module_dir / template_filename
     template_lines = load_text_template(template_path, logger).splitlines()
 
     output_lines = []
-    section_header_expected = f"[{config_section_name}]"
-    header_found_in_template = False
+    # --- REMOVED: Redundant header check variables ---
+    # section_header_expected = f"[{config_section_name}]"
+    # header_found_in_template = False
+    # --- END REMOVAL ---
 
     placeholder_pattern = re.compile(
         r"^(\s*)(#?\s*)([\w-]+)\s*=\s*\{toml_(\w+)\}\s*(?:#.*)?$"
@@ -54,14 +55,18 @@ def generate_config_content(
             else:
                  output_lines.append(line) # Keep template line if key missing in defaults
         else:
-            if section_header_expected in line:
-                header_found_in_template = True
-            output_lines.append(line)
+            # --- REMOVED: Redundant header check ---
+            # if section_header_expected in line:
+            #     header_found_in_template = True
+            # --- END REMOVAL ---
+            output_lines.append(line) # Keep non-placeholder lines
 
-    if not header_found_in_template:
-         raise ValueError(
-             f"Template '{template_filename}' thiếu header section '{section_header_expected}'."
-         )
+    # --- REMOVED: Redundant header validation block ---
+    # if not header_found_in_template:
+    #      raise ValueError(
+    #          f"Template '{template_filename}' thiếu header section '{section_header_expected}'."
+    #      )
+    # --- END REMOVAL ---
 
     if output_lines and output_lines[-1].strip() != "":
         output_lines.append("")
