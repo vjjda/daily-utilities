@@ -8,17 +8,23 @@ Sử dụng LibCST để đảm bảo giữ nguyên định dạng.
 import logging
 from typing import Union, Sequence, Optional
 
+# --- Sửa lỗi Import ---
+_LIBCST_AVAILABLE = False
 try:
     import libcst as cst
-    # Import các thành phần cần thiết từ libcst
-    from libcst import BaseStatement, RemovalSentinel, RemoveFromParent
-    # Thêm type: ignore cho các thành phần Pylance không thấy
-    from libcst import AsyncFunctionDef # type: ignore [attr-defined]
-    from libcst.exceptions import VersionCannotParseError # type: ignore [attr-defined]
-    LIBCST_AVAILABLE = True
+    # Chỉ kiểm tra import chính ở đây
+    _LIBCST_AVAILABLE = True
 except ImportError:
-    LIBCST_AVAILABLE = False
-    # Định nghĩa các lớp giả để tránh lỗi type hint khi libcst không cài
+    pass # Để _LIBCST_AVAILABLE là False
+
+# Chỉ import các thành phần con nếu libcst thực sự tồn tại
+if _LIBCST_AVAILABLE:
+    from libcst import BaseStatement, RemovalSentinel, RemoveFromParent
+    # Vẫn thêm type: ignore cho Pylance
+    from libcst import AsyncFunctionDef # type: ignore [attr-defined]
+    from libcst import VersionCannotParseError, ParserSyntaxError # type: ignore [attr-defined]
+else:
+    # Định nghĩa các lớp giả nếu libcst không tồn tại
     class CSTNode: pass
     class Comment(CSTNode): pass
     class Module(CSTNode): pass
@@ -28,11 +34,13 @@ except ImportError:
     BaseStatement = CSTNode # type: ignore [misc]
     RemovalSentinel = object() # type: ignore [misc, assignment]
     RemoveFromParent = object() # type: ignore [misc, assignment]
-    class ParserSyntaxError(Exception): pass
+    class ParserSyntaxError(Exception): pass # type: ignore [no-redef]
     class VersionCannotParseError(Exception): pass # type: ignore [no-redef]
 
+LIBCST_AVAILABLE = _LIBCST_AVAILABLE # Gán vào biến global cuối cùng
 
 __all__ = ["clean_python_code"]
+
 
 if LIBCST_AVAILABLE:
     class DocstringAndCommentRemover(cst.CSTTransformer):
@@ -109,7 +117,6 @@ if LIBCST_AVAILABLE:
             new_inner_body_tuple = self._remove_docstring_from_body(updated_node.body.body) # type: ignore [attr-defined]
             if new_inner_body_tuple is not None:
                 new_indented_block = updated_node.body.with_changes(body=new_inner_body_tuple) # type: ignore [attr-defined]
-                # Bỏ qua lỗi unbound-variable sai của Pylance
                 return updated_node.with_changes(body=new_indented_block) # type: ignore [attr-defined, unbound-variable]
             return updated_node
 
@@ -120,16 +127,15 @@ def clean_python_code(
 ) -> str:
     """
     Loại bỏ docstring và tùy chọn comment khỏi một chuỗi mã nguồn Python.
-
     Args:
         code_content: Chuỗi chứa mã nguồn Python.
         logger: Logger để ghi log lỗi.
         all_clean: True để xóa cả comments (trừ shebang).
-
     Returns:
         Chuỗi mã nguồn đã được làm sạch, hoặc chuỗi gốc nếu có lỗi hoặc libcst không cài đặt.
     """
     if not LIBCST_AVAILABLE:
+        # Log lỗi CHỈ MỘT LẦN ở đây thay vì lặp lại trong vòng lặp của ndoc_analyzer
         logger.error("❌ LibCST chưa được cài đặt. Không thể làm sạch code.")
         return code_content # Trả về gốc nếu thiếu thư viện
 
@@ -137,23 +143,18 @@ def clean_python_code(
         return code_content # Trả về gốc nếu chuỗi rỗng
 
     try:
-        # Parse code gốc
         cst_module = cst.parse_module(code_content)
-
-        # Áp dụng transformer
         transformer = DocstringAndCommentRemover(all_clean=all_clean)
         modified_tree = cst_module.visit(transformer)
-
-        # Lấy code mới
         new_content = modified_tree.code
         return new_content
 
-    except ParserSyntaxError as e: # type: ignore [misc]
+    except ParserSyntaxError as e: # Sử dụng tên đã import (hoặc dummy)
         line = getattr(e, 'raw_line', '?')
         col = getattr(e, 'raw_column', '?')
         logger.warning(f"⚠️ Lỗi cú pháp Python (LibCST) tại dòng {line}, cột {col} khi làm sạch code: {e.message}") # type: ignore [attr-defined]
         return code_content # Trả về gốc
-    except VersionCannotParseError as e: # type: ignore [misc]
+    except VersionCannotParseError as e: # Sử dụng tên đã import (hoặc dummy)
         logger.warning(f"⚠️ Lỗi phiên bản grammar (LibCST) khi làm sạch code: {e}")
         return code_content # Trả về gốc
     except Exception as e:
