@@ -21,8 +21,9 @@ DEFAULT_START_PATH: Final[str] = '.'
 # Các key cũng là danh sách extension mặc định dùng bởi Merger/Scanner.
 DEFAULT_EXTENSIONS_MAP: Final[Dict[str, str]] = {
     "py": "python",
-    # "js": "javascript", # Ví dụ: Thêm JS nếu có cleaner_js
-    # "sh": "shell",      # Ví dụ: Thêm Shell nếu có cleaner_shell
+    "sh": "shell",
+    "bash": "shell",
+    "zsh": "shell", # Có thể thêm nếu muốn
 }
 
 # Dùng ignore mặc định của dự án cpath/pcode/tree để đảm bảo tính nhất quán
