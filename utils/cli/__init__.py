@@ -1,7 +1,6 @@
 # Path: utils/cli/__init__.py
 """
 Cổng giao tiếp (Facade) cho các tiện ích giao diện dòng lệnh (CLI).
-
 Tự động export tất cả các thành phần public (`__all__`)
 từ các submodule bên trong (ví dụ: ui_helpers, config_writer).
 """
@@ -14,9 +13,10 @@ from typing import List
 current_dir = Path(__file__).parent
 
 # Danh sách các submodule nội bộ để load
+# config_writer_legacy không được export nữa
 modules_to_export: List[str] = [
     "ui_helpers",
-    "config_writer"
+    "config_writer" # Đây là file mới dùng tomlkit
 ]
 
 __all__: List[str] = []
