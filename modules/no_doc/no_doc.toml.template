@@ -3,7 +3,7 @@
 # Cài đặt tại đây sẽ GHI ĐÈ cài đặt trong `.project.toml`.
 #
 
-[ndoc]
+[{config_section_name}]
 
 # extensions (List[str]): Danh sách các đuôi file cần bao gồm.
 # GHI ĐÈ hoàn toàn danh sách mặc định CỦA SCRIPT (là keys của map).
