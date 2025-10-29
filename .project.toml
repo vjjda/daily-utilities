@@ -105,12 +105,12 @@ ignore = [".svn", ".git", ".DS_Store", ".hg", "venv", "__pycache__", ".venv"]
 [ndoc]
 
 # extensions (List[str]): Danh sách các đuôi file cần bao gồm.
-# GHI ĐÈ hoàn toàn danh sách mặc định của script.
-# Ví dụ: extensions = ["py", "pycst"]
-# Mặc định: ["py"]
-extensions = ["py"]
+# GHI ĐÈ hoàn toàn danh sách mặc định CỦA SCRIPT (là keys của map).
+# Ví dụ: extensions = ["py", "js"] # Chỉ xử lý py và js nếu có cleaner
+# Mặc định (từ keys của map): {toml_extensions} # Placeholder vẫn là list
+extensions = ["bash", "py", "sh", "zsh"]
 
 # ignore (List[str]): Danh sách các pattern (kiểu .gitignore) để bỏ qua.
 # Các giá trị này sẽ được THÊM vào danh sách mặc định.
-# Ví dụ: ignore = ["**/tests/*"]
+# Ví dụ: ignore = ["**/tests/*"] # Placeholder vẫn là list
 ignore = [".DS_Store", ".git", ".hg", ".svn", ".venv", "__pycache__", "build", "dist", "node_modules", "out", "venv"]
