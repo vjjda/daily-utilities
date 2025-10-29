@@ -1,6 +1,6 @@
-# Path: modules/remove_doc/remove_doc_executor.py
+# Path: modules/no_doc/no_doc_executor.py
 """
-Logic thực thi/hành động cho module 'remove_doc'.
+Logic thực thi/hành động cho module 'no_doc'.
 (Tạo tự động bởi bootstrap_tool.py)
 
 Chịu trách nhiệm thực hiện các side-effect (I/O, print, gọi API,...).
@@ -14,9 +14,9 @@ from typing import Dict, Any, List, Optional # Thêm các type hint cần thiế
 # from utils.core import run_command
 # from utils.logging_config import log_success
 
-__all__ = ["execute_remove_doc_action"] # Hàm thực thi chính
+__all__ = ["execute_no_doc_action"] # Hàm thực thi chính
 
-def execute_remove_doc_action(
+def execute_no_doc_action(
     logger: logging.Logger,
     result: Dict[str, Any] # Hoặc kiểu dữ liệu cụ thể từ Core
 ) -> None:
@@ -25,9 +25,9 @@ def execute_remove_doc_action(
 
     Args:
         logger: Instance logger.
-        result: Đối tượng kết quả trả về từ `process_remove_doc_logic`.
+        result: Đối tượng kết quả trả về từ `process_no_doc_logic`.
     """
-    logger.info("Đang thực thi hành động cho remove_doc...") #
+    logger.info("Đang thực thi hành động cho no_doc...") #
     logger.debug(f"Dữ liệu nhận được từ core: {result}") #
 
     # --- Triển khai logic thực thi tại đây ---

@@ -1,6 +1,6 @@
-# Path: modules/remove_doc/remove_doc_loader.py
+# Path: modules/no_doc/no_doc_loader.py
 """
-Logic tải dữ liệu cho module 'remove_doc'.
+Logic tải dữ liệu cho module 'no_doc'.
 (Tạo tự động bởi bootstrap_tool.py)
 
 Chịu trách nhiệm cho các hoạt động I/O đọc (đọc file, gọi API GET,...).

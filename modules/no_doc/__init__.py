@@ -1,6 +1,6 @@
-# Path: modules/remove_doc/__init__.py
+# Path: modules/no_doc/__init__.py
 """
-Cổng giao tiếp (Facade) cho module 'remove_doc'.
+Cổng giao tiếp (Facade) cho module 'no_doc'.
 (Tạo tự động bởi bootstrap_tool.py)
 
 Export các thành phần public từ các file con.

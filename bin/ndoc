@@ -1,0 +1,32 @@
+#!/usr/bin/env zsh
+# Path: bin/ndoc
+
+# Wrapper Zsh cho script Python (tạo tự động bởi bootstrap_tool.py)
+# Chế độ: relative (mặc định)
+
+# --- Xác định gốc dự án (PROJECT_ROOT) ---
+# Lấy đường dẫn thư mục chứa wrapper này
+WRAPPER_DIR=$(cd "$(dirname "$0")" && pwd)
+# Đi ngược lên để tìm PROJECT_ROOT (giả định wrapper nằm trong bin/)
+PROJECT_ROOT=$(cd "${WRAPPER_DIR}/.." && pwd)
+
+# --- Thiết lập môi trường ---
+VENV_PATH="${PROJECT_ROOT}/.venv" # Đường dẫn môi trường ảo
+PYTHON_SCRIPT="${PROJECT_ROOT}/scripts/no_doc.py" # Đường dẫn script Python
+
+# --- Kích hoạt venv và chạy script ---
+if [ -d "$VENV_PATH" ]; then
+  source "$VENV_PATH/bin/activate"
+  # Thêm thư mục gốc vào PYTHONPATH để import utils, modules
+  export PYTHONPATH="${PROJECT_ROOT}:$PYTHONPATH"
+  # Chạy script Python, truyền tất cả đối số ($@)
+  python "$PYTHON_SCRIPT" "$@"
+  # Tắt venv sau khi chạy xong (tùy chọn)
+  # deactivate
+else
+  echo "Lỗi: Không tìm thấy môi trường ảo tại $VENV_PATH" >&2 #
+  exit 1
+fi
+
+# Giữ exit code của script Python gốc
+exit $?

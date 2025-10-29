@@ -1,6 +1,6 @@
-# Path: modules/remove_doc/remove_doc_config.py
+# Path: modules/no_doc/no_doc_config.py
 """
-Các hằng số cấu hình cho module 'remove_doc'.
+Các hằng số cấu hình cho module 'no_doc'.
 (Tạo tự động bởi bootstrap_tool.py)
 """
 

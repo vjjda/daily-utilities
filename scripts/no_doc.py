@@ -1,7 +1,7 @@
-# Path: scripts/remove_doc.py
+# Path: scripts/no_doc.py
 
 """
-Entrypoint (cổng vào) cho tool 'rdoc'.
+Entrypoint (cổng vào) cho tool 'ndoc'.
 (Tạo tự động bởi bootstrap_tool.py - Giao diện Argparse)
 """
 
@@ -18,9 +18,9 @@ sys.path.append(str(PROJECT_ROOT))
 try:
     from utils.logging_config import setup_logging, log_success
     # Import các hằng số config (nếu có)
-    from modules.remove_doc.remove_doc_config import DEFAULT_START_PATH
+    from modules.no_doc.no_doc_config import DEFAULT_START_PATH
     # Import các thành phần logic từ module
-    # from modules.remove_doc import process_remove_doc_logic, execute_remove_doc_action
+    # from modules.no_doc import process_no_doc_logic, execute_no_doc_action
 except ImportError as e:
     print(f"Lỗi: Không thể import các module cần thiết: {e}", file=sys.stderr) 
     sys.exit(1)
@@ -71,15 +71,15 @@ def main():
     args = parser.parse_args()
 
     # --- 3. Cấu hình Logging ---
-    logger = setup_logging(script_name="RDoc")
-    logger.debug("Script RDoc (Argparse) bắt đầu.") 
+    logger = setup_logging(script_name="Ndoc")
+    logger.debug("Script Ndoc (Argparse) bắt đầu.") 
 
     # --- 4. Xử lý Path Expand ---
     start_path_path = Path(args.start_path).expanduser() if args.start_path else None
 
     try:
         # --- 5. Gọi Logic Cốt lõi ---
-        # result = process_remove_doc_logic(
+        # result = process_no_doc_logic(
         #     logger=logger,
         start_path=start_path_path,
         dry_run=args.dry_run,
@@ -90,7 +90,7 @@ def main():
 
         # --- 6. Gọi Executor (nếu cần) ---
         # if result:
-        #     execute_remove_doc_action(logger=logger, result=result)
+        #     execute_no_doc_action(logger=logger, result=result)
         #     log_success(logger, "Hoạt động hoàn tất.")
 
         # --- Xử lý Tạm thời (Xóa sau khi thêm logic) ---
