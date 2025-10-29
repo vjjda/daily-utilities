@@ -1,4 +1,4 @@
-# Path: docs/drafts/tool_spec.template.toml
+# Path: docs/internal/tool_spec.template.toml
 # Template để tạo file <tên_tool>.spec.toml
 
 # --- Phần [meta]: Thông tin cơ bản về tool ---
