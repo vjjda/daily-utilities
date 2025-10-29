@@ -10,7 +10,8 @@ from typing import Optional, Dict, Any, Union, Sequence
 
 try:
     import libcst as cst
-    from libcst import BaseStatement, RemovalSentinel, RemoveFromParent
+    from libcst import BaseStatement, RemovalSentinel, RemoveFromParent, AsyncFunctionDef
+    from libcst.exceptions import VersionCannotParseError
     LIBCST_AVAILABLE = True
 except ImportError:
     LIBCST_AVAILABLE = False
@@ -36,9 +37,9 @@ if LIBCST_AVAILABLE:
                 return -1
             node = body[0]
             if isinstance(node, cst.SimpleStatementLine):
-                 if len(node.body) == 1 and isinstance(node.body[0], cst.Expr):
-                     if isinstance(node.body[0].value, (cst.SimpleString, cst.ConcatenatedString)):
-                         return 0
+                if len(node.body) == 1 and isinstance(node.body[0], cst.Expr):
+                    if isinstance(node.body[0].value, (cst.SimpleString, cst.ConcatenatedString)):
+                        return 0
             return -1
 
         def leave_Comment(
@@ -88,8 +89,8 @@ if LIBCST_AVAILABLE:
             return updated_node
 
         def leave_AsyncFunctionDef(
-            self, original_node: cst.AsyncFunctionDef, updated_node: cst.AsyncFunctionDef
-        ) -> cst.AsyncFunctionDef:
+            self, original_node: AsyncFunctionDef, updated_node: AsyncFunctionDef
+        ) -> AsyncFunctionDef:
             """Xóa docstring ở cấp độ hàm (bất đồng bộ)."""
             new_inner_body_tuple = self._remove_docstring_from_body(updated_node.body.body)
             if new_inner_body_tuple is not None:
@@ -130,15 +131,15 @@ def analyze_file_for_docstrings(
         try:
             lines = original_content.splitlines()
             if line != '?' and int(line) > 0 and int(line) <= len(lines):
-                 logger.warning(f"   | Lỗi gần dòng: {lines[int(line)-1]}")
+                logger.warning(f"   | Lỗi gần dòng: {lines[int(line)-1]}")
         except Exception:
-             pass # Bỏ qua nếu không lấy được dòng lỗi
+            pass # Bỏ qua nếu không lấy được dòng lỗi
         return None
     # Sửa lỗi: Bắt cụ thể lỗi phiên bản grammar
-    except cst.exceptions.VersionCannotParseError as e:
-         logger.warning(f"⚠️ Bỏ qua file '{file_path.name}' do lỗi phiên bản grammar (LibCST): {e}")
-         logger.warning("   -> Có thể cần nâng cấp libcst hoặc kiểm tra cú pháp Python không tương thích.")
-         return None
+    except VersionCannotParseError as e:
+        logger.warning(f"⚠️ Bỏ qua file '{file_path.name}' do lỗi phiên bản grammar (LibCST): {e}")
+        logger.warning("   -> Có thể cần nâng cấp libcst hoặc kiểm tra cú pháp Python không tương thích.")
+        return None
     except Exception as e:
         logger.warning(f"⚠️ Bỏ qua file '{file_path.name}' do lỗi parse không xác định: {e}")
         return None
