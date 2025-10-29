@@ -1,4 +1,3 @@
-# Path: modules/check_path/check_path.toml.template
 # Template cho file cấu hình .cpath.toml (local scope)
 
 # --- Section [{config_section_name}] ---
