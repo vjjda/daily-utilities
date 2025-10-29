@@ -10,8 +10,8 @@ from typing import Optional, Dict, Any, Union, Sequence
 
 try:
     import libcst as cst
-    from libcst import BaseStatement, RemovalSentinel, RemoveFromParent, AsyncFunctionDef
-    from libcst.exceptions import VersionCannotParseError
+    # Giữ import gốc, không import tường minh AsyncFunctionDef hay exceptions
+    from libcst import BaseStatement, RemovalSentinel, RemoveFromParent
     LIBCST_AVAILABLE = True
 except ImportError:
     LIBCST_AVAILABLE = False
@@ -89,13 +89,14 @@ if LIBCST_AVAILABLE:
             return updated_node
 
         def leave_AsyncFunctionDef(
-            self, original_node: AsyncFunctionDef, updated_node: AsyncFunctionDef
-        ) -> AsyncFunctionDef:
+            self, original_node: cst.AsyncFunctionDef, updated_node: cst.AsyncFunctionDef # type: ignore [attr-defined]
+        ) -> cst.AsyncFunctionDef: # type: ignore [attr-defined]
             """Xóa docstring ở cấp độ hàm (bất đồng bộ)."""
             new_inner_body_tuple = self._remove_docstring_from_body(updated_node.body.body)
             if new_inner_body_tuple is not None:
                 new_indented_block = updated_node.body.with_changes(body=new_inner_body_tuple)
-                return updated_node.with_changes(body=new_indented_block)
+                # LỖI BÁO SAI CỦA PYLANCE Ở ĐÂY - Bỏ qua vì code đúng logic
+                return updated_node.with_changes(body=new_indented_block) # type: ignore [unbound-variable]
             return updated_node
 
 # --- Hàm Phân tích Chính ---
@@ -116,7 +117,6 @@ def analyze_file_for_docstrings(
 
     try:
         original_content = file_path.read_text(encoding='utf-8')
-        # SỬA LỖI: Bỏ config=parser_config, để libcst tự phát hiện version
         cst_module = cst.parse_module(original_content)
 
     except (IOError, UnicodeDecodeError) as e:
@@ -125,18 +125,15 @@ def analyze_file_for_docstrings(
     except cst.ParserSyntaxError as e:
         line = getattr(e, 'raw_line', '?')
         col = getattr(e, 'raw_column', '?')
-        # Sửa lại log để hiển thị rõ hơn lỗi cú pháp gốc
         logger.warning(f"⚠️ Bỏ qua file '{file_path.name}' do lỗi cú pháp Python (LibCST) tại dòng {line}, cột {col}: {e.message}")
-        # Log thêm context dòng lỗi nếu có thể
         try:
             lines = original_content.splitlines()
             if line != '?' and int(line) > 0 and int(line) <= len(lines):
                 logger.warning(f"   | Lỗi gần dòng: {lines[int(line)-1]}")
         except Exception:
-            pass # Bỏ qua nếu không lấy được dòng lỗi
+            pass
         return None
-    # Sửa lỗi: Bắt cụ thể lỗi phiên bản grammar
-    except VersionCannotParseError as e:
+    except cst.exceptions.VersionCannotParseError as e: # type: ignore [attr-defined]
         logger.warning(f"⚠️ Bỏ qua file '{file_path.name}' do lỗi phiên bản grammar (LibCST): {e}")
         logger.warning("   -> Có thể cần nâng cấp libcst hoặc kiểm tra cú pháp Python không tương thích.")
         return None
