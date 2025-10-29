@@ -10,7 +10,7 @@ from typing import Optional, Dict, Any
 # Import tiện ích làm sạch code
 from utils.core import clean_code
 # SỬA: Import EXTENSIONS_LANG_MAP mới
-from .no_doc_config import EXTENSIONS_LANG_MAP
+from utils.constants import DEFAULT_EXTENSIONS_LANG_MAP # <-- THAY ĐỔI IMPORT
 
 __all__ = ["analyze_file_content"]
 

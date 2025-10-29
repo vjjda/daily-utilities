@@ -5,31 +5,23 @@ Các hằng số cấu hình cho ndoc.
 """
 
 from pathlib import Path
-from typing import Dict, Any, Optional, List, Final, Set
+# SỬA: Bỏ Dict
+from typing import Any, Optional, List, Final, Set
 
 __all__ = [
     "DEFAULT_START_PATH",
-    "DEFAULT_EXTENSIONS", # <-- Đưa trở lại
-    "EXTENSIONS_LANG_MAP", # <-- Đổi tên
+    "DEFAULT_EXTENSIONS",
+    # "EXTENSIONS_LANG_MAP", # <-- XÓA DÒNG NÀY
     "DEFAULT_IGNORE",
     "PROJECT_CONFIG_FILENAME", "CONFIG_FILENAME", "CONFIG_SECTION_NAME"
 ]
 
 # --- Giá trị Mặc định (sử dụng nếu không có CLI/Config) ---
 DEFAULT_START_PATH: Final[str] = '.'
+DEFAULT_EXTENSIONS: Final[Set[str]] = {"py"}
 
-# DANH SÁCH mặc định các đuôi file cần xử lý
-DEFAULT_EXTENSIONS: Final[Set[str]] = {"py", "sh", "bash", "zsh"}
-
-# BẢN ĐỒ ÁNH XẠ: Đuôi file (key) sang mã định danh ngôn ngữ (value)
-# Dùng bởi Analyzer để gọi đúng cleaner. Bao gồm TẤT CẢ các ánh xạ có thể.
-EXTENSIONS_LANG_MAP: Final[Dict[str, str]] = {
-    "py": "python",
-    "js": "javascript", # Giữ lại ánh xạ dù không có trong DEFAULT_EXTENSIONS
-    "sh": "shell",      # Giữ lại ánh xạ
-    "bash": "shell",    # Giữ lại ánh xạ
-    "zsh": "shell"      # Giữ lại ánh xạ
-    }
+# XÓA: Không cần định nghĩa EXTENSIONS_LANG_MAP ở đây nữa
+# EXTENSIONS_LANG_MAP: Final[Dict[str, str]] = { ... }
 
 # Ignore mặc định
 DEFAULT_IGNORE: Final[Set[str]] = {
