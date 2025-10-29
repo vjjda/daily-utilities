@@ -47,57 +47,62 @@ def generate_script_entrypoint(
     cli_help_config = cli_config.get("help", {})
 
     # --- LOGIC MỚI ĐỂ XÁC ĐỊNH INTERFACE ---
-    # Ưu tiên 1: Cờ CLI
-    # Ưu tiên 2: File spec
-    # Ưu tiên 3: 'typer' làm mặc định
     interface_type = cli_interface_override or cli_config.get("interface", "typer")
     # --- KẾT THÚC LOGIC MỚI ---
 
-    config_imports_code = build_config_imports(config["module_name"], config)
+    config_imports_code = build_config_imports(config["module_name"], config) # 
 
     if interface_type == "argparse":
+        template = load_template("script_entrypoint_argparse.py.template") #
 
-        template = load_template("script_entrypoint_argparse.py.template")
+        argparse_args_code = build_argparse_arguments(config) #
+        path_expands_code = build_argparse_path_expands(config) #
+        args_pass_code = build_argparse_args_pass_to_core(config) #
 
-        argparse_args_code = build_argparse_arguments(config)
-        path_expands_code = build_argparse_path_expands(config)
+        # --- SỬA LỖI DESCRIPTION VÀ EPILOG ---
+        raw_description = cli_help_config.get( #
+            "description", f"Mô tả cho {config['meta']['tool_name']}."
+        )
+        raw_epilog = cli_help_config.get("epilog", "") #
 
-        args_pass_code = build_argparse_args_pass_to_core(config)
+        # Sử dụng repr() cho cả hai để đảm bảo literal string hợp lệ
+        formatted_description = repr(raw_description)
+        formatted_epilog = repr(raw_epilog)
+        # --- KẾT THÚC SỬA LỖI ---
+
 
         return template.format(
-            tool_name=config["meta"]["tool_name"],
-            script_file=config["meta"]["script_file"],
-            logger_name=config["meta"]["logger_name"],
-            module_name=config["module_name"],
-            config_imports=config_imports_code,
-            cli_description=cli_help_config.get(
-                "description", f"Mô tả cho {config['meta']['tool_name']}."
-            ),
-            cli_epilog=cli_help_config.get("epilog", ""),
-            argparse_arguments=argparse_args_code,
-            argparse_path_expands=path_expands_code,
-            argparse_args_pass_to_core=args_pass_code,
+            tool_name=config["meta"]["tool_name"], #
+            script_file=config["meta"]["script_file"], #
+            logger_name=config["meta"]["logger_name"], #
+            module_name=config["module_name"], #
+            config_imports=config_imports_code, #
+            cli_description=formatted_description, # <-- Truyền giá trị đã repr()
+            cli_epilog=formatted_epilog, # <-- Truyền giá trị đã repr()
+            argparse_arguments=argparse_args_code, #
+            argparse_path_expands=path_expands_code, #
+            argparse_args_pass_to_core=args_pass_code, #
         )
 
     else:  # Mặc định là 'typer'
+        # ... (logic cho Typer không đổi) ...
+        template = load_template("script_entrypoint_typer.py.template") # [cite: 266]
 
-        template = load_template("script_entrypoint_typer.py.template")
-
-        typer_app_code = build_typer_app_code(config)
-        typer_main_sig = build_typer_main_signature(config)
-        typer_path_expands = build_typer_path_expands(config)
-        typer_args_pass = build_typer_args_pass_to_core(config)
+        typer_app_code = build_typer_app_code(config) # [cite: 266]
+        typer_main_sig = build_typer_main_signature(config) # [cite: 266]
+        typer_path_expands = build_typer_path_expands(config) # [cite: 266]
+        typer_args_pass = build_typer_args_pass_to_core(config) # [cite: 266]
 
         return template.format(
-            tool_name=config["meta"]["tool_name"],
-            script_file=config["meta"]["script_file"],
-            logger_name=config["meta"]["logger_name"],
-            module_name=config["module_name"],
-            config_imports=config_imports_code,
-            typer_app_code=typer_app_code,
-            typer_main_function_signature=typer_main_sig,
-            typer_path_expands=typer_path_expands,
-            typer_args_pass_to_core=typer_args_pass,
+            tool_name=config["meta"]["tool_name"], # [cite: 267]
+            script_file=config["meta"]["script_file"], # [cite: 267]
+            logger_name=config["meta"]["logger_name"], # [cite: 267]
+            module_name=config["module_name"], # [cite: 267]
+            config_imports=config_imports_code, # [cite: 267]
+            typer_app_code=typer_app_code, # [cite: 267]
+            typer_main_function_signature=typer_main_sig, # [cite: 267]
+            typer_path_expands=typer_path_expands, # [cite: 267]
+            typer_args_pass_to_core=typer_args_pass, # [cite: 268]
         )
 
 

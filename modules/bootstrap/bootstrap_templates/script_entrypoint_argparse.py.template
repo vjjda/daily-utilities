@@ -31,8 +31,8 @@ def main():
 
     # --- 1. Định nghĩa Parser ---
     parser = argparse.ArgumentParser(
-        description="{cli_description}",
-        epilog="{cli_epilog}",
+        description={cli_description},
+        epilog={cli_epilog},
         formatter_class=argparse.RawTextHelpFormatter # Giữ nguyên format help text
     )
 
