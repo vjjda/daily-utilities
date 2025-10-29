@@ -137,17 +137,17 @@ def _handle_project_scope_with_tomlkit(
             return None
 
         if should_write:
-            # 3. Chuẩn bị dữ liệu để ghi (chuyển set -> list)
-            # Dùng tomlkit.array() để tạo mảng TOML đúng chuẩn
-            # Dùng tomlkit.value() cho các giá trị khác để giữ kiểu
-            serializable_data = tomlkit.table() # Tạo bảng TOML mới
+            # 3. Chuẩn bị dữ liệu để ghi (chuyển set -> list, BỎ QUA None)
+            serializable_data = tomlkit.table()
             for k, v in new_section_data.items():
+                # --- SỬA LỖI: Bỏ qua giá trị None ---
+                if v is None:
+                    continue
+                # ------------------------------------
                 if isinstance(v, set):
-                    # Tạo mảng TOML từ list đã sắp xếp
                     serializable_data[k] = tomlkit.array(sorted(list(v)))
                 else:
-                    # Giữ nguyên kiểu dữ liệu gốc
-                    serializable_data[k] = v # tomlkit tự xử lý bool, str, int,...
+                    serializable_data[k] = v
 
             # Gán section mới vào tài liệu
             doc[config_section_name] = serializable_data
@@ -190,7 +190,7 @@ def handle_config_init_request(
 
     # Kiểm tra thư viện TOML cần thiết
     toml_read_lib_missing = tomllib is None
-    toml_write_lib_missing = tomlkit is None # Cần tomlkit để ghi project
+    toml_write_lib_missing = tomlkit is None
 
     if toml_read_lib_missing:
          logger.error("❌ Thiếu thư viện đọc TOML ('tomllib' hoặc 'toml').")
@@ -233,10 +233,9 @@ def handle_config_init_request(
             )
 
         elif scope == "project":
-            # Chuẩn bị dict dữ liệu (không cần lọc None nữa, tomlkit xử lý được)
+            # Chuẩn bị dict dữ liệu (không cần lọc None ở đây nữa, helper sẽ xử lý)
             new_section_data = effective_defaults.copy()
             target_path = Path.cwd() / project_config_filename
-            # Gọi helper mới dùng tomlkit
             config_file_path = _handle_project_scope_with_tomlkit(
                 logger, target_path, config_section_name, new_section_data
             )
