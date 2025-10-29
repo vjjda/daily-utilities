@@ -8,6 +8,7 @@ File Scanning logic for the no_doc module.
 import logging
 from pathlib import Path
 from typing import List, Set, Optional, TYPE_CHECKING, Iterable
+import sys
 
 # Thiết lập sys.path
 if not 'PROJECT_ROOT' in locals():

@@ -8,6 +8,7 @@ import logging
 import argparse
 from pathlib import Path
 from typing import List, Optional, Dict, Any, Tuple
+import sys
 
 # Thiết lập sys.path
 if not 'PROJECT_ROOT' in locals():
