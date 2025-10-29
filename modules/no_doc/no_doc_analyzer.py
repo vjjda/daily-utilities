@@ -27,7 +27,7 @@ class DocstringRemover(ast.NodeTransformer):
         """Helper: Loại bỏ docstring khỏi body của node."""
         if (node.body and 
             isinstance(node.body[0], ast.Expr) and 
-            isinstance(node.body[0].value, (ast.Constant, ast.Str))
+            isinstance(node.body[0].value, (ast.Constant)) # <-- ĐÃ SỬA LỖI Ở ĐÂY
         ):
             # Docstring là node biểu thức (ast.Expr) đầu tiên chứa chuỗi
             node.body.pop(0) 
