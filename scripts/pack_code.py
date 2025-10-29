@@ -24,15 +24,12 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.append(str(PROJECT_ROOT))
 
 try:
-    # Import các tiện ích dùng chung
     from utils.logging_config import setup_logging, log_success
     from utils.cli import handle_config_init_request
     from utils.core import parse_comma_list
-
-    # Import các thành phần của module pack_code
     from modules.pack_code.pack_code_config import (
         DEFAULT_START_PATH, DEFAULT_EXTENSIONS, DEFAULT_IGNORE,
-        DEFAULT_CLEAN_EXTENSIONS, # <-- THÊM IMPORT
+        DEFAULT_CLEAN_EXTENSIONS,
         DEFAULT_OUTPUT_DIR,
         PROJECT_CONFIG_FILENAME, CONFIG_FILENAME, CONFIG_SECTION_NAME
     )
@@ -41,19 +38,16 @@ try:
         execute_pack_code_action,
     )
 except ImportError as e:
-    print(f"Lỗi: Không thể import các tiện ích/module dự án. Lỗi: {e}", file=sys.stderr) #
+    print(f"Lỗi: Không thể import các tiện ích/module dự án. Lỗi: {e}", file=sys.stderr)
     sys.exit(1)
 
-# --- Hằng số Cụ thể cho Entrypoint ---
 MODULE_DIR: Final[Path] = PROJECT_ROOT / "modules" / "pack_code"
 TEMPLATE_FILENAME: Final[str] = "pack_code.toml.template"
-
-# Giá trị mặc định dùng để tạo template config
 PCODE_DEFAULTS: Final[Dict[str, Any]] = {
     "output_dir": DEFAULT_OUTPUT_DIR,
     "extensions": list(parse_comma_list(DEFAULT_EXTENSIONS)),
     "ignore": list(parse_comma_list(DEFAULT_IGNORE)),
-    "clean_extensions": sorted(list(DEFAULT_CLEAN_EXTENSIONS)) # <-- THÊM MỚI
+    "clean_extensions": sorted(list(DEFAULT_CLEAN_EXTENSIONS))
 }
 
 def main():
@@ -90,6 +84,12 @@ def main():
         type=str,
         default=None, # Core sẽ hợp nhất
         help="Chỉ bao gồm các đuôi file này (vd: 'py,md'). Hỗ trợ +/-/~."
+    )
+    pack_group.add_argument(
+        "-x", "--clean-extensions",
+        type=str,
+        default=None, # Core sẽ hợp nhất
+        help="Chỉ định/sửa đổi danh sách đuôi file cần làm sạch KHI -a được bật (vd: 'py,js'). Hỗ trợ +/-/~."
     )
     pack_group.add_argument(
         "-I", "--ignore",
@@ -176,14 +176,15 @@ def main():
         "start_path": start_path_obj,
         "output": output_path_obj,
         "stdout": args.stdout,
-        "extensions": args.extensions,
+        "extensions": args.extensions, # Dùng để chọn file
         "ignore": args.ignore,
         "no_gitignore": args.no_gitignore,
         "dry_run": args.dry_run,
         "no_header": args.no_header,
         "no_tree": args.no_tree,
         "copy_to_clipboard": args.copy,
-        "all_clean": args.all_clean, # <-- THÊM MỚI
+        "all_clean": args.all_clean, # Bật/tắt clean
+        "clean_extensions": args.clean_extensions, # <-- THÊM MỚI: String từ CLI (-x)
     }
 
     # 6. Chạy Core Logic và Executor
