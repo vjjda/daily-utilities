@@ -9,7 +9,6 @@ CONFIG_SECTION_NAME: Any
 DEFAULT_EXTENSIONS: Any
 DEFAULT_IGNORE: Any
 DEFAULT_START_PATH: Any
-EXTENSIONS_LANG_MAP: Any
 PROJECT_CONFIG_FILENAME: Any
 analyze_file_content: Any
 execute_ndoc_action: Any
@@ -25,7 +24,6 @@ __all__: List[str] = [
     'DEFAULT_EXTENSIONS',
     'DEFAULT_IGNORE',
     'DEFAULT_START_PATH',
-    'EXTENSIONS_LANG_MAP',
     'PROJECT_CONFIG_FILENAME',
     'analyze_file_content',
     'execute_ndoc_action',
