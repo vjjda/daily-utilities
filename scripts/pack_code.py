@@ -79,11 +79,6 @@ def main():
         help="File output để ghi. Mặc định: '[output_dir]/<start_name>_context.txt' (từ config)."
     )
     pack_group.add_argument(
-        "-S", "--stdout",
-        action="store_true",
-        help='In kết quả ra stdout (console) thay vì ghi file.'
-    )
-    pack_group.add_argument(
         "-e", "--extensions",
         type=str,
         default=None, # Core sẽ hợp nhất
@@ -104,6 +99,11 @@ def main():
         "-d", "--dry-run",
         action="store_true",
         help='Chỉ in danh sách file sẽ được đóng gói (không đọc/in nội dung).'
+    )
+    pack_group.add_argument(
+        "--stdout",
+        action="store_true",
+        help='In kết quả ra stdout (console) thay vì ghi file.'
     )
     pack_group.add_argument(
         "--no-header",
