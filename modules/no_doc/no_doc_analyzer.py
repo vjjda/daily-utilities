@@ -7,9 +7,16 @@ Docstring Removal logic using Python's AST (Abstract Syntax Tree)
 
 import logging
 import ast
-import re # Đảm bảo re được import
+import re 
 from typing import Optional, Dict, Any, List, cast
 from pathlib import Path
+# Thêm import cho Pygments
+from pygments.token import Comment, Token
+from pygments.lexers import PythonLexer
+from pygments.formatters import RawTokenFormatter # Chỉ dùng cho Lexing/Untokenizing
+# Thêm import cho module native Python để Lexing an toàn
+import io
+import tokenize
 
 __all__ = ["analyze_file_for_docstrings"]
 
@@ -64,69 +71,85 @@ def _find_all_docstrings(tree: ast.Module) -> List[Dict[str, Any]]:
 # --- Hàm chính ---
 
 def _remove_comments_from_content(content: str) -> str:
-    """Loại bỏ tất cả comments (#) khỏi nội dung, ngoại trừ Shebang,
-    sử dụng Regex để cố gắng tránh xóa comments bên trong string literals."""
+    """
+    Loại bỏ tất cả comments (#) khỏi nội dung bằng Pygments Lexer an toàn.
+    """
+    lexer = PythonLexer()
     
-    lines = content.splitlines(True) # Giữ dấu xuống dòng
-    new_lines: List[str] = []
+    # 1. Tách token
+    tokens = list(lexer.get_tokens(content))
     
-    # 1. Xử lý Shebang (Nếu có, giữ lại)
-    shebang_line = ""
-    if lines and lines[0].startswith('#!'):
-        shebang_line = lines.pop(0)
+    new_tokens = []
     
-    if shebang_line:
-        new_lines.append(shebang_line)
+    # Dùng cờ để kiểm tra và giữ lại Shebang
+    shebang_kept = False
+    
+    # Vị trí dòng/cột để theo dõi và thêm khoảng trắng
+    last_end_row = 1
+    last_end_col = 0
+    
+    for token_type, value in tokens:
+        start_row, start_col = lexer.get_pos() # Pygments trả về vị trí sau token trước đó
 
-    # Regex an toàn hơn: tìm dấu # không phải là string
-    # Pattern: Bắt dấu # (Group 1) theo sau bởi bất cứ thứ gì không phải newline (Group 2).
-    # Không sử dụng Pattern phức tạp để tránh string literals 
-    # vì không thể phân tích đúng string literals bằng Regex.
-    # Thay vào đó, ta sẽ dùng Regex chỉ tìm dấu # đứng sau khoảng trắng/tab
-    
-    COMMENT_PATTERN = re.compile(r'(\s+)#.*', re.DOTALL)
-
-    for line in lines:
-        stripped_line = line.lstrip()
-        
-        # 2. Bỏ qua các dòng comment hoàn toàn
-        if stripped_line.startswith('#'):
+        # 1. Kiểm tra Shebang: Pygments coi Shebang là Comment.
+        if token_type is Comment.Hashbang and not shebang_kept:
+             new_tokens.append((token_type, value))
+             shebang_kept = True
+             continue
+             
+        # 2. Bỏ qua tất cả các token COMMENT khác
+        if token_type in [Comment, Comment.Single, Comment.Multiline]:
             continue
-        
-        # 3. Loại bỏ comment nội tuyến
-        # Dùng COMMENT_PATTERN để tìm khoảng trắng + # + comment
-        match = COMMENT_PATTERN.search(line)
-        
-        if match:
-             # Nếu tìm thấy, cắt dòng tại vị trí khoảng trắng (match.group(1))
-             # và chỉ giữ lại phần code trước đó.
-             line_without_comment = line[:match.start(1)].rstrip()
-             
-             # Giữ lại dấu xuống dòng
-             if line.endswith('\n'):
-                line_without_comment += '\n'
-             
-             # Chỉ thêm nếu dòng không trống sau khi xóa comment
-             if line_without_comment.strip():
-                 new_lines.append(line_without_comment)
-                 
-        else:
-            # Nếu không tìm thấy comment hoặc dấu # nằm trong string, giữ nguyên dòng (nếu không trống)
-            if line.strip():
-                new_lines.append(line)
 
-    # Sửa lỗi: Loại bỏ dòng trống thừa do xóa comment
-    # Ta chỉ cần một vòng lặp cuối cùng để dọn dẹp các dòng trống
-    # (vì các dòng không có comment cũng có thể bị xóa ở bước 3)
-    final_lines: List[str] = []
-    if shebang_line:
-        final_lines.append(shebang_line)
+        # 3. Xử lý khoảng trắng/newline (để giữ format)
         
-    for line in new_lines:
-        if line.strip() and line != shebang_line:
-             final_lines.append(line)
+        # Nếu token là newline hoặc khoảng trắng, giữ nguyên
+        if token_type is Token.Text:
+             new_tokens.append((token_type, value))
+             continue
              
-    return "".join(final_lines)
+        # Token code: Chỉ cần giữ lại code, Pygments đã xử lý khoảng trắng.
+        new_tokens.append((token_type, value))
+        
+    # Lỗi: Pygments Lexer không có hàm untokenize. Phải dùng module `tokenize` 
+    # của Python để nối lại, điều này có thể phá vỡ định dạng.
+    # Tuy nhiên, ta có thể nối thủ công các giá trị token lại.
+    
+    new_content_lines: List[str] = []
+    current_line = ""
+    
+    for token_type, value in new_tokens:
+        if token_type is Token.Text:
+            # Token Text bao gồm khoảng trắng và newline
+            current_line += value
+        else:
+            # Nếu là token code, chỉ cần nối vào dòng hiện tại
+            current_line += value
+
+        # Nếu dòng kết thúc, bắt đầu dòng mới
+        if current_line.endswith('\n'):
+            new_content_lines.append(current_line)
+            current_line = ""
+            
+    # Thêm dòng cuối cùng (nếu có)
+    if current_line:
+         new_content_lines.append(current_line)
+
+    # Loại bỏ dòng chỉ chứa khoảng trắng/tab
+    output_lines: List[str] = []
+    for line in new_content_lines:
+        if line.strip() or line == '\n':
+            output_lines.append(line)
+            
+    # Loại bỏ các dòng trống liên tiếp > 1
+    final_output: List[str] = []
+    for line in output_lines:
+        # Nếu dòng hiện tại là trống và dòng cuối cùng cũng trống -> Bỏ qua
+        if not line.strip() and final_output and not final_output[-1].strip():
+            continue
+        final_output.append(line)
+        
+    return "".join(final_output)
 
 # --- Hàm chính ---
 
