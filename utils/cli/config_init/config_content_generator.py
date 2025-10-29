@@ -32,133 +32,99 @@ def generate_config_content(
     into a valid TOML section string.
     """
     if tomlkit is None:
-        # format_value_to_toml relies on tomlkit
         raise ImportError("Thư viện 'tomlkit' không được cài đặt.")
 
     template_path = module_dir / template_filename
     template_lines = load_text_template(template_path, logger).splitlines()
 
     output_lines: List[str] = []
-    processed_keys: set[str] = set() # Track keys handled via placeholder
+    # --- REMOVED: processed_keys is no longer needed ---
+    # processed_keys: set[str] = set()
 
     # 1. Add Section Header
     output_lines.append(f"[{config_section_name}]")
-    output_lines.append("") # Add a blank line after header
+    output_lines.append("")
 
-    # Regex to find potential key lines (commented or not) to extract comments
-    # Groups: 1:indent, 2:comment_marker(#?), 3:key_name, 4:equals_part (= ...), 5:trailing_comment (#...)
     key_line_pattern = re.compile(r"^(\s*)(#?\s*)([\w-]+)(\s*=.*?)?\s*(#.*)?$")
-    placeholder_pattern = re.compile(r"\{toml_(\w+)\}") # To find placeholders in value part
+    placeholder_pattern = re.compile(r"\{toml_(\w+)\}")
 
-    # 2. Process Template Lines to extract comments and structure
-    key_comments: Dict[str, str] = {} # Store comments associated with keys
+    # 2. Process Template Lines to extract comments
+    key_comments: Dict[str, str] = {}
     current_key_comment = ""
-
     in_section = False
     for line in template_lines:
         stripped_line = line.strip()
-
-        # Find section start in template
         if stripped_line == f"[{config_section_name}]" or \
            stripped_line == "[{config_section_name}]":
             in_section = True
-            continue # Skip header line itself
-
-        # Stop processing if another section starts
+            continue
         if in_section and stripped_line.startswith("[") and stripped_line.endswith("]"):
             in_section = False
-            break # Stop after our target section
-
+            break
         if not in_section:
-            continue # Only process lines within our section in the template
+            continue
 
-        # Capture comments preceding a key
         if stripped_line.startswith("#"):
-            # Append multi-line comments
-            if current_key_comment:
-                current_key_comment += f"\n{line}"
-            else:
-                current_key_comment = line
-            continue # Move to next line
+            current_key_comment = f"{current_key_comment}\n{line}" if current_key_comment else line
+            continue
 
-        # Check if it's a key-value line (or potentially commented key-value)
         match = key_line_pattern.match(line)
         if match:
             key_name = match.group(3)
-            # Store preceding comment (if any) and reset accumulator
             if current_key_comment:
-                 # Check if placeholder name matches key
                  placeholder_suffix_in_val = ""
                  equals_part = match.group(4) or ""
                  placeholder_match = placeholder_pattern.search(equals_part)
                  if placeholder_match:
                      placeholder_suffix_in_val = placeholder_match.group(1).replace('_','-')
-
-                 # Only associate comment if key matches placeholder variable name derived from key
-                 if key_name == placeholder_suffix_in_val or not placeholder_match: # Or if it's just a commented key
-                     key_comments[key_name] = current_key_comment
-                 # else: Comment belongs to a different structure, ignore for now
+                 if key_name == placeholder_suffix_in_val or not placeholder_match:
+                     key_comments[key_name] = current_key_comment.strip() # Store stripped comment block
 
             current_key_comment = "" # Reset comment accumulator
 
-            # Also capture trailing comment on the same line
             trailing_comment = match.group(5)
-            if trailing_comment and key_name not in key_comments:
-                # If no preceding comment, use the trailing one as the primary
-                 key_comments[key_name] = trailing_comment.strip()
-            elif trailing_comment:
-                 # Append trailing comment to preceding comment
-                 key_comments[key_name] += f" {trailing_comment.strip()}"
+            if trailing_comment:
+                existing_comment = key_comments.get(key_name, "")
+                # Append trailing comment separated by a space if there was a preceding comment
+                separator = " " if existing_comment else ""
+                key_comments[key_name] = f"{existing_comment}{separator}{trailing_comment.strip()}"
 
         elif stripped_line == "":
-             # If it's a blank line after comments, append it to the comment block
              if current_key_comment:
                  current_key_comment += "\n" # Keep blank line for spacing
         else:
-            # Non-comment, non-key line, reset comment accumulator
             current_key_comment = ""
 
-
+    # --- FIX: Iterate directly over effective_defaults ---
     # 3. Add default keys and values, preceded by extracted comments
-    # Iterate through base_defaults to maintain a reasonable order
-    for key in base_defaults.keys():
-         if key in effective_defaults:
-             value = effective_defaults[key]
-             processed_keys.add(key) # Mark as processed
-
-             # Add comment if found
-             if key in key_comments:
-                 output_lines.append(key_comments[key])
-
-             # Format value and add key-value line (or commented line for None)
-             if value is not None:
-                 value_str = format_value_to_toml(value)
-                 output_lines.append(f"{key} = {value_str}")
-             else:
-                 output_lines.append(f"# {key} = ") # Default commented for None
-             output_lines.append("") # Add blank line for spacing
-
-    # 4. Add any extra keys from effective_defaults not in base_defaults (rare)
     for key, value in effective_defaults.items():
-        if key not in processed_keys:
-             if key in key_comments:
-                 output_lines.append(key_comments[key])
-             if value is not None:
-                 value_str = format_value_to_toml(value)
-                 output_lines.append(f"{key} = {value_str}")
-             else:
-                 output_lines.append(f"# {key} = ")
-             output_lines.append("")
+        # Add comment if found
+        if key in key_comments:
+            output_lines.append(key_comments[key])
+
+        # Format value and add key-value line (or commented line for None)
+        if value is not None:
+            value_str = format_value_to_toml(value)
+            output_lines.append(f"{key} = {value_str}")
+        else:
+            output_lines.append(f"# {key} = ") # Default commented for None
+        output_lines.append("") # Add blank line for spacing
+    # --- END FIX ---
+
+    # --- REMOVED: Second loop for extra keys (already covered) ---
 
     # Ensure trailing newline
-    if not output_lines[-1] == "":
-         output_lines.append("")
+    # Remove potential multiple blank lines at the end
+    while output_lines and output_lines[-1] == "":
+        output_lines.pop()
+    # Add a single trailing newline if there's content
+    if output_lines:
+        output_lines.append("")
+
 
     final_content = "\n".join(output_lines)
 
-    # Final basic validation (check if header is present)
-    if f"[{config_section_name}]" not in final_content:
-         # This should not happen with the new logic, but keep as safeguard
+    if f"[{config_section_name}]" not in final_content.splitlines()[0]: # Check first line
          raise ValueError(f"Generated content missing section header '[{config_section_name}]'.")
 
     return final_content
