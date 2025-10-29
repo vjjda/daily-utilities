@@ -5,24 +5,27 @@
 # Mặc định: không giới hạn (None)
 # level = 
 
-# extensions (Optional[List[str]]): Chỉ hiển thị các file có đuôi trong danh sách này.
-# Ghi đè hoàn toàn danh sách mặc định (là None - hiển thị tất cả).
-# Để chỉ hiển thị file Python và Markdown: extensions = ["py", "md"]
-# Mặc định: (Không lọc - {toml_extensions} là None)
-# extensions = 
+# show-submodules (bool): Hiển thị nội dung của Git submodules.
+# Mặc định: false (ẩn submodules)
+show-submodules = false
+
+# use-gitignore (bool): Có tôn trọng file .gitignore hay không.
+# Cờ --no-gitignore trên CLI sẽ ghi đè giá trị này thành false.
+# Mặc định: true (luôn tôn trọng nếu là kho Git)
+use-gitignore = false
 
 # ignore (List[str]): Danh sách các pattern (giống .gitignore) để ẩn hoàn toàn khỏi cây.
 # Các pattern này sẽ được NỐI VÀO danh sách mặc định của script.
 # Ví dụ: ignore = ["*.tmp", ".env"]
 # Mặc định (được thêm vào): {toml_ignore}
-ignore = ['.git', '.venv', '__pycache__', 'node_modules', 'venv']
+ignore = [".git", ".venv", "__pycache__", "node_modules", "venv"]
 
 # prune (List[str]): Danh sách các pattern thư mục để "cắt tỉa".
 # Thư mục sẽ hiển thị nhưng nội dung bên trong bị ẩn ([...]).
 # Các pattern này sẽ được NỐI VÀO danh sách mặc định của script.
 # Ví dụ: prune = ["node_modules/", "vendor/"]
 # Mặc định (được thêm vào): {toml_prune}
-prune = ['build', 'dist']
+prune = ["build", "dist"]
 
 # dirs-only (Union[str, List[str], None]): Chế độ chỉ hiển thị thư mục.
 # - "_ALL_": Chỉ hiển thị thư mục cho toàn bộ cây (tương đương cờ -d).
@@ -33,14 +36,11 @@ prune = ['build', 'dist']
 # Mặc định: {toml_dirs_only}
 dirs-only = []
 
-# show-submodules (bool): Hiển thị nội dung của Git submodules.
-# Mặc định: false (ẩn submodules)
-show-submodules = false
-
-# use-gitignore (bool): Có tôn trọng file .gitignore hay không.
-# Cờ --no-gitignore trên CLI sẽ ghi đè giá trị này thành false.
-# Mặc định: true (luôn tôn trọng nếu là kho Git)
-use-gitignore = true
+# extensions (Optional[List[str]]): Chỉ hiển thị các file có đuôi trong danh sách này.
+# Ghi đè hoàn toàn danh sách mặc định (là None - hiển thị tất cả).
+# Để chỉ hiển thị file Python và Markdown: extensions = ["py", "md"]
+# Mặc định: (Không lọc - {toml_extensions} là None)
+# extensions = 
 
 [cpath]
 
@@ -48,13 +48,13 @@ use-gitignore = true
 # Ghi đè hoàn toàn danh sách mặc định của script.
 # Ví dụ: extensions = ["py", "js", "ts", "md"]
 # Mặc định: {toml_extensions}
-extensions = ['css', 'js', 'py', 'scss', 'sh', 'template.toml', 'ts', 'zsh']
+extensions = ["css", "js", "py", "scss", "sh", "template.toml", "ts", "zsh"]
 
 # ignore (List[str]): Danh sách các pattern (giống .gitignore) để bỏ qua.
 # Các pattern này sẽ được NỐI VÀO danh sách mặc định của script.
 # Ví dụ: ignore = ["*.log", "temp/", "build*/"]
 # Mặc định (được thêm vào): {toml_ignore}
-ignore = ['.git', '.venv', '__pycache__', 'build', 'dist', 'node_modules', 'out', 'venv']
+ignore = [".git", ".venv", "__pycache__", "build", "dist", "node_modules", "out", "venv"]
 
 [sgen]
 
@@ -90,28 +90,27 @@ include = []
 
 [pcode]
 
-# (Tùy chọn) Đường dẫn thư mục mặc định để lưu file context.
-# Hỗ trợ `~` (ví dụ: "~/Documents/code_contexts")
-output_dir = '~/Documents/code.context'
+output_dir = "~/Documents/code.context"
 
 # Danh sách các đuôi file (extensions) cần bao gồm.
 # Bất kỳ giá trị nào ở đây sẽ GHI ĐÈ hoàn toàn danh sách mặc định.
 # (CLI: -e "py,md" / +e "ts" / ~e "log")
-extensions = ['bash', 'cfg', 'cfg.py', 'ini', 'json', 'md', 'py', 'sh', 'template', 'toml', 'txt', 'xml', 'yaml', 'yml', 'zsh']
+extensions = ["bash", "template", "xml", "py", "cfg", "sh", "yml", "yaml", "toml", "cfg.py", "ini", "md", "json", "zsh", "txt"]
 
 # Danh sách các pattern (kiểu .gitignore) để bỏ qua.
 # Các giá trị này sẽ được THÊM vào danh sách mặc định.
 # (CLI: -I "*.log,build/")
-ignore = ['.DS_Store', '.git', '.hg', '.svn', '.venv', '__pycache__', 'venv']
+ignore = [".svn", ".git", ".DS_Store", ".hg", "venv", "__pycache__", ".venv"]
+
 [ndoc]
 
 # extensions (List[str]): Danh sách các đuôi file cần bao gồm.
 # GHI ĐÈ hoàn toàn danh sách mặc định của script.
 # Ví dụ: extensions = ["py", "pycst"]
 # Mặc định: ["py"]
-extensions = ['py']
+extensions = ["py"]
 
 # ignore (List[str]): Danh sách các pattern (kiểu .gitignore) để bỏ qua.
 # Các giá trị này sẽ được THÊM vào danh sách mặc định.
 # Ví dụ: ignore = ["**/tests/*"]
-ignore = ['.DS_Store', '.git', '.hg', '.svn', '.venv', '__pycache__', 'build', 'dist', 'node_modules', 'out', 'venv']
+ignore = [".DS_Store", ".git", ".hg", ".svn", ".venv", "__pycache__", "build", "dist", "node_modules", "out", "venv"]
