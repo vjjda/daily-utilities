@@ -1,91 +1,117 @@
 [tree]
-show-submodules = false
-use-gitignore = true
-ignore = [
-    ".git",
-    ".venv",
-    "__pycache__",
-    "node_modules",
-    "venv",
-]
-prune = [
-    "build",
-    "dist",
-]
+
+# level (Optional[int]): Giới hạn độ sâu hiển thị của cây.
+# Bỏ comment và đặt giá trị số nguyên dương, ví dụ: level = 3
+# Mặc định: không giới hạn (None)
+# level = 
+
+# extensions (Optional[List[str]]): Chỉ hiển thị các file có đuôi trong danh sách này.
+# Ghi đè hoàn toàn danh sách mặc định (là None - hiển thị tất cả).
+# Để chỉ hiển thị file Python và Markdown: extensions = ["py", "md"]
+# Mặc định: (Không lọc - {toml_extensions} là None)
+# extensions = 
+
+# ignore (List[str]): Danh sách các pattern (giống .gitignore) để ẩn hoàn toàn khỏi cây.
+# Các pattern này sẽ được NỐI VÀO danh sách mặc định của script.
+# Ví dụ: ignore = ["*.tmp", ".env"]
+# Mặc định (được thêm vào): {toml_ignore}
+ignore = ['.git', '.venv', '__pycache__', 'node_modules', 'venv']
+
+# prune (List[str]): Danh sách các pattern thư mục để "cắt tỉa".
+# Thư mục sẽ hiển thị nhưng nội dung bên trong bị ẩn ([...]).
+# Các pattern này sẽ được NỐI VÀO danh sách mặc định của script.
+# Ví dụ: prune = ["node_modules/", "vendor/"]
+# Mặc định (được thêm vào): {toml_prune}
+prune = ['build', 'dist']
+
+# dirs-only (Union[str, List[str], None]): Chế độ chỉ hiển thị thư mục.
+# - "_ALL_": Chỉ hiển thị thư mục cho toàn bộ cây (tương đương cờ -d).
+# - ["pattern1", "pattern2/"]: Chỉ hiển thị thư mục con BÊN TRONG các thư mục khớp pattern.
+# Các pattern này sẽ được GỘP VÀO danh sách mặc định (thường là rỗng).
+# Ví dụ 1: dirs-only = "_ALL_"
+# Ví dụ 2: dirs-only = ["assets", "static/"]
+# Mặc định: {toml_dirs_only}
 dirs-only = []
 
+# show-submodules (bool): Hiển thị nội dung của Git submodules.
+# Mặc định: false (ẩn submodules)
+show-submodules = false
+
+# use-gitignore (bool): Có tôn trọng file .gitignore hay không.
+# Cờ --no-gitignore trên CLI sẽ ghi đè giá trị này thành false.
+# Mặc định: true (luôn tôn trọng nếu là kho Git)
+use-gitignore = true
+
 [cpath]
-extensions = [
-    "css",
-    "js",
-    "py",
-    "scss",
-    "sh",
-    "template.toml",
-    "ts",
-    "zsh",
-]
-ignore = [
-    ".git",
-    ".venv",
-    "__pycache__",
-    "build",
-    "dist",
-    "node_modules",
-    "out",
-    "venv",
-]
+
+# extensions (List[str]): Danh sách các đuôi file cần quét.
+# Ghi đè hoàn toàn danh sách mặc định của script.
+# Ví dụ: extensions = ["py", "js", "ts", "md"]
+# Mặc định: {toml_extensions}
+extensions = ['css', 'js', 'py', 'scss', 'sh', 'template.toml', 'ts', 'zsh']
+
+# ignore (List[str]): Danh sách các pattern (giống .gitignore) để bỏ qua.
+# Các pattern này sẽ được NỐI VÀO danh sách mặc định của script.
+# Ví dụ: ignore = ["*.log", "temp/", "build*/"]
+# Mặc định (được thêm vào): {toml_ignore}
+ignore = ['.git', '.venv', '__pycache__', 'build', 'dist', 'node_modules', 'out', 'venv']
 
 [sgen]
-ignore = [
-    "*.pyc",
-    "*.pyo",
-    ".git",
-    ".venv",
-    "__pycache__",
-    "build",
-    "dist",
-    "node_modules",
-    "out",
-    "venv",
-]
-restrict = [
-    "modules",
-    "utils",
-]
-dynamic_import_indicators = [
-    "globals()[name]",
-    "globals()[name] = obj",
-    "import_module",
-]
-ast_module_list_name = "modules_to_export"
-ast_all_list_name = "__all__"
+
+# restrict (List[str]): Giới hạn quét trong các thư mục con này (so với gốc quét).
+# GHI ĐÈ hoàn toàn danh sách mặc định của script.
+# Ví dụ: restrict = ["my_modules", "shared_utils"]
+# Mặc định: {toml_restrict}
+restrict = ['modules', 'utils']
+
+# ignore (List[str]): Các pattern (giống .gitignore) để bỏ qua khi quét.
+# Các pattern này sẽ được NỐI VÀO danh sách mặc định của script.
+# Ví dụ: ignore = ["*_test.py", "**/legacy/*"]
+# Mặc định (được thêm vào): {toml_ignore}
+ignore = ['*.pyc', '*.pyo', '.git', '.venv', '__pycache__', 'build', 'dist', 'node_modules', 'out', 'venv']
+
+# include (List[str]): Bộ lọc dương. Chỉ xử lý các file khớp với pattern này.
+# Hoạt động sau khi đã áp dụng 'restrict' và 'ignore'.
+# Các pattern này sẽ được NỐI VÀO danh sách mặc định (thường là rỗng).
+# Ví dụ: include = ["modules/core/**", "utils/network.py"]
+# Mặc định (được thêm vào): {toml_include}
+include = []
+
+# --- Cấu hình nâng cao (Ít khi cần thay đổi) ---
+
+# dynamic_import_indicators (List[str]): Các chuỗi code nhận diện gateway động.
+# dynamic_import_indicators = ["import_module", "globals()[name] = obj"]
+
+# ast_module_list_name (str): Tên biến list chứa danh sách submodule trong AST.
+# ast_module_list_name = "modules_to_export"
+
+# ast_all_list_name (str): Tên biến list __all__ trong AST của submodule.
+# ast_all_list_name = "__all__"
 
 [pcode]
-output_dir = "~/Documents/code.context"
-extensions = [
-    "bash",
-    "cfg",
-    "cfg.py",
-    "ini",
-    "json",
-    "md",
-    "py",
-    "sh",
-    "toml",
-    "txt",
-    "xml",
-    "yaml",
-    "yml",
-    "zsh",
-    "template",
-]
-ignore = [
-    ".DS_Store",
-    ".git",
-    ".hg",
-    ".svn",
-    ".venv",
-    "__pycache__",
-    "venv",
-]
+
+# (Tùy chọn) Đường dẫn thư mục mặc định để lưu file context.
+# Hỗ trợ `~` (ví dụ: "~/Documents/code_contexts")
+output_dir = '~/Documents/code.context'
+
+# Danh sách các đuôi file (extensions) cần bao gồm.
+# Bất kỳ giá trị nào ở đây sẽ GHI ĐÈ hoàn toàn danh sách mặc định.
+# (CLI: -e "py,md" / +e "ts" / ~e "log")
+extensions = ['bash', 'cfg', 'cfg.py', 'ini', 'json', 'md', 'py', 'sh', 'template', 'toml', 'txt', 'xml', 'yaml', 'yml', 'zsh']
+
+# Danh sách các pattern (kiểu .gitignore) để bỏ qua.
+# Các giá trị này sẽ được THÊM vào danh sách mặc định.
+# (CLI: -I "*.log,build/")
+ignore = ['.DS_Store', '.git', '.hg', '.svn', '.venv', '__pycache__', 'venv']
+[ndoc]
+
+# extensions (List[str]): Danh sách các đuôi file cần bao gồm.
+# GHI ĐÈ hoàn toàn danh sách mặc định của script.
+# Ví dụ: extensions = ["py", "pycst"]
+# Mặc định: ["py"]
+extensions = ['py']
+
+# ignore (List[str]): Danh sách các pattern (kiểu .gitignore) để bỏ qua.
+# Các giá trị này sẽ được THÊM vào danh sách mặc định.
+# Ví dụ: ignore = ["**/tests/*"]
+ignore = ['.DS_Store', '.git', '.hg', '.svn', '.venv', '__pycache__', 'build', 'dist', 'node_modules', 'out', 'venv']
