@@ -1,29 +1,55 @@
 # Path: modules/no_doc/no_doc_loader.py
 """
-Logic tải dữ liệu cho module 'no_doc'.
-(Tạo tự động bởi bootstrap_tool.py)
-
-Chịu trách nhiệm cho các hoạt động I/O đọc (đọc file, gọi API GET,...).
+File Loading logic for the no_doc module.
+(Responsible for all config read I/O)
 """
 
 import logging
+import sys
 from pathlib import Path
-from typing import Dict, Any, List, Optional # Thêm các type hint cần thiết
+from typing import Dict, Any
 
-# Import các tiện ích cần thiết (ví dụ: đọc TOML)
-# from utils.core import load_toml_file
+# Thiết lập sys.path
+if not 'PROJECT_ROOT' in locals():
+    # Fallback cho trường hợp chạy độc lập/test
+    sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
-__all__ = [] # Thêm tên các hàm loader vào đây
+try:
+    from utils.core import load_and_merge_configs
+except ImportError as e:
+    # Log lỗi chi tiết nếu import thất bại
+    print(f"Lỗi: Không thể import utils.core: {e}. Vui lòng chạy từ gốc dự án.", file=sys.stderr)
+    sys.exit(1)
 
-# Ví dụ một hàm loader:
-# def load_data_from_file(logger: logging.Logger, file_path: Path) -> Optional[str]:
-#     """Tải nội dung từ một file text."""
-#     logger.info(f"Đang tải dữ liệu từ: {file_path.name}")
-#     try:
-#         return file_path.read_text(encoding='utf-8')
-#     except FileNotFoundError:
-#         logger.error(f"❌ Lỗi: Không tìm thấy file: {file_path}")
-#         return None
-#     except Exception as e:
-#         logger.error(f"❌ Lỗi khi đọc file {file_path.name}: {e}")
-#         return None
+
+from .no_doc_config import (
+    PROJECT_CONFIG_FILENAME, 
+    CONFIG_SECTION_NAME,
+    CONFIG_FILENAME
+)
+
+__all__ = ["load_config_files"]
+
+
+def load_config_files(
+    start_dir: Path, 
+    logger: logging.Logger
+) -> Dict[str, Any]:
+    """
+    Tải và hợp nhất cấu hình từ .project.toml và .ndoc.toml.
+    
+    Args:
+        start_dir: Thư mục bắt đầu quét config.
+        logger: Logger để ghi log.
+    
+    Returns:
+        Một dict chứa cấu hình [ndoc] đã được hợp nhất (local ưu tiên hơn project).
+    """
+    # Sử dụng tiện ích chung
+    return load_and_merge_configs(
+        start_dir=start_dir,
+        logger=logger,
+        project_config_filename=PROJECT_CONFIG_FILENAME,
+        local_config_filename=CONFIG_FILENAME,
+        config_section_name=CONFIG_SECTION_NAME
+    )

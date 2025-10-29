@@ -1,18 +1,28 @@
 # Path: modules/no_doc/no_doc_config.py
 """
-Các hằng số cấu hình cho module 'no_doc'.
-(Tạo tự động bởi bootstrap_tool.py)
+Các hằng số cấu hình cho pack_code.
+(Nguồn chân lý duy nhất - Single Source of Truth)
 """
 
 from pathlib import Path
-from typing import Dict, Any, Optional, List, Set, Final # Thêm các type cần thiết
+from typing import Dict, Any, Optional, List, Final, Set
 
-__all__ = ["DEFAULT_START_PATH"] # Danh sách các hằng số export
+__all__ = [
+    "DEFAULT_START_PATH", "DEFAULT_EXTENSIONS", "DEFAULT_IGNORE",
+    "PROJECT_CONFIG_FILENAME", "CONFIG_FILENAME", "CONFIG_SECTION_NAME"
+]
 
-# --- Các hằng số được tạo từ tool.spec.toml ---
-DEFAULT_START_PATH = '.'
-# --- Kết thúc hằng số được tạo tự động ---
+# --- Giá trị Mặc định (sử dụng nếu không có CLI/Config) ---
+DEFAULT_START_PATH: Final[str] = '.'
+# Chỉ quét file Python
+DEFAULT_EXTENSIONS: Final[Set[str]] = {"py"} 
+# Dùng ignore mặc định của dự án cpath/pcode/tree để đảm bảo tính nhất quán
+DEFAULT_IGNORE: Final[Set[str]] = {
+    ".venv", "venv", "__pycache__", ".git", ".hg", ".svn", 
+    "node_modules", "dist", "build", "out", ".DS_Store"
+} 
 
-# Thêm các hằng số hoặc cấu hình khác cần thiết cho module tại đây
-# Ví dụ:
-# DEFAULT_API_ENDPOINT: Final[str] = "https://api.example.com"
+# --- Tên File Cấu hình ---
+PROJECT_CONFIG_FILENAME: Final[str] = ".project.toml"
+CONFIG_FILENAME: Final[str] = ".ndoc.toml"
+CONFIG_SECTION_NAME: Final[str] = "ndoc"
