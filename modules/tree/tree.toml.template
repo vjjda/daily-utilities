@@ -1,6 +1,5 @@
 # Template cho file cấu hình .tree.toml (local scope)
 
-# --- Section [{config_section_name}] ---
 [{config_section_name}]
 
 # level (Optional[int]): Giới hạn độ sâu hiển thị của cây.

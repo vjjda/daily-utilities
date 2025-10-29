@@ -1,7 +1,5 @@
 # Template cho file cấu hình .cpath.toml (local scope)
 
-# --- Section [{config_section_name}] ---
-# Tên section này khớp với giá trị CONFIG_SECTION_NAME trong script
 [{config_section_name}]
 
 # extensions (List[str]): Danh sách các đuôi file cần quét.

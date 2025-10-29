@@ -1,6 +1,5 @@
 # Template cho file cấu hình .sgen.toml (local scope)
 
-# --- Section [{config_section_name}] ---
 [{config_section_name}]
 
 # restrict (List[str]): Giới hạn quét trong các thư mục con này (so với gốc quét).
