@@ -52,8 +52,7 @@ def generate_script_entrypoint(config: Dict[str, Any]) -> str:
     """Tạo nội dung cho file entrypoint Python trong thư mục `scripts/`."""
     cli_config = config.get('cli', {})
     cli_help_config = cli_config.get('help', {})
-    interface_type = cli_config.get('interface', 'typer') # Mặc định là Typer
-
+    interface_type = cli_config.get('interface', 'typer')
     # Tạo dòng import hằng số config
     config_imports_code = build_config_imports(config['module_name'], config)
 
@@ -86,7 +85,6 @@ def generate_script_entrypoint(config: Dict[str, Any]) -> str:
 
    
     else:
-        # --- Logic cho TYPER (mặc định) ---
         template = load_template("script_entrypoint_typer.py.template")
 
         # Tạo các code snippet
