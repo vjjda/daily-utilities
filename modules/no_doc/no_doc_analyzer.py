@@ -7,16 +7,11 @@ Docstring Removal logic using Python's AST (Abstract Syntax Tree)
 
 import logging
 import ast
-import re 
 from typing import Optional, Dict, Any, List, cast
 from pathlib import Path
 # Thêm import cho Pygments
 from pygments.token import Comment, Token
 from pygments.lexers import PythonLexer
-from pygments.formatters import RawTokenFormatter # Chỉ dùng cho Lexing/Untokenizing
-# Thêm import cho module native Python để Lexing an toàn
-import io
-import tokenize
 
 __all__ = ["analyze_file_for_docstrings"]
 
