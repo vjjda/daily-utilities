@@ -11,22 +11,18 @@ from importlib import import_module
 from typing import List
 
 # --- Tự động Tái xuất (Dynamic Re-export) ---
+from typing import List
+
+# --- Tự động Tái xuất (Dynamic Re-export) ---
 current_dir = Path(__file__).parent
 
-# Danh sách các file .py trong module này (trừ __init__.py)
-# Dùng heuristic nếu danh sách `modules_to_export` không được định nghĩa rõ
-try:
-    # Ưu tiên danh sách được định nghĩa rõ ràng nếu có
-    from ._internal_export_list import modules_to_export # Giả định file này tồn tại
-except ImportError:
-    # Fallback: Tự động tìm các file .py
-    modules_to_export: List[str] = [
-        f.stem
-        for f in current_dir.iterdir()
-        if f.is_file() and f.suffix == '.py' and f.name != '__init__.py'
-    ]
-    # Có thể thêm thứ tự ưu tiên load ở đây nếu cần
-    # ví dụ: modules_to_export.sort(key=lambda x: (x.endswith('_config'), x))
+# Thay thế khối try/except bằng logic Fallback trực tiếp:
+# Fallback: Tự động tìm các file .py
+modules_to_export: List[str] = [
+    f.stem
+    for f in current_dir.iterdir()
+    if f.is_file() and f.suffix == '.py' and f.name != '__init__.py'
+]
 
 
 __all__: List[str] = []
