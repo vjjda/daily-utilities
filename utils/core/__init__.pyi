@@ -5,7 +5,7 @@ from typing import Any, List, Optional, Set, Dict, Union
 from pathlib import Path
 
 Logger: Any
-clean_python_code: Any
+clean_code: Any
 compile_spec_from_patterns: Any
 copy_file_to_clipboard: Any
 find_git_root: Any
@@ -22,6 +22,7 @@ merge_config_sections: Any
 parse_cli_set_operators: Any
 parse_comma_list: Any
 parse_gitignore: Any
+register_cleaner: Any
 resolve_config_list: Any
 resolve_config_value: Any
 resolve_set_modification: Any
@@ -31,7 +32,7 @@ write_toml_file: Any
 # Static declaration of exported symbols (for Pylance)
 __all__: List[str] = [
     'Logger',
-    'clean_python_code',
+    'clean_code',
     'compile_spec_from_patterns',
     'copy_file_to_clipboard',
     'find_git_root',
@@ -48,6 +49,7 @@ __all__: List[str] = [
     'parse_cli_set_operators',
     'parse_comma_list',
     'parse_gitignore',
+    'register_cleaner',
     'resolve_config_list',
     'resolve_config_value',
     'resolve_set_modification',
