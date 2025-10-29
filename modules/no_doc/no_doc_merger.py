@@ -7,8 +7,14 @@ Configuration Merging logic for the no_doc module.
 import logging
 from typing import Dict, Any, List, Set, Optional
 
+# --- KHẮC PHỤC LỖI PYRIGHT/PYLANCE ---
+import sys 
+from pathlib import Path 
+# -------------------------------------
+
 # Thiết lập sys.path
 if not 'PROJECT_ROOT' in locals():
+    # Fallback cho trường hợp chạy độc lập/test (nếu không có PROJECT_ROOT)
     sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
     
 from utils.core import (
