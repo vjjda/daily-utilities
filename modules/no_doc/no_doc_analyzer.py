@@ -1,44 +1,63 @@
 # Path: modules/no_doc/no_doc_analyzer.py
 """
-Docstring Removal logic using Python's AST (Abstract Syntax Tree).
-(Internal module, imported by no_doc_core)
-
-Chịu trách nhiệm chuyển đổi mã Python thành AST, loại bỏ các node docstring,
-và chuyển AST đã sửa đổi trở lại thành mã nguồn.
+Docstring Removal logic using Python's AST (Abstract Syntax Tree)
+để trích xuất vị trí, sau đó xóa bằng cách chỉnh sửa nội dung gốc (string)
+để bảo toàn định dạng.
 """
 
 import logging
 import ast
-import inspect
 from typing import Optional, Dict, Any, List
 from pathlib import Path
 
 __all__ = ["analyze_file_for_docstrings"]
 
-# --- AST Node Transformer ---
+# --- AST Helper: Trích xuất vị trí Docstring ---
 
-class DocstringRemover(ast.NodeTransformer):
+def _get_docstring_info(node_body: List[ast.stmt]) -> Optional[Dict[str, Any]]:
     """
-    ast.NodeTransformer để loại bỏ các Docstring (String Literal đầu tiên)
-    ở cấp độ Module, Class và Function/Method.
+    Trích xuất docstring và vị trí dòng/cột của nó.
+    Trả về None nếu không phải là docstring hợp lệ.
     """
-    
-    def _remove_docstring(self, node):
-        """Helper: Loại bỏ docstring khỏi body của node."""
-        if (node.body and 
-            isinstance(node.body[0], ast.Expr) and 
-            isinstance(node.body[0].value, (ast.Constant)) # <-- ĐÃ SỬA LỖI Ở ĐÂY
-        ):
-            # Docstring là node biểu thức (ast.Expr) đầu tiên chứa chuỗi
-            node.body.pop(0) 
-        return node
+    if (node_body and 
+        isinstance(node_body[0], ast.Expr) and 
+        isinstance(node_body[0].value, (ast.Constant))
+    ):
+        expr_node: ast.Expr = node_body[0]
+        constant_node = expr_node.value
         
-    # Ghi đè các phương thức visit để áp dụng logic
-    visit_Module = _remove_docstring
-    visit_FunctionDef = _remove_docstring
-    visit_AsyncFunctionDef = _remove_docstring
-    visit_ClassDef = _remove_docstring
+        # Docstring phải là chuỗi
+        if not isinstance(constant_node.value, str):
+            return None
+            
+        # Vị trí dòng bắt đầu và dòng kết thúc
+        start_line = expr_node.lineno
+        end_line = expr_node.end_lineno
+        
+        return {
+            "start_line": start_line,
+            "end_line": end_line,
+            "col_offset": expr_node.col_offset,
+            "end_col_offset": expr_node.end_col_offset,
+            "value": constant_node.value,
+        }
+    return None
 
+def _find_all_docstrings(tree: ast.Module) -> List[Dict[str, Any]]:
+    """Duyệt qua AST để tìm tất cả docstring ở các cấp."""
+    docstring_list: List[Dict[str, Any]] = []
+
+    for node in ast.walk(tree):
+        doc_info = None
+        
+        # Xử lý các node có thể chứa docstring
+        if isinstance(node, (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
+            doc_info = _get_docstring_info(node.body)
+            
+        if doc_info:
+            docstring_list.append(doc_info)
+            
+    return docstring_list
 
 # --- Hàm chính ---
 
@@ -47,82 +66,79 @@ def analyze_file_for_docstrings(
     logger: logging.Logger
 ) -> Optional[Dict[str, Any]]:
     """
-    Phân tích file Python, loại bỏ docstring và trả về nội dung mới.
-    
-    Args:
-        file_path: Đường dẫn đến file Python.
-        logger: Logger.
-        
-    Returns:
-        Dict chứa nội dung mới và đường dẫn file nếu docstring được tìm thấy, 
-        None nếu không có thay đổi hoặc có lỗi.
+    Phân tích file Python, loại bỏ docstring bằng cách xóa dòng,
+    và trả về nội dung mới.
     """
     
-    original_content = ""
+    original_lines: List[str] = []
     try:
-        original_content = file_path.read_text(encoding='utf-8')
+        # Đọc file và giữ lại dấu xuống dòng (True)
+        original_lines = file_path.read_text(encoding='utf-8').splitlines(keepends=True)
     except (IOError, UnicodeDecodeError) as e:
         logger.warning(f"⚠️ Bỏ qua file '{file_path.name}' do lỗi đọc/encoding: {e}")
         return None
 
     try:
-        # 1. Parse nội dung thành AST
+        original_content = "".join(original_lines)
         tree = ast.parse(original_content)
+        docstrings = _find_all_docstrings(tree)
         
-        # 2. Tạo bản sao của AST gốc
-        original_tree = ast.parse(original_content)
-        
-        # 3. Áp dụng Transformer để loại bỏ docstring
-        new_tree = DocstringRemover().visit(tree)
-        
-        # 4. Chuyển AST đã sửa đổi trở lại thành mã nguồn
-        # Sử dụng ast.unparse (Python 3.9+)
-        new_content = ast.unparse(new_tree)
-        
-        # 5. So sánh với bản gốc
-        # So sánh AST đã sửa đổi với AST gốc (để loại trừ trường hợp 
-        # file có docstring nhưng ast.unparse lại thêm/bớt khoảng trắng/dòng trống, 
-        # chúng ta chỉ so sánh nội dung sau khi unparse).
-        # Nếu ast.unparse thay đổi format (chỉ là khoảng trắng), việc so sánh trực tiếp 
-        # new_content == original_content sẽ thất bại, nhưng chúng ta chỉ quan tâm 
-        # đến việc loại bỏ docstring.
-        
-        # Một heuristic đơn giản hơn: nếu có docstring ban đầu, 
-        # nội dung sau khi remove chắc chắn ngắn hơn hoặc khác.
-        if new_content == original_content:
-            # Code không thay đổi, có thể do không có docstring
-            # hoặc lỗi unparse không đáng kể (sẽ được xử lý bằng so sánh hàm)
-            pass
+        if not docstrings:
+            return None # Không có docstring để xóa
 
-        # Kiểm tra chi tiết hơn: Nếu có bất kỳ docstring nào (cách thô)
-        if inspect.getdoc(tree) or any(inspect.isdatadescriptor(node) and inspect.getdoc(node) for node in tree.body):
-            # Nếu có vẻ có docstring, chúng ta chấp nhận new_content
-            # và để Executor quyết định ghi đè.
-            pass
+        new_lines = list(original_lines)
+        
+        # Vì ta xóa dòng từ trên xuống, việc xóa có thể làm lệch vị trí 
+        # dòng của các node bên dưới. Ta phải xóa từ DƯỚI LÊN (Reverse).
+        # Docstrings có start_line và end_line khác nhau, nên ta chỉ cần
+        # lấy chúng và sắp xếp theo thứ tự giảm dần của dòng bắt đầu.
+        
+        # Sắp xếp theo dòng kết thúc giảm dần (để xóa từ dưới lên)
+        docstrings.sort(key=lambda d: d["end_line"], reverse=True)
+        
+        docstrings_removed_count = 0
+        
+        for doc_info in docstrings:
+            start = doc_info["start_line"]
+            end = doc_info["end_line"]
+            
+            # Chỉ số trong list (list index) = line number - 1
+            start_index = start - 1
+            end_index = end - 1
+            
+            # --- Xử lý xóa dòng ---
+            
+            # Dòng chứa docstring là: original_lines[start_index] đến original_lines[end_index]
+            
+            # Giả định: Docstring thường được bao quanh bởi dòng trống.
+            # Ta sẽ xóa docstring VÀ dòng trống ngay trước nó (nếu có).
+            
+            # Chuỗi docstring thô (có thể bao gồm dấu ngoặc kép/ba)
+            # Ta cần giữ lại dòng `def function():` 
+            
+            # Tìm dòng thực sự bắt đầu chuỗi (thường là dấu """)
+            
+            # Vì ta chỉ có dòng/cột: ta sẽ xóa toàn bộ các dòng từ start_index
+            # đến end_index.
+            del new_lines[start_index : end_index + 1]
+            docstrings_removed_count += 1
+            
+        if docstrings_removed_count > 0:
+            new_content = "".join(new_lines)
+            
+            logger.debug(f"Đã xóa {docstrings_removed_count} docstring khỏi file '{file_path.name}'")
+            
+            return {
+                "path": file_path,
+                "original_content": original_content,
+                "new_content": new_content,
+            }
         
     except SyntaxError as e:
         logger.warning(f"⚠️ Bỏ qua file '{file_path.name}' do lỗi cú pháp (SyntaxError): {e}")
         return None
     except Exception as e:
-        logger.error(f"❌ Lỗi không mong muốn khi phân tích AST file '{file_path.name}': {e}")
+        logger.error(f"❌ Lỗi không mong muốn khi phân tích AST/xóa dòng file '{file_path.name}': {e}")
         return None
 
-    # Vấn đề của ast.unparse là nó thay đổi đáng kể định dạng, gây ra 
-    # nhiều thay đổi không mong muốn (ví dụ: mất comment).
-    # Vì mục đích chỉ là xóa docstring, chúng ta sẽ chỉ trả về kết quả 
-    # nếu thấy có sự khác biệt đáng kể (ví dụ: khác nhau về số dòng/bytes)
-    # và để người dùng xác nhận. 
-    # Tuy nhiên, cách tốt nhất là dùng công cụ bên ngoài (ví dụ: libcst) 
-    # hoặc trả về nội dung đã sửa và cảnh báo về sự mất format.
-
-    # Do chúng ta phải tuân thủ thư viện chuẩn, chúng ta dùng ast.unparse 
-    # và chấp nhận sự thay đổi format:
-    if new_content != original_content:
-        # Giả định có sự thay đổi (hy vọng là docstring đã bị xóa)
-        return {
-            "path": file_path,
-            "original_content": original_content,
-            "new_content": new_content,
-        }
-
-    return None # Không có thay đổi cần thiết
+    return None
