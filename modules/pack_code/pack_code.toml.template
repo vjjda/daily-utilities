@@ -22,5 +22,6 @@ ignore = {toml_ignore}
 
 # (Tùy chọn) Danh sách các đuôi file cần LÀM SẠCH (clean) khi dùng -a/--all-clean.
 # GHI ĐÈ hoàn toàn danh sách mặc định (thường là ["py"]).
+# Bị ghi đè/sửa đổi bởi cờ CLI -x/--clean-extensions.
 # Ví dụ: clean_extensions = ["py", "js"]
 clean_extensions = {toml_clean_extensions}
