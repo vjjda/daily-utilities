@@ -10,12 +10,13 @@ from typing import Optional, Dict, Any
 
 try:
     import tomlkit
-    # --- FIX: Import exceptions directly ---
-    from tomlkit import ParseError, ConvertError
+    # --- FIX: Import exceptions from tomlkit.exceptions ---
+    from tomlkit.exceptions import ParseError, ConvertError
     # --- END FIX ---
 except ImportError:
     tomlkit = None
-    # Define dummy exceptions if tomlkit is not available to avoid NameError
+    # Define dummy exceptions if tomlkit is not available
+    # These need a base class, Exception is suitable
     class ParseError(Exception): pass
     class ConvertError(Exception): pass
 
@@ -38,6 +39,8 @@ def write_project_config_section(
     Parses the generated section string to get a TOML object with comments.
     Returns the path if written, None if cancelled.
     """
+    # ... (Rest of the function remains the same, the except blocks
+    #      already use the correct exception names ParseError and ConvertError) ...
     if tomlkit is None:
         logger.error("❌ Thiếu thư viện 'tomlkit'. Không thể cập nhật file project.")
         raise ImportError("Thư viện 'tomlkit' không được cài đặt.")
@@ -65,9 +68,7 @@ def write_project_config_section(
                          f"Generated content unexpectedly missing section [{config_section_name}] after parsing."
                      )
                 new_section_object = parsed_section_doc[config_section_name]
-            # --- FIX: Use direct exception names ---
-            except (ParseError, ValueError, Exception) as e:
-            # --- END FIX ---
+            except (ParseError, ValueError, Exception) as e: # Catch correct ParseError
                  logger.error(f"❌ Lỗi khi phân tích nội dung section đã tạo: {e}")
                  raise # Re-raise
 
@@ -82,9 +83,7 @@ def write_project_config_section(
     except IOError as e:
         logger.error(f"❌ Lỗi I/O khi cập nhật file '{config_file_path.name}': {e}")
         raise
-    # --- FIX: Use direct exception names ---
-    except (ParseError, ConvertError, Exception) as e:
-    # --- END FIX ---
+    except (ParseError, ConvertError, Exception) as e: # Catch correct ParseError/ConvertError
         logger.error(f"❌ Lỗi không mong muốn khi cập nhật TOML (tomlkit): {e}")
         raise
 
