@@ -6,13 +6,13 @@
 # level (Optional[int]): Giới hạn độ sâu hiển thị của cây.
 # Bỏ comment và đặt giá trị số nguyên dương, ví dụ: level = 3
 # Mặc định: không giới hạn (None)
-# level = {toml_level}
+level = {toml_level}
 
 # extensions (Optional[List[str]]): Chỉ hiển thị các file có đuôi trong danh sách này.
 # Ghi đè hoàn toàn danh sách mặc định (là None - hiển thị tất cả).
 # Để chỉ hiển thị file Python và Markdown: extensions = ["py", "md"]
 # Mặc định: (Không lọc - {toml_extensions} là None)
-# extensions = {toml_extensions}
+extensions = {toml_extensions}
 
 # ignore (List[str]): Danh sách các pattern (giống .gitignore) để ẩn hoàn toàn khỏi cây.
 # Các pattern này sẽ được NỐI VÀO danh sách mặc định của script.
