@@ -100,10 +100,6 @@ def scan_for_files(
     for file_path in all_files:
         abs_file_path = file_path.resolve()
 
-        # Bỏ qua chính script đang chạy
-        if abs_file_path.samefile(script_file_path):
-            continue
-
         # Bỏ qua file trong submodule
         is_in_submodule = any(abs_file_path.is_relative_to(p) for p in submodule_paths)
         if is_in_submodule:
