@@ -7,6 +7,7 @@ Docstring Removal logic using Python's AST (Abstract Syntax Tree)
 
 import logging
 import ast
+import re # Đảm bảo re được import
 from typing import Optional, Dict, Any, List, cast
 from pathlib import Path
 
@@ -63,47 +64,69 @@ def _find_all_docstrings(tree: ast.Module) -> List[Dict[str, Any]]:
 # --- Hàm chính ---
 
 def _remove_comments_from_content(content: str) -> str:
-    """Loại bỏ tất cả comments (#) khỏi nội dung, ngoại trừ Shebang."""
+    """Loại bỏ tất cả comments (#) khỏi nội dung, ngoại trừ Shebang,
+    sử dụng Regex để cố gắng tránh xóa comments bên trong string literals."""
+    
     lines = content.splitlines(True) # Giữ dấu xuống dòng
     new_lines: List[str] = []
     
+    # 1. Xử lý Shebang (Nếu có, giữ lại)
+    shebang_line = ""
     if lines and lines[0].startswith('#!'):
-        # Giữ lại Shebang
-        new_lines.append(lines[0])
-        lines.pop(0)
+        shebang_line = lines.pop(0)
+    
+    if shebang_line:
+        new_lines.append(shebang_line)
+
+    # Regex an toàn hơn: tìm dấu # không phải là string
+    # Pattern: Bắt dấu # (Group 1) theo sau bởi bất cứ thứ gì không phải newline (Group 2).
+    # Không sử dụng Pattern phức tạp để tránh string literals 
+    # vì không thể phân tích đúng string literals bằng Regex.
+    # Thay vào đó, ta sẽ dùng Regex chỉ tìm dấu # đứng sau khoảng trắng/tab
+    
+    COMMENT_PATTERN = re.compile(r'(\s+)#.*', re.DOTALL)
 
     for line in lines:
-        stripped_line = line.lstrip() # Dùng lstrip để giữ indent của code
+        stripped_line = line.lstrip()
+        
+        # 2. Bỏ qua các dòng comment hoàn toàn
         if stripped_line.startswith('#'):
-            # Bỏ qua dòng comment hoàn toàn
             continue
         
-        # Tìm comment nội tuyến
-        clean_line = line
-        try:
-            # Tách chuỗi theo dấu # (cần regex hoặc phân tích cú pháp để tránh string literals)
-            # Tuy nhiên, để đơn giản, ta chỉ loại bỏ dấu # đầu tiên (rủi ro với string literal)
-            # Dùng regex đơn giản để loại bỏ comment cuối dòng (thô sơ)
-            # Vì ta đã xóa docstring (thường là string dài), rủi ro này được giảm bớt.
-            # Tìm dấu '#' không nằm trong dấu nháy kép/đơn.
-            
-            # Giải pháp an toàn hơn: chỉ loại bỏ comment nếu nó đứng sau khoảng trắng
-            parts = clean_line.split('#', 1)
-            if len(parts) > 1:
-                # Nếu phần trước dấu # KHÔNG phải là dấu nháy (heuristic đơn giản)
-                if parts[0].strip() and not (parts[0].strip().endswith('"') or parts[0].strip().endswith("'")):
-                    clean_line = parts[0].rstrip() + '\n' # Loại bỏ comment và khoảng trắng thừa
-                else:
-                    # Nếu là comment bên trong string hoặc dấu # là code, giữ nguyên
-                    pass
-
-            new_lines.append(clean_line)
+        # 3. Loại bỏ comment nội tuyến
+        # Dùng COMMENT_PATTERN để tìm khoảng trắng + # + comment
+        match = COMMENT_PATTERN.search(line)
         
-        except Exception:
-            new_lines.append(line) # Fallback
+        if match:
+             # Nếu tìm thấy, cắt dòng tại vị trí khoảng trắng (match.group(1))
+             # và chỉ giữ lại phần code trước đó.
+             line_without_comment = line[:match.start(1)].rstrip()
+             
+             # Giữ lại dấu xuống dòng
+             if line.endswith('\n'):
+                line_without_comment += '\n'
+             
+             # Chỉ thêm nếu dòng không trống sau khi xóa comment
+             if line_without_comment.strip():
+                 new_lines.append(line_without_comment)
+                 
+        else:
+            # Nếu không tìm thấy comment hoặc dấu # nằm trong string, giữ nguyên dòng (nếu không trống)
+            if line.strip():
+                new_lines.append(line)
 
-    return "".join(new_lines)
-
+    # Sửa lỗi: Loại bỏ dòng trống thừa do xóa comment
+    # Ta chỉ cần một vòng lặp cuối cùng để dọn dẹp các dòng trống
+    # (vì các dòng không có comment cũng có thể bị xóa ở bước 3)
+    final_lines: List[str] = []
+    if shebang_line:
+        final_lines.append(shebang_line)
+        
+    for line in new_lines:
+        if line.strip() and line != shebang_line:
+             final_lines.append(line)
+             
+    return "".join(final_lines)
 
 # --- Hàm chính ---
 
