@@ -8,7 +8,6 @@
 # extensions (List[str]): Danh sách các đuôi file cần bao gồm.
 # GHI ĐÈ hoàn toàn danh sách mặc định CỦA SCRIPT (là keys của map).
 # Ví dụ: extensions = ["py", "js"] # Chỉ xử lý py và js nếu có cleaner
-# Mặc định (từ keys của map): {toml_extensions}
 extensions = {toml_extensions} # Placeholder vẫn là list
 
 # ignore (List[str]): Danh sách các pattern (kiểu .gitignore) để bỏ qua.
