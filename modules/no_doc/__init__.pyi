@@ -6,11 +6,11 @@ from pathlib import Path
 
 CONFIG_FILENAME: Any
 CONFIG_SECTION_NAME: Any
-DEFAULT_EXTENSIONS: Any
+DEFAULT_EXTENSIONS_MAP: Any
 DEFAULT_IGNORE: Any
 DEFAULT_START_PATH: Any
 PROJECT_CONFIG_FILENAME: Any
-analyze_file_for_docstrings: Any
+analyze_file_content: Any
 execute_ndoc_action: Any
 load_config_files: Any
 merge_ndoc_configs: Any
@@ -21,11 +21,11 @@ scan_files: Any
 __all__: List[str] = [
     'CONFIG_FILENAME',
     'CONFIG_SECTION_NAME',
-    'DEFAULT_EXTENSIONS',
+    'DEFAULT_EXTENSIONS_MAP',
     'DEFAULT_IGNORE',
     'DEFAULT_START_PATH',
     'PROJECT_CONFIG_FILENAME',
-    'analyze_file_for_docstrings',
+    'analyze_file_content',
     'execute_ndoc_action',
     'load_config_files',
     'merge_ndoc_configs',
