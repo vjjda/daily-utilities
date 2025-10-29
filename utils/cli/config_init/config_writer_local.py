@@ -1,4 +1,4 @@
-# Path: utils/cli/config_writer_local.py
+# Path: utils/cli/config_init/config_writer_local.py
 """
 Handles writing the configuration content to a local config file (e.g., .<tool>.toml).
 Overwrites the entire file.
@@ -8,9 +8,11 @@ import logging
 from pathlib import Path
 from typing import Optional
 
-# Import UI helpers and logging utils
-from .ui_helpers import prompt_config_overwrite
-from utils.logging_config import log_success
+# --- FIX: Correct relative import ---
+# Import UI helpers and logging utils from one level up
+from ..ui_helpers import prompt_config_overwrite
+# --- END FIX ---
+from utils.logging_config import log_success # This import is fine
 
 __all__ = ["write_local_config"]
 
@@ -25,6 +27,7 @@ def write_local_config(
     (Checks existence, prompts, overwrites file)
     Returns the path if written, None if cancelled.
     """
+    # ... (rest of the function remains the same) ...
     file_existed = config_file_path.exists()
     should_write = True
 
