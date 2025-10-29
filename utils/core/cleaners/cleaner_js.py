@@ -6,7 +6,7 @@ Sử dụng Regex an toàn để loại bỏ comment mà không làm hỏng các
 
 import logging
 import re
-from typing import List
+from typing import List, Final
 
 __all__ = ["clean_javascript_code"]
 
