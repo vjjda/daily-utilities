@@ -8,7 +8,7 @@ import sys
 import argparse
 import logging
 from pathlib import Path
-from typing import Optional, Final
+from typing import Optional, Final, Dict, Any # <-- ĐÃ SỬA LỖI Ở ĐÂY
 
 # Thiết lập sys.path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
