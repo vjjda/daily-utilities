@@ -5,6 +5,7 @@ from typing import Any, List, Optional, Set, Dict, Union
 from pathlib import Path
 
 Logger: Any
+clean_python_code: Any
 compile_spec_from_patterns: Any
 copy_file_to_clipboard: Any
 find_git_root: Any
@@ -30,6 +31,7 @@ write_toml_file: Any
 # Static declaration of exported symbols (for Pylance)
 __all__: List[str] = [
     'Logger',
+    'clean_python_code',
     'compile_spec_from_patterns',
     'copy_file_to_clipboard',
     'find_git_root',
