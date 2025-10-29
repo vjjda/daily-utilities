@@ -5,24 +5,25 @@ Configuration Merging logic for the no_doc module.
 """
 
 import logging
+# THÊM Dict
 from typing import Dict, Any, List, Set, Optional
 
 # --- KHẮC PHỤC LỖI PYRIGHT/PYLANCE ---
-import sys 
-from pathlib import Path 
+import sys
+from pathlib import Path
 # -------------------------------------
 
 # Thiết lập sys.path
 if not 'PROJECT_ROOT' in locals():
-    # Fallback cho trường hợp chạy độc lập/test (nếu không có PROJECT_ROOT)
     sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
-    
+
 from utils.core import (
     resolve_config_list,
     resolve_set_modification
 )
 from .no_doc_config import (
-    DEFAULT_EXTENSIONS,
+    # SỬA: Import dict map mới
+    DEFAULT_EXTENSIONS_MAP,
     DEFAULT_IGNORE
 )
 
@@ -37,35 +38,37 @@ def merge_ndoc_configs(
 ) -> Dict[str, Any]:
     """
     Hợp nhất các nguồn cấu hình (CLI, File, Default) cho ndoc.
-    
-    Args:
-        logger: Logger.
-        cli_extensions: Chuỗi extensions thô từ CLI (ví dụ: "+py,~md").
-        cli_ignore: Chuỗi ignore thô từ CLI (ví dụ: "*.log,build/").
-        file_config_data: Dict cấu hình [ndoc] đã load từ file.
-        
-    Returns:
-        Một dict chứa các danh sách "final" đã được hợp nhất.
     """
-    
+
     # 1. Hợp nhất Cấu hình 'extensions' (hỗ trợ +/-/~)
     file_extensions_value: Optional[List[str]] = file_config_data.get('extensions')
-        
+
+    # SỬA: Lấy các key từ dict map làm default set
+    default_ext_set: Set[str] = set(DEFAULT_EXTENSIONS_MAP.keys())
+
     tentative_extensions: Set[str]
+    # Logic xác định tentative_extensions từ file_config hoặc default giữ nguyên
     if file_extensions_value is not None:
+        # Nếu file config có 'extensions', dùng nó làm cơ sở
         tentative_extensions = set(file_extensions_value)
+        logger.debug("Sử dụng danh sách 'extensions' từ file config làm cơ sở.")
     else:
-        tentative_extensions = DEFAULT_EXTENSIONS
-    
+        # Nếu không, dùng các key từ DEFAULT_EXTENSIONS_MAP làm cơ sở
+        tentative_extensions = default_ext_set
+        logger.debug("Sử dụng danh sách 'extensions' mặc định (từ keys của config map) làm cơ sở.")
+
+    # Áp dụng logic CLI (+/-/~ hoặc ghi đè) vào tentative_extensions
     final_extensions_set = resolve_set_modification(
         tentative_set=tentative_extensions,
         cli_string=cli_extensions
     )
+    # Kết quả cuối cùng là danh sách các đuôi file cần quét
     final_extensions_list = sorted(list(final_extensions_set))
-    
-    logger.debug(f"Set 'extensions' cuối cùng: {final_extensions_list}")
+
+    logger.debug(f"Danh sách 'extensions' cuối cùng để quét: {final_extensions_list}") # Sửa log message
 
     # 2. Hợp nhất Cấu hình 'ignore' (File GHI ĐÈ Default) + (CLI NỐI VÀO)
+    # Logic này không thay đổi
     final_ignore_list = resolve_config_list(
         cli_str_value=cli_ignore,
         file_list_value=file_config_data.get('ignore'), # Đây là List[str] hoặc None
@@ -74,6 +77,6 @@ def merge_ndoc_configs(
     logger.debug(f"Danh sách 'ignore' cuối cùng: {final_ignore_list}")
 
     return {
-        "final_extensions_list": final_extensions_list,
+        "final_extensions_list": final_extensions_list, # Vẫn trả về list cho Scanner
         "final_ignore_list": final_ignore_list
     }

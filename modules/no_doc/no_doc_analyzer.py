@@ -5,21 +5,26 @@ Logic Phân tích File cho ndoc, sử dụng tiện ích làm sạch code từ u
 
 import logging
 from pathlib import Path
+# THÊM Dict
 from typing import Optional, Dict, Any
 
-# Import tiện ích làm sạch code (ĐÃ THAY ĐỔI)
+# Import tiện ích làm sạch code (không đổi)
 from utils.core import clean_code
+# THÊM: Import config map để tra cứu ngôn ngữ
+from .no_doc_config import DEFAULT_EXTENSIONS_MAP
 
-__all__ = ["analyze_file_for_docstrings"]
+# ĐỔI TÊN hàm và __all__
+__all__ = ["analyze_file_content"]
 
 # --- Hàm Phân tích Chính ---
-def analyze_file_for_docstrings(
+# ĐỔI TÊN hàm
+def analyze_file_content(
     file_path: Path,
     logger: logging.Logger,
     all_clean: bool
 ) -> Optional[Dict[str, Any]]:
     """
-    Phân tích file Python, đọc nội dung, gọi tiện ích làm sạch,
+    Phân tích file, đọc nội dung, xác định ngôn ngữ, gọi tiện ích làm sạch,
     và trả về kết quả nếu nội dung thay đổi.
     """
     try:
@@ -31,22 +36,30 @@ def analyze_file_for_docstrings(
         logger.warning(f"⚠️ Bỏ qua file '{file_path.name}' do lỗi đọc không xác định: {e}")
         return None
 
-    # Gọi hàm tiện ích để làm sạch code (ĐÃ THAY ĐỔI)
-    # Hàm này sẽ tự xử lý lỗi LibCST và trả về nội dung gốc nếu cần
+    # THÊM: Xác định ngôn ngữ từ đuôi file
+    file_ext = "".join(file_path.suffixes).lstrip('.') # Xử lý đuôi kép
+    language_id = DEFAULT_EXTENSIONS_MAP.get(file_ext)
+
+    if not language_id:
+        # Nếu không tìm thấy ngôn ngữ cho đuôi file này trong config map
+        logger.debug(f"Bỏ qua file '{file_path.name}' vì không có cleaner nào được cấu hình cho đuôi file '.{file_ext}'.")
+        return None # Không xử lý file này
+
+    # Gọi hàm tiện ích để làm sạch code (không đổi, chỉ thay đổi tên biến)
     new_content = clean_code(
         code_content=original_content,
-        language="python", # <-- CHỈ ĐỊNH RÕ NGÔN NGỮ
-        logger=logger, # Truyền logger để hàm tiện ích có thể báo lỗi
+        language=language_id, # <-- Truyền ngôn ngữ đã tìm được
+        logger=logger,
         all_clean=all_clean
     )
 
-    # Chỉ trả về kết quả nếu nội dung thực sự thay đổi
+    # Chỉ trả về kết quả nếu nội dung thực sự thay đổi (không đổi)
     if new_content != original_content:
         return {
             "path": file_path,
-            "original_content": original_content, # Giữ lại nội dung gốc để so sánh (tùy chọn)
+            "original_content": original_content,
             "new_content": new_content,
         }
 
-    # Trả về None nếu không có thay đổi hoặc có lỗi xảy ra trong clean_code
+    # Trả về None nếu không có thay đổi hoặc có lỗi (không đổi)
     return None
