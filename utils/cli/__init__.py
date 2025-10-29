@@ -1,8 +1,6 @@
 # Path: utils/cli/__init__.py
 """
 Cổng giao tiếp (Facade) cho các tiện ích giao diện dòng lệnh (CLI).
-Tự động export tất cả các thành phần public (`__all__`)
-từ các submodule bên trong (ví dụ: ui_helpers, config_writer).
 """
 
 from pathlib import Path
@@ -12,11 +10,11 @@ from typing import List
 # --- Tự động Tái xuất (Dynamic Re-export) ---
 current_dir = Path(__file__).parent
 
-# Danh sách các submodule nội bộ để load
-# config_writer_legacy không được export nữa
+# Only export necessary functions/classes from the main orchestrator and helpers
+# Keep internal modules like _local, _project, _generator internal.
 modules_to_export: List[str] = [
-    "ui_helpers",
-    "config_writer" # Đây là file mới dùng tomlkit
+    "ui_helpers", # Keep UI helpers exported
+    "config_writer" # Export the main orchestrator function handle_config_init_request
 ]
 
 __all__: List[str] = []
@@ -31,12 +29,15 @@ for module_name in modules_to_export:
                 obj = getattr(module, name)
                 globals()[name] = obj
             __all__.extend(public_symbols)
+        else:
+             print(f"Cảnh báo: Module '{module_name}' trong utils/cli thiếu định nghĩa __all__.")
 
     except ImportError as e:
-        print(f"Cảnh báo: Không thể import từ {module_name}: {e}") #
+        print(f"Cảnh báo: Không thể import từ {module_name} trong utils/cli: {e}")
 
-# Dọn dẹp
+# Cleanup
 del Path, import_module, List, current_dir, modules_to_export
+# ... (rest of cleanup)
 if 'module_name' in locals(): del module_name
 if 'module' in locals(): del module
 if 'public_symbols' in locals(): del public_symbols
