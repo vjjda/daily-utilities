@@ -59,7 +59,7 @@ if LIBCST_AVAILABLE:
             if not self.all_clean or original_node.value.startswith("#!"):
                 return updated_node
             # SỬA LỖI: Trả về thể hiện RemoveFromParent()
-            return RemoveFromParent() # Thêm dấu ngoặc đơn ()
+            return RemoveFromParent() # pyright: ignore[reportCallIssue]
 
         def _remove_docstring_from_body(
             self, body: Sequence[BaseStatement]
