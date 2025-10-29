@@ -16,22 +16,24 @@ import io
 
 # --- Pygments Imports ---
 try:
-    # 1. Import tường minh các Token Types cần thiết
-    from pygments.token import (
-        Comment, Token, Text, Name, Literal, Punctuation # Thêm Text, Name, Literal, Punctuation
-    )
+    # Import the token module to avoid typing mismatch with the Token singleton type
+    from pygments import token as pygments_token
     from pygments.lexers import PythonLexer
     PYGMENTS_AVAILABLE = True
 except ImportError:
     PYGMENTS_AVAILABLE = False
-    class Token: # Mock Token class vẫn cần thiết cho Python không có Pygments
-        # Mock các thuộc tính được sử dụng trong code
-        Text = 1
-        Comment = 2
-        Name = 3
-        Literal = 4
-        Punctuation = 5 # Thêm Punctuation mock
-        Comment_Hashbang = 6
+    # Light-weight mock for pygments_token used only when Pygments is unavailable.
+    # Note: _remove_comments_from_content exits early if PYGMENTS_AVAILABLE is False,
+    # so this mock only prevents NameError at import-time or tests.
+    class _MockTokenModule:
+        Text = object()
+        Comment = object()
+        Literal = object()
+        Punctuation = object()
+        class Name:
+            Builtin = object()
+            Pseudo = object()
+    pygments_token = _MockTokenModule()
 
 __all__ = ["analyze_file_for_docstrings"]
 
@@ -107,38 +109,40 @@ def _remove_comments_from_content(content: str, logger: logging.Logger) -> str:
     
     # 1. Lặp qua các token
     for token_type, value in tokens:
-        
-        # Bỏ qua token ENCODING và ENDMARKER (xử lý ở bước cuối)
-        if token_type is Token.Literal.String.Doc:
-            continue
-            
-        # 2. Xử lý Shebang (Hashbang là token comment đặc biệt)
-        if str(token_type).startswith('Comment.Hashbang') and not shebang_kept:
-             code_buffer += value
-             shebang_kept = True
-             continue
-             
-        # 3. Bỏ qua tất cả các token COMMENT khác
-        if str(token_type).startswith('Comment'):
+        # Use the string representation of the token type to avoid attribute access
+        # on a mocked pygments_token object and to be robust across Pygments versions.
+        tname = str(token_type)
+
+        # Skip docstring literal tokens
+        if "Literal.String.Doc" in tname:
             continue
 
-        # 4. Xử lý Token Text (bao gồm khoảng trắng và newline)
-        if token_type is Token.Text:
+        # 2. Xử lý Shebang (Hashbang là token comment đặc biệt)
+        if tname.startswith("Comment.Hashbang") and not shebang_kept:
+            code_buffer += value
+            shebang_kept = True
+            continue
+
+        # 3. Bỏ qua tất cả các token COMMENT khác
+        if tname.startswith("Comment"):
+            continue
+
+        # Handle plain text tokens (which may contain newlines) to preserve line breaks
+        if "Text" in tname:
             if '\n' in value:
-                # Nếu có newline, thêm buffer hiện tại vào dòng và reset
                 parts = value.split('\n')
                 for part in parts[:-1]:
                     code_buffer += part
                     new_content_lines.append(code_buffer)
                     code_buffer = ""
-                # Phần còn lại của token (trước newline cuối cùng)
+                # Remaining part after the last newline
                 code_buffer += parts[-1]
             else:
                 code_buffer += value
-        
-        elif token_type is not Token.Name.Builtin and token_type is not Token.Name.Builtin.Pseudo:
-            # Nếu là token code, chỉ nối vào buffer
-            code_buffer += value
+            continue
+
+        # For all other tokens (code), just append their value
+        code_buffer += value
 
     # Thêm phần còn lại của buffer (nếu có)
     if code_buffer:
