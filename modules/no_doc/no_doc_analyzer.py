@@ -7,8 +7,8 @@ import logging
 from pathlib import Path
 from typing import Optional, Dict, Any
 
-# Import tiện ích làm sạch code
-from utils.core import clean_python_code
+# Import tiện ích làm sạch code (ĐÃ THAY ĐỔI)
+from utils.core import clean_code
 
 __all__ = ["analyze_file_for_docstrings"]
 
@@ -31,10 +31,11 @@ def analyze_file_for_docstrings(
         logger.warning(f"⚠️ Bỏ qua file '{file_path.name}' do lỗi đọc không xác định: {e}")
         return None
 
-    # Gọi hàm tiện ích để làm sạch code
+    # Gọi hàm tiện ích để làm sạch code (ĐÃ THAY ĐỔI)
     # Hàm này sẽ tự xử lý lỗi LibCST và trả về nội dung gốc nếu cần
-    new_content = clean_python_code(
+    new_content = clean_code(
         code_content=original_content,
+        language="python", # <-- CHỈ ĐỊNH RÕ NGÔN NGỮ
         logger=logger, # Truyền logger để hàm tiện ích có thể báo lỗi
         all_clean=all_clean
     )
@@ -47,5 +48,5 @@ def analyze_file_for_docstrings(
             "new_content": new_content,
         }
 
-    # Trả về None nếu không có thay đổi hoặc có lỗi xảy ra trong clean_python_code
+    # Trả về None nếu không có thay đổi hoặc có lỗi xảy ra trong clean_code
     return None
