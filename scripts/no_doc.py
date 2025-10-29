@@ -1,5 +1,4 @@
 # Path: scripts/no_doc.py
-#!/usr/bin/env python3
 
 """
 Entrypoint (cổng vào) cho ndoc (No Doc).
