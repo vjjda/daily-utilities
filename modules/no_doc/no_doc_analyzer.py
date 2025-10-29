@@ -1,4 +1,4 @@
-# Path: modules/no_doc/no_doc_analyzer.py
+
 """
 Logic loại bỏ Docstring và Comment sử dụng LibCST (Concrete Syntax Tree)
 để đảm bảo giữ nguyên 100% định dạng mã nguồn.
@@ -31,38 +31,38 @@ if LIBCST_AVAILABLE:
         def _is_docstring(self, node: cst.BaseStatement) -> bool:
             """Kiểm tra xem một statement có phải là docstring không."""
             if isinstance(node, cst.Expr):
-                # Docstring là một SimpleString hoặc ConcatenatedString
+                
                 if isinstance(node.value, (cst.SimpleString, cst.ConcatenatedString)):
                     return True
             return False
 
-        # --- Xử lý Comments ---
+        
 
         def leave_Comment(
             self, original_node: cst.Comment, updated_node: cst.Comment
-        ) -> Union[cst.Comment, cst.RemovalSentinel]:
+        ) -> Union[cst.Comment, cst.RemoveFromParent]: 
             """
             Được gọi sau khi visit một nút Comment.
             """
-            # 1. Nếu không ở chế độ all_clean, giữ lại tất cả comments
+            
             if not self.all_clean:
                 return updated_node
 
-            # 2. Nếu ở chế độ all_clean, giữ lại shebang
+            
             if original_node.value.startswith("#!"):
                 return updated_node
 
-            # 3. Xóa tất cả các comments khác
-            return cst.RemovalSentinel()
+            
+            return cst.RemoveFromParent() 
 
-        # --- Xử lý Docstrings ---
+        
 
         def leave_Module(
             self, original_node: cst.Module, updated_node: cst.Module
         ) -> cst.Module:
             """Xóa docstring ở cấp độ module."""
             if original_node.body and self._is_docstring(original_node.body[0]):
-                # Trả về một module mới với body đã bị cắt bớt
+                
                 return updated_node.with_changes(body=updated_node.body[1:])
             return updated_node
 
@@ -71,7 +71,7 @@ if LIBCST_AVAILABLE:
         ) -> cst.ClassDef:
             """Xóa docstring ở cấp độ class."""
             if original_node.body.body and self._is_docstring(original_node.body.body[0]):
-                # Tạo lại body của class mà không có docstring
+                
                 new_body = updated_node.body.with_changes(body=updated_node.body.body[1:])
                 return updated_node.with_changes(body=new_body)
             return updated_node
@@ -94,12 +94,13 @@ if LIBCST_AVAILABLE:
                 return updated_node.with_changes(body=new_body)
             return updated_node
 
-else:
-    # --- Phiên bản Fallback nếu LibCST không được cài đặt ---
-    # (Để hàm analyze_file_for_docstrings không bị lỗi)
-    class DocstringAndCommentRemover:
-        def __init__(self, all_clean: bool = False):
-            pass
+
+
+
+
+
+
+
 
 
 def analyze_file_for_docstrings(
@@ -115,10 +116,10 @@ def analyze_file_for_docstrings(
     if not LIBCST_AVAILABLE:
         logger.error("❌ Lỗi: Tính năng này yêu cầu thư viện 'libcst'.")
         logger.error("   Vui lòng cài đặt: pip install libcst")
-        # Dừng toàn bộ quá trình nếu thiếu thư viện
+        
         raise ImportError("Không tìm thấy LibCST. Vui lòng cài đặt: pip install libcst")
 
-    # 1. Đọc nội dung gốc
+    
     try:
         original_content = file_path.read_text(encoding='utf-8')
         cst_module = cst.parse_module(original_content)
@@ -133,14 +134,14 @@ def analyze_file_for_docstrings(
         return None
 
     try:
-        # 2. Khởi tạo và chạy transformer
+        
         transformer = DocstringAndCommentRemover(all_clean=all_clean)
         modified_tree = cst_module.visit(transformer)
 
-        # 3. Lấy nội dung code mới
+        
         new_content = modified_tree.code
 
-        # 4. So sánh và trả về kết quả
+        
         if new_content != original_content:
             return {
                 "path": file_path,
@@ -148,7 +149,7 @@ def analyze_file_for_docstrings(
                 "new_content": new_content,
             }
 
-        # Không có gì thay đổi
+        
         return None
 
     except Exception as e:
