@@ -33,7 +33,7 @@ DEFAULT_EXTENSIONS_LANG_MAP: Final[Dict[str, str]] = {
     "js": "javascript",
     "sh": "shell",
     "bash": "shell",
-    # Thêm các ánh xạ khác khi cần
+    "zsh": "shell",
 }
 
 # --- Cấu hình Khác (Ví dụ) ---

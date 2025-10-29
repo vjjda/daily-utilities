@@ -23,7 +23,7 @@ DEFAULT_IGNORE: Final[str] = '.venv,venv,__pycache__,.git,.hg,.svn,.DS_Store'
 DEFAULT_OUTPUT_DIR: Final[str] = "~/Documents/code.context"
 
 # THÊM MỚI: Các đuôi file mặc định sẽ được làm sạch khi -a / --all-clean
-DEFAULT_CLEAN_EXTENSIONS: Final[Set[str]] = {"py"} # Chỉ làm sạch Python mặc định
+DEFAULT_CLEAN_EXTENSIONS: Final[Set[str]] = {"py", "zsh", "sh"} # Chỉ làm sạch Python mặc định
 
 # --- Tên File Cấu hình ---
 PROJECT_CONFIG_FILENAME: Final[str] = ".project.toml"

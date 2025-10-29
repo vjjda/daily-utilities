@@ -93,6 +93,8 @@ try:
     register_cleaner("shell", cleaners.cleaner_shell.clean_shell_code)
     register_cleaner("bash", cleaners.cleaner_shell.clean_shell_code)
     register_cleaner("sh", cleaners.cleaner_shell.clean_shell_code)
+    register_cleaner("zsh", cleaners.cleaner_shell.clean_shell_code)
+
 
 except ImportError as e:
     # Xử lý lỗi nếu thư mục cleaners bị thiếu
