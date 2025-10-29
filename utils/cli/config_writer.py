@@ -1,17 +1,13 @@
 # Path: utils/cli/config_writer.py
-"""
-Tiện ích xử lý logic ghi file config cho các entrypoint CLI.
-Sử dụng tomlkit để bảo toàn comment và định dạng khi cập nhật .project.toml.
-"""
-
 import logging
 from pathlib import Path
 from typing import Dict, Any, Optional, List
 import io
+import re # <-- Added import
 
 # Cố gắng import thư viện TOML
 try:
-    import tomllib  # Chỉ dùng để đọc nếu tomlkit lỗi (fallback hiếm)
+    import tomllib
 except ImportError:
     try:
         import toml as tomllib
@@ -19,16 +15,17 @@ except ImportError:
         tomllib = None
 
 try:
-    import tomlkit # Thư viện chính để đọc/ghi bảo toàn định dạng
+    import tomlkit
 except ImportError:
     tomlkit = None
 
 # Import các tiện ích cốt lõi
 from utils.core import (
     load_text_template,
-    format_value_to_toml, # Vẫn dùng để format giá trị cho template
+    # format_value_to_toml is still needed for individual value formatting
+    format_value_to_toml as _format_single_value_to_toml,
     load_project_config_section,
-    load_toml_file # Vẫn dùng load_toml_file (vì nó kiểm tra tomllib)
+    load_toml_file
 )
 # Import các tiện ích UI
 from .ui_helpers import prompt_config_overwrite, launch_editor
@@ -37,52 +34,76 @@ from utils.logging_config import log_success
 
 __all__ = ["handle_config_init_request"]
 
-
+# --- REVISED Generator Function ---
 def _generate_template_content(
     logger: logging.Logger,
     module_dir: Path,
     template_filename: str,
-    config_section_name: str,
+    config_section_name: str, # Keep for header check
     effective_defaults: Dict[str, Any]
 ) -> str:
     """
-    Tải file template .toml, điền các giá trị mặc định vào đó.
-    (Giữ nguyên logic)
+    Tải template, giữ comment, và chèn giá trị mặc định chỉ khi chúng không None.
+    Nếu giá trị mặc định là None, comment out dòng key = value đó trong template.
     """
     template_path = module_dir / template_filename
-    template_str = load_text_template(template_path, logger)
+    template_lines = load_text_template(template_path, logger).splitlines()
 
-    format_dict: Dict[str, str] = {
-        'config_section_name': config_section_name,
-    }
+    output_lines = []
+    section_header_expected = f"[{config_section_name}]" # Used for validation later
+    header_found_in_template = False
 
-    for key, value in effective_defaults.items():
-        placeholder_key = f"toml_{key.replace('-', '_')}"
-        format_dict[placeholder_key] = format_value_to_toml(value)
+    # Regex để tìm dòng `key = {placeholder}` hoặc `# key = {placeholder}`
+    # Groups: 1:indent, 2:comment_marker, 3:key_name_toml, 4:placeholder_suffix
+    placeholder_pattern = re.compile(r"^(\s*)(#?\s*)([\w-]+)\s*=\s*\{toml_(\w+)\}\s*(?:#.*)?$")
 
-    try:
-        content_filled = template_str.format(**format_dict)
-    except KeyError as e:
-        logger.error(f"❌ Lỗi: Template '{template_filename}' thiếu placeholder: {e}")
-        raise ValueError(f"Template '{template_filename}' thiếu placeholder: {e}")
+    for line in template_lines:
+        match = placeholder_pattern.match(line)
+        if match:
+            indent = match.group(1)
+            comment_marker = match.group(2) # Original comment marker (e.g., '# ' or '  ')
+            key_name_toml = match.group(3)
+            placeholder_suffix = match.group(4)
+            # Convert placeholder suffix (use_gitignore) to dict key (use-gitignore)
+            key_name_dict = placeholder_suffix.replace('_', '-')
 
-    start_marker = f"[{config_section_name}]"
-    if start_marker not in content_filled:
-        logger.error(f"❌ Lỗi: Nội dung template sau khi format thiếu header section '{start_marker}'.")
-        raise ValueError(f"Template '{template_filename}' thiếu header section '{start_marker}' sau khi format.")
+            if key_name_dict in effective_defaults:
+                value = effective_defaults[key_name_dict]
+                if value is not None:
+                    # Value exists and is not None: write the line UNCOMMENTED
+                    value_str = _format_single_value_to_toml(value)
+                    output_lines.append(f"{indent}{key_name_toml} = {value_str}")
+                else:
+                    # Value is None: write the line COMMENTED OUT
+                    # Use '# ' as the standard comment marker
+                    output_lines.append(f"{indent}# {key_name_toml} = ") # Show key but no value, commented
+            else:
+                 # Key not found in defaults, keep template line as is (likely commented or placeholder)
+                 output_lines.append(line)
+        else:
+            # Not a placeholder line, keep as is (header, comment, blank line)
+            if section_header_expected in line:
+                header_found_in_template = True
+            output_lines.append(line)
 
-    return content_filled
+    # Validation
+    if not header_found_in_template:
+         raise ValueError(f"Template '{template_filename}' thiếu header section '{section_header_expected}'.")
+
+    # Add trailing newline if needed
+    if output_lines and output_lines[-1].strip() != "":
+        output_lines.append("")
+
+    return "\n".join(output_lines)
 
 
+# _handle_local_scope remains the same, it uses the generated string directly
 def _handle_local_scope(
     logger: logging.Logger,
     config_file_path: Path,
     content_from_template: str,
 ) -> Optional[Path]:
-    """
-    Xử lý logic I/O cho scope 'local'.
-    (Kiểm tra, Hỏi, Ghi đè toàn bộ file - Sử dụng write_text thông thường)
-    """
+    """Handles I/O logic for 'local' scope."""
     file_existed = config_file_path.exists()
     should_write = True
 
@@ -91,12 +112,10 @@ def _handle_local_scope(
             logger, config_file_path, f"File '{config_file_path.name}'"
         )
 
-    if should_write is None:
-        return None
+    if should_write is None: return None
 
     if should_write:
         try:
-            # Ghi nội dung đã tạo từ template bằng write_text
             config_file_path.write_text(content_from_template, encoding="utf-8")
             log_msg = (
                 f"Đã tạo thành công '{config_file_path.name}'." if not file_existed
@@ -106,65 +125,55 @@ def _handle_local_scope(
         except IOError as e:
             logger.error(f"❌ Lỗi I/O khi ghi file '{config_file_path.name}': {e}")
             raise
-
     return config_file_path
 
 
+# _handle_project_scope_with_tomlkit uses the generated string, parses it, extracts, assigns
 def _handle_project_scope_with_tomlkit(
     logger: logging.Logger,
     config_file_path: Path,
     config_section_name: str,
-    # --- THAY ĐỔI: Nhận cả thông tin template ---
     module_dir: Path,
     template_filename: str,
     effective_defaults: Dict[str, Any],
-    # --- KẾT THÚC THAY ĐỔI ---
 ) -> Optional[Path]:
-    """
-    Xử lý logic I/O cho scope 'project' sử dụng tomlkit.
-    Tạo section mới từ template để bảo toàn comment.
-    """
+    """Handles I/O logic for 'project' scope using tomlkit, preserving comments."""
     should_write = True
     try:
-        # 1. Đọc file .project.toml chính bằng tomlkit
         content = config_file_path.read_text(encoding='utf-8') if config_file_path.exists() else ""
         main_doc = tomlkit.parse(content)
 
-        # 2. Kiểm tra section có tồn tại không
         section_existed = config_section_name in main_doc
         if section_existed:
             should_write = prompt_config_overwrite(
                 logger, config_file_path, f"Section [{config_section_name}]"
             )
 
-        if should_write is None:
-            return None
+        if should_write is None: return None
 
         if should_write:
-            # --- THAY ĐỔI LOGIC: Tạo section từ template ---
-            # 3. Tạo nội dung string của section mới từ template
-            #    Hàm này đã bao gồm cả comment và giá trị mặc định
             try:
-                # _generate_template_content tạo ra toàn bộ nội dung file ảo
-                # bao gồm '[section_name]' ở đầu
+                # Generate the syntactically valid section string using the revised generator
                 new_section_string_content = _generate_template_content(
                     logger, module_dir, template_filename,
                     config_section_name, effective_defaults
                 )
-                # Parse chuỗi này để lấy đối tượng tomlkit có comment
+                # Parse this string (which now handles None correctly by commenting)
                 parsed_section_doc = tomlkit.parse(new_section_string_content)
-                # Lấy đối tượng Table của section từ document vừa parse
-                new_section_object_with_comments = parsed_section_doc[config_section_name]
 
-            except (FileNotFoundError, ValueError, Exception) as e:
+                # Extract the Table object (should exist and be valid)
+                if config_section_name not in parsed_section_doc:
+                     raise ValueError(f"Generated content unexpectedly missing section [{config_section_name}] after parsing.")
+                new_section_object = parsed_section_doc[config_section_name]
+
+            except (FileNotFoundError, ValueError, tomlkit.exceptions.ParseError, Exception) as e:
                  logger.error(f"❌ Lỗi khi tạo/phân tích nội dung section từ template: {e}")
-                 raise # Ném lại lỗi
+                 raise
 
-            # 4. Gán đối tượng section (có comment) vào tài liệu chính
-            main_doc[config_section_name] = new_section_object_with_comments
-            # --- KẾT THÚC THAY ĐỔI LOGIC ---
+            # Assign the TOML Table object (preserving comments/structure from template)
+            main_doc[config_section_name] = new_section_object
 
-            # 5. Ghi lại file .project.toml chính
+            # Write back the main document
             with config_file_path.open('w', encoding='utf-8') as f:
                 tomlkit.dump(main_doc, f)
 
@@ -173,94 +182,86 @@ def _handle_project_scope_with_tomlkit(
     except IOError as e:
         logger.error(f"❌ Lỗi I/O khi cập nhật file '{config_file_path.name}': {e}")
         raise
-    # Bắt thêm lỗi ConvertError từ tomlkit nếu có gì đó không ổn
-    except (tomlkit.exceptions.ConvertError, Exception) as e:
+    except (tomlkit.exceptions.ParseError, tomlkit.exceptions.ConvertError, Exception) as e:
         logger.error(f"❌ Lỗi không mong muốn khi cập nhật TOML (tomlkit): {e}")
         raise
 
     return config_file_path
 
-# --- Cập nhật hàm điều phối handle_config_init_request ---
 
+# Orchestrator function - no significant changes needed here
 def handle_config_init_request(
     logger: logging.Logger,
     config_project: bool,
     config_local: bool,
-    # Thông tin về template và file config
     module_dir: Path,
     template_filename: str,
     config_filename: str,
     project_config_filename: str,
     config_section_name: str,
-    # Dữ liệu mặc định
     base_defaults: Dict[str, Any]
 ) -> bool:
-    """
-    Hàm điều phối (Orchestrator) logic tạo/cập nhật file config.
-    """
-    # (Phần kiểm tra thư viện và xác định scope giữ nguyên)
-    # ...
-    if not (config_project or config_local):
-        return False
+    """Orchestrates the config initialization/update process."""
 
-    if tomllib is None or tomlkit is None: # Đổi kiểm tra thành tomlkit
-        # (Log lỗi giữ nguyên)
-        # ...
+    if not (config_project or config_local): return False
+
+    toml_read_lib_missing = tomllib is None
+    toml_write_lib_missing = tomlkit is None
+
+    if toml_read_lib_missing:
+         logger.error("❌ Thiếu thư viện đọc TOML ('tomllib' hoặc 'toml').")
+    if toml_write_lib_missing:
+         logger.error("❌ Thiếu thư viện ghi TOML ('tomlkit').")
+    if toml_read_lib_missing or toml_write_lib_missing:
         raise ImportError("Thiếu thư viện TOML cần thiết")
 
     scope = 'project' if config_project else 'local'
     logger.info(f"Yêu cầu khởi tạo cấu hình scope '{scope}'...")
 
-    # (Phần xác định effective_defaults giữ nguyên)
-    # ...
+    # Determine effective defaults (remains the same)
     effective_defaults = base_defaults.copy()
     if scope == "local":
-        # ... (logic load project_section giữ nguyên)
         project_config_path = Path.cwd() / project_config_filename
         project_section = load_project_config_section(
             project_config_path, config_section_name, logger
         )
         if project_section:
-            logger.debug(f"Sử dụng section [{config_section_name}] từ '{project_config_filename}' làm cơ sở cho template '{config_filename}'.")
+            logger.debug(f"Sử dụng section [{config_section_name}] từ '{project_config_filename}' làm cơ sở.")
             effective_defaults.update(project_section)
         else:
-            logger.debug(f"Không tìm thấy '{project_config_filename}' hoặc section [{config_section_name}], sử dụng default gốc cho template '{config_filename}'.")
-
+            logger.debug(f"Không tìm thấy section [{config_section_name}] trong '{project_config_filename}', dùng default gốc.")
 
     config_file_path: Optional[Path] = None
 
     try:
+        # Generate the content string once using the revised generator
+        generated_content_string = _generate_template_content(
+            logger, module_dir, template_filename,
+            config_section_name, effective_defaults
+        )
+
         if scope == "local":
-            # Tạo nội dung từ template cho file local
-            content_from_template = _generate_template_content(
-                logger, module_dir, template_filename,
-                config_section_name, effective_defaults
-            )
             target_path = Path.cwd() / config_filename
             config_file_path = _handle_local_scope(
-                logger, target_path, content_from_template
+                logger, target_path, generated_content_string
             )
-
         elif scope == "project":
             target_path = Path.cwd() / project_config_filename
-            # Gọi helper project mới, truyền thêm thông tin template
+            # The project handler now needs the template info again to regenerate/parse
             config_file_path = _handle_project_scope_with_tomlkit(
                 logger=logger,
                 config_file_path=target_path,
                 config_section_name=config_section_name,
-                # --- Truyền thông tin template ---
                 module_dir=module_dir,
                 template_filename=template_filename,
                 effective_defaults=effective_defaults
-                # --- Hết ---
             )
 
     except (FileNotFoundError, ValueError, IOError, ImportError, Exception) as e:
         logger.error(f"❌ Không thể hoàn tất khởi tạo config do lỗi: {e}")
         raise
 
-    # (Phần mở editor giữ nguyên)
-    # ...
+    # Launch editor (remains the same)
     if config_file_path:
         launch_editor(logger, config_file_path)
 
