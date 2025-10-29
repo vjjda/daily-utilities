@@ -7,7 +7,7 @@ Docstring Removal logic using Python's AST (Abstract Syntax Tree)
 
 import logging
 import ast
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any, List, cast
 from pathlib import Path
 
 __all__ = ["analyze_file_for_docstrings"]
@@ -26,8 +26,7 @@ def _get_docstring_info(node_body: List[ast.stmt]) -> Optional[Dict[str, Any]]:
         expr_node: ast.Expr = node_body[0]
         
         # Thêm khai báo kiểu tường minh cho Type Checker
-        constant_node: ast.Constant = expr_node.value
-        
+        constant_node: ast.Constant = cast(ast.Constant, expr_node.value)        
         # Docstring phải là chuỗi
         if not isinstance(constant_node.value, str):
             return None
