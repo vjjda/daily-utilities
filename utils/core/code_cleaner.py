@@ -56,10 +56,10 @@ if LIBCST_AVAILABLE:
             self, original_node: cst.Comment, updated_node: cst.Comment # type: ignore [valid-type]
         ) -> Union[cst.Comment, RemovalSentinel]: # type: ignore [valid-type]
             """Xóa comment nếu all_clean=True (trừ shebang)."""
-            # Sử dụng cst.Comment trực tiếp
             if not self.all_clean or original_node.value.startswith("#!"):
                 return updated_node
-            return RemoveFromParent
+            # SỬA LỖI: Trả về thể hiện RemoveFromParent()
+            return RemoveFromParent() # Thêm dấu ngoặc đơn ()
 
         def _remove_docstring_from_body(
             self, body: Sequence[BaseStatement]
@@ -125,8 +125,7 @@ def clean_python_code(
         Chuỗi mã nguồn đã được làm sạch, hoặc chuỗi gốc nếu có lỗi hoặc libcst không cài đặt.
     """
     if not LIBCST_AVAILABLE:
-        # Log chỉ 1 lần nếu thiếu libcst
-        # logger.error("...") # Đã log ở lần chạy trước, có thể comment out nếu không muốn lặp lại
+        # logger.error("...") # Đã log trước đó
         return code_content
 
     if not code_content.strip(): return code_content
@@ -138,15 +137,31 @@ def clean_python_code(
         new_content = modified_tree.code
         return new_content
 
-    # Sử dụng cst.ParserSyntaxError và cst.exceptions.VersionCannotParseError
-    except cst.ParserSyntaxError as e: # type: ignore [attr-defined]
+    # --- SỬA LỖI EXCEPTION HANDLING ---
+    # Bắt các lỗi cụ thể của libcst nếu có thể, dùng AttributeError làm fallback
+    except (getattr(cst, 'ParserSyntaxError', AttributeError)) as e: # type: ignore
+        # Kiểm tra xem có phải là lỗi cú pháp thực sự không
+        # (AttributeError sẽ không có raw_line/raw_column)
+        if isinstance(e, AttributeError):
+             # Nếu là AttributeError, có thể là lỗi khác, ném lại để except Exception bắt
+             raise e from None
+
+        # Xử lý ParserSyntaxError
         line = getattr(e, 'raw_line', '?')
         col = getattr(e, 'raw_column', '?')
-        logger.warning(f"⚠️ Lỗi cú pháp Python (LibCST) tại dòng {line}, cột {col} khi làm sạch code: {e.message}")
-        return code_content
-    except cst.exceptions.VersionCannotParseError as e: # type: ignore [attr-defined]
+        logger.warning(f"⚠️ Lỗi cú pháp Python (LibCST) tại dòng {line}, cột {col} khi làm sạch code: {getattr(e, 'message', str(e))}")
+        return code_content # Trả về gốc
+    except (getattr(cst, 'VersionCannotParseError', AttributeError)) as e: # type: ignore
+        # Kiểm tra xem có phải là lỗi phiên bản thực sự không
+        if isinstance(e, AttributeError):
+             # Nếu là AttributeError, ném lại để except Exception bắt
+             raise e from None
+
+        # Xử lý VersionCannotParseError
         logger.warning(f"⚠️ Lỗi phiên bản grammar (LibCST) khi làm sạch code: {e}")
-        return code_content
+        return code_content # Trả về gốc
     except Exception as e:
+        # Bắt tất cả các lỗi khác, bao gồm cả AttributeError từ các khối trên
         logger.warning(f"⚠️ Lỗi không xác định khi làm sạch code bằng LibCST: {e}")
-        return code_content
+        logger.debug("Traceback:", exc_info=True) # Log traceback để gỡ lỗi
+        return code_content # Trả về gốc
