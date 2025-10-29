@@ -9,8 +9,8 @@ from typing import Optional, Dict, Any
 
 # Import tiện ích làm sạch code
 from utils.core import clean_code
-# SỬA: Import EXTENSIONS_LANG_MAP mới
-from utils.constants import DEFAULT_EXTENSIONS_LANG_MAP # <-- THAY ĐỔI IMPORT
+# SỬA: Import bản đồ ngôn ngữ từ utils.constants
+from utils.constants import DEFAULT_EXTENSIONS_LANG_MAP # <-- SỬA LẠI IMPORT
 
 __all__ = ["analyze_file_content"]
 
@@ -35,24 +35,20 @@ def analyze_file_content(
 
     # Xác định ngôn ngữ từ đuôi file
     file_ext = "".join(file_path.suffixes).lstrip('.')
-    # SỬA: Sử dụng EXTENSIONS_LANG_MAP để tra cứu
-    language_id = EXTENSIONS_LANG_MAP.get(file_ext)
+    # SỬA: Sử dụng đúng tên biến đã import
+    language_id = DEFAULT_EXTENSIONS_LANG_MAP.get(file_ext) # <-- SỬA TÊN BIẾN
 
     if not language_id:
-        # Lỗi này không nên xảy ra nếu logic filter hoạt động đúng,
-        # nhưng vẫn kiểm tra để đảm bảo an toàn.
-        logger.warning(f"⚠️ Bỏ qua file '{file_path.name}'. Không tìm thấy ánh xạ ngôn ngữ cho đuôi '.{file_ext}' trong EXTENSIONS_LANG_MAP.")
+        logger.warning(f"⚠️ Bỏ qua file '{file_path.name}'. Không tìm thấy ánh xạ ngôn ngữ cho đuôi '.{file_ext}' trong DEFAULT_EXTENSIONS_LANG_MAP.")
         return None
 
-    # Gọi hàm tiện ích để làm sạch code
     new_content = clean_code(
         code_content=original_content,
-        language=language_id, # Truyền ngôn ngữ đã tìm được
+        language=language_id,
         logger=logger,
         all_clean=all_clean
     )
 
-    # Chỉ trả về kết quả nếu nội dung thực sự thay đổi (không đổi)
     if new_content != original_content:
         return {
             "path": file_path,
@@ -60,5 +56,4 @@ def analyze_file_content(
             "new_content": new_content,
         }
 
-    # Trả về None nếu không có thay đổi hoặc có lỗi (không đổi)
     return None

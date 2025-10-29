@@ -4,7 +4,7 @@ Các hằng số dùng chung trong toàn bộ dự án.
 """
 
 from pathlib import Path
-from typing import Final
+from typing import Final, Dict
 
 # --- Đường dẫn Gốc Dự án ---
 # Xác định đường dẫn tuyệt đối đến thư mục gốc của dự án `daily-utilities`
