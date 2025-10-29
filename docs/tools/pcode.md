@@ -1,9 +1,6 @@
 # Hướng dẫn sử dụng: pcode
 
-`pcode` (Pack Code) 
- là công cụ dùng để thu thập nội dung của nhiều file mã nguồn hoặc văn bản từ một thư mục hoặc file chỉ định, sau đó đóng gói chúng thành một file văn bản duy nhất.
- Mục đích chính là tạo ra một ngữ cảnh (context) đầy đủ, dễ dàng sao chép để cung cấp cho các mô hình ngôn ngữ lớn (LLM) hoặc để lưu trữ.
- Công cụ này hỗ trợ lọc file theo đuôi mở rộng, bỏ qua các file/thư mục không cần thiết (tự động tôn trọng `.gitignore`), và tùy chọn hiển thị cấu trúc cây thư mục ở đầu file output.
+`pcode` (Pack Code) là công cụ dùng để thu thập nội dung của nhiều file mã nguồn hoặc văn bản từ một thư mục hoặc file chỉ định, sau đó đóng gói chúng thành một file văn bản duy nhất. Mục đích chính là tạo ra một ngữ cảnh (context) đầy đủ, dễ dàng sao chép để cung cấp cho các mô hình ngôn ngữ lớn (LLM) hoặc để lưu trữ. Công cụ này hỗ trợ lọc file theo đuôi mở rộng, bỏ qua các file/thư mục không cần thiết (tự động tôn trọng `.gitignore`), và tùy chọn hiển thị cấu trúc cây thư mục ở đầu file output.
 
 ## Khởi động Nhanh
 
