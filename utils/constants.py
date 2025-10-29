@@ -25,6 +25,17 @@ CONSOLE_LOG_LEVEL: Final[str] = "INFO"
 # Cấp độ log mặc định cho File (thường là DEBUG để ghi chi tiết)
 FILE_LOG_LEVEL: Final[str] = "DEBUG"
 
+# --- THÊM MỚI: Language Mapping ---
+# Ánh xạ đuôi file (lowercase) sang mã định danh ngôn ngữ dùng bởi cleaners
+# Được sử dụng bởi ndoc và pcode
+DEFAULT_EXTENSIONS_LANG_MAP: Final[Dict[str, str]] = {
+    "py": "python",
+    "js": "javascript",
+    "sh": "shell",
+    "bash": "shell",
+    # Thêm các ánh xạ khác khi cần
+}
+
 # --- Cấu hình Khác (Ví dụ) ---
 # Thư mục mặc định cho việc lưu trữ file (ví dụ)
 # DEFAULT_ARCHIVE_FOLDER: Final[str] = "~/Desktop/"

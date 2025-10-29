@@ -32,6 +32,7 @@ try:
     # Import các thành phần của module pack_code
     from modules.pack_code.pack_code_config import (
         DEFAULT_START_PATH, DEFAULT_EXTENSIONS, DEFAULT_IGNORE,
+        DEFAULT_CLEAN_EXTENSIONS, # <-- THÊM IMPORT
         DEFAULT_OUTPUT_DIR,
         PROJECT_CONFIG_FILENAME, CONFIG_FILENAME, CONFIG_SECTION_NAME
     )
@@ -50,8 +51,9 @@ TEMPLATE_FILENAME: Final[str] = "pack_code.toml.template"
 # Giá trị mặc định dùng để tạo template config
 PCODE_DEFAULTS: Final[Dict[str, Any]] = {
     "output_dir": DEFAULT_OUTPUT_DIR,
-    "extensions": list(parse_comma_list(DEFAULT_EXTENSIONS)), # Chuyển sang list cho TOML
-    "ignore": list(parse_comma_list(DEFAULT_IGNORE)),       # Chuyển sang list cho TOML
+    "extensions": list(parse_comma_list(DEFAULT_EXTENSIONS)),
+    "ignore": list(parse_comma_list(DEFAULT_IGNORE)),
+    "clean_extensions": sorted(list(DEFAULT_CLEAN_EXTENSIONS)) # <-- THÊM MỚI
 }
 
 def main():
@@ -77,6 +79,11 @@ def main():
         type=str,
         default=None, # Core sẽ tính toán nếu None
         help="File output để ghi. Mặc định: '[output_dir]/<start_name>_context.txt' (từ config)."
+    )
+    pack_group.add_argument(
+        "-a", "--all-clean",
+        action="store_true",
+        help="Làm sạch (xóa docstring/comment) nội dung của các file có đuôi trong 'clean_extensions' trước khi đóng gói."
     )
     pack_group.add_argument(
         "-e", "--extensions",
@@ -166,45 +173,41 @@ def main():
 
     # 5. Chuẩn bị dict `cli_args` cho Core
     cli_args_dict = {
-        "start_path": start_path_obj, # Optional[Path]
-        "output": output_path_obj,     # Optional[Path]
+        "start_path": start_path_obj,
+        "output": output_path_obj,
         "stdout": args.stdout,
-        "extensions": args.extensions, # Optional[str]
-        "ignore": args.ignore,       # Optional[str]
+        "extensions": args.extensions,
+        "ignore": args.ignore,
         "no_gitignore": args.no_gitignore,
         "dry_run": args.dry_run,
         "no_header": args.no_header,
         "no_tree": args.no_tree,
         "copy_to_clipboard": args.copy,
+        "all_clean": args.all_clean, # <-- THÊM MỚI
     }
 
     # 6. Chạy Core Logic và Executor
     try:
-        # Core tự xử lý việc tải config, hợp nhất, quét, đóng gói
         result = process_pack_code_logic(
             logger=logger,
             cli_args=cli_args_dict,
         )
-
-        # Executor xử lý side-effects dựa trên kết quả
         if result:
             execute_pack_code_action(
                 logger=logger,
                 result=result
             )
-
-        # In thông báo hoàn thành (trừ dry-run và stdout)
         if not (args.dry_run or args.stdout) and result and result.get('status') == 'ok':
-            log_success(logger, "Hoạt động hoàn tất thành công.") #
-
+            log_success(logger, "Hoạt động hoàn tất thành công.")
     except Exception as e:
-        logger.error(f"❌ Đã xảy ra lỗi không mong muốn: {e}") #
+        logger.error(f"❌ Đã xảy ra lỗi không mong muốn: {e}")
         logger.debug("Traceback:", exc_info=True)
         sys.exit(1)
+
 
 if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print("\n\n❌ Hoạt động bị dừng bởi người dùng.") #
+        print("\n\n❌ Hoạt động bị dừng bởi người dùng.")
         sys.exit(1)
