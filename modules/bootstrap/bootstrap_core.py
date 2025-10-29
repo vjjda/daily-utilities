@@ -2,8 +2,9 @@
 
 import logging
 import sys
+import argparse  # <-- THÊM DÒNG NÀY
 from pathlib import Path
-from typing import Dict, Any, Tuple, Optional, argparse # <-- Thêm Optional, argparse
+from typing import Dict, Any, Tuple, Optional  # <-- XÓA argparse KHỎI DÒNG NÀY
 
 
 from .bootstrap_loader import load_template
@@ -84,7 +85,7 @@ def generate_script_entrypoint(config: Dict[str, Any], cli_interface_override: O
    
     else: # Mặc định là 'typer'
       
-         template = load_template("script_entrypoint_typer.py.template")
+        template = load_template("script_entrypoint_typer.py.template")
 
         
         typer_app_code = build_typer_app_code(config)
