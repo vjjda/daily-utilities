@@ -1,4 +1,4 @@
-# Path: utils/cli/config_writer.py
+# Path: utils/cli/config_writer_legacy.py
 """
 Tiện ích xử lý logic ghi file config cho các entrypoint CLI.
 (Module nội bộ, được import bởi utils/cli)

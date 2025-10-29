@@ -1,4 +1,4 @@
-# Path: utils/cli/config_defaults_resolver.py
+# Path: utils/cli/config_init/config_defaults_resolver.py
 """
 Resolves the effective default configuration values by merging base defaults
 with project-level configurations when applicable.

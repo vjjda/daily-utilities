@@ -11,7 +11,6 @@ from typing import List
 current_dir = Path(__file__).parent
 
 # Only export necessary functions/classes from the main orchestrator and helpers
-# Keep internal modules like _local, _project, _generator internal.
 modules_to_export: List[str] = [
     "ui_helpers", # Keep UI helpers exported
     "config_writer" # Export the main orchestrator function handle_config_init_request
@@ -35,9 +34,8 @@ for module_name in modules_to_export:
     except ImportError as e:
         print(f"Cảnh báo: Không thể import từ {module_name} trong utils/cli: {e}")
 
-# Cleanup
+# Cleanup (remains the same)
 del Path, import_module, List, current_dir, modules_to_export
-# ... (rest of cleanup)
 if 'module_name' in locals(): del module_name
 if 'module' in locals(): del module
 if 'public_symbols' in locals(): del public_symbols

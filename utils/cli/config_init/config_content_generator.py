@@ -1,4 +1,4 @@
-# Path: utils/cli/config_content_generator.py
+# Path: utils/cli/config_init/config_content_generator.py
 """
 Generates the configuration file content string from a template,
 correctly handling None values and preserving comments.
