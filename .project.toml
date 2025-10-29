@@ -1,4 +1,6 @@
 [tree]
+show-submodules = false
+use-gitignore = true
 ignore = [
     ".git",
     ".venv",
@@ -11,8 +13,6 @@ prune = [
     "dist",
 ]
 dirs-only = []
-show-submodules = false
-use-gitignore = true
 
 [cpath]
 extensions = [
