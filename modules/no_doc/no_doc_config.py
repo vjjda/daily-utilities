@@ -1,32 +1,37 @@
 # Path: modules/no_doc/no_doc_config.py
 """
-Các hằng số cấu hình cho pack_code.
+Các hằng số cấu hình cho ndoc.
 (Nguồn chân lý duy nhất - Single Source of Truth)
 """
 
 from pathlib import Path
-# THÊM Dict
 from typing import Dict, Any, Optional, List, Final, Set
 
 __all__ = [
-    "DEFAULT_START_PATH", "DEFAULT_EXTENSIONS_MAP", "DEFAULT_IGNORE", # ĐỔI TÊN
+    "DEFAULT_START_PATH",
+    "DEFAULT_EXTENSIONS", # <-- Đưa trở lại
+    "EXTENSIONS_LANG_MAP", # <-- Đổi tên
+    "DEFAULT_IGNORE",
     "PROJECT_CONFIG_FILENAME", "CONFIG_FILENAME", "CONFIG_SECTION_NAME"
 ]
 
 # --- Giá trị Mặc định (sử dụng nếu không có CLI/Config) ---
 DEFAULT_START_PATH: Final[str] = '.'
 
-# THAY ĐỔI: Ánh xạ đuôi file (key) sang mã định danh ngôn ngữ (value)
-# Dùng bởi Analyzer để gọi đúng cleaner.
-# Các key cũng là danh sách extension mặc định dùng bởi Merger/Scanner.
-DEFAULT_EXTENSIONS_MAP: Final[Dict[str, str]] = {
-    "py": "python",
-    "sh": "shell",
-    "bash": "shell",
-    "zsh": "shell", # Có thể thêm nếu muốn
-}
+# DANH SÁCH mặc định các đuôi file cần xử lý
+DEFAULT_EXTENSIONS: Final[Set[str]] = {"py", "sh", "bash", "zsh"}
 
-# Dùng ignore mặc định của dự án cpath/pcode/tree để đảm bảo tính nhất quán
+# BẢN ĐỒ ÁNH XẠ: Đuôi file (key) sang mã định danh ngôn ngữ (value)
+# Dùng bởi Analyzer để gọi đúng cleaner. Bao gồm TẤT CẢ các ánh xạ có thể.
+EXTENSIONS_LANG_MAP: Final[Dict[str, str]] = {
+    "py": "python",
+    "js": "javascript", # Giữ lại ánh xạ dù không có trong DEFAULT_EXTENSIONS
+    "sh": "shell",      # Giữ lại ánh xạ
+    "bash": "shell",    # Giữ lại ánh xạ
+    "zsh": "shell"      # Giữ lại ánh xạ
+    }
+
+# Ignore mặc định
 DEFAULT_IGNORE: Final[Set[str]] = {
     ".venv", "venv", "__pycache__", ".git", ".hg", ".svn",
     "node_modules", "dist", "build", "out", ".DS_Store"
