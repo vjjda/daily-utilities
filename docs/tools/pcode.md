@@ -48,10 +48,10 @@ pcode [start_path] [options]
 
 `pcode` tự động tải cấu hình từ các file `.toml` sau (theo thứ tự ưu tiên):
 
-1.  **Đối Số Dòng Lệnh (CLI Arguments)** (Cao nhất)
-2.  **File `.pcode.toml`** (Cấu hình cục bộ cho thư mục)
-3.  **File `.project.toml`** (Section `[pcode]`) (Cấu hình toàn dự án)
-4.  **Giá trị Mặc định của Script** (Thấp nhất)
+1. **Đối Số Dòng Lệnh (CLI Arguments)** (Cao nhất)
+2. **File `.pcode.toml`** (Cấu hình cục bộ cho thư mục)
+3. **File `.project.toml`** (Section `[pcode]`) (Cấu hình toàn dự án)
+4. **Giá trị Mặc định của Script** (Thấp nhất)
 
 ### Các tùy chọn cấu hình trong file `.toml`
 
