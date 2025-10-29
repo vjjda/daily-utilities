@@ -30,14 +30,6 @@ def execute_ndoc_action(
 ) -> None:
     """
     Xử lý danh sách các file cần sửa, thực hiện side-effects.
-    
-    Args:
-        logger: Logger.
-        files_to_fix: Danh sách kết quả từ Core/Analyzer.
-        dry_run: True nếu ở chế độ 'check' (dry-run).
-        force: True nếu cờ --force được sử dụng.
-        scan_root: Gốc quét (để tính đường dẫn tương đối).
-        git_warning_str: Cảnh báo Git (nếu có) từ entrypoint.
     """
 
     processed_count = len(files_to_fix)
@@ -59,26 +51,27 @@ def execute_ndoc_action(
         except ValueError:
             rel_path = str(file_path)
             
-        # Chúng ta không thể hiển thị "preview" dễ dàng do ast.unparse 
-        # thay đổi định dạng quá nhiều. Chỉ in ra đường dẫn.
         logger.warning(f"   -> {rel_path} (Sẽ bị thay đổi định dạng do AST unparse)")
 
     # 2. Xử lý theo chế độ
     if dry_run:
-        # --- Chế độ "dry-run" ---
+        # --- Chế độ "dry-run" (-d) ---
         if git_warning_str: logger.warning(f"\n{git_warning_str}")
         logger.warning(f"-> Để xóa docstring, chạy lại mà không có cờ -d (sử dụng -f/--force để bỏ qua xác nhận).")
         sys.exit(1) # Thoát với mã lỗi
     else:
-        # --- Chế độ "fix" (mặc định) ---
+        # --- Chế độ "fix" (Mặc định) ---
         if git_warning_str: logger.warning(f"\n{git_warning_str}")
             
+        # Hỏi xác nhận nếu KHÔNG có cờ --force
         proceed_to_write = force
         if not force:
             try:
                 confirmation = input("\nTiếp tục xóa docstring và ghi đè các file này? (y/n): ")
             except EOFError:
                 confirmation = "n"
+            except KeyboardInterrupt:
+                confirmation = "n" 
             
             if confirmation.lower() == "y":
                 proceed_to_write = True

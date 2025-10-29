@@ -1,14 +1,22 @@
 # Path: scripts/no_doc.py
+#!/usr/bin/env python3
 
 """
 Entrypoint (cổng vào) cho ndoc (No Doc).
+Script này chịu trách nhiệm:
+1. Thiết lập `sys.path` để import `utils` và `modules`[cite: 918].
+2. Phân tích đối số dòng lệnh (Argparse).
+3. Cấu hình logging[cite: 919].
+4. Xử lý yêu cầu khởi tạo config (--config-local, --config-project)[cite: 929].
+5. Gọi logic cốt lõi (`process_no_doc_logic`)[cite: 933].
+6. Gọi logic thực thi (`execute_ndoc_action`) dựa trên kết quả[cite: 933].
 """
 
 import sys
 import argparse
 import logging
 from pathlib import Path
-from typing import Optional, Final, Dict, Any # <-- ĐÃ SỬA LỖI Ở ĐÂY
+from typing import Optional, Final, Dict, Any
 
 # Thiết lập sys.path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -47,7 +55,7 @@ NDOC_DEFAULTS: Final[Dict[str, Any]] = {
 def main():
     """ Hàm điều phối chính (phiên bản Argparse) """
     
-    # 1. Định nghĩa Parser (Đã có sẵn từ Bootstrap)
+    # 1. Định nghĩa Parser
     parser = argparse.ArgumentParser(
         description="Công cụ quét và xóa docstring (và tùy chọn comment) khỏi file mã nguồn Python.",
         epilog="Mặc định: Chạy ở chế độ sửa lỗi. Dùng -d để chạy thử.",
@@ -135,9 +143,12 @@ def main():
 
     # Tìm gốc Git để làm gốc quét
     effective_scan_root: Optional[Path]
+    # Lấy thư mục cha nếu là file, nếu không thì lấy chính thư mục đó làm gốc tìm kiếm
+    root_to_search = start_path.parent if start_path.is_file() else start_path 
+
     effective_scan_root, git_warning_str = handle_project_root_validation(
         logger=logger, 
-        scan_root=start_path.parent if start_path.is_file() else start_path, 
+        scan_root=root_to_search, 
         force_silent=args.force # Nếu --force, không hỏi
     )
     
@@ -146,7 +157,6 @@ def main():
 
     # Gán đường dẫn đã resolve vào args (cho Core sử dụng)
     setattr(args, 'start_path_path', start_path)
-    setattr(args, 'dry_run', args.dry_run or not args.force) # Nếu không có force, dry-run mặc định là True
     
     # 5. Chạy Core Logic và Executor
     try:
@@ -162,7 +172,7 @@ def main():
         execute_ndoc_action(
             logger=logger, 
             files_to_fix=files_to_fix, 
-            dry_run=args.dry_run,
+            dry_run=args.dry_run, # Mặc định là False (chế độ Fix)
             force=args.force,
             scan_root=effective_scan_root,
             git_warning_str=git_warning_str

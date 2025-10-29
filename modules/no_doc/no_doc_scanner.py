@@ -7,8 +7,8 @@ File Scanning logic for the no_doc module.
 
 import logging
 from pathlib import Path
-from typing import List, Set, Optional, TYPE_CHECKING, Iterable
 import sys
+from typing import List, Set, Optional, TYPE_CHECKING, Iterable
 
 # Thiết lập sys.path
 if not 'PROJECT_ROOT' in locals():
@@ -48,7 +48,7 @@ def scan_files(
         ignore_list: Danh sách pattern (đã hợp nhất) để bỏ qua.
         extensions: Danh sách đuôi file (đã hợp nhất) để quét.
         scan_root: Gốc dự án (để tính .gitignore và submodule).
-        script_file_path: Đường dẫn của chính script ndoc (để bỏ qua).
+        script_file_path: Đường dẫn của chính script ndoc (để bỏ qua, DÙNG TRONG CODE GỐC).
 
     Returns:
         List[Path]: Danh sách các file cần phân tích.
@@ -88,9 +88,8 @@ def scan_files(
     for file_path in all_files:
         abs_file_path = file_path.resolve()
 
-        # Bỏ qua chính script đang chạy
-        if abs_file_path.samefile(script_file_path.resolve()):
-             continue
+        # BỎ QUA KIỂM TRA CHÍNH SCRIPT: 
+        # Chúng ta đã xóa: `if abs_file_path.samefile(script_file_path.resolve()): continue`
 
         # Bỏ qua file trong submodule
         is_in_submodule = any(abs_file_path.is_relative_to(p) for p in submodule_paths)
