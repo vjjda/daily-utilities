@@ -1,10 +1,14 @@
 # Path: modules/pack_code/pack_code_internal/pack_code_tree.py
 from pathlib import Path
 from typing import List, Dict, Any, Set, Optional
+import logging # SỬA: Thêm import logging
 
 __all__ = ["generate_tree_string"]
 
 FileResult = Dict[str, Any] # Type alias
+
+# SỬA: Khởi tạo logger
+logger = logging.getLogger(__name__)
 
 def generate_tree_string(
     all_file_results: List[FileResult], 
@@ -34,6 +38,12 @@ def generate_tree_string(
 
     # Lấy tên của gốc báo cáo
     root_display = reporting_root.name
+    # SỬA: Xử lý trường hợp gốc là CWD ('.') hoặc /
+    if root_display == "" and reporting_root.parent == reporting_root: # Gốc /
+        root_display = "/"
+    elif root_display == "": # Gốc CWD
+        root_display = "."
+        
     tree_lines.append(f"{root_display}/")
 
     # Xây dựng cây từ các đường dẫn
