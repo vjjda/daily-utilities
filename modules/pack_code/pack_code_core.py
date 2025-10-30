@@ -1,115 +1,123 @@
 # Path: modules/pack_code/pack_code_core.py
+"""
+Logic cốt lõi cho pack_code (Orchestrator).
+"""
+
 import logging
 from pathlib import Path
-from typing import Dict, Any, List, Optional, Set, TYPE_CHECKING, Iterable, Tuple
+from typing import Dict, Any, List, Optional, Set, Tuple
 
-
+# SỬA: Import các hàm Task và các worker cần thiết
 from .pack_code_internal import (
-    scan_files,
+    process_pcode_task_file,
+    process_pcode_task_dir,
     generate_tree_string,
-    load_files_content,
-    load_config_files,
-    resolve_start_and_scan_paths,
-    resolve_filters,
+    load_config_files, # Cần cho config output
     resolve_output_path,
-    assemble_packed_content,
+    assemble_packed_content
 )
-from .pack_code_config import DEFAULT_START_PATH
-
 
 __all__ = ["process_pack_code_logic"]
 
+FileResult = Dict[str, Any] # Type alias
 
 def process_pack_code_logic(
     logger: logging.Logger,
     cli_args: Dict[str, Any],
+    files_to_process: List[Path],
+    dirs_to_scan: List[Path],
+    reporting_root: Optional[Path], # Gốc báo cáo (Tổ tiên chung)
+    script_file_path: Path
 ) -> Dict[str, Any]:
+    """
+    Hàm logic chính (Orchestrator) cho pack_code.
+    Điều phối việc quét, đọc, làm sạch và đóng gói nội dung.
+    """
     logger.info("Đang chạy logic cốt lõi...")
 
     try:
+        all_file_results: List[FileResult] = []
+        processed_files: Set[Path] = set() # Tránh xử lý trùng lặp
 
-        start_path_from_cli: Optional[Path] = cli_args.get("start_path")
-        temp_path_for_config = (
-            start_path_from_cli if start_path_from_cli else Path.cwd().resolve()
-        )
-        config_load_dir: Path = (
-            temp_path_for_config.parent
-            if temp_path_for_config.is_file()
-            else temp_path_for_config
-        )
-        logger.debug(f"Đang tải cấu hình từ: {config_load_dir.as_posix()}")
-        file_config = load_config_files(config_load_dir, logger)
+        # 1. XỬ LÝ CÁC FILE RIÊNG LẺ
+        if files_to_process:
+            for file_path in files_to_process:
+                results = process_pcode_task_file(
+                    file_path=file_path,
+                    cli_args=cli_args,
+                    logger=logger,
+                    processed_files=processed_files,
+                    reporting_root=reporting_root,
+                    script_file_path=script_file_path
+                )
+                all_file_results.extend(results)
+
+        # 2. XỬ LÝ CÁC THƯ MỤC
+        if dirs_to_scan:
+            logger.info(f"Đang xử lý {len(dirs_to_scan)} thư mục...")
+            for scan_dir in dirs_to_scan:
+                results = process_pcode_task_dir(
+                    scan_dir=scan_dir,
+                    cli_args=cli_args,
+                    logger=logger,
+                    processed_files=processed_files,
+                    reporting_root=reporting_root,
+                    script_file_path=script_file_path
+                )
+                all_file_results.extend(results)
+
+        # --- 3. GIAI ĐOẠN "BUILD" (SAU KHI THU THẬP) ---
+        
+        if not all_file_results:
+            logger.warning("Không tìm thấy file nào khớp với tiêu chí.")
+            return {'status': 'empty'}
+            
+        logger.info(f"Tổng cộng tìm thấy {len(all_file_results)} file để đóng gói.")
 
         dry_run: bool = cli_args.get("dry_run", False)
         no_tree: bool = cli_args.get("no_tree", False)
-        all_clean: bool = cli_args.get("all_clean", False)
 
-        if all_clean:
-            logger.info(
-                "⚠️ Chế độ ALL-CLEAN đã bật: Nội dung file sẽ được làm sạch trước khi đóng gói."
-            )
-
-        start_path, scan_root = resolve_start_and_scan_paths(
-            logger, start_path_from_cli
-        )
-
-        ext_filter_set, ignore_spec, submodule_paths, clean_extensions_set = (
-            resolve_filters(logger, cli_args, file_config, scan_root)
-        )
-
-        files_to_pack = scan_files(
-            logger, start_path, ignore_spec, ext_filter_set, submodule_paths, scan_root
-        )
-        if not files_to_pack:
-            logger.warning("Không tìm thấy file nào khớp với tiêu chí.")
-            return {"status": "empty"}
-        logger.info(f"Tìm thấy {len(files_to_pack)} file để đóng gói.")
-
+        # 4. Tạo cây thư mục (từ kết quả tổng)
         tree_str = ""
         if not no_tree:
             logger.debug("Đang tạo cây thư mục...")
-            tree_str = generate_tree_string(start_path, files_to_pack, scan_root)
+            tree_str = generate_tree_string(all_file_results, reporting_root)
 
-        files_content: Dict[Path, str] = {}
-        if not (dry_run and no_tree):
-            files_content = load_files_content(
-                logger=logger,
-                file_paths=files_to_pack,
-                base_dir=scan_root,
-                all_clean=all_clean,
-                clean_extensions_set=clean_extensions_set,
-            )
-
+        # 5. Ghép nối nội dung cuối cùng
         final_content = assemble_packed_content(
-            files_to_pack=files_to_pack,
-            files_content=files_content,
-            scan_root=scan_root,
+            all_file_results=all_file_results,
             tree_str=tree_str,
             no_header=cli_args.get("no_header", False),
             dry_run=dry_run,
         )
 
+        # 6. Xác định đường dẫn file output
+        # (Cần tải config từ gốc báo cáo để biết output_dir)
+        config_load_dir = reporting_root if reporting_root else Path.cwd()
+        file_config = load_config_files(config_load_dir, logger)
+        
         final_output_path = resolve_output_path(
-            logger, cli_args, file_config, start_path
+            logger, cli_args, file_config, reporting_root
         )
 
+        # 7. Trả về Result Object cho Executor
         return {
-            "status": "ok",
-            "final_content": final_content,
-            "output_path": final_output_path,
-            "stdout": cli_args.get("stdout", False),
-            "dry_run": dry_run,
-            "copy_to_clipboard": cli_args.get("copy_to_clipboard", False),
-            "file_list_relative": [p.relative_to(scan_root) for p in files_to_pack],
-            "scan_root": scan_root,
-            "tree_string": tree_str,
-            "no_tree": no_tree,
+            'status': 'ok',
+            'final_content': final_content,
+            'output_path': final_output_path,
+            'stdout': cli_args.get("stdout", False),
+            'dry_run': dry_run,
+            'copy_to_clipboard': cli_args.get("copy_to_clipboard", False),
+            'file_list_relative': [r["rel_path"] for r in all_file_results],
+            'scan_root': reporting_root if reporting_root else Path.cwd(), # Dùng cho executor
+            'tree_string': tree_str,
+            'no_tree': no_tree
         }
 
     except FileNotFoundError as e:
         logger.error(f"❌ {e}")
-        return {"status": "error", "message": str(e)}
+        return {'status': 'error', 'message': str(e)}
     except Exception as e:
         logger.error(f"Lỗi không mong muốn trong logic cốt lõi pack_code: {e}")
         logger.debug("Traceback:", exc_info=True)
-        return {"status": "error", "message": f"Lỗi không mong muốn: {e}"}
+        return {'status': 'error', 'message': f"Lỗi không mong muốn: {e}"}

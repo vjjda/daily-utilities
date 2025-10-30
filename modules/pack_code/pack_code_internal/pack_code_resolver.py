@@ -17,51 +17,29 @@ from utils.core import (
     resolve_config_value,
 )
 
-
 from ..pack_code_config import (
     DEFAULT_EXTENSIONS,
     DEFAULT_IGNORE,
-    DEFAULT_START_PATH,
     DEFAULT_CLEAN_EXTENSIONS,
-    DEFAULT_OUTPUT_DIR,
+    DEFAULT_OUTPUT_DIR
 )
 
-__all__ = ["resolve_start_and_scan_paths", "resolve_filters", "resolve_output_path"]
+# SỬA: Xóa 'resolve_start_and_scan_paths' khỏi __all__
+__all__ = ["resolve_filters", "resolve_output_path"]
 
-
-def resolve_start_and_scan_paths(
-    logger: logging.Logger,
-    start_path_from_cli: Optional[Path],
-) -> Tuple[Path, Path]:
-    start_path: Path
-    if start_path_from_cli:
-        start_path = start_path_from_cli
-    else:
-        start_path = Path(DEFAULT_START_PATH).expanduser().resolve()
-    scan_root: Path
-    if start_path.is_file():
-        scan_root = find_git_root(start_path.parent) or start_path.parent
-    else:
-        effective_start_dir = (
-            start_path if start_path.exists() else Path.cwd().resolve()
-        )
-        scan_root = find_git_root(effective_start_dir) or effective_start_dir
-    if not start_path.exists():
-        raise FileNotFoundError(
-            f"Đường dẫn bắt đầu không tồn tại: {start_path.as_posix()}"
-        )
-    logger.debug(f"Gốc quét (cho quy tắc .gitignore): {scan_root.as_posix()}")
-    logger.debug(f"Đường dẫn bắt đầu quét: {start_path.as_posix()}")
-    return start_path, scan_root
-
+# (ĐÃ XÓA: hàm resolve_start_and_scan_paths)
 
 def resolve_filters(
     logger: logging.Logger,
     cli_args: Dict[str, Any],
     file_config: Dict[str, Any],
-    scan_root: Path,
+    scan_root: Path, # scan_root giờ là cục bộ (ví dụ: file.parent hoặc scan_dir)
 ) -> Tuple[Set[str], Optional["pathspec.PathSpec"], Set[Path], Set[str]]:
+    """
+    Hợp nhất các cấu hình filter (extensions, ignore, submodules, clean_extensions).
+    """
 
+    # 1. Hợp nhất Extensions
     file_ext_list = file_config.get("extensions")
     default_ext_set = parse_comma_list(DEFAULT_EXTENSIONS)
     tentative_extensions: Set[str]
@@ -76,6 +54,7 @@ def resolve_filters(
         f"Set 'extensions' cuối cùng (để quét): {sorted(list(ext_filter_set))}"
     )
 
+    # 2. Hợp nhất Ignore
     default_ignore_set = parse_comma_list(DEFAULT_IGNORE)
     config_cli_ignore_list = resolve_config_list(
         cli_str_value=cli_args.get("ignore"),
@@ -85,24 +64,24 @@ def resolve_filters(
     gitignore_patterns: List[str] = []
     if not cli_args.get("no_gitignore", False):
         gitignore_patterns = parse_gitignore(scan_root)
+    
     all_ignore_patterns_list: List[str] = config_cli_ignore_list + gitignore_patterns
     ignore_spec = compile_spec_from_patterns(all_ignore_patterns_list, scan_root)
     logger.debug(
-        f"Tổng cộng {len(all_ignore_patterns_list)} quy tắc ignore đã biên dịch."
+        f"Tổng cộng {len(all_ignore_patterns_list)} quy tắc ignore đã biên dịch cho gốc {scan_root.name}."
     )
 
+    # 3. Lấy đường dẫn Submodules (cục bộ)
     submodule_paths = get_submodule_paths(scan_root, logger)
 
+    # 4. Hợp nhất Clean Extensions
     file_clean_ext_list = file_config.get("clean_extensions")
     default_clean_ext_set = DEFAULT_CLEAN_EXTENSIONS
-
     tentative_clean_extensions: Set[str]
     if file_clean_ext_list is not None:
         tentative_clean_extensions = set(file_clean_ext_list)
-        logger.debug("Sử dụng 'clean_extensions' từ file config làm cơ sở.")
     else:
         tentative_clean_extensions = default_clean_ext_set
-        logger.debug("Sử dụng 'clean_extensions' mặc định làm cơ sở.")
 
     clean_extensions_set = resolve_set_modification(
         tentative_set=tentative_clean_extensions,
@@ -116,25 +95,39 @@ def resolve_filters(
 
 
 def resolve_output_path(
-    logger: logging.Logger,
+     logger: logging.Logger,
     cli_args: Dict[str, Any],
     file_config: Dict[str, Any],
-    start_path: Path,
+    reporting_root: Optional[Path], # SỬA: Dùng reporting_root thay vì start_path
 ) -> Optional[Path]:
-    if cli_args.get("stdout", False) or cli_args.get("dry_run", False):
+    """
+    Xác định đường dẫn file output cuối cùng.
+    """
+    if cli_args.get("stdout", False) or cli_args.get("dry_run", False): 
         return None
+        
     output_path_from_cli: Optional[Path] = cli_args.get("output")
-    if output_path_from_cli:
+    if output_path_from_cli: 
         return output_path_from_cli
+        
+    # Lấy thư mục output mặc định từ config
     default_output_dir_str = resolve_config_value(
-        cli_value=None,
-        file_value=file_config.get("output_dir"),
-        default_value=DEFAULT_OUTPUT_DIR,
+        cli_value=None, file_value=file_config.get("output_dir"), default_value=DEFAULT_OUTPUT_DIR
     )
     default_output_dir_path = Path(default_output_dir_str)
-    start_name = start_path.stem if start_path.is_file() else start_path.name
-    final_output_path = default_output_dir_path / f"{start_name}_context.txt"
-    logger.debug(
-        f"Sử dụng đường dẫn output mặc định (chưa expand): {final_output_path.as_posix()}"
-    )
+    
+    # Tạo tên file mặc định
+    output_name: str
+    if reporting_root:
+        # Nếu gốc báo cáo là gốc '/', dùng 'root_context.txt'
+        if reporting_root.name == "" and reporting_root.parent == reporting_root:
+            output_name = "root_context.txt"
+        else:
+            output_name = f"{reporting_root.name}_context.txt"
+    else:
+        # Fallback nếu không có gốc chung (ví dụ: C: và D:)
+        output_name = "mixed_context.txt"
+        
+    final_output_path = default_output_dir_path / output_name
+    logger.debug(f"Sử dụng đường dẫn output mặc định (chưa expand): {final_output_path.as_posix()}")
     return final_output_path

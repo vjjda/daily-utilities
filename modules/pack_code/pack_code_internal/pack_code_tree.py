@@ -1,78 +1,79 @@
 # Path: modules/pack_code/pack_code_internal/pack_code_tree.py
 from pathlib import Path
-from typing import List, Dict, Any, Set
+from typing import List, Dict, Any, Set, Optional
 
 __all__ = ["generate_tree_string"]
 
+FileResult = Dict[str, Any] # Type alias
 
 def generate_tree_string(
-    start_path: Path, file_paths: List[Path], scan_root: Path
+    all_file_results: List[FileResult], 
+    reporting_root: Optional[Path]
 ) -> str:
-    if not file_paths:
+    """
+    Tạo cây thư mục từ danh sách các FileResult đã được lọc,
+    dựa trên 'rel_path' (đã được tính toán trước).
+    """
+    if not all_file_results:
         return ""
 
     tree_lines: List[str] = []
+    
+    # Sử dụng 'rel_path' từ results
+    all_relative_paths_str: Set[str] = {r["rel_path"] for r in all_file_results}
 
-    try:
-
-        root_display = start_path.relative_to(scan_root).as_posix()
-        if root_display == ".":
-
-            root_display = scan_root.name
-    except ValueError:
-
-        root_display = start_path.name
-
-    tree_lines.append(f"{root_display}{'/' if start_path.is_dir() else ''}")
-
-    if not start_path.is_dir():
+    # Nếu không có reporting_root, chúng ta có danh sách đường dẫn tuyệt đối
+    # Việc tạo cây từ đây là không thực tế.
+    if reporting_root is None:
+        logger.warning("Không thể tạo cây thư mục: Đang xử lý các đường dẫn tuyệt đối từ nhiều nguồn.")
+        tree_lines.append("[Không thể tạo cây: Nhiều gốc báo cáo]")
+        # Chỉ liệt kê file
+        for rel_path_str in sorted(list(all_relative_paths_str)):
+            tree_lines.append(f"{rel_path_str}")
         return "\n".join(tree_lines)
 
+    # Lấy tên của gốc báo cáo
+    root_display = reporting_root.name
+    tree_lines.append(f"{root_display}/")
+
+    # Xây dựng cây từ các đường dẫn
     all_relative_parts: Set[Path] = set()
-    for p in file_paths:
-        try:
-            rel_p = p.relative_to(start_path)
-            all_relative_parts.add(rel_p)
-
-            for parent in rel_p.parents:
-                if parent != Path("."):
-                    all_relative_parts.add(parent)
-        except ValueError:
-
-            continue
+    for rel_path_str in all_relative_paths_str:
+        rel_p = Path(rel_path_str)
+        all_relative_parts.add(rel_p)
+        for parent in rel_p.parents:
+            if parent != Path("."):
+                all_relative_parts.add(parent)
 
     if not all_relative_parts:
         return "\n".join(tree_lines)
 
     sorted_parts = sorted(list(all_relative_parts), key=lambda p: p.parts)
-
     level_prefixes: Dict[int, str] = {}
 
     for i, part in enumerate(sorted_parts):
         level = len(part.parts) - 1
+        prefix = "".join(level_prefixes.get(l, "    ") for l in range(level))
 
-        prefix = ""
-        for l in range(level):
-            prefix += level_prefixes.get(l, "    ")
-
+        # Tìm các "anh em" (siblings)
         siblings = [
             p
             for p in sorted_parts
             if p.parent == part.parent and len(p.parts) == len(part.parts)
         ]
-        is_last = part == siblings[-1]
+        is_last = (part == siblings[-1])
         pointer = "└── " if is_last else "├── "
 
+        # Kiểm tra xem 'part' này có phải là thư mục (có con) không
         is_directory = any(p.parent == part for p in sorted_parts)
 
         line = f"{prefix}{pointer}{part.name}{'/' if is_directory else ''}"
         tree_lines.append(line)
 
         if is_directory:
-
             level_prefixes[level] = "    " if is_last else "│   "
         elif is_last:
-
+            # Dọn dẹp prefix khi đi hết nhánh
             keys_to_remove = [k for k in level_prefixes if k >= level]
             for k in keys_to_remove:
                 del level_prefixes[k]
