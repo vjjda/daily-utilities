@@ -4,7 +4,7 @@ Facade nội bộ cho các thành phần "worker" của stubgen.
 Che giấu các chi tiết triển khai (parser, loader, merger, formatter)
 khỏi namespace chính của module 'stubgen'.
 """
-# ... (Nội dung file không đổi) ...
+
 from pathlib import Path
 from importlib import import_module
 from typing import List
@@ -12,12 +12,17 @@ from typing import List
 # --- Tự động Tái xuất (Dynamic Re-export) ---
 current_dir = Path(__file__).parent
 
-# Định nghĩa thứ tự load (mặc dù không quan trọng bằng bootstrap)
+# SỬA: Thêm 3 module task mới
 modules_to_export: List[str] = [
+    # Workers (logic nghiệp vụ)
     "stubgen_loader",
     "stubgen_merger",
     "stubgen_parser",
     "stubgen_formatter",
+    "gateway_processor",
+    # Tasks (logic điều phối task)
+    "task_file",
+    "task_dir",
 ]
 
 __all__: List[str] = []
