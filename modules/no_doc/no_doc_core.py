@@ -6,7 +6,9 @@ Core Orchestration logic for the no_doc module.
 import logging
 import argparse
 from pathlib import Path
+# SỬA: Import OrderedDict
 from typing import List, Optional, Dict, Any, Tuple, Set
+from collections import OrderedDict
 import sys
 
 # Thiết lập sys.path
@@ -23,19 +25,25 @@ __all__ = ["process_no_doc_logic"]
 
 FileResult = Dict[str, Any] # Type alias
 
+# SỬA: Thay đổi kiểu trả về của hàm
 def process_no_doc_logic(
     logger: logging.Logger,
-    files_to_process: List[Path], # <-- THAY ĐỔI
-    dirs_to_scan: List[Path],     # <-- THAY ĐỔI
+    files_to_process: List[Path],
+    dirs_to_scan: List[Path],
     cli_args: argparse.Namespace,
     script_file_path: Path
-) -> List[FileResult]:
+) -> Dict[str, List[FileResult]]:
     """
     Điều phối toàn bộ quá trình xóa docstring (Orchestrator).
     Xử lý file và thư mục theo logic cục bộ.
+    
+    Returns:
+        Một Dict có thứ tự, nhóm các file cần sửa theo
+        nguồn đầu vào (ví dụ: "Files Lẻ", "scripts", "modules").
     """
     
-    files_needing_fix: List[FileResult] = []
+    # SỬA: Sử dụng OrderedDict để nhóm kết quả
+    grouped_results: Dict[str, List[FileResult]] = OrderedDict()
     processed_files: Set[Path] = set() # Tránh xử lý file trùng lặp
 
     all_clean: bool = getattr(cli_args, 'all_clean', False)
@@ -54,11 +62,12 @@ def process_no_doc_logic(
 
     if files_to_process:
         logger.info(f"--- Đang xử lý {len(files_to_process)} file riêng lẻ ---")
-        # SỬA: Thêm log cấu hình
         logger.info(f"  [Cấu hình áp dụng]")
         logger.info(f"    - Extensions: {sorted(list(file_extensions))}")
         logger.info(f"    - (Bỏ qua .gitignore và config file)")
         
+        # SỬA: Tạo danh sách kết quả cục bộ cho nhóm này
+        file_only_results: List[FileResult] = []
         for file_path in files_to_process:
             resolved_file = file_path.resolve()
             if resolved_file in processed_files:
@@ -71,18 +80,22 @@ def process_no_doc_logic(
 
             result = analyze_file_content(file_path, logger, all_clean)
             if result:
-                files_needing_fix.append(result)
+                file_only_results.append(result) # SỬA
             processed_files.add(resolved_file)
+            
+        # SỬA: Thêm nhóm vào dict chính
+        if file_only_results:
+            grouped_results["Files Lẻ"] = file_only_results
 
     # --- 2. XỬ LÝ CÁC THƯ MỤC ---
     if dirs_to_scan:
         logger.info(f"Đang xử lý {len(dirs_to_scan)} thư mục...")
 
     for scan_dir in dirs_to_scan:
-        # 2a. Tải config cục bộ TẠI thư mục đó
+        # 2a. Tải config
         file_config_data = load_config_files(scan_dir, logger)
 
-        # 2b. Hợp nhất config cục bộ với cờ CLI
+        # 2b. Hợp nhất config
         cli_extensions: Optional[str] = getattr(cli_args, 'extensions', None)
         cli_ignore: Optional[str] = getattr(cli_args, 'ignore', None)
         
@@ -95,8 +108,7 @@ def process_no_doc_logic(
         final_extensions_list = merged_config["final_extensions_list"]
         final_ignore_list = merged_config["final_ignore_list"]
 
-        # 2c. Quét file (dùng scan_dir làm cả start_path và scan_root)
-        # SỬA: Nhận thêm scan_status
+        # 2c. Quét file
         files_in_dir, scan_status = scan_files(
              logger=logger,
              start_path=scan_dir, 
@@ -106,7 +118,7 @@ def process_no_doc_logic(
              script_file_path=script_file_path
         )
         
-        # SỬA: In báo cáo cấu hình chi tiết
+        # In báo cáo cấu hình
         logger.info(f"--- Quét thư mục: {scan_dir.name} ---")
         logger.info(f"  [Cấu hình áp dụng]")
         logger.info(f"    - Extensions: {sorted(list(final_extensions_list))}")
@@ -122,6 +134,8 @@ def process_no_doc_logic(
         logger.info(f"  -> Tìm thấy {len(files_in_dir)} file, đang phân tích...")
 
         # 2d. Phân tích file
+        # SỬA: Tạo danh sách kết quả cục bộ
+        dir_results: List[FileResult] = []
         for file_path in files_in_dir:
             resolved_file = file_path.resolve()
             if resolved_file in processed_files:
@@ -129,12 +143,17 @@ def process_no_doc_logic(
 
             result = analyze_file_content(file_path, logger, all_clean)
             if result:
-                files_needing_fix.append(result)
+                dir_results.append(result) # SỬA
             processed_files.add(resolved_file)
+            
+        # SỬA: Thêm nhóm vào dict chính
+        if dir_results:
+            # Sử dụng tên thư mục làm khóa
+            grouped_results[scan_dir.name] = dir_results
             
         logger.info(f"--- Kết thúc {scan_dir.name} ---")
 
-    if not files_needing_fix and (files_to_process or dirs_to_scan):
+    if not grouped_results and (files_to_process or dirs_to_scan):
         logger.info("Quét hoàn tất. Không tìm thấy file nào cần thay đổi.")
         
-    return files_needing_fix
+    return grouped_results # SỬA: Trả về dict đã nhóm

@@ -16,7 +16,6 @@ sys.path.append(str(PROJECT_ROOT))
 
 try:
     from utils.logging_config import setup_logging
-    # SỬA IMPORT: Dùng resolve_input_paths
     from utils.cli import handle_config_init_request, resolve_input_paths
     
     from utils.core import parse_comma_list
@@ -55,8 +54,8 @@ def main():
     pack_group.add_argument(
         "start_path_arg", 
         type=str, 
-        nargs='*',  # Chấp nhận 0 hoặc nhiều
-        default=[], # Mặc định là list rỗng
+        nargs='*',
+        default=[],
         help=f'Các đường dẫn (file hoặc thư mục) để quét. Mặc định: "{DEFAULT_START_PATH}".'
     )
     pack_group.add_argument(
@@ -91,11 +90,11 @@ def main():
     )
     args = parser.parse_args()
 
-    # 2. Setup Logging (Không đổi)
+    # 2. Setup Logging
     logger = setup_logging(script_name="Ndoc")
     logger.debug("Ndoc script started.")
 
-    # 3. Xử lý Config Init (Không đổi)
+    # 3. Xử lý Config Init
     try:
         config_action_taken = handle_config_init_request(
             logger=logger, config_project=args.config_project, config_local=args.config_local,
@@ -109,10 +108,10 @@ def main():
         logger.debug("Traceback:", exc_info=True)
         sys.exit(1)
 
-    # 4. Xử lý Path và Validation (THAY ĐỔI)
+    # 4. Xử lý Path và Validation
     validated_paths: List[Path] = resolve_input_paths(
         logger=logger,
-        raw_paths=args.start_path_arg,  # Đây là List[str] từ nargs='*'
+        raw_paths=args.start_path_arg,
         default_path_str=DEFAULT_START_PATH
     )
 
@@ -120,7 +119,6 @@ def main():
         logger.warning("Không tìm thấy đường dẫn hợp lệ nào để quét. Đã dừng.")
         sys.exit(0)
 
-    # Phân loại đường dẫn
     files_to_process: List[Path] = []
     dirs_to_scan: List[Path] = []
     for path in validated_paths:
@@ -131,24 +129,25 @@ def main():
 
     # 5. Chạy Core Logic và Executor
     try:
-        files_to_fix = process_no_doc_logic(
+        # SỬA: Đổi tên biến
+        results_from_core = process_no_doc_logic(
             logger=logger,
-            files_to_process=files_to_process, # <-- THAY ĐỔI
-            dirs_to_scan=dirs_to_scan,         # <-- THAY ĐỔI
-            cli_args=args, # Vẫn truyền args cho các cờ khác
+            files_to_process=files_to_process,
+            dirs_to_scan=dirs_to_scan,
+            cli_args=args,
             script_file_path=THIS_SCRIPT_PATH
         )
         
-        # Gốc báo cáo: sử dụng thư mục làm việc hiện tại
         reporting_root = Path.cwd()
         
+        # SỬA: Truyền dict kết quả vào grouped_results
         execute_ndoc_action(
             logger=logger, 
-            files_to_fix=files_to_fix, 
+            grouped_results=results_from_core, 
             dry_run=args.dry_run, 
             force=args.force,
-            scan_root=reporting_root, # <-- THAY ĐỔI
-            git_warning_str=""        # <-- THAY ĐỔI (Không còn cảnh báo Git)
+            scan_root=reporting_root,
+            git_warning_str=""
         )
     except Exception as e:
         logger.error(f"❌ Đã xảy ra lỗi không mong muốn: {e}")

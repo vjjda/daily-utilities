@@ -19,49 +19,50 @@ __all__ = ["execute_ndoc_action"]
 
 FileResult = Dict[str, Any]
 
+# SỬA: Thay đổi chữ ký hàm
 def execute_ndoc_action(
     logger: logging.Logger,
-    files_to_fix: List[FileResult],
+    grouped_results: Dict[str, List[FileResult]],
     dry_run: bool,
     force: bool,
     scan_root: Path, # Dùng để in đường dẫn tương đối
-    git_warning_str: str, # Sẽ luôn là chuỗi rỗng
+    git_warning_str: str,
 ) -> None:
     """
     Xử lý danh sách các file cần sửa, thực hiện side-effects.
     """
 
-    processed_count = len(files_to_fix)
+    # SỬA: Tính tổng số file từ các nhóm
+    total_files_to_fix = sum(len(files) for files in grouped_results.values())
 
-    if processed_count == 0:
-        # SỬA: Không in git_warning_str nữa
+    if total_files_to_fix == 0:
         log_success(logger, "Tất cả file đã sạch docstring hoặc không cần thay đổi.")
         return
 
-    # 1. In báo cáo
+    # 1. In báo cáo (SỬA: Lặp qua các nhóm)
     logger.warning(
-        f"⚠️ {processed_count} file cần được sửa (Docstrings sẽ bị xóa):"
+        f"⚠️ {total_files_to_fix} file cần được sửa (Docstrings sẽ bị xóa):"
     )
 
-    for info in files_to_fix:
-        file_path: Path = info["path"]
-        try:
-            # In đường dẫn tương đối so với thư mục làm việc hiện tại
-            rel_path = file_path.relative_to(scan_root).as_posix()
-        except ValueError:
-            rel_path = str(file_path) # Fallback nếu nằm ngoài
-            
-        logger.warning(f"   -> {rel_path} (Sẽ bị thay đổi định dạng do AST unparse)")
+    for group_name, files_in_group in grouped_results.items():
+        logger.warning(f"\n   --- Nhóm: {group_name} ({len(files_in_group)} file) ---")
+        
+        for info in files_in_group:
+            file_path: Path = info["path"]
+            try:
+                rel_path = file_path.relative_to(scan_root).as_posix()
+            except ValueError:
+                rel_path = str(file_path) # Fallback nếu nằm ngoài
+                
+            logger.warning(f"   -> {rel_path} (Sẽ bị thay đổi định dạng do AST unparse)")
 
     # 2. Xử lý theo chế độ
     if dry_run:
-        # --- Chế độ "dry-run" (-d) ---
         logger.warning(f"-> Để xóa docstring, chạy lại mà không có cờ -d (sử dụng -f/--force để bỏ qua xác nhận).")
         sys.exit(1) # Thoát với mã lỗi
     else:
         # --- Chế độ "fix" (Mặc định) ---
             
-        # Hỏi xác nhận nếu KHÔNG có cờ --force
         proceed_to_write = force
         if not force:
             try:
@@ -79,20 +80,22 @@ def execute_ndoc_action(
 
         if proceed_to_write:
             written_count = 0
-            for info in files_to_fix:
-                target_path: Path = info["path"]
-                new_content: str = info["new_content"]
-                
-                try:
-                    target_path.write_text(new_content, encoding="utf-8")
-                    rel_path_str = target_path.relative_to(scan_root).as_posix()
-                    logger.info(f"Đã sửa: {rel_path_str}")
-                    written_count += 1
-                except IOError as e:
-                    logger.error(
-                        "❌ Lỗi khi ghi file %s: %s",
-                        target_path.relative_to(scan_root).as_posix(),
-                        e
-                    )
+            # SỬA: Lặp qua các nhóm để ghi file
+            for files_in_group in grouped_results.values():
+                for info in files_in_group:
+                    target_path: Path = info["path"]
+                    new_content: str = info["new_content"]
+                    
+                    try:
+                        target_path.write_text(new_content, encoding="utf-8")
+                        rel_path_str = target_path.relative_to(scan_root).as_posix()
+                        logger.info(f"Đã sửa: {rel_path_str}")
+                        written_count += 1
+                    except IOError as e:
+                        logger.error(
+                            "❌ Lỗi khi ghi file %s: %s",
+                            target_path.relative_to(scan_root).as_posix(),
+                            e
+                        )
 
             log_success(logger, f"Hoàn tất! Đã xóa docstring khỏi {written_count} file.")
