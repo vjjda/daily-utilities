@@ -18,15 +18,15 @@ process_stubgen_logic: Any
 
 # Static declaration of exported symbols (for Pylance)
 __all__: List[str] = [
-    'AST_ALL_LIST_NAME',
-    'AST_MODULE_LIST_NAME',
-    'CONFIG_FILENAME',
-    'CONFIG_SECTION_NAME',
-    'DEFAULT_IGNORE',
-    'DEFAULT_INCLUDE',
-    'DYNAMIC_IMPORT_INDICATORS',
-    'PROJECT_CONFIG_FILENAME',
-    'classify_and_report_stub_changes',
-    'execute_stubgen_action',
-    'process_stubgen_logic'
+    "AST_ALL_LIST_NAME",
+    "AST_MODULE_LIST_NAME",
+    "CONFIG_FILENAME",
+    "CONFIG_SECTION_NAME",
+    "DEFAULT_IGNORE",
+    "DEFAULT_INCLUDE",
+    "DYNAMIC_IMPORT_INDICATORS",
+    "PROJECT_CONFIG_FILENAME",
+    "classify_and_report_stub_changes",
+    "execute_stubgen_action",
+    "process_stubgen_logic",
 ]

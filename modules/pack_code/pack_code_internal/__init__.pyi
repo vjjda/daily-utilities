@@ -16,13 +16,13 @@ scan_files: Any
 
 # Static declaration of exported symbols (for Pylance)
 __all__: List[str] = [
-    'assemble_packed_content',
-    'generate_tree_string',
-    'load_config_files',
-    'load_files_content',
-    'process_pack_code_task_dir',
-    'process_pack_code_task_file',
-    'resolve_filters',
-    'resolve_output_path',
-    'scan_files'
+    "assemble_packed_content",
+    "generate_tree_string",
+    "load_config_files",
+    "load_files_content",
+    "process_pack_code_task_dir",
+    "process_pack_code_task_file",
+    "resolve_filters",
+    "resolve_output_path",
+    "scan_files",
 ]

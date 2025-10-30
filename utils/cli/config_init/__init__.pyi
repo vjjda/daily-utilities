@@ -11,8 +11,8 @@ write_project_config_section: Any
 
 # Static declaration of exported symbols (for Pylance)
 __all__: List[str] = [
-    'generate_config_content',
-    'resolve_effective_defaults',
-    'write_local_config',
-    'write_project_config_section'
+    "generate_config_content",
+    "resolve_effective_defaults",
+    "write_local_config",
+    "write_project_config_section",
 ]
