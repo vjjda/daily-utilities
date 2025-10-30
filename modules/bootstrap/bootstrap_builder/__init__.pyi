@@ -17,14 +17,14 @@ build_typer_path_expands: Any
 
 # Static declaration of exported symbols (for Pylance)
 __all__: List[str] = [
-    'build_argparse_arguments',
-    'build_args_pass_to_core',
-    'build_config_all_list',
-    'build_config_constants',
-    'build_config_imports',
-    'build_path_expands',
-    'build_typer_app_code',
-    'build_typer_args_pass_to_core',
-    'build_typer_main_signature',
-    'build_typer_path_expands'
+    "build_argparse_arguments",
+    "build_args_pass_to_core",
+    "build_config_all_list",
+    "build_config_constants",
+    "build_config_imports",
+    "build_path_expands",
+    "build_typer_app_code",
+    "build_typer_args_pass_to_core",
+    "build_typer_main_signature",
+    "build_typer_path_expands",
 ]

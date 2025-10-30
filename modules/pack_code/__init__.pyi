@@ -17,14 +17,14 @@ process_pack_code_logic: Any
 
 # Static declaration of exported symbols (for Pylance)
 __all__: List[str] = [
-    'CONFIG_FILENAME',
-    'CONFIG_SECTION_NAME',
-    'DEFAULT_CLEAN_EXTENSIONS',
-    'DEFAULT_EXTENSIONS',
-    'DEFAULT_IGNORE',
-    'DEFAULT_OUTPUT_DIR',
-    'DEFAULT_START_PATH',
-    'PROJECT_CONFIG_FILENAME',
-    'execute_pack_code_action',
-    'process_pack_code_logic'
+    "CONFIG_FILENAME",
+    "CONFIG_SECTION_NAME",
+    "DEFAULT_CLEAN_EXTENSIONS",
+    "DEFAULT_EXTENSIONS",
+    "DEFAULT_IGNORE",
+    "DEFAULT_OUTPUT_DIR",
+    "DEFAULT_START_PATH",
+    "PROJECT_CONFIG_FILENAME",
+    "execute_pack_code_action",
+    "process_pack_code_logic",
 ]
