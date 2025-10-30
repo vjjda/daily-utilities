@@ -25,7 +25,7 @@ def format_stub_content(
         stub_template_str: Nội dung file template .pyi.template.
 
     Returns:
-        Một string chứa nội dung file .pyi hoàn chỉnh.
+        Một string chứa nội dung file .pyi hoàn chỉnh (không có header Path).
     """
     
     if not all_exported_symbols:
@@ -45,12 +45,10 @@ def format_stub_content(
     )
     all_list_repr = f"[\n{all_list_body}\n]"
     
-    rel_path = init_path.relative_to(project_root).as_posix()
     module_name = init_path.parent.name
     
-    # Điền vào template
+    # Điền vào template (SỬA: Đã bỏ rel_path)
     return stub_template_str.format(
-        rel_path=f"{rel_path}i", # Thêm 'i' để thành .pyi
         module_name=module_name,
         symbol_declarations=symbol_declarations,
         all_list_repr=all_list_repr
