@@ -69,7 +69,7 @@ def load_files_content(
             if all_clean and file_ext in clean_extensions_set:
                 language_id = DEFAULT_EXTENSIONS_LANG_MAP.get(file_ext)
                 if language_id:
-                     logger.debug(f"   -> Đang làm sạch '{file_path.relative_to(base_dir).as_posix()}' (ngôn ngữ: {language_id})...")
+                    logger.debug(f"   -> Đang làm sạch '{file_path.relative_to(base_dir).as_posix()}' (ngôn ngữ: {language_id})...")
                     cleaned_content = clean_code(
                         code_content=content,
                          language=language_id,
