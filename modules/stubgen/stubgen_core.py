@@ -14,14 +14,17 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     import pathspec
 
-# Import các thành phần của module
-from .stubgen_parser import (
+# SỬA: Import từ facade nội bộ '.stubgen_internal'
+from .stubgen_internal import (
     extract_module_list,
-    collect_all_exported_symbols
+    collect_all_exported_symbols,
+    find_gateway_files, 
+    load_config_files,
+    merge_stubgen_configs,
+    format_stub_content
 )
-from .stubgen_loader import find_gateway_files, load_config_files
-from .stubgen_merger import merge_stubgen_configs
-from .stubgen_formatter import format_stub_content
+
+# Import các thành phần còn lại
 from .stubgen_executor import classify_and_report_stub_changes
 
 # Import tiện ích chung
@@ -37,6 +40,9 @@ StubResult = Dict[str, Any]
 
 __all__ = ["process_stubgen_logic"]
 
+# ... (Toàn bộ phần còn lại của file _process_single_gateway,
+# _process_stubgen_task_file, _process_stubgen_task_dir,
+# và process_stubgen_logic không thay đổi) ...
 
 def _process_single_gateway(
     init_file: Path,
@@ -63,7 +69,6 @@ def _process_single_gateway(
         )
         
         if not exported_symbols:
-            # (Không log warning ở đây, để hàm gọi quyết định)
             return None, 0
 
         # 2. Format (gọi Formatter)
@@ -89,12 +94,11 @@ def _process_stubgen_task_file(
     reporting_root: Path
 ) -> Tuple[List[StubResult], List[StubResult]]:
     """
-    (HELPER 2 - MỚI)
+    (HELPER 2)
     Xử lý logic sgen cho một file __init__.py riêng lẻ.
     """
     logger.info(f"--- 📄 Đang xử lý file: {file_path.relative_to(reporting_root).as_posix()} ---")
     
-    # 1. Kiểm tra
     resolved_file = file_path.resolve()
     if resolved_file in processed_files:
         logger.info("   -> Bỏ qua (đã xử lý).")
@@ -113,7 +117,7 @@ def _process_stubgen_task_file(
         "include": getattr(cli_args, 'include', None)
     }
     merged_config = merge_stubgen_configs(logger, cli_config, file_config_data)
-    scan_dir = file_path.parent # Gốc cục bộ là thư mục cha
+    scan_dir = file_path.parent
     
     logger.info(f"  [Cấu hình áp dụng]")
     logger.info(f"    - Ignore (từ config/CLI): {merged_config['ignore_list']}")
@@ -148,7 +152,7 @@ def _process_stubgen_task_file(
     create, overwrite, _ = classify_and_report_stub_changes(
         logger, file_path.name, file_raw_results, reporting_root
     )
-    logger.info("") # Dòng trống
+    logger.info("")
     
     return create, overwrite
 
@@ -163,7 +167,7 @@ def _process_stubgen_task_dir(
     script_file_path: Path
 ) -> Tuple[List[StubResult], List[StubResult]]:
     """
-    (HELPER 3 - MỚI)
+    (HELPER 3)
     Xử lý logic sgen cho một thư mục đầu vào.
     """
     logger.info(f"--- 📁 Quét thư mục: {scan_dir.name} ---")
@@ -243,8 +247,6 @@ def _process_stubgen_task_dir(
     
     return create, overwrite
 
-
-# --- HÀM ĐIỀU PHỐI CHÍNH (REFACTORED) ---
 
 def process_stubgen_logic(
     logger: logging.Logger, 
