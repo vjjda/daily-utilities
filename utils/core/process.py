@@ -1,5 +1,4 @@
 # Path: utils/core/process.py
-
 """
 Các tiện ích thực thi tiến trình hệ thống.
 (Module nội bộ, được import bởi utils/core)
@@ -17,12 +16,12 @@ __all__ = ["run_command"]
 def run_command(
     command: Union[str, List[str]],
     logger: Logger,
-    description: str = "Thực thi lệnh shell", #
-    cwd: Optional[Path] = None
+    description: str = "Thực thi lệnh shell",
+    cwd: Optional[Path] = None,
+    input_content: Optional[str] = None # <-- THÊM THAM SỐ MỚI
 ) -> Tuple[bool, str]:
     """
     Thực thi một lệnh hệ thống/shell và ghi log kết quả.
-
     Args:
         command: Lệnh dưới dạng chuỗi hoặc list các thành phần lệnh.
         logger: Logger để ghi log.
@@ -38,27 +37,28 @@ def run_command(
     """
 
     if isinstance(command, str):
-        # Tách chuỗi lệnh thành list nếu cần (đơn giản, không xử lý quote phức tạp)
         command_list = command.split()
     else:
         command_list = command
 
-    cwd_info = f" (trong {cwd})" if cwd else "" #
-    # Log lệnh dưới dạng chuỗi dễ đọc
-    logger.debug(f"Đang chạy lệnh{cwd_info}: {' '.join(command_list)}") #
+    cwd_info = f" (trong {cwd})" if cwd else ""
+    stdin_info = " (với input stdin)" if input_content is not None else ""
+    logger.debug(f"Đang chạy lệnh{cwd_info}{stdin_info}: {' '.join(command_list)}")
 
     try:
         result = subprocess.run(
-            command_list,
-            capture_output=True, # Bắt stdout và stderr
-            text=True,           # Decode output thành text (utf-8 mặc định)
-            check=True,          # Ném CalledProcessError nếu exit code != 0
-            shell=False,         # An toàn hơn, không dùng shell trung gian
-            cwd=cwd              # Chỉ định thư mục làm việc
+    command_list,
+            capture_output=True,
+            text=True,
+            check=True,
+    shell=False,
+            cwd=cwd,
+            input=input_content, # <-- TRUYỀN input
+            encoding='utf-8' # <-- Chỉ định rõ encoding cho input/output
         )
 
         stdout_clean = result.stdout.strip()
-        logger.debug(f"Lệnh '{command_list[0]}' thành công. Output:\n{stdout_clean}") #
+        logger.debug(f"Lệnh '{command_list[0]}' thành công. Output:\n{stdout_clean}")
         return True, stdout_clean
 
     except subprocess.CalledProcessError as e:
@@ -66,14 +66,12 @@ def run_command(
         error_details = ""
         if e.stderr:
             error_details = e.stderr.strip()
-        # Nếu stderr rỗng, thử lấy stdout (một số lệnh ghi lỗi ra stdout)
         if not error_details and e.stdout:
             error_details = e.stdout.strip()
 
         error_message = f"Lệnh '{command_list[0]}' thất bại. Lỗi:\n{error_details}" #
         logger.error(f"❌ {error_message}") #
 
-        # Trả về chi tiết lỗi để bên gọi xử lý (ví dụ: kiểm tra "nothing to commit")
         return False, error_details
 
     except FileNotFoundError:

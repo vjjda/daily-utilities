@@ -1,5 +1,4 @@
 # Path: utils/core/git.py
-
 """
 Các tiện ích liên quan đến Git và hệ thống file.
 (Module nội bộ, được import bởi utils/core)
@@ -11,22 +10,39 @@ from pathlib import Path
 from typing import Set, Optional, List, TYPE_CHECKING, Tuple, Iterable
 
 from .process import run_command
-from ..logging_config import log_success # Dùng để log commit thành công
+from ..logging_config import log_success
 
-try:
-    import pathspec
-except ImportError:
-    print("Cảnh báo: Thư viện 'pathspec' không tìm thấy. Phân tích .gitignore sẽ bị hạn chế.") #
-    print("Vui lòng chạy 'pip install pathspec' để hỗ trợ đầy đủ .gitignore.") #
-    pathspec = None
-
-if TYPE_CHECKING:
-    import pathspec
+# ... (try/except pathspec) ...
 
 __all__ = [
     "is_git_repository", "find_git_root", "get_submodule_paths", "parse_gitignore",
-    "git_add_and_commit"
+    "git_add_and_commit",
+    "find_file_upwards" # <-- THÊM MỚI
 ]
+
+def find_file_upwards(
+    filename: str, 
+    start_path: Path, 
+    logger: logging.Logger,
+    max_levels: int = 10
+) -> Optional[Path]:
+    """
+    (HÀM MỚI)
+    Tìm một file cụ thể bằng cách đi ngược lên cây thư mục.
+    """
+    current_path = start_path.resolve()
+    for _ in range(max_levels):
+        file_to_find = current_path / filename
+        if file_to_find.is_file():
+            logger.debug(f"Đã tìm thấy '{filename}' tại: {current_path.as_posix()}")
+            return file_to_find
+
+        if current_path == current_path.parent:
+            break
+        current_path = current_path.parent
+
+    logger.debug(f"Không tìm thấy '{filename}' trong {max_levels} cấp thư mục cha từ {start_path.as_posix()}.")
+    return None
 
 def is_git_repository(root: Path) -> bool:
     """Kiểm tra xem đường dẫn `root` có phải là gốc của một kho Git không."""
@@ -35,13 +51,6 @@ def is_git_repository(root: Path) -> bool:
 def find_git_root(start_path: Path, max_levels: int = 5) -> Optional[Path]:
     """
     Tìm thư mục gốc `.git` gần nhất bằng cách đi ngược lên cây thư mục.
-
-    Args:
-        start_path: Đường dẫn bắt đầu tìm kiếm.
-        max_levels: Số cấp thư mục tối đa sẽ đi ngược lên.
-
-    Returns:
-        Path đến thư mục gốc Git nếu tìm thấy, ngược lại trả về None.
     """
     current_path = start_path.resolve()
     for _ in range(max_levels):
@@ -51,7 +60,6 @@ def find_git_root(start_path: Path, max_levels: int = 5) -> Optional[Path]:
         # Dừng nếu đã lên đến thư mục gốc của hệ thống file
         if current_path == current_path.parent:
             break
-
         current_path = current_path.parent
 
     return None
@@ -77,14 +85,13 @@ def get_submodule_paths(root: Path, logger: Optional[logging.Logger] = None) -> 
             for section in config.sections():
                 if config.has_option(section, "path"):
                     path_str = config.get(section, "path")
-                    # Chuyển đổi thành đường dẫn tuyệt đối
                     submodule_paths.add((root / path_str).resolve())
         except configparser.Error as e:
-            warning_msg = f"Không thể phân tích file .gitmodules: {e}" #
+            warning_msg = f"Không thể phân tích file .gitmodules: {e}"
             if logger:
-                logger.warning(f"⚠️ {warning_msg}") #
+                logger.warning(f"⚠️ {warning_msg}")
             else:
-                print(f"Cảnh báo: {warning_msg}") #
+                print(f"Cảnh báo: {warning_msg}")
     return submodule_paths
 
 def parse_gitignore(root: Path) -> List[str]:
@@ -103,8 +110,6 @@ def parse_gitignore(root: Path) -> List[str]:
         file không tồn tại hoặc có lỗi đọc.
     """
     patterns: List[str] = []
-    # Không cần kiểm tra pathspec ở đây vì chỉ đọc file text
-
     gitignore_path = root / ".gitignore"
     if not gitignore_path.exists():
         return patterns # Không có file .gitignore
@@ -116,7 +121,6 @@ def parse_gitignore(root: Path) -> List[str]:
         # Thêm các quy tắc mặc định mà Git luôn áp dụng (vào cuối)
         lines.append(".git/") # Thêm dấu / để chắc chắn là thư mục
 
-        # Lọc các dòng rỗng/comment, giữ thứ tự
         valid_lines = [
             line.strip() for line in lines
             if line.strip() and not line.strip().startswith('#')
@@ -150,15 +154,15 @@ def git_add_and_commit(
     """
 
     if not file_paths_relative:
-        logger.debug("Không có file nào được chỉ định, bỏ qua commit.") #
-        return True # Thành công vì không có gì cần làm
+        logger.debug("Không có file nào được chỉ định, bỏ qua commit.")
+        return True
 
     if not is_git_repository(scan_root):
-        logger.warning(f"⚠️ Bỏ qua commit: {scan_root} không phải là thư mục gốc của kho Git.") #
+        logger.warning(f"⚠️ Bỏ qua commit: {scan_root} không phải là thư mục gốc của kho Git.")
         return False
 
     try:
-        logger.info(f"Đang thực hiện 'git add' cho {len(file_paths_relative)} file...") #
+        logger.info(f"Đang thực hiện 'git add' cho {len(file_paths_relative)} file...")
 
         # 1. Git Add
         add_command: List[str] = ["git", "add"] + file_paths_relative
