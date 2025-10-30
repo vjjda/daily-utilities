@@ -1,4 +1,4 @@
-# Path: modules/pack_code/pack_code_builder.py
+# Path: modules/pack_code/pack_code_internal/pack_code_builder.py
 """
 Logic ghép nối chuỗi nội dung đóng gói cuối cùng.
 (Module nội bộ, được import bởi pack_code_core)

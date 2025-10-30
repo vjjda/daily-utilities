@@ -1,4 +1,4 @@
-# Path: modules/no_doc/no_doc_analyzer.py
+# Path: modules/no_doc/ndoc_internal/no_doc_analyzer.py
 """
 Logic Phân tích File cho ndoc, sử dụng tiện ích làm sạch code từ utils.core.
 """

@@ -1,4 +1,4 @@
-# Path: modules/pack_code/pack_code_scanner.py
+# Path: modules/pack_code/pack_code_internal/pack_code_scanner.py
 
 """
 Logic quét file cho module Pack Code.

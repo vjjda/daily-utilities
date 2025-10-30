@@ -1,4 +1,4 @@
-# Path: modules/pack_code/pack_code_tree.py
+# Path: modules/pack_code/pack_code_internal/pack_code_tree.py
 
 """
 Logic tạo cây thư mục cho module Pack Code.

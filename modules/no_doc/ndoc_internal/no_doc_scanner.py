@@ -1,4 +1,4 @@
-# Path: modules/no_doc/no_doc_scanner.py
+# Path: modules/no_doc/ndoc_internal/no_doc_scanner.py
 """
 File Scanning logic for the no_doc module.
 (Internal module, imported by no_doc_core)
