@@ -1,7 +1,7 @@
-# Path: modules/pack_code/pack_code_resolver.py
+# Path: modules/pack_code/pack_code_internal/pack_code_resolver.py
 """
 Logic xác định đường dẫn và bộ lọc cho pack_code.
-(Module nội bộ, được import bởi pack_code_core)
+(Internal module, imported by pack_code_core)
 """
 
 import logging
@@ -15,14 +15,15 @@ from utils.core import (
     find_git_root,
     parse_gitignore,
     compile_spec_from_patterns,
-    resolve_set_modification, # Cần dùng cho clean_extensions
+    resolve_set_modification,
     get_submodule_paths,
     parse_comma_list,
     resolve_config_list,
     resolve_config_value
 )
 
-from .pack_code_config import (
+# SỬA: Import từ thư mục cha (..)
+from ..pack_code_config import (
     DEFAULT_EXTENSIONS, DEFAULT_IGNORE, DEFAULT_START_PATH,
     DEFAULT_CLEAN_EXTENSIONS,
     DEFAULT_OUTPUT_DIR
@@ -31,7 +32,6 @@ from .pack_code_config import (
 __all__ = ["resolve_start_and_scan_paths", "resolve_filters", "resolve_output_path"]
 
 
-# ... (resolve_start_and_scan_paths không đổi) ...
 def resolve_start_and_scan_paths(
     logger: logging.Logger,
     start_path_from_cli: Optional[Path],
@@ -64,7 +64,7 @@ def resolve_filters(
     Hợp nhất các cấu hình filter (extensions, ignore, submodules, clean_extensions).
     """
 
-    # 1. Hợp nhất Extensions (để quét) (Không đổi)
+    # 1. Hợp nhất Extensions (để quét)
     file_ext_list = file_config.get('extensions')
     default_ext_set = parse_comma_list(DEFAULT_EXTENSIONS)
     tentative_extensions: Set[str]
@@ -77,7 +77,7 @@ def resolve_filters(
     )
     logger.debug(f"Set 'extensions' cuối cùng (để quét): {sorted(list(ext_filter_set))}")
 
-    # 2. Hợp nhất Ignore (Không đổi)
+    # 2. Hợp nhất Ignore
     default_ignore_set = parse_comma_list(DEFAULT_IGNORE)
     config_cli_ignore_list = resolve_config_list(
         cli_str_value=cli_args.get("ignore"), # String từ CLI -I
@@ -91,14 +91,13 @@ def resolve_filters(
     ignore_spec = compile_spec_from_patterns(all_ignore_patterns_list, scan_root)
     logger.debug(f"Tổng cộng {len(all_ignore_patterns_list)} quy tắc ignore đã biên dịch.")
 
-    # 3. Lấy đường dẫn Submodules (Không đổi)
+    # 3. Lấy đường dẫn Submodules
     submodule_paths = get_submodule_paths(scan_root, logger)
 
-    # 4. SỬA: Hợp nhất Clean Extensions (áp dụng logic +/-/~)
+    # 4. Hợp nhất Clean Extensions
     file_clean_ext_list = file_config.get('clean_extensions') # List[str] hoặc None
     default_clean_ext_set = DEFAULT_CLEAN_EXTENSIONS # Set[str]
 
-    # Xác định set cơ sở (tentative)
     tentative_clean_extensions: Set[str]
     if file_clean_ext_list is not None:
         tentative_clean_extensions = set(file_clean_ext_list)
@@ -107,7 +106,6 @@ def resolve_filters(
         tentative_clean_extensions = default_clean_ext_set
         logger.debug("Sử dụng 'clean_extensions' mặc định làm cơ sở.")
 
-    # Áp dụng logic CLI từ cờ -x
     clean_extensions_set = resolve_set_modification(
         tentative_set=tentative_clean_extensions,
         cli_string=cli_args.get("clean_extensions") # String từ CLI -x
@@ -117,9 +115,8 @@ def resolve_filters(
     return ext_filter_set, ignore_spec, submodule_paths, clean_extensions_set
 
 
-# ... (resolve_output_path không đổi) ...
 def resolve_output_path(
-    logger: logging.Logger,
+     logger: logging.Logger,
     cli_args: Dict[str, Any],
     file_config: Dict[str, Any],
     start_path: Path,

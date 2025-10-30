@@ -1,8 +1,8 @@
-# Path: modules/pack_code/__init__.py
+# Path: modules/pack_code/pack_code_internal/__init__.py
 """
-Cổng giao tiếp (Facade) cho module pack_code.
-Tự động export tất cả các thành phần public (`__all__`)
-từ các submodule bên trong.
+Facade nội bộ cho các thành phần "worker" của pack_code.
+Che giấu các chi tiết triển khai (loader, scanner, tree, resolver, builder)
+khỏi namespace chính của module 'pack_code'.
 """
 
 from pathlib import Path
@@ -12,11 +12,12 @@ from typing import List
 # --- Tự động Tái xuất (Dynamic Re-export) ---
 current_dir = Path(__file__).parent
 
-# SỬA: Chỉ export các thành phần "public"
 modules_to_export: List[str] = [
-    "pack_code_config",
-    "pack_code_core",
-    "pack_code_executor"
+    "pack_code_loader",
+    "pack_code_scanner",
+    "pack_code_tree",
+    "pack_code_resolver",
+    "pack_code_builder"
 ]
 
 __all__: List[str] = []
@@ -33,7 +34,7 @@ for submodule_stem in modules_to_export:
             __all__.extend(public_symbols)
 
     except ImportError as e:
-        print(f"Cảnh báo: Không thể import từ {submodule_stem}: {e}")
+        print(f"Cảnh báo: Không thể import từ {submodule_stem} trong module {__name__}: {e}")
 
 # Dọn dẹp
 del Path, import_module, List, current_dir, modules_to_export, submodule_stem
