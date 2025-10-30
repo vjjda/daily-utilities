@@ -1,4 +1,4 @@
-# Path: modules/stubgen/stubgen_formatter.py
+# Path: modules/stubgen/stubgen_internal/stubgen_formatter.py
 """
 .pyi Content Formatting logic for the Stub Generator (sgen) module.
 (Internal module, imported by stubgen_core.py)

@@ -1,4 +1,4 @@
-# Path: modules/stubgen/stubgen_parser.py
+# Path: modules/stubgen/stubgen_internal/stubgen_parser.py
 """
 AST (Abstract Syntax Tree) Parsing logic for the Stub Generator (sgen) module.
 (Internal module, imported by stubgen_core.py)

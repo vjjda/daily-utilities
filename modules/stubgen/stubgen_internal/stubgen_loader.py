@@ -1,4 +1,4 @@
-# Path: modules/stubgen/stubgen_loader.py
+# Path: modules/stubgen/stubgen_internal/stubgen_loader.py
 """
 File Scanning and Config Loading logic for the Stub Generator (sgen) module.
 """
