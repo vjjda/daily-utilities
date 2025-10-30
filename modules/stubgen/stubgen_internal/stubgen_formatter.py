@@ -11,10 +11,10 @@ __all__ = ["format_stub_content"]
 
 
 def format_stub_content(
-    init_path: Path, 
-    project_root: Path, 
+    init_path: Path,
+    project_root: Path,
     all_exported_symbols: Set[str],
-    stub_template_str: str 
+    stub_template_str: str,
 ) -> str:
     """
     Tạo nội dung (string) cho file .pyi.
@@ -27,29 +27,27 @@ def format_stub_content(
     Returns:
         Một string chứa nội dung file .pyi hoàn chỉnh (không có header Path).
     """
-    
+
     if not all_exported_symbols:
         # Nếu không có symbols, trả về template với __all__ rỗng
         return stub_template_str.format(
             module_name=init_path.parent.name,
             symbol_declarations="# (No symbols found)",
-            all_list_repr="[]"
+            all_list_repr="[]",
         )
 
     sorted_symbols = sorted(list(all_exported_symbols))
-    
+
     # Tạo các dòng "symbol: Any"
-    symbol_declarations = "\n".join(
-        f"{symbol}: Any" for symbol in sorted_symbols
-    )
-    
+    symbol_declarations = "\n".join(f"{symbol}: Any" for symbol in sorted_symbols)
+
     # SỬA: Dùng double quotes (") thay vì repr()
     quoted_symbols = [f'"{symbol}"' for symbol in sorted_symbols]
-    
+
     # SỬA: Tạo nội dung list __all__ theo chuẩn Black
     all_list_body: str
     all_list_repr: str
-    
+
     if not quoted_symbols:
         # Trường hợp list rỗng
         all_list_repr = "[]"
@@ -62,12 +60,12 @@ def format_stub_content(
         all_list_body += ","
         # Đưa vào cặp ngoặc
         all_list_repr = f"[\n{all_list_body}\n]"
-    
+
     module_name = init_path.parent.name
-    
+
     # Điền vào template
     return stub_template_str.format(
         module_name=module_name,
         symbol_declarations=symbol_declarations,
-        all_list_repr=all_list_repr
+        all_list_repr=all_list_repr,
     )
