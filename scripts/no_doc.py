@@ -24,7 +24,7 @@ try:
     from modules.no_doc import (
         process_no_doc_logic,
         execute_ndoc_action,
-DEFAULT_START_PATH, DEFAULT_EXTENSIONS, DEFAULT_IGNORE,
+        DEFAULT_START_PATH, DEFAULT_EXTENSIONS, DEFAULT_IGNORE,
         CONFIG_FILENAME, PROJECT_CONFIG_FILENAME, CONFIG_SECTION_NAME
     )
 except ImportError as e:
@@ -38,18 +38,16 @@ TEMPLATE_FILENAME: Final[str] = "no_doc.toml.template"
 
 NDOC_DEFAULTS: Final[Dict[str, Any]] = {
     "extensions": sorted(list(DEFAULT_EXTENSIONS)),
-"ignore": sorted(list(DEFAULT_IGNORE))
+    "ignore": sorted(list(DEFAULT_IGNORE))
 }
 
 
-def 
-main():
+def main():
     """ Hàm điều phối chính (phiên bản Argparse) """
     
     parser = argparse.ArgumentParser(
         description="Công cụ quét và xóa docstring (và tùy chọn comment) khỏi file mã nguồn.",
-        epilog="Mặc định: Chạy ở chế độ sửa lỗi.
-Dùng -d để chạy thử.",
+        epilog="Mặc định: Chạy ở chế độ sửa lỗi. Dùng -d để chạy thử.",
         formatter_class=argparse.RawTextHelpFormatter
     )
     
@@ -57,45 +55,45 @@ Dùng -d để chạy thử.",
     pack_group.add_argument(
         "start_path_arg", 
         type=str, 
-        [cite_start]nargs='*',  # Chấp nhận 0 hoặc nhiều [cite: 988]
-        [cite_start]default=[], # Mặc định là list rỗng [cite: 988]
+        nargs='*',  # Chấp nhận 0 hoặc nhiều
+        default=[], # Mặc định là list rỗng
         help=f'Các đường dẫn (file hoặc thư mục) để quét. Mặc định: "{DEFAULT_START_PATH}".'
-)
+    )
     pack_group.add_argument(
         "-a", "--all-clean", action="store_true",
         help="Loại bỏ cả docstring và tất cả comments (#) khỏi file (ngoại trừ shebang)."
-)
+    )
     pack_group.add_argument(
         "-d", "--dry-run", action="store_true",
         help="Chỉ chạy ở chế độ kiểm tra (dry-run) và báo cáo các file cần sửa, không thực hiện ghi file."
-)
+    )
     pack_group.add_argument(
         "-e", "--extensions", type=str, default=None,
         help="Danh sách các đuôi file cần quét (phân cách bởi dấu phẩy). Hỗ trợ + (thêm) và ~ (bớt)."
-)
+    )
     pack_group.add_argument(
         "-I", "--ignore", type=str, default=None,
         help="Danh sách pattern (giống .gitignore) để bỏ qua khi quét (THÊM vào config)."
-)
+    )
     pack_group.add_argument(
         "-f", "--force", action="store_true",
         help="Ghi đè file mà không hỏi xác nhận (chỉ áp dụng ở chế độ fix)."
-)
+    )
     
     config_group = parser.add_argument_group("Khởi tạo Cấu hình (chạy riêng)")
     config_group.add_argument(
          "-c", "--config-project", action="store_true",
         help=f"Khởi tạo/cập nhật section [{CONFIG_SECTION_NAME}] trong {PROJECT_CONFIG_FILENAME}."
-)
+    )
     config_group.add_argument(
         "-C", "--config-local", action="store_true",
         help=f"Khởi tạo/cập nhật file {CONFIG_FILENAME} (scope 'local')."
-)
+    )
     args = parser.parse_args()
 
     # 2. Setup Logging (Không đổi)
     logger = setup_logging(script_name="Ndoc")
-logger.debug("Ndoc script started.")
+    logger.debug("Ndoc script started.")
 
     # 3. Xử lý Config Init (Không đổi)
     try:
@@ -105,10 +103,10 @@ logger.debug("Ndoc script started.")
             config_filename=CONFIG_FILENAME, project_config_filename=PROJECT_CONFIG_FILENAME,
             config_section_name=CONFIG_SECTION_NAME, base_defaults=NDOC_DEFAULTS
         )
-if config_action_taken: sys.exit(0)
+        if config_action_taken: sys.exit(0)
     except Exception as e:
         logger.error(f"❌ Đã xảy ra lỗi khi khởi tạo config: {e}")
-logger.debug("Traceback:", exc_info=True)
+        logger.debug("Traceback:", exc_info=True)
         sys.exit(1)
 
     # 4. Xử lý Path và Validation (THAY ĐỔI)

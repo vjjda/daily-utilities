@@ -29,7 +29,7 @@ def execute_ndoc_action(
 ) -> None:
     """
     Xử lý danh sách các file cần sửa, thực hiện side-effects.
-"""
+    """
 
     processed_count = len(files_to_fix)
 
@@ -45,7 +45,7 @@ def execute_ndoc_action(
 
     for info in files_to_fix:
         file_path: Path = info["path"]
-try:
+        try:
             # In đường dẫn tương đối so với thư mục làm việc hiện tại
             rel_path = file_path.relative_to(scan_root).as_posix()
         except ValueError:
@@ -55,24 +55,24 @@ try:
 
     # 2. Xử lý theo chế độ
     if dry_run:
-# --- Chế độ "dry-run" (-d) ---
+        # --- Chế độ "dry-run" (-d) ---
         logger.warning(f"-> Để xóa docstring, chạy lại mà không có cờ -d (sử dụng -f/--force để bỏ qua xác nhận).")
         sys.exit(1) # Thoát với mã lỗi
     else:
         # --- Chế độ "fix" (Mặc định) ---
             
-# Hỏi xác nhận nếu KHÔNG có cờ --force
+        # Hỏi xác nhận nếu KHÔNG có cờ --force
         proceed_to_write = force
         if not force:
             try:
                 confirmation = input("\nTiếp tục xóa docstring và ghi đè các file này? (y/n): ")
-except EOFError:
+            except EOFError:
                 confirmation = "n"
             except KeyboardInterrupt:
                 confirmation = "n" 
             
             if confirmation.lower() == "y":
-proceed_to_write = True
+                proceed_to_write = True
             else:
                 logger.warning("Hoạt động sửa file bị hủy bởi người dùng.")
                 sys.exit(0)
@@ -80,19 +80,19 @@ proceed_to_write = True
         if proceed_to_write:
             written_count = 0
             for info in files_to_fix:
-target_path: Path = info["path"]
+                target_path: Path = info["path"]
                 new_content: str = info["new_content"]
                 
                 try:
                     target_path.write_text(new_content, encoding="utf-8")
-rel_path_str = target_path.relative_to(scan_root).as_posix()
+                    rel_path_str = target_path.relative_to(scan_root).as_posix()
                     logger.info(f"Đã sửa: {rel_path_str}")
                     written_count += 1
                 except IOError as e:
                     logger.error(
-"❌ Lỗi khi ghi file %s: %s",
+                        "❌ Lỗi khi ghi file %s: %s",
                         target_path.relative_to(scan_root).as_posix(),
                         e
                     )
 
-log_success(logger, f"Hoàn tất! Đã xóa docstring khỏi {written_count} file.")
+            log_success(logger, f"Hoàn tất! Đã xóa docstring khỏi {written_count} file.")
