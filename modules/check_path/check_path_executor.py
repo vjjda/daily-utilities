@@ -1,10 +1,4 @@
 # Path: modules/check_path/check_path_executor.py
-
-"""
-Execution and Reporting logic for the Path Checker (cpath) module.
-(Side-effects: Báo cáo, Xác nhận người dùng, Ghi file)
-"""
-
 import logging
 import sys
 from pathlib import Path
@@ -23,26 +17,12 @@ def execute_check_path_action(
     scan_root: Path,
     git_warning_str: str,
 ) -> None:
-    """
-    Xử lý danh sách các file cần sửa, thực hiện side-effects.
-
-    Args:
-        logger: Logger.
-        files_to_fix: Danh sách kết quả từ Analyzer.
-        check_mode: True nếu ở chế độ 'check' (dry-run).
-        fix_command_str: Chuỗi lệnh để chạy lại ở chế độ 'fix'.
-        scan_root: Gốc quét (để tính đường dẫn tương đối).
-        git_warning_str: Cảnh báo Git (nếu có) từ entrypoint.
-    """
 
     processed_count = len(files_to_fix)
 
     if processed_count > 0:
 
-        # 1. In báo cáo
-        logger.warning(
-            f"⚠️ {processed_count} file không tuân thủ quy ước đường dẫn:"
-        )
+        logger.warning(f"⚠️ {processed_count} file không tuân thủ quy ước đường dẫn:")
 
         for info in files_to_fix:
             file_path = info["path"]
@@ -53,22 +33,21 @@ def execute_check_path_action(
                 rel_path = file_path.relative_to(scan_root).as_posix()
             except ValueError:
                 rel_path = str(file_path)
-            
+
             logger.warning(f"   -> {rel_path}")
             logger.warning(f"      (Dòng 1 hiện tại: {first_line})")
             logger.warning(f"      (Đề xuất:     {fix_preview})")
 
-        # 2. Xử lý theo chế độ
         if check_mode:
-            # --- Chế độ "check" (dry-run) ---
+
             if git_warning_str:
                 logger.warning(f"\n{git_warning_str}")
 
             logger.warning("-> Để sửa các file này, hãy chạy:")
             logger.warning(f"\n{fix_command_str}\n")
-            sys.exit(1) # Thoát với mã lỗi
+            sys.exit(1)
         else:
-            # --- Chế độ "fix" (mặc định) ---
+
             if git_warning_str:
                 logger.warning(f"\n{git_warning_str}")
 
@@ -92,7 +71,7 @@ def execute_check_path_action(
                         logger.error(
                             "❌ Lỗi khi ghi file %s: %s",
                             target_path.relative_to(scan_root).as_posix(),
-                            e
+                            e,
                         )
 
                 log_success(logger, f"Hoàn tất! Đã sửa {written_count} file.")
@@ -102,7 +81,7 @@ def execute_check_path_action(
                 sys.exit(0)
 
     else:
-        # 0 file cần sửa
+
         if git_warning_str:
             logger.warning(f"\n{git_warning_str}")
 

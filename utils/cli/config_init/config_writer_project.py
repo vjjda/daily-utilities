@@ -1,13 +1,8 @@
 # Path: utils/cli/config_init/config_writer_project.py
-"""
-Handles writing/updating a specific section within the project's main
-configuration file (e.g., .project.toml) using tomlkit to preserve formatting.
-"""
-
 import logging
 from pathlib import Path
 from typing import Optional, Dict, Any
-import sys # Import sys for sys.exit
+import sys
 
 try:
     import tomlkit
@@ -18,7 +13,6 @@ except ImportError:
     ConvertError = Exception
 
 
-# Import UI helpers and logging utils from one level up
 from ..ui_helpers import prompt_config_overwrite
 from utils.logging_config import log_success
 
@@ -31,20 +25,18 @@ def write_project_config_section(
     config_section_name: str,
     new_section_content_string: str,
 ) -> Optional[Path]:
-    """
-    Handles I/O logic for 'project' scope using tomlkit.
-    Parses the generated section string to get a TOML object with comments.
-    Returns the path if written, None if cancelled.
-    """
-    # --- ADDED: Early exit if tomlkit is missing ---
+
     if tomlkit is None:
-        # Error logged by the orchestrator, just raise to stop execution
+
         raise ImportError("Thư viện 'tomlkit' không được cài đặt.")
-    # --- END ADDITION ---
 
     should_write = True
     try:
-        content = config_file_path.read_text(encoding='utf-8') if config_file_path.exists() else ""
+        content = (
+            config_file_path.read_text(encoding="utf-8")
+            if config_file_path.exists()
+            else ""
+        )
         main_doc = tomlkit.parse(content)
 
         section_existed = config_section_name in main_doc
@@ -54,33 +46,34 @@ def write_project_config_section(
             )
 
         if should_write is None:
-            return None # User cancelled
+            return None
 
         if should_write:
             try:
-                # ParseError can happen here
+
                 parsed_section_doc = tomlkit.parse(new_section_content_string)
                 if config_section_name not in parsed_section_doc:
-                     raise ValueError(
-                         f"Generated content unexpectedly missing section [{config_section_name}] after parsing."
-                     )
+                    raise ValueError(
+                        f"Generated content unexpectedly missing section [{config_section_name}] after parsing."
+                    )
                 new_section_object = parsed_section_doc[config_section_name]
-            except (ParseError, ValueError, Exception) as e: # Catch real ParseError
-                 logger.error(f"❌ Lỗi khi phân tích nội dung section đã tạo: {e}")
-                 raise # Re-raise
+            except (ParseError, ValueError, Exception) as e:
+                logger.error(f"❌ Lỗi khi phân tích nội dung section đã tạo: {e}")
+                raise
 
             main_doc[config_section_name] = new_section_object
 
-            # ConvertError can happen during dump if data is invalid
-            with config_file_path.open('w', encoding='utf-8') as f:
+            with config_file_path.open("w", encoding="utf-8") as f:
                 tomlkit.dump(main_doc, f)
 
-            log_success(logger, f"✅ Đã tạo/cập nhật thành công '{config_file_path.name}'.")
+            log_success(
+                logger, f"✅ Đã tạo/cập nhật thành công '{config_file_path.name}'."
+            )
 
     except IOError as e:
         logger.error(f"❌ Lỗi I/O khi cập nhật file '{config_file_path.name}': {e}")
         raise
-    except (ParseError, ConvertError, Exception) as e: # Catch real ParseError/ConvertError
+    except (ParseError, ConvertError, Exception) as e:
         logger.error(f"❌ Lỗi không mong muốn khi cập nhật TOML (tomlkit): {e}")
         raise
 

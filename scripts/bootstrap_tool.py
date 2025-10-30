@@ -1,5 +1,4 @@
 # Path: scripts/bootstrap_tool.py
-
 import sys
 import argparse
 import logging
@@ -48,7 +47,7 @@ def main():
         action="store_true",
         help="Ghi đè (overwrite) các file và thư mục đã tồn tại nếu có.",
     )
-    # --- THÊM CỜ MỚI ---
+
     parser.add_argument(
         "-i",
         "--interface",
@@ -57,7 +56,6 @@ def main():
         default=None,
         help="Ghi đè (overwrite) loại interface (typer/argparse) được định nghĩa trong file spec.",
     )
-    # --- KẾT THÚC THÊM ---
 
     args = parser.parse_args()
 
@@ -102,7 +100,7 @@ def main():
             logger=logger,
             config=config_spec,
             configured_paths=configured_paths,
-            cli_args=args,  # <-- THAY ĐỔI: Truyền toàn bộ args
+            cli_args=args,
         )
 
         logger.info(

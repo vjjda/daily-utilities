@@ -1,19 +1,12 @@
 # Path: modules/no_doc/__init__.py
-"""
-Cổng giao tiếp (Facade) cho module 'no_doc'.
-(Tạo tự động bởi bootstrap_tool.py)
-
-Export các thành phần public từ các file con.
-"""
-
 from pathlib import Path
 from importlib import import_module
 from typing import List
 
-# --- Tự động Tái xuất (Dynamic Re-export) ---
+
 current_dir = Path(__file__).parent
 
-# SỬA: Dùng danh sách export tường minh
+
 modules_to_export: List[str] = [
     "no_doc_config",
     "no_doc_core",
@@ -27,23 +20,25 @@ for submodule_stem in modules_to_export:
     try:
         module = import_module(f".{submodule_stem}", package=__name__)
 
-        if hasattr(module, '__all__'):
-            public_symbols = getattr(module, '__all__')
+        if hasattr(module, "__all__"):
+            public_symbols = getattr(module, "__all__")
             for name in public_symbols:
                 obj = getattr(module, name)
                 globals()[name] = obj
             __all__.extend(public_symbols)
 
     except ImportError as e:
-        print(f"Cảnh báo: Không thể import từ {submodule_stem} trong module {__name__}: {e}")
+        print(
+            f"Cảnh báo: Không thể import từ {submodule_stem} trong module {__name__}: {e}"
+        )
 
-# Dọn dẹp
+
 del Path, import_module, List, current_dir, modules_to_export, submodule_stem
-if 'module' in locals():
+if "module" in locals():
     del module
-if 'public_symbols' in locals():
+if "public_symbols" in locals():
     del public_symbols
-if 'name' in locals():
+if "name" in locals():
     del name
-if 'obj' in locals():
+if "obj" in locals():
     del obj

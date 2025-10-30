@@ -1,11 +1,4 @@
 # Path: modules/check_path/check_path_analyzer.py
-"""
-File Analysis logic for the Path Checker (cpath) module.
-(Internal module, imported by check_path_core.py)
-
-Chịu trách nhiệm đọc nội dung file và so sánh với các quy tắc comment.
-"""
-
 import logging
 import os
 from pathlib import Path
@@ -18,31 +11,8 @@ __all__ = ["analyze_files_for_path_comments"]
 
 
 def analyze_files_for_path_comments(
-    files_to_scan: List[Path], 
-    project_root: Path, 
-    logger: logging.Logger
+    files_to_scan: List[Path], project_root: Path, logger: logging.Logger
 ) -> List[Dict[str, Any]]:
-    """
-    Phân tích danh sách file, tìm các file cần sửa comment Path.
-    
-    Đây là logic thuần túy (chỉ đọc I/O).
-
-    Args:
-        files_to_scan: Danh sách file đã được lọc (từ Scanner).
-        project_root: Gốc dự án (để tính đường dẫn tương đối).
-        logger: Logger.
-
-    Returns:
-        Một danh sách các dict, mỗi dict đại diện cho một file cần sửa.
-        [
-            {
-                "path": Path(...),
-                "line": "dòng 1 hiện tại...",
-                "new_lines": ["dòng 1 mới\n", "dòng 2\n", ...],
-                "fix_preview": "dòng 1 mới (đã strip)"
-            }, ...
-        ]
-    """
     files_needing_fix: List[Dict[str, Any]] = []
     if not files_to_scan:
         logger.warning("Không có file nào để xử lý (sau khi loại trừ).")
@@ -50,7 +20,7 @@ def analyze_files_for_path_comments(
 
     for file_path in files_to_scan:
         relative_path = file_path.relative_to(project_root)
-        file_ext = "".join(file_path.suffixes) # Xử lý đuôi kép (ví dụ: .py.template)
+        file_ext = "".join(file_path.suffixes)
         rule = COMMENT_RULES_BY_EXT.get(file_ext)
 
         if not rule:
@@ -59,56 +29,63 @@ def analyze_files_for_path_comments(
 
         try:
             try:
-                original_lines = file_path.read_text(encoding='utf-8').splitlines(True)
-                lines = list(original_lines) # Tạo bản copy để sửa
+                original_lines = file_path.read_text(encoding="utf-8").splitlines(True)
+                lines = list(original_lines)
             except UnicodeDecodeError:
                 logger.warning(f"Bỏ qua file lỗi encoding: {relative_path.as_posix()}")
                 continue
             except IOError as e:
                 logger.error(f"Không thể đọc file {relative_path.as_posix()}: {e}")
                 continue
-            
-            if not lines: continue
-            
-            try: is_executable = os.access(file_path, os.X_OK)
-            except Exception: is_executable = False
-            
+
+            if not lines:
+                continue
+
+            try:
+                is_executable = os.access(file_path, os.X_OK)
+            except Exception:
+                is_executable = False
+
             first_line_content = lines[0].strip()
             new_lines: List[str] = []
-            correct_comment_str = "" 
+            correct_comment_str = ""
             rule_type = rule["type"]
-            
-            # Áp dụng quy tắc tương ứng
+
             if rule_type == "line":
                 prefix = rule["comment_prefix"]
                 correct_comment = f"{prefix} Path: {relative_path.as_posix()}\n"
-                correct_comment_str = correct_comment 
-                new_lines = apply_line_comment_rule(lines, correct_comment, prefix, is_executable)
+                correct_comment_str = correct_comment
+                new_lines = apply_line_comment_rule(
+                    lines, correct_comment, prefix, is_executable
+                )
             elif rule_type == "block":
                 prefix = rule["comment_prefix"]
                 suffix = rule["comment_suffix"]
                 padding = " " if rule.get("padding", False) else ""
                 correct_comment = f"{prefix}{padding}Path: {relative_path.as_posix()}{padding}{suffix}\n"
-                correct_comment_str = correct_comment 
+                correct_comment_str = correct_comment
                 new_lines = apply_block_comment_rule(lines, correct_comment, rule)
             else:
-                logger.warning(f"Bỏ qua file: Kiểu quy tắc không rõ '{rule_type}' cho {relative_path.as_posix()}")
+                logger.warning(
+                    f"Bỏ qua file: Kiểu quy tắc không rõ '{rule_type}' cho {relative_path.as_posix()}"
+                )
                 continue
 
-            # So sánh bản gốc và bản mới
             if new_lines != original_lines:
                 fix_preview_str = correct_comment_str.strip()
                 if first_line_content.startswith("#!") and not is_executable:
                     fix_preview_str = f"(Đã xóa Shebang) -> {fix_preview_str}"
-                
-                files_needing_fix.append({
-                    "path": file_path,
-                    "line": first_line_content,
-                    "new_lines": new_lines,
-                    "fix_preview": fix_preview_str
-                })
+
+                files_needing_fix.append(
+                    {
+                        "path": file_path,
+                        "line": first_line_content,
+                        "new_lines": new_lines,
+                        "fix_preview": fix_preview_str,
+                    }
+                )
         except Exception as e:
             logger.error(f"Lỗi xử lý file {relative_path.as_posix()}: {e}")
             logger.debug("Traceback:", exc_info=True)
-            
+
     return files_needing_fix

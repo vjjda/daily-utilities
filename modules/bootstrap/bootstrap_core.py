@@ -1,10 +1,9 @@
 # Path: modules/bootstrap/bootstrap_core.py
-
 import logging
 import sys
-import argparse  # <-- THÊM DÒNG NÀY
+import argparse
 from pathlib import Path
-from typing import Dict, Any, Tuple, Optional  # <-- XÓA argparse KHỎI DÒNG NÀY
+from typing import Dict, Any, Tuple, Optional
 
 
 from .bootstrap_loader import load_template
@@ -39,70 +38,63 @@ def generate_bin_wrapper(config: Dict[str, Any]) -> str:
     )
 
 
-# --- THAY ĐỔI SIGNATURE HÀM NÀY ---
 def generate_script_entrypoint(
     config: Dict[str, Any], cli_interface_override: Optional[str] = None
 ) -> str:
     cli_config = config.get("cli", {})
     cli_help_config = cli_config.get("help", {})
 
-    # --- LOGIC MỚI ĐỂ XÁC ĐỊNH INTERFACE ---
     interface_type = cli_interface_override or cli_config.get("interface", "typer")
-    # --- KẾT THÚC LOGIC MỚI ---
 
-    config_imports_code = build_config_imports(config["module_name"], config) # 
+    config_imports_code = build_config_imports(config["module_name"], config)
 
     if interface_type == "argparse":
-        template = load_template("script_entrypoint_argparse.py.template") #
+        template = load_template("script_entrypoint_argparse.py.template")
 
-        argparse_args_code = build_argparse_arguments(config) #
-        path_expands_code = build_argparse_path_expands(config) #
-        args_pass_code = build_argparse_args_pass_to_core(config) #
+        argparse_args_code = build_argparse_arguments(config)
+        path_expands_code = build_argparse_path_expands(config)
+        args_pass_code = build_argparse_args_pass_to_core(config)
 
-        # --- SỬA LỖI DESCRIPTION VÀ EPILOG ---
-        raw_description = cli_help_config.get( #
+        raw_description = cli_help_config.get(
             "description", f"Mô tả cho {config['meta']['tool_name']}."
         )
-        raw_epilog = cli_help_config.get("epilog", "") #
+        raw_epilog = cli_help_config.get("epilog", "")
 
-        # Sử dụng repr() cho cả hai để đảm bảo literal string hợp lệ
         formatted_description = repr(raw_description)
         formatted_epilog = repr(raw_epilog)
-        # --- KẾT THÚC SỬA LỖI ---
-
 
         return template.format(
-            tool_name=config["meta"]["tool_name"], #
-            script_file=config["meta"]["script_file"], #
-            logger_name=config["meta"]["logger_name"], #
-            module_name=config["module_name"], #
-            config_imports=config_imports_code, #
-            cli_description=formatted_description, # <-- Truyền giá trị đã repr()
-            cli_epilog=formatted_epilog, # <-- Truyền giá trị đã repr()
-            argparse_arguments=argparse_args_code, #
-            argparse_path_expands=path_expands_code, #
-            argparse_args_pass_to_core=args_pass_code, #
+            tool_name=config["meta"]["tool_name"],
+            script_file=config["meta"]["script_file"],
+            logger_name=config["meta"]["logger_name"],
+            module_name=config["module_name"],
+            config_imports=config_imports_code,
+            cli_description=formatted_description,
+            cli_epilog=formatted_epilog,
+            argparse_arguments=argparse_args_code,
+            argparse_path_expands=path_expands_code,
+            argparse_args_pass_to_core=args_pass_code,
         )
 
-    else:  # Mặc định là 'typer'
-        # ... (logic cho Typer không đổi) ...
-        template = load_template("script_entrypoint_typer.py.template") # [cite: 266]
+    else:
 
-        typer_app_code = build_typer_app_code(config) # [cite: 266]
-        typer_main_sig = build_typer_main_signature(config) # [cite: 266]
-        typer_path_expands = build_typer_path_expands(config) # [cite: 266]
-        typer_args_pass = build_typer_args_pass_to_core(config) # [cite: 266]
+        template = load_template("script_entrypoint_typer.py.template")
+
+        typer_app_code = build_typer_app_code(config)
+        typer_main_sig = build_typer_main_signature(config)
+        typer_path_expands = build_typer_path_expands(config)
+        typer_args_pass = build_typer_args_pass_to_core(config)
 
         return template.format(
-            tool_name=config["meta"]["tool_name"], # [cite: 267]
-            script_file=config["meta"]["script_file"], # [cite: 267]
-            logger_name=config["meta"]["logger_name"], # [cite: 267]
-            module_name=config["module_name"], # [cite: 267]
-            config_imports=config_imports_code, # [cite: 267]
-            typer_app_code=typer_app_code, # [cite: 267]
-            typer_main_function_signature=typer_main_sig, # [cite: 267]
-            typer_path_expands=typer_path_expands, # [cite: 267]
-            typer_args_pass_to_core=typer_args_pass, # [cite: 268]
+            tool_name=config["meta"]["tool_name"],
+            script_file=config["meta"]["script_file"],
+            logger_name=config["meta"]["logger_name"],
+            module_name=config["module_name"],
+            config_imports=config_imports_code,
+            typer_app_code=typer_app_code,
+            typer_main_function_signature=typer_main_sig,
+            typer_path_expands=typer_path_expands,
+            typer_args_pass_to_core=typer_args_pass,
         )
 
 
@@ -144,12 +136,11 @@ def generate_doc_file(config: Dict[str, Any]) -> str:
     )
 
 
-# --- THAY ĐỔI SIGNATURE HÀM NÀY ---
 def process_bootstrap_logic(
     logger: logging.Logger,
     config: Dict[str, Any],
     configured_paths: Dict[str, Path],
-    cli_args: argparse.Namespace,  # <-- Thêm tham số này
+    cli_args: argparse.Namespace,
 ) -> Tuple[Dict[str, str], Dict[str, Path], Path]:
 
     BIN_DIR = configured_paths["BIN_DIR"]
@@ -185,7 +176,6 @@ def process_bootstrap_logic(
 
         generated_content = {
             "bin": generate_bin_wrapper(config),
-            # --- THAY ĐỔI TRUYỀN THAM SỐ VÀO ĐÂY ---
             "script": generate_script_entrypoint(
                 config, cli_interface_override=cli_args.interface
             ),

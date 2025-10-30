@@ -1,7 +1,5 @@
 # Path: scripts/format_code.py
-"""
-Entrypoint (cổng vào) cho forc (Format Code).
-"""
+
 
 import sys
 import argparse
@@ -9,7 +7,7 @@ import logging
 from pathlib import Path
 from typing import Optional, Final, Dict, Any, List, Set
 
-# Thiết lập sys.path
+
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.append(str(PROJECT_ROOT))
 
@@ -18,7 +16,7 @@ try:
     from utils.cli import handle_config_init_request, resolve_input_paths
     from utils.core import parse_comma_list
 
-    # SỬA: Import từ module 'format_code'
+    
     from modules.format_code import (
         process_format_code_logic,
         execute_format_code_action,
@@ -29,20 +27,19 @@ except ImportError as e:
     print(f"Lỗi: Không thể import project utilities/modules: {e}", file=sys.stderr)
     sys.exit(1)
 
-# --- HẰNG SỐ CỤ THỂ CHO ENTRYPOINT ---
+
 THIS_SCRIPT_PATH: Final[Path] = Path(__file__).resolve()
-# SỬA: Tên module
+
 MODULE_DIR: Final[Path] = PROJECT_ROOT / "modules" / "format_code"
-# (Chúng ta cần tạo template cho format_code nếu dùng config init)
-# TEMPLATE_FILENAME: Final[str] = "format_code.toml.template" 
-# FORC_DEFAULTS: Final[Dict[str, Any]] = {
-#     "extensions": sorted(list(DEFAULT_EXTENSIONS)),
-#     "ignore": sorted(list(DEFAULT_IGNORE))
-# }
+
+
+
+
+
+
 
 
 def main():
-    """ Hàm điều phối chính (phiên bản Argparse) """
     
     parser = argparse.ArgumentParser(
         description="Công cụ quét và định dạng (format) file mã nguồn.",
@@ -77,15 +74,15 @@ def main():
     
     args = parser.parse_args()
 
-    # 2. Setup Logging
-    # SỬA: Tên Logger
+    
+    
     logger = setup_logging(script_name="FormatCode")
     logger.debug("FormatCode script started.")
 
-    # 3. Xử lý Config Init (Tạm thời bỏ qua)
-    # ...
+    
+    
 
-    # 4. Xử lý Path và Validation
+    
     validated_paths: List[Path] = resolve_input_paths(
         logger=logger,
         raw_paths=args.start_path_arg,
@@ -104,9 +101,9 @@ def main():
         elif path.is_dir():
             dirs_to_scan.append(path)
 
-    # 5. Chạy Core Logic và Executor
+    
     try:
-        # SỬA: Tên hàm logic
+        
         files_to_fix = process_format_code_logic(
             logger=logger,
             files_to_process=files_to_process,
@@ -117,7 +114,7 @@ def main():
         
         reporting_root = Path.cwd()
         
-        # SỬA: Tên hàm executor
+        
         execute_format_code_action(
             logger=logger, 
             all_files_to_fix=files_to_fix,

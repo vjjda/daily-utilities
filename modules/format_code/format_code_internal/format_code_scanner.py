@@ -1,16 +1,11 @@
 # Path: modules/format_code/format_code_internal/format_code_scanner.py
-"""
-File Scanning logic for the format_code module.
-(Internal module, imported by format_code_core)
-"""
-
 import logging
 from pathlib import Path
 import sys
 from typing import List, Set, Optional, TYPE_CHECKING, Iterable, Tuple, Dict
 
-# Thiết lập sys.path
-if not 'PROJECT_ROOT' in locals():
+
+if not "PROJECT_ROOT" in locals():
     sys.path.append(str(Path(__file__).resolve().parent.parent.parent.parent))
 
 try:
@@ -25,10 +20,11 @@ from utils.core import (
     get_submodule_paths,
     parse_gitignore,
     is_path_matched,
-    compile_spec_from_patterns
+    compile_spec_from_patterns,
 )
 
 __all__ = ["scan_files"]
+
 
 def scan_files(
     logger: logging.Logger,
@@ -36,48 +32,44 @@ def scan_files(
     ignore_list: List[str],
     extensions: List[str],
     scan_root: Path,
-    script_file_path: Path
+    script_file_path: Path,
 ) -> Tuple[List[Path], Dict[str, bool]]:
-    """
-    Quét thư mục dự án, lọc file, và trả về danh sách file sạch.
-    """
-    scan_status = {
-        'gitignore_found': False,
-        'gitmodules_found': False
-    }
+    scan_status = {"gitignore_found": False, "gitmodules_found": False}
 
     scan_path = start_path.resolve()
-    
+
     if not scan_path.exists():
-         logger.warning(f"Thư mục quét không tồn tại: {scan_path.as_posix()}")
-         return [], scan_status
+        logger.warning(f"Thư mục quét không tồn tại: {scan_path.as_posix()}")
+        return [], scan_status
 
     submodule_paths = get_submodule_paths(scan_root, logger)
     if submodule_paths:
-        scan_status['gitmodules_found'] = True
+        scan_status["gitmodules_found"] = True
 
     gitignore_patterns: List[str] = parse_gitignore(scan_root)
     if gitignore_patterns:
-        scan_status['gitignore_found'] = True
-        
+        scan_status["gitignore_found"] = True
+
     all_ignore_patterns_list: List[str] = ignore_list + gitignore_patterns
     ignore_spec = compile_spec_from_patterns(all_ignore_patterns_list, scan_root)
 
     all_files: List[Path] = []
- 
+
     if scan_path.is_dir():
         for ext in extensions:
             all_files.extend(scan_path.rglob(f"*.{ext}"))
     elif scan_path.is_file():
-        file_ext = "".join(scan_path.suffixes).lstrip('.')
+        file_ext = "".join(scan_path.suffixes).lstrip(".")
         if file_ext in extensions:
             all_files.append(scan_path)
         else:
-             logger.warning(f"File '{scan_path.name}' bị bỏ qua do không khớp extension: {file_ext}")
-             return [], scan_status
-        
+            logger.warning(
+                f"File '{scan_path.name}' bị bỏ qua do không khớp extension: {file_ext}"
+            )
+            return [], scan_status
+
     files_to_process: List[Path] = []
-    
+
     for file_path in all_files:
         abs_file_path = file_path.resolve()
 

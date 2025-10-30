@@ -1,15 +1,10 @@
 # Path: utils/cli/config_writer.py
-"""
-Orchestrator for configuration file initialization/update logic.
-Coordinates default resolution, content generation, and file writing.
-"""
-
 import logging
 from pathlib import Path
 from typing import Dict, Any, Optional
 import sys
 
-# Check for necessary libraries early
+
 try:
     import tomllib
 except ImportError:
@@ -22,17 +17,15 @@ try:
 except ImportError:
     tomlkit = None
 
-# --- UPDATED IMPORTS ---
-# Import from the new config_init facade
+
 from .config_init import (
     resolve_effective_defaults,
     generate_config_content,
     write_local_config,
-    write_project_config_section
+    write_project_config_section,
 )
-# --- END UPDATED IMPORTS ---
 
-# Import UI helpers (still needed directly)
+
 from .ui_helpers import launch_editor
 
 __all__ = ["handle_config_init_request"]
@@ -42,21 +35,14 @@ def handle_config_init_request(
     logger: logging.Logger,
     config_project: bool,
     config_local: bool,
-    # Template and config file info
     module_dir: Path,
     template_filename: str,
     config_filename: str,
     project_config_filename: str,
     config_section_name: str,
-    # Default data
-    base_defaults: Dict[str, Any]
+    base_defaults: Dict[str, Any],
 ) -> bool:
-    """
-    Orchestrates the config file creation/update process by calling
-    specialized helper modules.
-    """
-    # (Rest of the function logic remains exactly the same)
-    # ... (library checks, scope determination, calls to imported functions, etc.) ...
+
     if not (config_project or config_local):
         return False
 
@@ -65,17 +51,19 @@ def handle_config_init_request(
 
     lib_missing = False
     if toml_read_lib_missing:
-         logger.error("❌ Thiếu thư viện đọc TOML ('tomllib' hoặc 'toml').")
-         lib_missing = True
+        logger.error("❌ Thiếu thư viện đọc TOML ('tomllib' hoặc 'toml').")
+        lib_missing = True
     if toml_write_lib_missing:
-         logger.error("❌ Thiếu thư viện ghi TOML ('tomlkit') cần cho scope 'project'.")
-         lib_missing = True
+        logger.error("❌ Thiếu thư viện ghi TOML ('tomlkit') cần cho scope 'project'.")
+        lib_missing = True
 
     if lib_missing:
-        logger.error("   Vui lòng cài đặt thư viện còn thiếu (ví dụ: pip install tomlkit toml).")
+        logger.error(
+            "   Vui lòng cài đặt thư viện còn thiếu (ví dụ: pip install tomlkit toml)."
+        )
         sys.exit("Thiếu thư viện TOML cần thiết.")
 
-    scope = 'project' if config_project else 'local'
+    scope = "project" if config_project else "local"
     logger.info(f"Yêu cầu khởi tạo cấu hình scope '{scope}'...")
     cwd = Path.cwd()
 
@@ -86,7 +74,7 @@ def handle_config_init_request(
             project_config_filename=project_config_filename,
             config_section_name=config_section_name,
             base_defaults=base_defaults,
-            cwd=cwd
+            cwd=cwd,
         )
 
         config_content_string = generate_config_content(
@@ -94,7 +82,7 @@ def handle_config_init_request(
             module_dir=module_dir,
             template_filename=template_filename,
             config_section_name=config_section_name,
-            effective_defaults=effective_defaults
+            effective_defaults=effective_defaults,
         )
 
         config_file_path: Optional[Path] = None
@@ -103,7 +91,7 @@ def handle_config_init_request(
             config_file_path = write_local_config(
                 logger=logger,
                 config_file_path=target_path,
-                content_from_template=config_content_string
+                content_from_template=config_content_string,
             )
         elif scope == "project":
             target_path = cwd / project_config_filename
@@ -111,7 +99,7 @@ def handle_config_init_request(
                 logger=logger,
                 config_file_path=target_path,
                 config_section_name=config_section_name,
-                new_section_content_string=config_content_string
+                new_section_content_string=config_content_string,
             )
 
         if config_file_path:

@@ -1,15 +1,4 @@
 # Path: modules/tree/tree_core.py
-"""
-Core Orchestration logic for the Tree (ctree) module.
-(Internal module, imported by tree gateway)
-
-Chịu trách nhiệm điều phối:
-1. Tải cấu hình
-2. Chuẩn bị tham số
-3. Gọi Merger
-4. Trả về Result Object cho Executor
-"""
-
 import logging
 import argparse
 from pathlib import Path
@@ -23,70 +12,47 @@ __all__ = ["process_tree_logic"]
 
 
 def process_tree_logic(
-    logger: logging.Logger,
-    cli_args: argparse.Namespace,
-    start_path_obj: Path
+    logger: logging.Logger, cli_args: argparse.Namespace, start_path_obj: Path
 ) -> Optional[Dict[str, Any]]:
-    """
-    Điều phối logic chính của ctree (tải, merge, chuẩn bị).
-    
-    Đây là hàm logic thuần túy, không thực hiện I/O (ngoại trừ đọc config).
 
-    Args:
-        logger: Logger.
-        cli_args: Namespace các đối số thô từ entrypoint (scripts/tree.py).
-        start_path_obj: Đường dẫn bắt đầu đã được resolve.
-
-    Returns:
-        Một dict "Result Object" chứa các tham số đã xử lý cho Executor,
-        hoặc None nếu xảy ra lỗi.
-    """
-    
-    # 1. Xác định đường dẫn và trạng thái Git
     initial_path: Path = start_path_obj
     start_dir = initial_path.parent if initial_path.is_file() else initial_path
     is_git_repo = is_git_repository(start_dir)
 
     try:
-        # 2. Tải Config (I/O Đọc)
+
         file_config = load_config_files(start_dir, logger)
 
-        # 3. Chuẩn bị CLI args cho Merger
-        # Hợp nhất 2 cờ -d và -D thành một giá trị 'dirs_only'
         cli_dirs_only: Optional[str] = None
-        if getattr(cli_args, 'all_dirs', False):
+        if getattr(cli_args, "all_dirs", False):
             cli_dirs_only = "_ALL_"
-        elif getattr(cli_args, 'dirs_patterns', None):
+        elif getattr(cli_args, "dirs_patterns", None):
             cli_dirs_only = cli_args.dirs_patterns
-        
-        # Tạo một Namespace con chỉ chứa các cờ mà merge_config_sources cần
-        # để giữ cho hàm merge_config_sources có giao diện ổn định.
+
         merge_cli_args = argparse.Namespace(
-            level=getattr(cli_args, 'level', None),
-            extensions=getattr(cli_args, 'extensions', None),
-            ignore=getattr(cli_args, 'ignore', None),
-            prune=getattr(cli_args, 'prune', None),
+            level=getattr(cli_args, "level", None),
+            extensions=getattr(cli_args, "extensions", None),
+            ignore=getattr(cli_args, "ignore", None),
+            prune=getattr(cli_args, "prune", None),
             dirs_only=cli_dirs_only,
-            show_submodules=getattr(cli_args, 'show_submodules', False),
-            no_gitignore=getattr(cli_args, 'no_gitignore', False),
-            full_view=getattr(cli_args, 'full_view', False),
+            show_submodules=getattr(cli_args, "show_submodules", False),
+            no_gitignore=getattr(cli_args, "no_gitignore", False),
+            full_view=getattr(cli_args, "full_view", False),
         )
 
-        # 4. Hợp nhất Config
         config_params = merge_config_sources(
             args=merge_cli_args,
             file_config=file_config,
             start_dir=start_dir,
             logger=logger,
-            is_git_repo=is_git_repo
+            is_git_repo=is_git_repo,
         )
-        
-        # 5. Trả về Result Object cho Executor
+
         return {
             "config_params": config_params,
             "start_dir": start_dir,
             "is_git_repo": is_git_repo,
-            "cli_no_gitignore": getattr(cli_args, 'no_gitignore', False)
+            "cli_no_gitignore": getattr(cli_args, "no_gitignore", False),
         }
 
     except Exception as e:
