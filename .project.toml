@@ -48,7 +48,7 @@ dirs-only = []
 # Ghi đè hoàn toàn danh sách mặc định của script.
 # Ví dụ: extensions = ["py", "js", "ts", "md"]
 # Mặc định: {toml_extensions}
-extensions = ["css", "js", "py", "scss", "sh", "template.toml", "ts", "zsh"]
+extensions = ["css", "js", "py", "pyi", "scss", "sh", "template.toml", "ts", "zsh"]
 
 # ignore (List[str]): Danh sách các pattern (giống .gitignore) để bỏ qua.
 # Các pattern này sẽ được NỐI VÀO danh sách mặc định của script.

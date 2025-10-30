@@ -27,6 +27,7 @@ DEFAULT_IGNORE: Final[Set[str]] = {
 
 DEFAULT_EXTENSIONS: Final[Set[str]] = {
     "py",
+    "pyi",
     "js",
     "ts",
     "css",
@@ -68,6 +69,7 @@ COMMENT_RULES: Final[Dict[str, Dict[str, Any]]] = {
 
 COMMENT_RULES_BY_EXT: Final[Dict[str, Dict[str, Any]]] = {
     ".py": COMMENT_RULES["hash_line"],
+    ".pyi": COMMENT_RULES["hash_line"],
     ".zsh": COMMENT_RULES["hash_line"],
     ".sh": COMMENT_RULES["hash_line"],
     ".js": COMMENT_RULES["slash_line"],
