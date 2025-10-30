@@ -1,5 +1,4 @@
 # Path: modules/stubgen/stubgen_config.py
-
 """
 Configuration constants for stubgen.
 """
@@ -9,7 +8,6 @@ from pathlib import Path
 
 __all__ = [
     "DEFAULT_IGNORE", 
-    "DEFAULT_RESTRICT",
     "DEFAULT_INCLUDE",
     "DYNAMIC_IMPORT_INDICATORS",
     "AST_MODULE_LIST_NAME", 
@@ -25,12 +23,6 @@ DEFAULT_IGNORE: Final[Set[str]] = {
     "__pycache__", ".venv", "venv", "node_modules", ".git", 
     "dist", "build", "out", "*.pyc", "*.pyo"
 }
-
-# Các thư mục con (tương đối với scan_root) để tìm kiếm các module gateway.
-DEFAULT_RESTRICT: Final[List[str]] = [
-    "modules", 
-    "utils",
-]
 
 # Mặc định là None (không lọc)
 DEFAULT_INCLUDE: Final[Optional[Set[str]]] = None

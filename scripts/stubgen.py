@@ -1,8 +1,6 @@
 # Path: scripts/stubgen.py
-
 """
 Entrypoint (cổng vào) cho sgen (Stub Generator).
-
 Script này chịu trách nhiệm:
 1. Thiết lập `sys.path` để import `utils` và `modules`.
 2. Phân tích đối số dòng lệnh (Argparse).
@@ -30,7 +28,6 @@ try:
     # Import các thành phần của module 'stubgen'
     from modules.stubgen import (
         DEFAULT_IGNORE, 
-        DEFAULT_RESTRICT, 
         DEFAULT_INCLUDE,
         DYNAMIC_IMPORT_INDICATORS,
         AST_MODULE_LIST_NAME,
@@ -54,7 +51,6 @@ TEMPLATE_FILENAME: Final[str] = "stubgen.toml.template"
 # Cấu hình mặc định để điền vào file template .toml khi khởi tạo
 SGEN_DEFAULTS: Final[Dict[str, Any]] = {
     "ignore": DEFAULT_IGNORE,
-    "restrict": DEFAULT_RESTRICT,
     "include": DEFAULT_INCLUDE or set(), 
     "dynamic_import_indicators": DYNAMIC_IMPORT_INDICATORS,
     "ast_module_list_name": AST_MODULE_LIST_NAME,
@@ -71,7 +67,7 @@ def main():
     # 1. Định nghĩa Parser
     parser = argparse.ArgumentParser(
         description="Tự động tạo file .pyi stub cho các module gateway động.",
-        epilog="Ví dụ: sgen . -R modules -i 'modules/auth/*' -f",
+        epilog="Ví dụ: sgen . -i 'modules/core/**' -f",
         formatter_class=argparse.RawTextHelpFormatter 
     )
 
@@ -94,12 +90,7 @@ def main():
         default=None,
         help="Danh sách pattern (giống .gitignore) để bỏ qua (THÊM vào config)."
     )
-    stubgen_group.add_argument(
-        "-R", "--restrict",
-        type=str,
-        default=None,
-        help="Danh sách thư mục con (so với target_dir) ngăn cách bởi dấu phẩy để giới hạn quét (GHI ĐÈ config)."
-    )
+    
     stubgen_group.add_argument(
         "-i", "--include",
         type=str,
@@ -118,7 +109,7 @@ def main():
         "-C", "--config-local",
         action="store_true",
         help=f"Khởi tạo/cập nhật file {CONFIG_FILENAME} (scope 'local')."
-    )
+)
     
     args = parser.parse_args()
     
@@ -154,7 +145,6 @@ def main():
         logger.error(f"❌ Lỗi: Thư mục mục tiêu không tồn tại hoặc không phải là thư mục: {scan_root.as_posix()}")
         sys.exit(1)
 
-    # Xác thực xem đây có phải là gốc Git không (hoặc hỏi người dùng)
     effective_scan_root: Optional[Path]
     effective_scan_root, _ = handle_project_root_validation(
         logger=logger,
@@ -168,7 +158,6 @@ def main():
 
     # 5. Chạy Core Logic và Executor
     try:
-        # Truyền thẳng args (Namespace) vào core, core sẽ tự load config
         results = process_stubgen_logic(
             logger=logger,
             scan_root=effective_scan_root,
@@ -177,7 +166,6 @@ def main():
         )
         
         if results:
-            # Ghi file, commit
             execute_stubgen_action(
                 logger=logger,
                 results=results,

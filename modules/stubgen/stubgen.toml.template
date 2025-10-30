@@ -2,19 +2,14 @@
 
 [{config_section_name}]
 
-# restrict (List[str]): Giới hạn quét trong các thư mục con này (so với gốc quét).
-# GHI ĐÈ hoàn toàn danh sách mặc định của script.
-# Ví dụ: restrict = ["my_modules", "shared_utils"]
-# Mặc định: {toml_restrict}
-restrict = {toml_restrict}
-
 # ignore (List[str]): Các pattern (giống .gitignore) để bỏ qua khi quét.
 # Các pattern này sẽ được NỐI VÀO danh sách mặc định của script.
 # Ví dụ: ignore = ["*_test.py", "**/legacy/*"]
 # Mặc định (được thêm vào): {toml_ignore}
 ignore = {toml_ignore}
 
-# include (List[str]): Bộ lọc dương. Chỉ xử lý các file khớp với pattern này.
+# include (List[str]): Bộ lọc dương.
+Chỉ xử lý các file khớp với pattern này.
 # Hoạt động sau khi đã áp dụng 'restrict' và 'ignore'.
 # Các pattern này sẽ được NỐI VÀO danh sách mặc định (thường là rỗng).
 # Ví dụ: include = ["modules/core/**", "utils/network.py"]

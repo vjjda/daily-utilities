@@ -1,5 +1,4 @@
 # Path: modules/stubgen/stubgen_core.py
-
 """
 Core logic for the Stub Generator (sgen) module.
 Handles Orchestration (Pure Logic).
@@ -46,7 +45,6 @@ def process_stubgen_logic(
 ) -> List[StubResult]:
     """
     Điều phối toàn bộ quá trình tạo stub (Logic thuần túy, không I/O ghi).
-
     Luồng xử lý:
     1. Tải template .pyi.template.
     2. Tải cấu hình từ file .toml (gọi Loader).
@@ -57,13 +55,11 @@ def process_stubgen_logic(
     7. Phân tích AST (gọi Parser).
     8. Định dạng nội dung stub (gọi Formatter).
     9. Trả về danh sách các đối tượng kết quả (StubResult).
-
     Args:
         logger: Logger.
         scan_root: Thư mục gốc để quét.
         cli_args: Namespace đối số thô từ entrypoint.
         script_file_path: Đường dẫn của chính script sgen (để bỏ qua).
-
     Returns:
         List[StubResult]: Danh sách các dict chứa thông tin file stub.
     """
@@ -82,7 +78,6 @@ def process_stubgen_logic(
     # 3. Chuẩn bị CLI Config
     cli_config: Dict[str, Optional[str]] = {
         "ignore": getattr(cli_args, 'ignore', None),
-        "restrict": getattr(cli_args, 'restrict', None),
         "include": getattr(cli_args, 'include', None)
     }
 
@@ -100,7 +95,6 @@ def process_stubgen_logic(
         logger=logger, 
         scan_root=scan_root,
         ignore_list=merged_config["ignore_list"], 
-        restrict_list=merged_config["restrict_list"],
         include_spec=final_include_spec,
         dynamic_import_indicators=merged_config["indicators"],
         script_file_path=script_file_path

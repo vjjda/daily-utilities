@@ -15,7 +15,6 @@ from utils.core import (
 
 from .stubgen_config import (
     DEFAULT_IGNORE, 
-    DEFAULT_RESTRICT, 
     DEFAULT_INCLUDE,
     DYNAMIC_IMPORT_INDICATORS,
     AST_MODULE_LIST_NAME,
@@ -35,7 +34,6 @@ def merge_stubgen_configs(
     
     Logic hợp nhất:
     - ignore: (File GHI ĐÈ Default) + (CLI NỐI VÀO)
-    - restrict: CLI GHI ĐÈ File GHI ĐÈ Default
     - include: (File GHI ĐÈ Default) + (CLI NỐI VÀO)
     - (Các hằng số AST): File GHI ĐÈ Default
 
@@ -43,7 +41,6 @@ def merge_stubgen_configs(
         logger: Logger.
         cli_config: Dict chứa các giá trị thô (str) từ CLI.
         file_config: Dict chứa cấu hình [sgen] đã load từ file.
-
     Returns:
         Dict chứa các giá trị "final" đã được hợp nhất và xử lý.
     """
@@ -55,23 +52,7 @@ def merge_stubgen_configs(
         default_set_value=DEFAULT_IGNORE
     )
     
-    # 2. Restrict (Scan Roots)
-    cli_restrict_str = cli_config.get('restrict')
-    final_restrict_list: List[str]
-    if cli_restrict_str is not None:
-        # CLI ghi đè tất cả
-        final_restrict_list = list(parse_comma_list(cli_restrict_str))
-        logger.debug("Sử dụng danh sách 'restrict' từ CLI.")
-    elif file_config.get('restrict') is not None:
-        # File ghi đè Default
-        final_restrict_list = file_config['restrict']
-        logger.debug("Sử dụng danh sách 'restrict' từ file config.")
-    else:
-        # Dùng Default
-        final_restrict_list = DEFAULT_RESTRICT 
-        logger.debug("Sử dụng danh sách 'restrict' (DEFAULT_RESTRICT) mặc định.")
-
-    # 3. Include (Dương)
+    # 2. Include (Dương)
     default_include_set = DEFAULT_INCLUDE if DEFAULT_INCLUDE is not None else set()
     final_include_list = resolve_config_list(
          cli_str_value=cli_config.get('include'),
@@ -84,7 +65,7 @@ def merge_stubgen_configs(
     else:
         logger.debug("Không áp dụng bộ lọc 'include'.")
 
-    # 4. AST/Dynamic Configs
+    # 3. AST/Dynamic Configs
     final_indicators = resolve_config_value(
         cli_value=None, # Không hỗ trợ qua CLI
         file_value=file_config.get('dynamic_import_indicators'),
@@ -103,7 +84,6 @@ def merge_stubgen_configs(
 
     return {
         "ignore_list": final_ignore_list,
-        "restrict_list": final_restrict_list,
         "include_list": final_include_list,
         "indicators": final_indicators,
         "module_list_name": final_module_list_name,
