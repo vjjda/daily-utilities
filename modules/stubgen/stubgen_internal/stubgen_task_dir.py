@@ -1,15 +1,19 @@
-# Path: modules/stubgen/stubgen_internal/task_dir.py
+# Path: modules/stubgen/stubgen_internal/stubgen_task_dir.py
+"""
+(Internal Task)
+Handles the logic for processing a user-specified directory.
+"""
+
 import logging
 import argparse
 from pathlib import Path
 from typing import Dict, Any, List, Optional, Set, Tuple
 
 from typing import TYPE_CHECKING
-
 if TYPE_CHECKING:
     import pathspec
 
-
+# Import internal workers/helpers
 from . import (
     load_config_files,
     merge_stubgen_configs,
@@ -17,15 +21,16 @@ from . import (
     process_single_gateway,
 )
 
-
+# Import hàm báo cáo từ executor (public)
 from ..stubgen_executor import classify_and_report_stub_changes
 
-
+# Import utils
 from utils.core import compile_spec_from_patterns
 
+# SỬA: Đổi tên hàm và __all__
 __all__ = ["process_stubgen_task_dir"]
 
-
+# SỬA: Đổi tên hàm
 def process_stubgen_task_dir(
     scan_dir: Path,
     cli_args: argparse.Namespace,
@@ -35,8 +40,12 @@ def process_stubgen_task_dir(
     reporting_root: Path,
     script_file_path: Path,
 ) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+    """
+    Xử lý logic sgen cho một thư mục đầu vào.
+    """
     logger.info(f"--- 📁 Quét thư mục: {scan_dir.name} ---")
 
+    # 1. Tải/Merge Config (cục bộ)
     file_config = load_config_files(scan_dir, logger)
     cli_config = {
         "ignore": getattr(cli_args, "ignore", None),
@@ -44,10 +53,12 @@ def process_stubgen_task_dir(
     }
     merged_config = merge_stubgen_configs(logger, cli_config, file_config)
 
+    # 2. Biên dịch Specs
     final_include_spec: Optional["pathspec.PathSpec"] = compile_spec_from_patterns(
         merged_config["include_list"], scan_dir
     )
 
+    # 3. Load: Tìm file gateway
     gateway_files, scan_status = find_gateway_files(
         logger=logger,
         scan_root=scan_dir,
@@ -57,6 +68,7 @@ def process_stubgen_task_dir(
         script_file_path=script_file_path,
     )
 
+    # 4. In báo cáo cấu hình
     logger.info(f"  [Cấu hình áp dụng]")
     logger.info(f"    - Ignore (từ config/CLI): {merged_config['ignore_list']}")
     logger.info(f"    - Include (từ config/CLI): {merged_config['include_list']}")
@@ -66,7 +78,7 @@ def process_stubgen_task_dir(
     logger.info(
         f"    - Tải .gitmodules cục bộ: {'Có' if scan_status['gitmodules_found'] else 'Không'}"
     )
-
+    
     if not gateway_files:
         logger.info(
             f"  -> 🤷 Không tìm thấy file '__init__.py' (gateway động) nào khớp tiêu chí."
@@ -74,9 +86,10 @@ def process_stubgen_task_dir(
         logger.info(f"--- ✅ Kết thúc {scan_dir.name} ---")
         logger.info("")
         return [], []
-
+    
     logger.info(f"  -> ⚡ Tìm thấy {len(gateway_files)} gateway, đang phân tích...")
-
+    
+    # 5. Phân tích & Định dạng
     dir_raw_results: List[Dict[str, Any]] = []
     for init_file in gateway_files:
         resolved_file = init_file.resolve()
@@ -90,7 +103,7 @@ def process_stubgen_task_dir(
             stub_template_str=stub_template_str,
             logger=logger,
         )
-
+        
         if stub_content:
             stub_path = init_file.with_suffix(".pyi")
             dir_raw_results.append(
@@ -103,12 +116,13 @@ def process_stubgen_task_dir(
                 }
             )
         processed_files.add(resolved_file)
-
+    
+    # 6. Phân loại và Báo cáo
     create, overwrite, _ = classify_and_report_stub_changes(
         logger, scan_dir.name, dir_raw_results, reporting_root
     )
-
+        
     logger.info(f"--- ✅ Kết thúc {scan_dir.name} ---")
     logger.info("")
-
+    
     return create, overwrite
