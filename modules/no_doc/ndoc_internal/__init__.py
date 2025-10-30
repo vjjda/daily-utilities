@@ -1,9 +1,8 @@
-# Path: modules/no_doc/__init__.py
+# Path: modules/no_doc/ndoc_internal/__init__.py
 """
-Cổng giao tiếp (Facade) cho module 'no_doc'.
-(Tạo tự động bởi bootstrap_tool.py)
-
-Export các thành phần public từ các file con.
+Facade nội bộ cho các thành phần "worker" của ndoc.
+Che giấu các chi tiết triển khai (analyzer, loader, merger, scanner)
+khỏi namespace chính của module 'ndoc'.
 """
 
 from pathlib import Path
@@ -13,13 +12,12 @@ from typing import List
 # --- Tự động Tái xuất (Dynamic Re-export) ---
 current_dir = Path(__file__).parent
 
-# SỬA: Dùng danh sách export tường minh
 modules_to_export: List[str] = [
-    "no_doc_config",
-    "no_doc_core",
-    "no_doc_executor",
+    "no_doc_loader",
+    "no_doc_merger",
+    "no_doc_scanner",
+    "no_doc_analyzer",
 ]
-
 
 __all__: List[str] = []
 

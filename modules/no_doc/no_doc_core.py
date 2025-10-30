@@ -7,22 +7,30 @@ import logging
 import argparse
 from pathlib import Path
 from typing import List, Optional, Dict, Any, Tuple, Set
+from collections import OrderedDict
 import sys
 
 # Thiết lập sys.path
 if not 'PROJECT_ROOT' in locals():
     sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
-from .no_doc_loader import load_config_files
-from .no_doc_merger import merge_ndoc_configs
-from .no_doc_analyzer import analyze_file_content
-from .no_doc_scanner import scan_files
+# SỬA: Import từ facade nội bộ '.ndoc_internal'
+from .ndoc_internal import (
+    load_config_files,
+    merge_ndoc_configs,
+    analyze_file_content,
+    scan_files
+)
+
 from .no_doc_config import DEFAULT_EXTENSIONS
 from .no_doc_executor import print_dry_run_report_for_group
 
 __all__ = ["process_no_doc_logic"]
 
 FileResult = Dict[str, Any] # Type alias
+
+# ... (Toàn bộ phần còn lại của file _process_ndoc_task_file,
+# _process_ndoc_task_dir, và process_no_doc_logic không thay đổi) ...
 
 # --- 1. HÀM HELPER XỬ LÝ FILE LẺ ---
 
