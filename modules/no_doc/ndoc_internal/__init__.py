@@ -12,11 +12,16 @@ from typing import List
 # --- Tự động Tái xuất (Dynamic Re-export) ---
 current_dir = Path(__file__).parent
 
+# SỬA: Thêm 2 module task mới
 modules_to_export: List[str] = [
+    # Workers
     "no_doc_loader",
     "no_doc_merger",
     "no_doc_scanner",
     "no_doc_analyzer",
+    # Tasks
+    "task_file",
+    "task_dir",
 ]
 
 __all__: List[str] = []

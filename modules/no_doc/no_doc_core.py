@@ -7,158 +7,25 @@ import logging
 import argparse
 from pathlib import Path
 from typing import List, Optional, Dict, Any, Tuple, Set
-from collections import OrderedDict
 import sys
 
 # Thiết lập sys.path
 if not 'PROJECT_ROOT' in locals():
     sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
-# SỬA: Import từ facade nội bộ '.ndoc_internal'
+# SỬA: Import các hàm Task từ facade nội bộ
 from .ndoc_internal import (
-    load_config_files,
     merge_ndoc_configs,
-    analyze_file_content,
-    scan_files
+    process_ndoc_task_file,
+    process_ndoc_task_dir
 )
-
-from .no_doc_config import DEFAULT_EXTENSIONS
-from .no_doc_executor import print_dry_run_report_for_group
 
 __all__ = ["process_no_doc_logic"]
 
 FileResult = Dict[str, Any] # Type alias
 
-# ... (Toàn bộ phần còn lại của file _process_ndoc_task_file,
-# _process_ndoc_task_dir, và process_no_doc_logic không thay đổi) ...
-
-# --- 1. HÀM HELPER XỬ LÝ FILE LẺ ---
-
-def _process_ndoc_task_file(
-    file_path: Path,
-    cli_args: argparse.Namespace,
-    file_extensions: Set[str], # Set extensions đã merge
-    logger: logging.Logger,
-    processed_files: Set[Path],
-    reporting_root: Path
-) -> List[FileResult]:
-    """
-    (HELPER 1)
-    Xử lý logic ndoc cho một file riêng lẻ.
-    """
-    logger.info(f"--- 📄 Đang xử lý file: {file_path.relative_to(reporting_root).as_posix()} ---")
-    
-    file_only_results: List[FileResult] = []
-    resolved_file = file_path.resolve()
-    if resolved_file in processed_files:
-        logger.info("   -> Bỏ qua (đã xử lý).")
-        logger.info("")
-        return []
-        
-    # 1. Kiểm tra extension
-    file_ext = "".join(file_path.suffixes).lstrip('.')
-    if file_ext not in file_extensions:
-        logger.warning(f"⚠️ Bỏ qua file '{file_path.name}': không khớp extensions (.{file_ext})")
-        logger.info("")
-        return []
-
-    # 2. Phân tích
-    all_clean: bool = getattr(cli_args, 'all_clean', False)
-    result = analyze_file_content(file_path, logger, all_clean)
-    if result:
-        file_only_results.append(result)
-    processed_files.add(resolved_file)
-    
-    # 3. Báo cáo
-    if file_only_results:
-        print_dry_run_report_for_group(logger, file_path.name, file_only_results, reporting_root)
-    else:
-        logger.info(f"  -> 🤷 Không tìm thấy thay đổi nào cần thiết.")
-
-    logger.info("") # Dòng trống
-    return file_only_results
-
-
-# --- 2. HÀM HELPER XỬ LÝ THƯ MỤC ---
-
-def _process_ndoc_task_dir(
-    scan_dir: Path,
-    cli_args: argparse.Namespace,
-    logger: logging.Logger,
-    processed_files: Set[Path],
-    reporting_root: Path,
-    script_file_path: Path
-) -> List[FileResult]:
-    """
-    (HELPER 2)
-    Xử lý logic ndoc cho một thư mục đầu vào.
-    """
-    logger.info(f"--- 📁 Quét thư mục: {scan_dir.name} ---")
-    
-    # 1. Tải/Merge Config (cục bộ)
-    file_config_data = load_config_files(scan_dir, logger)
-    cli_extensions: Optional[str] = getattr(cli_args, 'extensions', None)
-    cli_ignore: Optional[str] = getattr(cli_args, 'ignore', None)
-    
-    merged_config = merge_ndoc_configs(
-        logger=logger,
-        cli_extensions=cli_extensions,
-        cli_ignore=cli_ignore,
-        file_config_data=file_config_data
-    )
-    final_extensions_list = merged_config["final_extensions_list"]
-    final_ignore_list = merged_config["final_ignore_list"]
-
-    # 2. Quét file (dùng scan_dir làm cả start_path và scan_root)
-    files_in_dir, scan_status = scan_files(
-         logger=logger,
-         start_path=scan_dir, 
-         ignore_list=final_ignore_list,
-         extensions=final_extensions_list,
-         scan_root=scan_dir, 
-         script_file_path=script_file_path
-    )
-    
-    # 3. In báo cáo cấu hình
-    logger.info(f"  [Cấu hình áp dụng]")
-    logger.info(f"    - Extensions: {sorted(list(final_extensions_list))}")
-    logger.info(f"    - Ignore (từ config/CLI): {final_ignore_list}")
-    logger.info(f"    - Tải .gitignore cục bộ: {'Có' if scan_status['gitignore_found'] else 'Không'}")
-    logger.info(f"    - Tải .gitmodules cục bộ: {'Có' if scan_status['gitmodules_found'] else 'Không'}")
-
-    if not files_in_dir:
-        logger.info(f"  -> 🤷 Không tìm thấy file nào khớp tiêu chí trong: {scan_dir.name}")
-        logger.info(f"--- ✅ Kết thúc {scan_dir.name} ---")
-        logger.info("")
-        return []
-
-    logger.info(f"  -> ⚡ Tìm thấy {len(files_in_dir)} file, đang phân tích...")
-
-    # 4. Phân tích file
-    dir_results: List[FileResult] = []
-    all_clean: bool = getattr(cli_args, 'all_clean', False)
-    
-    for file_path in files_in_dir:
-        resolved_file = file_path.resolve()
-        if resolved_file in processed_files:
-            continue 
-
-        result = analyze_file_content(file_path, logger, all_clean)
-        if result:
-            dir_results.append(result)
-        processed_files.add(resolved_file)
-        
-    # 5. Báo cáo kết quả nhóm
-    if dir_results:
-        print_dry_run_report_for_group(logger, scan_dir.name, dir_results, reporting_root)
-        
-    logger.info(f"--- ✅ Kết thúc {scan_dir.name} ---")
-    logger.info("")
-    
-    return dir_results
-
-
-# --- 3. HÀM ĐIỀU PHỐI CHÍNH (REFACTORED) ---
+# (ĐÃ XÓA: _process_ndoc_task_file)
+# (ĐÃ XÓA: _process_ndoc_task_dir)
 
 def process_no_doc_logic(
     logger: logging.Logger,
@@ -202,7 +69,8 @@ def process_no_doc_logic(
         logger.info(f"    - (Bỏ qua .gitignore và config file)")
         
         for file_path in files_to_process:
-            results = _process_ndoc_task_file(
+            # SỬA: Gọi hàm task đã import
+            results = process_ndoc_task_file(
                 file_path=file_path,
                 cli_args=cli_args,
                 file_extensions=file_extensions,
@@ -216,7 +84,8 @@ def process_no_doc_logic(
     if dirs_to_scan:
         logger.info(f"Đang xử lý {len(dirs_to_scan)} thư mục...")
         for scan_dir in dirs_to_scan:
-            results = _process_ndoc_task_dir(
+            # SỬA: Gọi hàm task đã import
+            results = process_ndoc_task_dir(
                 scan_dir=scan_dir,
                 cli_args=cli_args,
                 logger=logger,
