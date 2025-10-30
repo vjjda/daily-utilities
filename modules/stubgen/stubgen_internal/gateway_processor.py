@@ -1,4 +1,5 @@
 # Path: modules/stubgen/stubgen_internal/gateway_processor.py
+
 import logging
 from pathlib import Path
 from typing import Dict, Any, List, Optional, Set, Tuple

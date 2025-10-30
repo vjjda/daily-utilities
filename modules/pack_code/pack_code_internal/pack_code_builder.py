@@ -1,20 +1,19 @@
 # Path: modules/pack_code/pack_code_internal/pack_code_builder.py
+
 from pathlib import Path
 from typing import Dict, Any, List, Optional
 
 __all__ = ["assemble_packed_content"]
 
-FileResult = Dict[str, Any] # Type alias
+FileResult = Dict[str, Any]
+
 
 def assemble_packed_content(
-    all_file_results: List[FileResult], # SỬA: Nhận list FileResult
+    all_file_results: List[FileResult],
     tree_str: str,
     no_header: bool,
     dry_run: bool,
 ) -> str:
-    """
-    Ghép nối nội dung cuối cùng từ cây và danh sách FileResult.
-    """
     final_content_lines: List[str] = []
 
     if tree_str:
@@ -22,9 +21,9 @@ def assemble_packed_content(
         final_content_lines.append("\n" + ("=" * 80) + "\n")
 
     if not dry_run:
-        # Sắp xếp kết quả theo 'rel_path' để đảm bảo thứ tự nhất quán
+
         sorted_results = sorted(all_file_results, key=lambda r: r["rel_path"])
-        
+
         for result in sorted_results:
             content = result.get("content")
             if content is None:

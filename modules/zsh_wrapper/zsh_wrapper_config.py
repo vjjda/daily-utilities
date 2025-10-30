@@ -1,4 +1,5 @@
 # Path: modules/zsh_wrapper/zsh_wrapper_config.py
+
 import os
 from pathlib import Path
 from typing import Dict, Any, Final

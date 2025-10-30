@@ -1,4 +1,5 @@
 # Path: modules/zsh_wrapper/zsh_wrapper_helpers.py
+
 import logging
 import sys
 from pathlib import Path

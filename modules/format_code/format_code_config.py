@@ -1,4 +1,5 @@
 # Path: modules/format_code/format_code_config.py
+
 from pathlib import Path
 from typing import Any, Optional, List, Final, Set
 

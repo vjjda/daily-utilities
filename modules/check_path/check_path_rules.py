@@ -1,4 +1,5 @@
 # Path: modules/check_path/check_path_rules.py
+
 from typing import List, Dict, Any
 
 __all__ = ["apply_line_comment_rule", "apply_block_comment_rule"]

@@ -1,4 +1,5 @@
 # Path: scripts/stubgen.py
+
 import sys
 import argparse
 import logging

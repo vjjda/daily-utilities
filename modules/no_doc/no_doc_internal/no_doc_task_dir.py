@@ -1,8 +1,5 @@
 # Path: modules/no_doc/no_doc_internal/no_doc_task_dir.py
-"""
-(Internal Task)
-Handles the logic for processing a user-specified directory.
-"""
+
 
 import logging
 import argparse
@@ -18,12 +15,12 @@ from . import (
 
 from ..no_doc_executor import print_dry_run_report_for_group
 
-# SỬA: Đổi tên hàm và __all__
+
 __all__ = ["process_no_doc_task_dir"]
 
 FileResult = Dict[str, Any]
 
-# SỬA: Đổi tên hàm
+
 def process_no_doc_task_dir(
     scan_dir: Path,
     cli_args: argparse.Namespace,

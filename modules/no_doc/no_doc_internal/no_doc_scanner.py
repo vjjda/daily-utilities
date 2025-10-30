@@ -1,4 +1,5 @@
-# Path: modules/no_doc/ndoc_internal/no_doc_scanner.py
+# Path: modules/no_doc/no_doc_internal/no_doc_scanner.py
+
 import logging
 from pathlib import Path
 import sys

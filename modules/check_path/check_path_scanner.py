@@ -1,4 +1,5 @@
 # Path: modules/check_path/check_path_scanner.py
+
 import logging
 from pathlib import Path
 from typing import List, Set, Optional, TYPE_CHECKING, Iterable

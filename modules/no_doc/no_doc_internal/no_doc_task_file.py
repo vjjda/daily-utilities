@@ -1,8 +1,5 @@
 # Path: modules/no_doc/no_doc_internal/no_doc_task_file.py
-"""
-(Internal Task)
-Handles the logic for processing a single, user-specified source file.
-"""
+
 
 import logging
 import argparse
@@ -13,12 +10,12 @@ from . import analyze_file_content
 
 from ..no_doc_executor import print_dry_run_report_for_group
 
-# SỬA: Đổi tên hàm và __all__
+
 __all__ = ["process_no_doc_task_file"]
 
 FileResult = Dict[str, Any]
 
-# SỬA: Đổi tên hàm
+
 def process_no_doc_task_file(
     file_path: Path,
     cli_args: argparse.Namespace,
@@ -27,9 +24,6 @@ def process_no_doc_task_file(
     processed_files: Set[Path],
     reporting_root: Path,
 ) -> List[FileResult]:
-    """
-    Xử lý logic no_doc cho một file riêng lẻ.
-    """
     logger.info(
         f"--- 📄 Đang xử lý file: {file_path.relative_to(reporting_root).as_posix()} ---"
     )

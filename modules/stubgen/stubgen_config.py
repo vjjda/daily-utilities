@@ -1,4 +1,5 @@
 # Path: modules/stubgen/stubgen_config.py
+
 from typing import List, Set, Final, Optional
 from pathlib import Path
 

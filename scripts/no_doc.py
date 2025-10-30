@@ -1,4 +1,5 @@
 # Path: scripts/no_doc.py
+
 import sys
 import argparse
 import logging

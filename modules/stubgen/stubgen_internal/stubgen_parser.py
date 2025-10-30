@@ -1,4 +1,5 @@
 # Path: modules/stubgen/stubgen_internal/stubgen_parser.py
+
 import logging
 import ast
 from pathlib import Path

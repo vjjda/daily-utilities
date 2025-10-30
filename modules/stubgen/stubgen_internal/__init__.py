@@ -1,26 +1,20 @@
 # Path: modules/stubgen/stubgen_internal/__init__.py
-"""
-Facade nội bộ cho các thành phần "worker" của stubgen.
-Che giấu các chi tiết triển khai (parser, loader, merger, formatter)
-khỏi namespace chính của module 'stubgen'.
-"""
+
 
 from pathlib import Path
 from importlib import import_module
 from typing import List
 
-# --- Tự động Tái xuất (Dynamic Re-export) ---
+
 current_dir = Path(__file__).parent
 
-# SỬA: Đổi tên file task
+
 modules_to_export: List[str] = [
-    # Workers (logic nghiệp vụ)
     "stubgen_loader",
     "stubgen_merger",
     "stubgen_parser",
     "stubgen_formatter",
     "gateway_processor",
-    # Tasks (logic điều phối task)
     "stubgen_task_file",
     "stubgen_task_dir",
 ]
@@ -43,7 +37,7 @@ for submodule_stem in modules_to_export:
             f"Cảnh báo: Không thể import từ {submodule_stem} trong module {__name__}: {e}"
         )
 
-# Dọn dẹp
+
 del Path, import_module, List, current_dir, modules_to_export, submodule_stem
 if "module" in locals():
     del module

@@ -1,4 +1,5 @@
-# Path: modules/no_doc/ndoc_internal/no_doc_analyzer.py
+# Path: modules/no_doc/no_doc_internal/no_doc_analyzer.py
+
 import logging
 from pathlib import Path
 from typing import Optional, Dict, Any

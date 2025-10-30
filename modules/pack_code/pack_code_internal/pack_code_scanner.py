@@ -1,4 +1,5 @@
 # Path: modules/pack_code/pack_code_internal/pack_code_scanner.py
+
 import logging
 from pathlib import Path
 from typing import List, Set, Optional, TYPE_CHECKING
@@ -14,11 +15,11 @@ __all__ = ["scan_files"]
 def scan_files(
     logger: logging.Logger,
     start_path: Path,
-    ignore_spec: Optional["pathspec.PathSpec"], # SỬA: Nhận spec đã biên dịch
+    ignore_spec: Optional["pathspec.PathSpec"],
     ext_filter_set: Set[str],
     submodule_paths: Set[Path],
     scan_root: Path,
-    script_file_path: Path # SỬA: Thêm tham số này
+    script_file_path: Path,
 ) -> List[Path]:
     files_to_pack: List[Path] = []
     all_files: List[Path] = []
@@ -48,8 +49,7 @@ def scan_files(
             continue
 
         abs_file_path = file_path.resolve()
-        
-        # SỬA: Bỏ qua chính file script (nếu nó nằm trong vùng quét)
+
         if abs_file_path.samefile(script_file_path):
             logger.debug("Bỏ qua (chính file script pack_code.py)")
             continue
@@ -68,11 +68,10 @@ def scan_files(
             ignored_count += 1
             continue
 
-        # SỬA: Xử lý file có nhiều đuôi (ví dụ: .template.toml)
-        file_ext = "".join(file_path.suffixes).lstrip('.')
+        file_ext = "".join(file_path.suffixes).lstrip(".")
         if file_ext not in ext_filter_set:
             if start_path.is_file() and abs_file_path.samefile(start_path.resolve()):
-                # Trường hợp file chỉ định duy nhất bị lọc
+
                 logger.warning(
                     f"File chỉ định {start_path.name} bị bỏ qua do không khớp extension."
                 )

@@ -1,4 +1,5 @@
-# Path: modules/no_doc/ndoc_internal/no_doc_merger.py
+# Path: modules/no_doc/no_doc_internal/no_doc_merger.py
+
 import logging
 from typing import Dict, Any, List, Set, Optional
 

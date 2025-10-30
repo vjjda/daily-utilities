@@ -1,4 +1,5 @@
 # Path: modules/format_code/format_code_internal/format_code_task_file.py
+
 import logging
 import argparse
 from pathlib import Path

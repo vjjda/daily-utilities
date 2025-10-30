@@ -1,4 +1,5 @@
 # Path: scripts/clip_diag.py
+
 import sys
 import argparse
 import logging

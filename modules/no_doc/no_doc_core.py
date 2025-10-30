@@ -1,7 +1,5 @@
 # Path: modules/no_doc/no_doc_core.py
-"""
-Core Orchestration logic for the no_doc module.
-"""
+
 
 import logging
 import argparse
@@ -12,7 +10,7 @@ import sys
 if not "PROJECT_ROOT" in locals():
     sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
-# SỬA: Import từ facade 'no_doc_internal' và các hàm đã đổi tên
+
 from .no_doc_internal import (
     merge_ndoc_configs,
     process_no_doc_task_file,
@@ -23,6 +21,7 @@ __all__ = ["process_no_doc_logic"]
 
 FileResult = Dict[str, Any]
 
+
 def process_no_doc_logic(
     logger: logging.Logger,
     files_to_process: List[Path],
@@ -30,11 +29,7 @@ def process_no_doc_logic(
     cli_args: argparse.Namespace,
     script_file_path: Path,
 ) -> List[FileResult]:
-    """
-    Điều phối toàn bộ quá trình xóa docstring (Orchestrator).
-    Xử lý file và thư mục, in báo cáo xen kẽ.
-    """
-    
+
     all_results: List[FileResult] = []
     processed_files: Set[Path] = set()
     reporting_root = Path.cwd()
@@ -59,9 +54,9 @@ def process_no_doc_logic(
         logger.info(f"  [Cấu hình áp dụng cho file lẻ]")
         logger.info(f"    - Extensions: {sorted(list(file_extensions))}")
         logger.info(f"    - (Bỏ qua .gitignore và config file)")
-        
+
         for file_path in files_to_process:
-            # SỬA: Gọi hàm task đã đổi tên
+
             results = process_no_doc_task_file(
                 file_path=file_path,
                 cli_args=cli_args,
@@ -75,7 +70,7 @@ def process_no_doc_logic(
     if dirs_to_scan:
         logger.info(f"Đang xử lý {len(dirs_to_scan)} thư mục...")
         for scan_dir in dirs_to_scan:
-            # SỬA: Gọi hàm task đã đổi tên
+
             results = process_no_doc_task_dir(
                 scan_dir=scan_dir,
                 cli_args=cli_args,
@@ -88,5 +83,5 @@ def process_no_doc_logic(
 
     if not all_results and (files_to_process or dirs_to_scan):
         logger.info("Quét hoàn tất. Không tìm thấy file nào cần thay đổi.")
-        
+
     return all_results
