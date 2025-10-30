@@ -16,13 +16,13 @@ process_stubgen_task_file: Any
 
 # Static declaration of exported symbols (for Pylance)
 __all__: List[str] = [
-    "collect_all_exported_symbols",
-    "extract_module_list",
-    "find_gateway_files",
-    "format_stub_content",
-    "load_config_files",
-    "merge_stubgen_configs",
-    "process_single_gateway",
-    "process_stubgen_task_dir",
-    "process_stubgen_task_file",
+    'collect_all_exported_symbols',
+    'extract_module_list',
+    'find_gateway_files',
+    'format_stub_content',
+    'load_config_files',
+    'merge_stubgen_configs',
+    'process_single_gateway',
+    'process_stubgen_task_dir',
+    'process_stubgen_task_file'
 ]

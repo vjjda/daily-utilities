@@ -13,10 +13,10 @@ scan_files: Any
 
 # Static declaration of exported symbols (for Pylance)
 __all__: List[str] = [
-    "analyze_file_content_for_formatting",
-    "load_config_files",
-    "merge_format_code_configs",
-    "process_format_code_task_dir",
-    "process_format_code_task_file",
-    "scan_files",
+    'analyze_file_content_for_formatting',
+    'load_config_files',
+    'merge_format_code_configs',
+    'process_format_code_task_dir',
+    'process_format_code_task_file',
+    'scan_files'
 ]

@@ -16,13 +16,13 @@ process_no_doc_logic: Any
 
 # Static declaration of exported symbols (for Pylance)
 __all__: List[str] = [
-    "CONFIG_FILENAME",
-    "CONFIG_SECTION_NAME",
-    "DEFAULT_EXTENSIONS",
-    "DEFAULT_IGNORE",
-    "DEFAULT_START_PATH",
-    "PROJECT_CONFIG_FILENAME",
-    "execute_ndoc_action",
-    "print_dry_run_report_for_group",
-    "process_no_doc_logic",
+    'CONFIG_FILENAME',
+    'CONFIG_SECTION_NAME',
+    'DEFAULT_EXTENSIONS',
+    'DEFAULT_IGNORE',
+    'DEFAULT_START_PATH',
+    'PROJECT_CONFIG_FILENAME',
+    'execute_ndoc_action',
+    'print_dry_run_report_for_group',
+    'process_no_doc_logic'
 ]
