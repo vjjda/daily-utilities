@@ -6,9 +6,7 @@ Core Orchestration logic for the no_doc module.
 import logging
 import argparse
 from pathlib import Path
-# SỬA: Import OrderedDict
 from typing import List, Optional, Dict, Any, Tuple, Set
-from collections import OrderedDict
 import sys
 
 # Thiết lập sys.path
@@ -20,6 +18,8 @@ from .no_doc_merger import merge_ndoc_configs
 from .no_doc_analyzer import analyze_file_content
 from .no_doc_scanner import scan_files
 from .no_doc_config import DEFAULT_EXTENSIONS
+# SỬA: Import hàm in báo cáo từ Executor
+from .no_doc_executor import print_dry_run_report_for_group
 
 __all__ = ["process_no_doc_logic"]
 
@@ -32,19 +32,22 @@ def process_no_doc_logic(
     dirs_to_scan: List[Path],
     cli_args: argparse.Namespace,
     script_file_path: Path
-) -> Dict[str, List[FileResult]]:
+) -> List[FileResult]:
     """
     Điều phối toàn bộ quá trình xóa docstring (Orchestrator).
-    Xử lý file và thư mục theo logic cục bộ.
+    Xử lý file và thư mục, in báo cáo xen kẽ.
     
     Returns:
-        Một Dict có thứ tự, nhóm các file cần sửa theo
-        nguồn đầu vào (ví dụ: "Files Lẻ", "scripts", "modules").
+        Một danh sách phẳng (flat list) chứa tất cả FileResult
+        cần được ghi bởi Executor.
     """
     
-    # SỬA: Sử dụng OrderedDict để nhóm kết quả
-    grouped_results: Dict[str, List[FileResult]] = OrderedDict()
+    # SỬA: Dùng danh sách phẳng
+    all_results: List[FileResult] = []
     processed_files: Set[Path] = set() # Tránh xử lý file trùng lặp
+
+    # Dùng CWD để in đường dẫn tương đối
+    reporting_root = Path.cwd()
 
     all_clean: bool = getattr(cli_args, 'all_clean', False)
     if all_clean:
@@ -66,7 +69,6 @@ def process_no_doc_logic(
         logger.info(f"    - Extensions: {sorted(list(file_extensions))}")
         logger.info(f"    - (Bỏ qua .gitignore và config file)")
         
-        # SỬA: Tạo danh sách kết quả cục bộ cho nhóm này
         file_only_results: List[FileResult] = []
         for file_path in files_to_process:
             resolved_file = file_path.resolve()
@@ -80,12 +82,13 @@ def process_no_doc_logic(
 
             result = analyze_file_content(file_path, logger, all_clean)
             if result:
-                file_only_results.append(result) # SỬA
+                file_only_results.append(result)
             processed_files.add(resolved_file)
             
-        # SỬA: Thêm nhóm vào dict chính
         if file_only_results:
-            grouped_results["Files Lẻ"] = file_only_results
+            # SỬA: Gọi hàm in báo cáo ngay lập tức
+            print_dry_run_report_for_group(logger, "Files Lẻ", file_only_results, reporting_root)
+            all_results.extend(file_only_results)
 
     # --- 2. XỬ LÝ CÁC THƯ MỤC ---
     if dirs_to_scan:
@@ -134,7 +137,6 @@ def process_no_doc_logic(
         logger.info(f"  -> Tìm thấy {len(files_in_dir)} file, đang phân tích...")
 
         # 2d. Phân tích file
-        # SỬA: Tạo danh sách kết quả cục bộ
         dir_results: List[FileResult] = []
         for file_path in files_in_dir:
             resolved_file = file_path.resolve()
@@ -143,17 +145,17 @@ def process_no_doc_logic(
 
             result = analyze_file_content(file_path, logger, all_clean)
             if result:
-                dir_results.append(result) # SỬA
+                dir_results.append(result)
             processed_files.add(resolved_file)
             
-        # SỬA: Thêm nhóm vào dict chính
         if dir_results:
-            # Sử dụng tên thư mục làm khóa
-            grouped_results[scan_dir.name] = dir_results
+            # SỬA: Gọi hàm in báo cáo ngay lập tức
+            print_dry_run_report_for_group(logger, scan_dir.name, dir_results, reporting_root)
+            all_results.extend(dir_results)
             
         logger.info(f"--- Kết thúc {scan_dir.name} ---")
 
-    if not grouped_results and (files_to_process or dirs_to_scan):
+    if not all_results and (files_to_process or dirs_to_scan):
         logger.info("Quét hoàn tất. Không tìm thấy file nào cần thay đổi.")
         
-    return grouped_results # SỬA: Trả về dict đã nhóm
+    return all_results # SỬA: Trả về danh sách phẳng
