@@ -10,7 +10,8 @@ from pathlib import Path
 from typing import Dict, Any, List, Optional
 
 from utils.logging_config import log_success
-from utils.core import git_add_and_commit
+# SỬA: Import thêm 'is_git_repository'
+from utils.core import git_add_and_commit, is_git_repository
 
 # Type Hint cho Result Object
 StubResult = Dict[str, Any]
@@ -22,20 +23,13 @@ def execute_stubgen_action(
     logger: logging.Logger, 
     results: List[StubResult],
     force: bool,
-    scan_root: Path
+    scan_root: Path # Sẽ là Path.cwd() từ entrypoint
 ) -> None:
     """
     Hàm thực thi, nhận kết quả từ core, xử lý tương tác và ghi file.
-    Luồng xử lý:
-    1. Phân loại file (create, overwrite, no_change) bằng cách đọc I/O.
-    2. Báo cáo cho người dùng.
-    3. Hỏi xác nhận (nếu `force=False`).
-    4. Ghi file (I/O Ghi).
-    5. Tự động `git add` và `git commit` các file đã thay đổi.
+    ...
     Args:
-        logger: Logger.
-        results: Danh sách StubResult từ core.
-        force: Cờ --force từ CLI.
+        ...
         scan_root: Thư mục gốc (dùng để tính relpath và chạy git).
     """
     
@@ -66,20 +60,32 @@ def execute_stubgen_action(
                 files_to_overwrite.append(result)
 
     # 2. Báo cáo cho người dùng
+    # (SỬA: In đường dẫn tương đối từ scan_root (CWD) thay vì 'rel_path'
+    #  vì 'rel_path' được tính từ gốc quét cục bộ, có thể gây nhầm lẫn)
+    
+    def get_rel_path_for_reporting(stub_path: Path) -> str:
+        try:
+            return stub_path.relative_to(scan_root).as_posix()
+        except ValueError:
+            return str(stub_path) # Fallback nếu nằm ngoài CWD
+
     if files_no_change:
         logger.info(f"\n✅ Files up-to-date ({len(files_no_change)}):")
         for r in files_no_change:
-            logger.info(f"   -> OK: {r['rel_path']} ({r['symbols_count']} symbols)")
+            path_str = get_rel_path_for_reporting(r['stub_path'])
+            logger.info(f"   -> OK: {path_str} ({r['symbols_count']} symbols)")
     
     if files_to_create:
         logger.info(f"\n📝 Files to create ({len(files_to_create)}):")
         for r in files_to_create:
-            logger.info(f"   -> NEW: {r['rel_path']} ({r['symbols_count']} symbols)")
+            path_str = get_rel_path_for_reporting(r['stub_path'])
+            logger.info(f"   -> NEW: {path_str} ({r['symbols_count']} symbols)")
 
     if files_to_overwrite:
         logger.warning(f"\n⚠️ Files to OVERWRITE ({len(files_to_overwrite)}):")
         for r in files_to_overwrite:
-            logger.warning(f"   -> OVERWRITE: {r['rel_path']} ({r['symbols_count']} symbols)")
+            path_str = get_rel_path_for_reporting(r['stub_path'])
+            logger.warning(f"   -> OVERWRITE: {path_str} ({r['symbols_count']} symbols)")
 
     if not (files_to_create or files_to_overwrite):
         log_success(logger, "\n✨ Stub generation complete. All stubs are up-to-date.")
@@ -110,32 +116,32 @@ def execute_stubgen_action(
         logger.info("✍️ Writing .pyi stub files...")
         
         try:
-            # Vòng 1: Tạo file mới
             for result in files_to_create:
                 result_being_processed = result
                 stub_path: Path = result["stub_path"]
                 content: str = result["content"]
                 stub_path.write_text(content, encoding='utf-8')
-                log_success(logger, f"Created stub: {result['rel_path']}")
+                path_str = get_rel_path_for_reporting(stub_path)
+                log_success(logger, f"Created stub: {path_str}")
                 written_count += 1
                 files_written_results.append(result)
                 
-            # Vòng 2: Ghi đè file
             for result in files_to_overwrite:
                 result_being_processed = result
                 stub_path: Path = result["stub_path"]
                 content: str = result["content"]
                 stub_path.write_text(content, encoding='utf-8')
-                log_success(logger, f"Overwrote stub: {result['rel_path']}")
+                path_str = get_rel_path_for_reporting(stub_path)
+                log_success(logger, f"Overwrote stub: {path_str}")
                 written_count += 1
                 files_written_results.append(result)
                 
         except IOError as e:
-            file_name = result_being_processed['rel_path'] if result_being_processed else "UNKNOWN FILE"
+            file_name = get_rel_path_for_reporting(result_being_processed['stub_path']) if result_being_processed else "UNKNOWN FILE"
             logger.error(f"❌ Failed to write file {file_name}: {e}")
             return 
         except Exception as e:
-            file_name = result_being_processed['rel_path'] if result_being_processed else "UNKNOWN FILE"
+            file_name = get_rel_path_for_reporting(result_being_processed['stub_path']) if result_being_processed else "UNKNOWN FILE"
             logger.error(f"❌ Unknown error while writing file {file_name}: {e}")
             return 
                 
@@ -144,21 +150,20 @@ def execute_stubgen_action(
         else:
             log_success(logger, f"\n✨ Stub generation complete. No files needed writing.")
 
-        # 5. Tự động Git Commit
-        if files_written_results:
-            # 1. Chuẩn bị danh sách đường dẫn tương đối
+        # 5. Tự động Git Commit (SỬA: Thêm kiểm tra an toàn)
+        if files_written_results and is_git_repository(scan_root):
             relative_paths = [
                 str(r["stub_path"].relative_to(scan_root)) 
                 for r in files_written_results
             ]
             
-            # 2. Tạo commit message
             commit_msg = f"style(stubs): Cập nhật {len(relative_paths)} file .pyi (tự động bởi sgen)"
             
-            # 3. Gọi hàm utils
             git_add_and_commit(
                 logger=logger,
-                scan_root=scan_root,
+                scan_root=scan_root, # Sẽ là CWD
                 file_paths_relative=relative_paths,
                 commit_message=commit_msg
             )
+        elif files_written_results:
+            logger.info("Bỏ qua auto-commit: Thư mục làm việc hiện tại không phải là gốc Git.")

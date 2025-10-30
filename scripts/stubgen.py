@@ -1,14 +1,7 @@
 # Path: scripts/stubgen.py
 """
 Entrypoint (cổng vào) cho sgen (Stub Generator).
-Script này chịu trách nhiệm:
-1. Thiết lập `sys.path` để import `utils` và `modules`.
-2. Phân tích đối số dòng lệnh (Argparse).
-3. Cấu hình logging.
-4. Xử lý các yêu cầu khởi tạo config (`--config-local`, `--config-project`).
-5. Xác thực đường dẫn quét (`scan_root`).
-6. Gọi `process_stubgen_logic` (từ Core) để lấy danh sách kết quả.
-7. Gọi `execute_stubgen_action` (từ Executor) để thực hiện side-effects.
+...
 """
 
 import sys
@@ -17,15 +10,15 @@ import logging
 from pathlib import Path
 from typing import Optional, List, Set, Dict, Any, Final
 
-# Thiết lập `sys.path` để import các module của dự án
+# Thiết lập `sys.path`
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.append(str(PROJECT_ROOT))
 
 try:
     from utils.logging_config import setup_logging, log_success
-    from utils.cli import handle_project_root_validation, handle_config_init_request
+    # SỬA: Import 'resolve_input_paths', bỏ 'handle_project_root_validation'
+    from utils.cli import handle_config_init_request, resolve_input_paths
     
-    # Import các thành phần của module 'stubgen'
     from modules.stubgen import (
         DEFAULT_IGNORE, 
         DEFAULT_INCLUDE,
@@ -48,7 +41,6 @@ THIS_SCRIPT_PATH: Final[Path] = Path(__file__).resolve()
 MODULE_DIR: Final[Path] = PROJECT_ROOT / "modules" / "stubgen"
 TEMPLATE_FILENAME: Final[str] = "stubgen.toml.template" 
 
-# Cấu hình mặc định để điền vào file template .toml khi khởi tạo
 SGEN_DEFAULTS: Final[Dict[str, Any]] = {
     "ignore": DEFAULT_IGNORE,
     "include": DEFAULT_INCLUDE or set(), 
@@ -61,7 +53,6 @@ SGEN_DEFAULTS: Final[Dict[str, Any]] = {
 def main():
     """
     Hàm điều phối chính.
-    Phân tích args, setup logging, và gọi logic cốt lõi.
     """
 
     # 1. Định nghĩa Parser
@@ -74,10 +65,12 @@ def main():
     # Group 1: Stub Generation Options
     stubgen_group = parser.add_argument_group("Stub Generation Options")
     stubgen_group.add_argument(
-        "target_dir",
-        nargs='?',
-        default=".",
-        help="Đường dẫn thư mục để bắt đầu quét (base directory). Mặc định là thư mục hiện tại (.)."
+        # SỬA: Đổi tên arg và cho phép nhiều
+        "target_paths",
+        type=str,
+        nargs='*', # Chấp nhận 0 hoặc nhiều
+        default=[], # Mặc định list rỗng
+        help="Đường dẫn (file hoặc thư mục) để quét. Mặc định là thư mục hiện tại (.)."
     )
     stubgen_group.add_argument(
         "-f", "--force",
@@ -100,6 +93,7 @@ def main():
 
     # Group 2: Config Flags
     config_group = parser.add_argument_group("Config Initialization (Chạy riêng lẻ)")
+    # ... (không đổi) ...
     config_group.add_argument(
         "-c", "--config-project",
         action="store_true",
@@ -109,7 +103,7 @@ def main():
         "-C", "--config-local",
         action="store_true",
         help=f"Khởi tạo/cập nhật file {CONFIG_FILENAME} (scope 'local')."
-)
+    )
     
     args = parser.parse_args()
     
@@ -131,46 +125,53 @@ def main():
             base_defaults=SGEN_DEFAULTS
         )
         if config_action_taken:
-             sys.exit(0) 
+            sys.exit(0) 
             
     except Exception as e:
         logger.error(f"❌ Đã xảy ra lỗi khi khởi tạo config: {e}")
         logger.debug("Traceback:", exc_info=True)
         sys.exit(1)
     
-    # 4. Xử lý Path và Validation
-    scan_root = Path(args.target_dir).expanduser().resolve()
-
-    if not scan_root.exists() or not scan_root.is_dir():
-        logger.error(f"❌ Lỗi: Thư mục mục tiêu không tồn tại hoặc không phải là thư mục: {scan_root.as_posix()}")
-        sys.exit(1)
-
-    effective_scan_root: Optional[Path]
-    effective_scan_root, _ = handle_project_root_validation(
+    # 4. Xử lý Path và Validation (SỬA: Dùng logic của ndoc)
+    validated_paths: List[Path] = resolve_input_paths(
         logger=logger,
-        scan_root=scan_root,
-        force_silent=args.force # Nếu --force, không hỏi
+        raw_paths=args.target_paths, # Lấy từ nargs='*'
+        default_path_str="." # Default là "."
     )
-    
-    if effective_scan_root is None:
-        # Người dùng đã chọn 'Quit' trong handle_project_root_validation
+
+    if not validated_paths:
+        logger.warning("Không tìm thấy đường dẫn hợp lệ nào để quét. Đã dừng.")
         sys.exit(0)
+
+    # Phân loại đường dẫn
+    files_to_process: List[Path] = []
+    dirs_to_scan: List[Path] = []
+    for path in validated_paths:
+        if path.is_file():
+            files_to_process.append(path)
+        elif path.is_dir():
+            dirs_to_scan.append(path)
 
     # 5. Chạy Core Logic và Executor
     try:
+        # SỬA: Thay đổi cách gọi process_stubgen_logic
         results = process_stubgen_logic(
             logger=logger,
-            scan_root=effective_scan_root,
-            cli_args=args, # Core sẽ tự trích xuất 'ignore', 'restrict', 'include'
-            script_file_path=THIS_SCRIPT_PATH
+            cli_args=args,
+            script_file_path=THIS_SCRIPT_PATH,
+            files_to_process=files_to_process,
+            dirs_to_scan=dirs_to_scan
         )
+        
+        # SỬA: Dùng CWD làm gốc báo cáo và gốc chạy Git
+        reporting_root = Path.cwd()
         
         if results:
             execute_stubgen_action(
                 logger=logger,
                 results=results,
                 force=args.force,
-                scan_root=effective_scan_root
+                scan_root=reporting_root # Dùng CWD
             )
         else:
             log_success(logger, "Không tìm thấy dynamic module gateways nào để xử lý.")

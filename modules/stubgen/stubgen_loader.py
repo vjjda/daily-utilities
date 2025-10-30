@@ -5,7 +5,8 @@ File Scanning and Config Loading logic for the Stub Generator (sgen) module.
 
 import logging
 from pathlib import Path
-from typing import List, Set, Dict, Any, TYPE_CHECKING, Iterable, Optional
+# SỬA: Import thêm Tuple, Dict
+from typing import List, Set, Dict, Any, TYPE_CHECKING, Iterable, Optional, Tuple
 
 try:
     import pathspec
@@ -36,13 +37,6 @@ def load_config_files(
 ) -> Dict[str, Any]:
     """
     Tải và hợp nhất cấu hình từ .project.toml và .sgen.toml.
-    
-    Args:
-        start_dir: Thư mục bắt đầu quét config.
-        logger: Logger để ghi log.
-
-    Returns:
-        Một dict chứa cấu hình [sgen] đã được hợp nhất.
     """
     return load_and_merge_configs(
         start_dir=start_dir,
@@ -59,8 +53,6 @@ def _is_dynamic_gateway(
 ) -> bool:
     """
     Kiểm tra (heuristic) xem file __init__.py có phải là gateway động không.
-    Kiểm tra bằng cách đọc nội dung file và tìm tất cả các chuỗi
-    trong `dynamic_import_indicators`.
     """
     try:
         content = path.read_text(encoding='utf-8')
@@ -68,6 +60,7 @@ def _is_dynamic_gateway(
     except Exception:
         return False
 
+# SỬA: Thay đổi chữ ký hàm và kiểu trả về
 def find_gateway_files(
     logger: logging.Logger,
     scan_root: Path,
@@ -75,31 +68,33 @@ def find_gateway_files(
     include_spec: Optional['pathspec.PathSpec'],
     dynamic_import_indicators: List[str],
     script_file_path: Path
-) -> List[Path]:
+) -> Tuple[List[Path], Dict[str, bool]]:
     """
     Tìm tất cả các file __init__.py là "gateway động".
-    Logic lọc nhiều bước:
-    1. (Đã xóa) Chỉ quét trong các thư mục `restrict_list`.
-    2. Áp dụng `ignore_list` (config) và `.gitignore`.
-    3. (Nếu có) Áp dụng `include_spec` (bộ lọc dương).
-    4. Kiểm tra xem file có phải là gateway động không (`_is_dynamic_gateway`).
     Args:
-        logger: Logger.
-        scan_root: Thư mục gốc để quét.
-        ignore_list: Danh sách pattern (config/cli) để bỏ qua.
-        include_spec: PathSpec (đã biên dịch) cho bộ lọc dương.
-        dynamic_import_indicators: Danh sách chuỗi để nhận diện gateway động.
-        script_file_path: Đường dẫn của chính script sgen (để bỏ qua).
+        ... (các args không đổi) ...
     Returns:
-        Danh sách các đối tượng Path đến file __init__.py hợp lệ.
+        Tuple[List[Path], Dict[str, bool]]:
+            - Danh sách các file __init__.py hợp lệ.
+            - Dict trạng thái (gitignore_found, gitmodules_found).
     """
 
+    # SỬA: Thêm dict trạng thái
+    scan_status = {
+        'gitignore_found': False,
+        'gitmodules_found': False
+    }
+
     gitignore_patterns: List[str] = parse_gitignore(scan_root) 
+    if gitignore_patterns: # SỬA: Cập nhật trạng thái
+        scan_status['gitignore_found'] = True
 
     all_ignore_patterns_list: List[str] = ignore_list + gitignore_patterns
     ignore_spec = compile_spec_from_patterns(all_ignore_patterns_list, scan_root)
 
     submodule_paths = get_submodule_paths(scan_root, logger)
+    if submodule_paths: # SỬA: Cập nhật trạng thái
+        scan_status['gitmodules_found'] = True
     
     logger.debug(f"Scanning for '__init__.py' within: {scan_root.as_posix()}")
     
@@ -134,4 +129,5 @@ def find_gateway_files(
         if _is_dynamic_gateway(path, dynamic_import_indicators):
             gateway_files.append(path)
 
-    return gateway_files
+    # SỬA: Trả về tuple
+    return gateway_files, scan_status
