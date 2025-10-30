@@ -1,4 +1,4 @@
-# Path: modules/forc/forc_internal/task_dir.py
+# Path: modules/format_code/format_code_internal/format_code_task_dir.py
 """
 (Internal Task)
 Handles the logic for processing a user-specified directory.
@@ -12,19 +12,21 @@ from typing import Dict, Any, List, Optional, Set, Tuple
 # Import internal workers/helpers
 from . import (
     load_config_files,
-    merge_forc_configs,
+    merge_format_code_configs,
     scan_files,
     analyze_file_content_for_formatting
 )
 
 # Import hàm báo cáo từ executor (public)
-from ..forc_executor import print_dry_run_report_for_group
+from ..format_code_executor import print_dry_run_report_for_group
 
-__all__ = ["process_forc_task_dir"]
+# SỬA: Tên hàm
+__all__ = ["process_format_code_task_dir"]
 
 FileResult = Dict[str, Any] # Type alias
 
-def process_forc_task_dir(
+# SỬA: Tên hàm
+def process_format_code_task_dir(
     scan_dir: Path,
     cli_args: argparse.Namespace,
     logger: logging.Logger,
@@ -33,7 +35,7 @@ def process_forc_task_dir(
     script_file_path: Path
 ) -> List[FileResult]:
     """
-    Xử lý logic forc cho một thư mục đầu vào.
+    Xử lý logic format_code cho một thư mục đầu vào.
     """
     logger.info(f"--- 📁 Quét thư mục: {scan_dir.name} ---")
     
@@ -42,7 +44,8 @@ def process_forc_task_dir(
     cli_extensions: Optional[str] = getattr(cli_args, 'extensions', None)
     cli_ignore: Optional[str] = getattr(cli_args, 'ignore', None)
     
-    merged_config = merge_forc_configs(
+    # SỬA: Tên hàm
+    merged_config = merge_format_code_configs(
         logger=logger,
         cli_extensions=cli_extensions,
         cli_ignore=cli_ignore,
@@ -84,7 +87,7 @@ def process_forc_task_dir(
         if resolved_file in processed_files:
             continue 
 
-        # Gọi analyzer của forc
+        # SỬA: Tên hàm
         result = analyze_file_content_for_formatting(file_path, logger)
         if result:
             dir_results.append(result)
@@ -94,6 +97,7 @@ def process_forc_task_dir(
     if dir_results:
         print_dry_run_report_for_group(logger, scan_dir.name, dir_results, reporting_root)
     else:
+        # SỬA: Tên thông báo
         logger.info(f"  -> ✅ Tất cả file trong thư mục đã được định dạng.")
 
     logger.info(f"--- ✅ Kết thúc {scan_dir.name} ---")

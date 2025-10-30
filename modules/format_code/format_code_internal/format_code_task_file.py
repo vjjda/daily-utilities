@@ -1,4 +1,4 @@
-# Path: modules/forc/forc_internal/task_file.py
+# Path: modules/format_code/format_code_internal/format_code_task_file.py
 """
 (Internal Task)
 Handles the logic for processing a single, user-specified source file.
@@ -10,16 +10,20 @@ from pathlib import Path
 from typing import Dict, Any, List, Optional, Set, Tuple
 
 # Import internal workers/helpers
+# SỬA: Tên hàm
 from . import analyze_file_content_for_formatting
 
 # Import hàm báo cáo từ executor (public)
-from ..forc_executor import print_dry_run_report_for_group
+# SỬA: Tên module
+from ..format_code_executor import print_dry_run_report_for_group
 
-__all__ = ["process_forc_task_file"]
+# SỬA: Tên hàm
+__all__ = ["process_format_code_task_file"]
 
 FileResult = Dict[str, Any] # Type alias
 
-def process_forc_task_file(
+# SỬA: Tên hàm
+def process_format_code_task_file(
     file_path: Path,
     cli_args: argparse.Namespace,
     file_extensions: Set[str], # Set extensions đã merge
@@ -28,7 +32,7 @@ def process_forc_task_file(
     reporting_root: Path
 ) -> List[FileResult]:
     """
-    Xử lý logic forc cho một file riêng lẻ.
+    Xử lý logic format_code cho một file riêng lẻ.
     """
     logger.info(f"--- 📄 Đang xử lý file: {file_path.relative_to(reporting_root).as_posix()} ---")
     
@@ -47,6 +51,7 @@ def process_forc_task_file(
         return []
 
     # 2. Phân tích (Gọi analyzer của forc)
+    # SỬA: Tên hàm
     result = analyze_file_content_for_formatting(file_path, logger)
     if result:
         file_only_results.append(result)
@@ -56,6 +61,7 @@ def process_forc_task_file(
     if file_only_results:
         print_dry_run_report_for_group(logger, file_path.name, file_only_results, reporting_root)
     else:
+        # SỬA: Tên thông báo
         logger.info(f"  -> ✅ File đã được định dạng.")
 
     logger.info("") # Dòng trống

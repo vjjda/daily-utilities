@@ -1,6 +1,6 @@
-# Path: modules/forc/forc_internal/forc_analyzer.py
+# Path: modules/format_code/format_code_internal/format_code_analyzer.py
 """
-Logic Phân tích File cho forc, sử dụng tiện ích định dạng từ utils.core.
+Logic Phân tích File cho format_code, sử dụng tiện ích định dạng từ utils.core.
 """
 
 import logging

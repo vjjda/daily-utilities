@@ -1,6 +1,6 @@
-# Path: modules/forc/forc_core.py
+# Path: modules/format_code/format_code_core.py
 """
-Core Orchestration logic for the forc (Format Code) module.
+Core Orchestration logic for the format_code (Format Code) module.
 """
 
 import logging
@@ -13,18 +13,20 @@ import sys
 if not 'PROJECT_ROOT' in locals():
     sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
-# Import các hàm Task từ facade nội bộ
-from .forc_internal import (
-    merge_forc_configs,
-    process_forc_task_file,
-    process_forc_task_dir
+# SỬA: Import từ internal
+from .format_code_internal import (
+    merge_format_code_configs,
+    process_format_code_task_file,
+    process_format_code_task_dir
 )
 
-__all__ = ["process_forc_logic"]
+# SỬA: Tên hàm
+__all__ = ["process_format_code_logic"]
 
 FileResult = Dict[str, Any] # Type alias
 
-def process_forc_logic(
+# SỬA: Tên hàm
+def process_format_code_logic(
     logger: logging.Logger,
     files_to_process: List[Path],
     dirs_to_scan: List[Path],
@@ -41,7 +43,8 @@ def process_forc_logic(
 
     # 1. Hợp nhất config MỘT LẦN cho các file lẻ
     cli_extensions_str: Optional[str] = getattr(cli_args, 'extensions', None)
-    default_file_config = merge_forc_configs(
+    # SỬA: Tên hàm
+    default_file_config = merge_format_code_configs(
         logger=logger,
         cli_extensions=cli_extensions_str,
         cli_ignore=None, 
@@ -57,7 +60,8 @@ def process_forc_logic(
         logger.info(f"    - (Bỏ qua .gitignore và config file)")
         
         for file_path in files_to_process:
-            results = process_forc_task_file(
+            # SỬA: Tên hàm
+            results = process_format_code_task_file(
                 file_path=file_path,
                 cli_args=cli_args,
                 file_extensions=file_extensions,
@@ -71,7 +75,8 @@ def process_forc_logic(
     if dirs_to_scan:
         logger.info(f"Đang xử lý {len(dirs_to_scan)} thư mục...")
         for scan_dir in dirs_to_scan:
-            results = process_forc_task_dir(
+            # SỬA: Tên hàm
+            results = process_format_code_task_dir(
                 scan_dir=scan_dir,
                 cli_args=cli_args,
                 logger=logger,

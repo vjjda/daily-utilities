@@ -1,7 +1,7 @@
-# Path: modules/forc/forc_internal/forc_merger.py
+# Path: modules/format_code/format_code_internal/format_code_merger.py
 """
-Configuration Merging logic for the forc module.
-(Internal module, imported by forc_core)
+Configuration Merging logic for the format_code module.
+(Internal module, imported by format_code_core)
 """
 
 import logging
@@ -17,23 +17,25 @@ from utils.core import (
     resolve_config_list,
     resolve_set_modification
 )
-# SỬA: Import config của forc
-from ..forc_config import (
+# SỬA: Import config của format_code
+from ..format_code_config import (
     DEFAULT_EXTENSIONS,
     DEFAULT_IGNORE
 )
 
-__all__ = ["merge_forc_configs"]
+# SỬA: Tên hàm
+__all__ = ["merge_format_code_configs"]
 
 
-def merge_forc_configs(
+# SỬA: Tên hàm
+def merge_format_code_configs(
     logger: logging.Logger,
     cli_extensions: Optional[str],
     cli_ignore: Optional[str],
     file_config_data: Dict[str, Any]
 ) -> Dict[str, Any]:
     """
-    Hợp nhất các nguồn cấu hình (CLI, File, Default) cho forc.
+    Hợp nhất các nguồn cấu hình (CLI, File, Default) cho format_code.
     """
 
     # 1. Hợp nhất Cấu hình 'extensions'

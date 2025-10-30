@@ -1,7 +1,7 @@
-# Path: modules/forc/forc_internal/forc_loader.py
+# Path: modules/format_code/format_code_internal/format_code_loader.py
 """
-File Loading logic for the forc module.
-(Internal module, imported by forc_core)
+File Loading logic for the format_code module.
+(Internal module, imported by format_code_core)
 """
 
 import logging
@@ -19,8 +19,8 @@ except ImportError as e:
     print(f"Lỗi: Không thể import utils.core: {e}. Vui lòng chạy từ gốc dự án.", file=sys.stderr)
     sys.exit(1)
 
-# SỬA: Import config của forc
-from ..forc_config import (
+# SỬA: Import config của format_code
+from ..format_code_config import (
     PROJECT_CONFIG_FILENAME, 
     CONFIG_SECTION_NAME,
     CONFIG_FILENAME
@@ -34,7 +34,7 @@ def load_config_files(
     logger: logging.Logger
 ) -> Dict[str, Any]:
     """
-    Tải và hợp nhất cấu hình từ .project.toml và .forc.toml.
+    Tải và hợp nhất cấu hình từ .project.toml và .format_code.toml.
     """
     return load_and_merge_configs(
         start_dir=start_dir,

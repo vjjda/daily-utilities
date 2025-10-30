@@ -1,7 +1,6 @@
-# Path: modules/forc/__init__.py
+# Path: modules/format_code/format_code_internal/__init__.py
 """
-Cổng giao tiếp (Facade) cho module 'forc' (Format Code).
-Export các thành phần public từ các file con.
+Facade nội bộ cho các thành phần "worker" và "task" của format_code.
 """
 
 from pathlib import Path
@@ -11,10 +10,16 @@ from typing import List
 # --- Tự động Tái xuất (Dynamic Re-export) ---
 current_dir = Path(__file__).parent
 
+# SỬA: Tên file
 modules_to_export: List[str] = [
-    "forc_config",
-    "forc_core",
-    "forc_executor",
+    # Workers
+    "format_code_loader",
+    "format_code_merger",
+    "format_code_scanner",
+    "format_code_analyzer",
+    # Tasks
+    "format_code_task_file",
+    "format_code_task_dir",
 ]
 
 __all__: List[str] = []

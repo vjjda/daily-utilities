@@ -1,7 +1,7 @@
-# Path: modules/forc/forc_internal/forc_scanner.py
+# Path: modules/format_code/format_code_internal/format_code_scanner.py
 """
-File Scanning logic for the forc module.
-(Internal module, imported by forc_core)
+File Scanning logic for the format_code module.
+(Internal module, imported by format_code_core)
 """
 
 import logging

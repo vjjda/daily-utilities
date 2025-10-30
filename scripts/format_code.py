@@ -1,4 +1,4 @@
-# Path: scripts/forc.py
+# Path: scripts/format_code.py
 """
 Entrypoint (cổng vào) cho forc (Format Code).
 """
@@ -18,9 +18,10 @@ try:
     from utils.cli import handle_config_init_request, resolve_input_paths
     from utils.core import parse_comma_list
 
-    from modules.forc import (
-        process_forc_logic,
-        execute_forc_action,
+    # SỬA: Import từ module 'format_code'
+    from modules.format_code import (
+        process_format_code_logic,
+        execute_format_code_action,
         DEFAULT_START_PATH, DEFAULT_EXTENSIONS, DEFAULT_IGNORE,
         CONFIG_FILENAME, PROJECT_CONFIG_FILENAME, CONFIG_SECTION_NAME
     )
@@ -30,9 +31,10 @@ except ImportError as e:
 
 # --- HẰNG SỐ CỤ THỂ CHO ENTRYPOINT ---
 THIS_SCRIPT_PATH: Final[Path] = Path(__file__).resolve()
-MODULE_DIR: Final[Path] = PROJECT_ROOT / "modules" / "forc"
-# (Chúng ta cần tạo template cho forc nếu dùng config init)
-# TEMPLATE_FILENAME: Final[str] = "forc.toml.template" 
+# SỬA: Tên module
+MODULE_DIR: Final[Path] = PROJECT_ROOT / "modules" / "format_code"
+# (Chúng ta cần tạo template cho format_code nếu dùng config init)
+# TEMPLATE_FILENAME: Final[str] = "format_code.toml.template" 
 # FORC_DEFAULTS: Final[Dict[str, Any]] = {
 #     "extensions": sorted(list(DEFAULT_EXTENSIONS)),
 #     "ignore": sorted(list(DEFAULT_IGNORE))
@@ -73,15 +75,12 @@ def main():
         help="Ghi đè file mà không hỏi xác nhận (chỉ áp dụng ở chế độ fix)."
     )
     
-    # (Tạm thời vô hiệu hóa config init cho forc)
-    # config_group = parser.add_argument_group("Khởi tạo Cấu hình (chạy riêng)")
-    # ...
-    
     args = parser.parse_args()
 
     # 2. Setup Logging
-    logger = setup_logging(script_name="Forc")
-    logger.debug("Forc script started.")
+    # SỬA: Tên Logger
+    logger = setup_logging(script_name="FormatCode")
+    logger.debug("FormatCode script started.")
 
     # 3. Xử lý Config Init (Tạm thời bỏ qua)
     # ...
@@ -107,7 +106,8 @@ def main():
 
     # 5. Chạy Core Logic và Executor
     try:
-        files_to_fix = process_forc_logic(
+        # SỬA: Tên hàm logic
+        files_to_fix = process_format_code_logic(
             logger=logger,
             files_to_process=files_to_process,
             dirs_to_scan=dirs_to_scan,
@@ -117,7 +117,8 @@ def main():
         
         reporting_root = Path.cwd()
         
-        execute_forc_action(
+        # SỬA: Tên hàm executor
+        execute_format_code_action(
             logger=logger, 
             all_files_to_fix=files_to_fix,
             dry_run=args.dry_run, 
