@@ -8,7 +8,9 @@ Logger: Any
 clean_code: Any
 compile_spec_from_patterns: Any
 copy_file_to_clipboard: Any
+find_file_upwards: Any
 find_git_root: Any
+format_code: Any
 format_value_to_toml: Any
 get_submodule_paths: Any
 git_add_and_commit: Any
@@ -23,6 +25,7 @@ parse_cli_set_operators: Any
 parse_comma_list: Any
 parse_gitignore: Any
 register_cleaner: Any
+register_formatter: Any
 resolve_config_list: Any
 resolve_config_value: Any
 resolve_set_modification: Any
@@ -35,7 +38,9 @@ __all__: List[str] = [
     'clean_code',
     'compile_spec_from_patterns',
     'copy_file_to_clipboard',
+    'find_file_upwards',
     'find_git_root',
+    'format_code',
     'format_value_to_toml',
     'get_submodule_paths',
     'git_add_and_commit',
@@ -50,6 +55,7 @@ __all__: List[str] = [
     'parse_comma_list',
     'parse_gitignore',
     'register_cleaner',
+    'register_formatter',
     'resolve_config_list',
     'resolve_config_value',
     'resolve_set_modification',
