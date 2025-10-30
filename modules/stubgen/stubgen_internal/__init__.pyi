@@ -10,6 +10,9 @@ find_gateway_files: Any
 format_stub_content: Any
 load_config_files: Any
 merge_stubgen_configs: Any
+process_single_gateway: Any
+process_stubgen_task_dir: Any
+process_stubgen_task_file: Any
 
 # Static declaration of exported symbols (for Pylance)
 __all__: List[str] = [
@@ -18,5 +21,8 @@ __all__: List[str] = [
     'find_gateway_files',
     'format_stub_content',
     'load_config_files',
-    'merge_stubgen_configs'
+    'merge_stubgen_configs',
+    'process_single_gateway',
+    'process_stubgen_task_dir',
+    'process_stubgen_task_file'
 ]
