@@ -10,10 +10,11 @@ from typing import List
 # --- Tự động Tái xuất (Dynamic Re-export) ---
 current_dir = Path(__file__).parent
 
-# Only export necessary functions/classes from the main orchestrator and helpers
+# Cập nhật danh sách để bao gồm path_resolver
 modules_to_export: List[str] = [
-    "ui_helpers", # Keep UI helpers exported
-    "config_writer" # Export the main orchestrator function handle_config_init_request
+    "ui_helpers",
+    "config_writer",
+    "path_resolver"  # <-- THÊM DÒNG MỚI
 ]
 
 __all__: List[str] = []
@@ -29,10 +30,10 @@ for module_name in modules_to_export:
                 globals()[name] = obj
             __all__.extend(public_symbols)
         else:
-             print(f"Cảnh báo: Module '{module_name}' trong utils/cli thiếu định nghĩa __all__.")
+             print(f"Cảnh báo: Module '{module_name}' trong utils/cli thiếu định nghĩa __all__.") # [cite: 1073]
 
     except ImportError as e:
-        print(f"Cảnh báo: Không thể import từ {module_name} trong utils/cli: {e}")
+         print(f"Cảnh báo: Không thể import từ {module_name} trong utils/cli: {e}") # [cite: 1074]
 
 # Cleanup (remains the same)
 del Path, import_module, List, current_dir, modules_to_export
