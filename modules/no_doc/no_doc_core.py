@@ -6,7 +6,9 @@ Core Orchestration logic for the no_doc module.
 import logging
 import argparse
 from pathlib import Path
+# SỬA: Import OrderedDict
 from typing import List, Optional, Dict, Any, Tuple, Set
+from collections import OrderedDict
 import sys
 
 # Thiết lập sys.path
@@ -64,7 +66,8 @@ def process_no_doc_logic(
     file_extensions = set(default_file_config["final_extensions_list"])
 
     if files_to_process:
-        logger.info(f"--- Đang xử lý {len(files_to_process)} file riêng lẻ ---")
+        # SỬA: Thêm emoji 📄
+        logger.info(f"--- 📄 Đang xử lý {len(files_to_process)} file riêng lẻ ---")
         logger.info(f"  [Cấu hình áp dụng]")
         logger.info(f"    - Extensions: {sorted(list(file_extensions))}")
         logger.info(f"    - (Bỏ qua .gitignore và config file)")
@@ -86,9 +89,11 @@ def process_no_doc_logic(
             processed_files.add(resolved_file)
             
         if file_only_results:
-            # SỬA: Gọi hàm in báo cáo ngay lập tức
             print_dry_run_report_for_group(logger, "Files Lẻ", file_only_results, reporting_root)
             all_results.extend(file_only_results)
+        
+        # SỬA: Thêm dòng trống sau khi xử lý xong nhóm file lẻ
+        logger.info("") 
 
     # --- 2. XỬ LÝ CÁC THƯ MỤC ---
     if dirs_to_scan:
@@ -121,8 +126,8 @@ def process_no_doc_logic(
              script_file_path=script_file_path
         )
         
-        # In báo cáo cấu hình
-        logger.info(f"--- Quét thư mục: {scan_dir.name} ---")
+        # SỬA: Thêm emoji 📁
+        logger.info(f"--- 📁 Quét thư mục: {scan_dir.name} ---")
         logger.info(f"  [Cấu hình áp dụng]")
         logger.info(f"    - Extensions: {sorted(list(final_extensions_list))}")
         logger.info(f"    - Ignore (từ config/CLI): {final_ignore_list}")
@@ -130,11 +135,15 @@ def process_no_doc_logic(
         logger.info(f"    - Tải .gitmodules cục bộ: {'Có' if scan_status['gitmodules_found'] else 'Không'}")
 
         if not files_in_dir:
-            logger.info(f"  -> Không tìm thấy file nào khớp tiêu chí trong: {scan_dir.name}")
-            logger.info(f"--- Kết thúc {scan_dir.name} ---")
+            # SỬA: Thêm emoji 🤷
+            logger.info(f"  -> 🤷 Không tìm thấy file nào khớp tiêu chí trong: {scan_dir.name}")
+            # SỬA: Thêm emoji ✅ và dòng trống
+            logger.info(f"--- ✅ Kết thúc {scan_dir.name} ---")
+            logger.info("") # Thêm dòng trống
             continue
 
-        logger.info(f"  -> Tìm thấy {len(files_in_dir)} file, đang phân tích...")
+        # SỬA: Thêm emoji ⚡
+        logger.info(f"  -> ⚡ Tìm thấy {len(files_in_dir)} file, đang phân tích...")
 
         # 2d. Phân tích file
         dir_results: List[FileResult] = []
@@ -149,13 +158,14 @@ def process_no_doc_logic(
             processed_files.add(resolved_file)
             
         if dir_results:
-            # SỬA: Gọi hàm in báo cáo ngay lập tức
             print_dry_run_report_for_group(logger, scan_dir.name, dir_results, reporting_root)
             all_results.extend(dir_results)
             
-        logger.info(f"--- Kết thúc {scan_dir.name} ---")
+        # SỬA: Thêm emoji ✅ và dòng trống
+        logger.info(f"--- ✅ Kết thúc {scan_dir.name} ---")
+        logger.info("") # Thêm dòng trống
 
     if not all_results and (files_to_process or dirs_to_scan):
         logger.info("Quét hoàn tất. Không tìm thấy file nào cần thay đổi.")
         
-    return all_results # SỬA: Trả về danh sách phẳng
+    return all_results
