@@ -13,13 +13,7 @@ DEFAULT_INCLUDE: Any
 DYNAMIC_IMPORT_INDICATORS: Any
 PROJECT_CONFIG_FILENAME: Any
 classify_and_report_stub_changes: Any
-collect_all_exported_symbols: Any
 execute_stubgen_action: Any
-extract_module_list: Any
-find_gateway_files: Any
-format_stub_content: Any
-load_config_files: Any
-merge_stubgen_configs: Any
 process_stubgen_logic: Any
 
 # Static declaration of exported symbols (for Pylance)
@@ -33,12 +27,6 @@ __all__: List[str] = [
     'DYNAMIC_IMPORT_INDICATORS',
     'PROJECT_CONFIG_FILENAME',
     'classify_and_report_stub_changes',
-    'collect_all_exported_symbols',
     'execute_stubgen_action',
-    'extract_module_list',
-    'find_gateway_files',
-    'format_stub_content',
-    'load_config_files',
-    'merge_stubgen_configs',
     'process_stubgen_logic'
 ]
