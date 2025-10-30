@@ -14,6 +14,7 @@ analyze_file_content: Any
 execute_ndoc_action: Any
 load_config_files: Any
 merge_ndoc_configs: Any
+print_dry_run_report_for_group: Any
 process_no_doc_logic: Any
 scan_files: Any
 
@@ -29,6 +30,7 @@ __all__: List[str] = [
     'execute_ndoc_action',
     'load_config_files',
     'merge_ndoc_configs',
+    'print_dry_run_report_for_group',
     'process_no_doc_logic',
     'scan_files'
 ]
