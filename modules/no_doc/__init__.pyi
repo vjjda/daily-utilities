@@ -10,13 +10,9 @@ DEFAULT_EXTENSIONS: Any
 DEFAULT_IGNORE: Any
 DEFAULT_START_PATH: Any
 PROJECT_CONFIG_FILENAME: Any
-analyze_file_content: Any
 execute_ndoc_action: Any
-load_config_files: Any
-merge_ndoc_configs: Any
 print_dry_run_report_for_group: Any
 process_no_doc_logic: Any
-scan_files: Any
 
 # Static declaration of exported symbols (for Pylance)
 __all__: List[str] = [
@@ -26,11 +22,7 @@ __all__: List[str] = [
     'DEFAULT_IGNORE',
     'DEFAULT_START_PATH',
     'PROJECT_CONFIG_FILENAME',
-    'analyze_file_content',
     'execute_ndoc_action',
-    'load_config_files',
-    'merge_ndoc_configs',
     'print_dry_run_report_for_group',
-    'process_no_doc_logic',
-    'scan_files'
+    'process_no_doc_logic'
 ]
