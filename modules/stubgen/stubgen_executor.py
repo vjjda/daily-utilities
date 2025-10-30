@@ -7,45 +7,37 @@ Execution/Action logic for the Stub Generator (sgen) module.
 import logging
 import sys
 from pathlib import Path
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Tuple
 
 from utils.logging_config import log_success
-# SỬA: Import thêm 'is_git_repository'
 from utils.core import git_add_and_commit, is_git_repository
 
 # Type Hint cho Result Object
 StubResult = Dict[str, Any]
 
-__all__ = ["execute_stubgen_action"]
+# SỬA: Export thêm hàm helper
+__all__ = ["execute_stubgen_action", "classify_and_report_stub_changes"]
 
 
-def execute_stubgen_action(
+def classify_and_report_stub_changes(
     logger: logging.Logger, 
-    results: List[StubResult],
-    force: bool,
-    scan_root: Path # Sẽ là Path.cwd() từ entrypoint
-) -> None:
+    group_name: str,
+    group_raw_results: List[StubResult],
+    scan_root: Path
+) -> Tuple[List[StubResult], List[StubResult], List[StubResult]]:
     """
-    Hàm thực thi, nhận kết quả từ core, xử lý tương tác và ghi file.
-    ...
-    Args:
-        ...
-        scan_root: Thư mục gốc (dùng để tính relpath và chạy git).
+    (HÀM MỚI)
+    Phân loại (I/O đọc) và In báo cáo xen kẽ cho một nhóm kết quả.
     """
     
-    if not results:
-        return
-
-    # 1. Phân loại file (I/O Đọc)
     files_to_create: List[StubResult] = []
     files_to_overwrite: List[StubResult] = []
     files_no_change: List[StubResult] = []
-
-    logger.debug("Categorizing stub files (Read I/O)...")
-    for result in results:
+    
+    # 1. Phân loại file (I/O Đọc)
+    for result in group_raw_results:
         stub_path: Path = result["stub_path"]
         new_content: str = result["content"]
-
         if not stub_path.exists():
             files_to_create.append(result)
         else:
@@ -55,43 +47,64 @@ def execute_stubgen_action(
                     files_no_change.append(result)
                 else:
                     files_to_overwrite.append(result)
-            except Exception as e:
-                logger.warning(f"Could not read existing stub {stub_path.name}: {e}")
-                files_to_overwrite.append(result)
+            except Exception:
+                files_to_overwrite.append(result) # Lỗi đọc -> coi như overwrite
 
-    # 2. Báo cáo cho người dùng
-    # (SỬA: In đường dẫn tương đối từ scan_root (CWD) thay vì 'rel_path'
-    #  vì 'rel_path' được tính từ gốc quét cục bộ, có thể gây nhầm lẫn)
-    
-    def get_rel_path_for_reporting(stub_path: Path) -> str:
+    # Helper in đường dẫn tương đối
+    def get_rel_path(path: Path) -> str:
         try:
-            return stub_path.relative_to(scan_root).as_posix()
+            return path.relative_to(scan_root).as_posix()
         except ValueError:
-            return str(stub_path) # Fallback nếu nằm ngoài CWD
+            return str(path)
 
+    # 2. In báo cáo
+    total_changes = len(files_to_create) + len(files_to_overwrite)
+    if not total_changes and not files_no_change:
+        # Nhóm này không tạo ra kết quả nào (ví dụ: quét thư mục không có gateway)
+        return [], [], []
+
+    # SỬA: Thêm emoji 📄
+    logger.info(f"\n   --- 📄 Nhóm: {group_name} ({len(group_raw_results)} gateway) ---")
+    
     if files_no_change:
-        logger.info(f"\n✅ Files up-to-date ({len(files_no_change)}):")
+        logger.info(f"     ✅ Files up-to-date ({len(files_no_change)}):")
         for r in files_no_change:
-            path_str = get_rel_path_for_reporting(r['stub_path'])
-            logger.info(f"   -> OK: {path_str} ({r['symbols_count']} symbols)")
+            logger.info(f"        -> OK: {get_rel_path(r['stub_path'])} ({r['symbols_count']} symbols)")
     
     if files_to_create:
-        logger.info(f"\n📝 Files to create ({len(files_to_create)}):")
+        logger.info(f"     📝 Files to create ({len(files_to_create)}):")
         for r in files_to_create:
-            path_str = get_rel_path_for_reporting(r['stub_path'])
-            logger.info(f"   -> NEW: {path_str} ({r['symbols_count']} symbols)")
+            logger.info(f"        -> NEW: {get_rel_path(r['stub_path'])} ({r['symbols_count']} symbols)")
 
     if files_to_overwrite:
-        logger.warning(f"\n⚠️ Files to OVERWRITE ({len(files_to_overwrite)}):")
+        logger.warning(f"     ⚠️ Files to OVERWRITE ({len(files_to_overwrite)}):")
         for r in files_to_overwrite:
-            path_str = get_rel_path_for_reporting(r['stub_path'])
-            logger.warning(f"   -> OVERWRITE: {path_str} ({r['symbols_count']} symbols)")
+            logger.warning(f"        -> OVERWRITE: {get_rel_path(r['stub_path'])} ({r['symbols_count']} symbols)")
 
-    if not (files_to_create or files_to_overwrite):
+    return files_to_create, files_to_overwrite, files_no_change
+
+
+# SỬA: Thay đổi chữ ký hàm
+def execute_stubgen_action(
+    logger: logging.Logger, 
+    files_to_create: List[StubResult],
+    files_to_overwrite: List[StubResult],
+    force: bool,
+    scan_root: Path
+) -> None:
+    """
+    Hàm thực thi, nhận các danh sách đã phân loại, hỏi xác nhận và ghi file.
+    """
+    
+    # 1. Báo cáo tổng kết
+    total_changes = len(files_to_create) + len(files_to_overwrite)
+    if not total_changes:
         log_success(logger, "\n✨ Stub generation complete. All stubs are up-to-date.")
         return 
+
+    logger.warning(f"\n⚠️ Tổng cộng {total_changes} file .pyi cần được tạo/ghi đè (chi tiết ở trên).")
     
-    # 3. Hỏi xác nhận
+    # 2. Hỏi xác nhận
     proceed_to_write = False
     if force:
         proceed_to_write = True
@@ -107,50 +120,56 @@ def execute_stubgen_action(
             logger.warning("Stub generation operation cancelled by user.")
             sys.exit(0)
     
-    # 4. Ghi file (I/O Write)
+    # 3. Ghi file
     if proceed_to_write:
         written_count = 0
         files_written_results: List[StubResult] = []
-        result_being_processed: Optional[StubResult] = None # Để debug khi lỗi
+        result_being_processed: Optional[StubResult] = None 
         
         logger.info("✍️ Writing .pyi stub files...")
         
+        def get_rel_path(path: Path) -> str:
+            try:
+                return path.relative_to(scan_root).as_posix()
+            except ValueError:
+                return str(path)
+        
         try:
+            # Vòng 1: Tạo file mới
             for result in files_to_create:
                 result_being_processed = result
                 stub_path: Path = result["stub_path"]
                 content: str = result["content"]
                 stub_path.write_text(content, encoding='utf-8')
-                path_str = get_rel_path_for_reporting(stub_path)
+                path_str = get_rel_path(stub_path)
                 log_success(logger, f"Created stub: {path_str}")
                 written_count += 1
                 files_written_results.append(result)
                 
+            # Vòng 2: Ghi đè file
             for result in files_to_overwrite:
                 result_being_processed = result
                 stub_path: Path = result["stub_path"]
                 content: str = result["content"]
                 stub_path.write_text(content, encoding='utf-8')
-                path_str = get_rel_path_for_reporting(stub_path)
+                path_str = get_rel_path(stub_path)
                 log_success(logger, f"Overwrote stub: {path_str}")
                 written_count += 1
                 files_written_results.append(result)
                 
         except IOError as e:
-            file_name = get_rel_path_for_reporting(result_being_processed['stub_path']) if result_being_processed else "UNKNOWN FILE"
+            file_name = get_rel_path(result_being_processed['stub_path']) if result_being_processed else "UNKNOWN FILE"
             logger.error(f"❌ Failed to write file {file_name}: {e}")
             return 
         except Exception as e:
-            file_name = get_rel_path_for_reporting(result_being_processed['stub_path']) if result_being_processed else "UNKNOWN FILE"
+            file_name = get_rel_path(result_being_processed['stub_path']) if result_being_processed else "UNKNOWN FILE"
             logger.error(f"❌ Unknown error while writing file {file_name}: {e}")
             return 
                 
         if written_count > 0:
             log_success(logger, f"\n✨ Stub generation complete. Successfully processed {written_count} files.")
-        else:
-            log_success(logger, f"\n✨ Stub generation complete. No files needed writing.")
 
-        # 5. Tự động Git Commit (SỬA: Thêm kiểm tra an toàn)
+        # 4. Tự động Git Commit
         if files_written_results and is_git_repository(scan_root):
             relative_paths = [
                 str(r["stub_path"].relative_to(scan_root)) 
@@ -161,7 +180,7 @@ def execute_stubgen_action(
             
             git_add_and_commit(
                 logger=logger,
-                scan_root=scan_root, # Sẽ là CWD
+                scan_root=scan_root,
                 file_paths_relative=relative_paths,
                 commit_message=commit_msg
             )

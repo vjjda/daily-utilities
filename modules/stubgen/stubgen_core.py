@@ -8,6 +8,7 @@ import logging
 import ast
 import argparse
 from pathlib import Path
+# SỬA: Import thêm Tuple
 from typing import Dict, Any, List, Optional, Set, Tuple
 
 from typing import TYPE_CHECKING
@@ -22,6 +23,8 @@ from .stubgen_parser import (
 from .stubgen_loader import find_gateway_files, load_config_files
 from .stubgen_merger import merge_stubgen_configs
 from .stubgen_formatter import format_stub_content
+# SỬA: Import hàm báo cáo từ executor
+from .stubgen_executor import classify_and_report_stub_changes
 
 # Import tiện ích chung
 from utils.core import (
@@ -37,20 +40,24 @@ StubResult = Dict[str, Any]
 __all__ = ["process_stubgen_logic"]
 
 
-# SỬA: Thay đổi chữ ký hàm
 def process_stubgen_logic(
     logger: logging.Logger, 
     cli_args: argparse.Namespace,
     script_file_path: Path,
     files_to_process: List[Path],
     dirs_to_scan: List[Path]
-) -> List[StubResult]:
+) -> Tuple[List[StubResult], List[StubResult]]: # SỬA: Kiểu trả về
     """
     Điều phối toàn bộ quá trình tạo stub (Logic thuần túy, không I/O ghi).
     Xử lý các file và thư mục đầu vào theo logic cục bộ.
+    
+    Returns:
+        Tuple[List[StubResult], List[StubResult]]:
+            - all_files_to_create
+            - all_files_to_overwrite
     """
     
-    # 1. Load Template (I/O Đọc)
+    # 1. Load Template
     try:
         template_path = MODULE_DIR / TEMPLATE_FILENAME
         stub_template_str = load_text_template(template_path, logger)
@@ -58,7 +65,10 @@ def process_stubgen_logic(
         logger.error(f"❌ Không thể tải PYI template: {e}")
         raise
 
-    all_results: List[StubResult] = []
+    # SỬA: Khởi tạo các list tổng
+    total_files_to_create: List[StubResult] = []
+    total_files_to_overwrite: List[StubResult] = []
+    
     processed_files: Set[Path] = set()
     reporting_root = Path.cwd() # Dùng để tính rel_path
 
@@ -66,31 +76,27 @@ def process_stubgen_logic(
     if files_to_process:
         logger.info(f"--- 📄 Đang xử lý {len(files_to_process)} file riêng lẻ ---")
         
-        # File lẻ dùng config default + CLI
-        file_config_data = {} # Không tải config
+        file_config_data = {} 
         cli_config = {
             "ignore": getattr(cli_args, 'ignore', None),
             "include": getattr(cli_args, 'include', None)
         }
         merged_config = merge_stubgen_configs(logger, cli_config, file_config_data)
 
-        # Biên dịch spec cho file lẻ (dùng CWD làm gốc?) - Tốt hơn là dùng parent
-        
+        file_raw_results: List[StubResult] = [] # Thu thập kết quả thô
         for file_path in files_to_process:
             resolved_file = file_path.resolve()
-            if resolved_file in processed_files or file_path.name != "__init__.py":
-                if file_path.name != "__init__.py":
-                    logger.warning(f"⚠️ Bỏ qua file '{file_path.name}': 'sgen' chỉ xử lý file '__init__.py'.")
+            if resolved_file in processed_files:
                 continue
                 
-            scan_dir = file_path.parent # Gốc cục bộ là thư mục cha
-            
-            # (Logic này có thể không hoàn hảo, vì include/ignore của file lẻ
-            # không có bối cảnh 'scan_root' rõ ràng. Tạm thời chấp nhận.)
+            if file_path.name != "__init__.py":
+                logger.warning(f"⚠️ Bỏ qua file '{file_path.name}': 'sgen' chỉ xử lý file '__init__.py'.")
+                continue
+                
+            scan_dir = file_path.parent 
             
             logger.info(f"  -> ⚡ Phân tích file: {file_path.relative_to(reporting_root).as_posix()}")
             
-            # Chạy logic phân tích/định dạng
             stub_content, symbols_count = _process_single_gateway(
                 init_file=file_path,
                 scan_root=scan_dir, # Dùng thư mục cha làm gốc
@@ -101,7 +107,7 @@ def process_stubgen_logic(
             
             if stub_content:
                 stub_path = file_path.with_suffix(".pyi")
-                all_results.append({
+                file_raw_results.append({
                     "init_path": file_path,
                     "stub_path": stub_path,
                     "content": stub_content,
@@ -109,6 +115,14 @@ def process_stubgen_logic(
                     "rel_path": stub_path.relative_to(reporting_root).as_posix()
                 })
             processed_files.add(resolved_file)
+
+        # SỬA: Phân loại và Báo cáo cho nhóm file
+        if file_raw_results:
+            create, overwrite, _ = classify_and_report_stub_changes(
+                logger, "Files Lẻ", file_raw_results, reporting_root
+            )
+            total_files_to_create.extend(create)
+            total_files_to_overwrite.extend(overwrite)
         
         logger.info("") # Dòng trống
 
@@ -119,7 +133,7 @@ def process_stubgen_logic(
     for scan_dir in dirs_to_scan:
         logger.info(f"--- 📁 Quét thư mục: {scan_dir.name} ---")
         
-        # 3a. Tải và Hợp nhất Config (cục bộ)
+        # 3a. Tải/Merge Config
         file_config = load_config_files(scan_dir, logger)
         cli_config = {
             "ignore": getattr(cli_args, 'ignore', None),
@@ -130,20 +144,20 @@ def process_stubgen_logic(
         # 3b. Biên dịch Specs
         final_include_spec: Optional['pathspec.PathSpec'] = compile_spec_from_patterns(
             merged_config["include_list"], 
-            scan_dir # Dùng scan_dir làm gốc
+            scan_dir
         )
         
-        # 3c. Load: Tìm file gateway (I/O Đọc)
+        # 3c. Load: Tìm file gateway
         gateway_files, scan_status = find_gateway_files(
             logger=logger, 
-            scan_root=scan_dir, # Dùng scan_dir làm gốc
+            scan_root=scan_dir,
             ignore_list=merged_config["ignore_list"], 
             include_spec=final_include_spec,
             dynamic_import_indicators=merged_config["indicators"],
             script_file_path=script_file_path
         )
         
-        # 3d. In báo cáo cấu hình (giống ndoc)
+        # 3d. In báo cáo cấu hình
         logger.info(f"  [Cấu hình áp dụng]")
         logger.info(f"    - Ignore (từ config/CLI): {merged_config['ignore_list']}")
         logger.info(f"    - Include (từ config/CLI): {merged_config['include_list']}")
@@ -158,7 +172,7 @@ def process_stubgen_logic(
         
         logger.info(f"  -> ⚡ Tìm thấy {len(gateway_files)} gateway, đang phân tích...")
         
-        dir_results: List[StubResult] = []
+        dir_raw_results: List[StubResult] = [] # Thu thập kết quả thô
         for init_file in gateway_files:
             resolved_file = init_file.resolve()
             if resolved_file in processed_files:
@@ -167,7 +181,7 @@ def process_stubgen_logic(
             # 3e. Phân tích & Định dạng
             stub_content, symbols_count = _process_single_gateway(
                 init_file=init_file,
-                scan_root=scan_dir, # Dùng scan_dir làm gốc
+                scan_root=scan_dir, 
                 merged_config=merged_config,
                 stub_template_str=stub_template_str,
                 logger=logger
@@ -175,7 +189,7 @@ def process_stubgen_logic(
             
             if stub_content:
                 stub_path = init_file.with_suffix(".pyi")
-                dir_results.append({
+                dir_raw_results.append({
                     "init_path": init_file,
                     "stub_path": stub_path,
                     "content": stub_content,
@@ -184,14 +198,19 @@ def process_stubgen_logic(
                 })
             processed_files.add(resolved_file)
         
-        if dir_results:
-            # (sgen không có hàm in xen kẽ, nó đợi executor)
-            all_results.extend(dir_results)
+        # SỬA: Phân loại và Báo cáo cho nhóm thư mục
+        if dir_raw_results:
+            create, overwrite, _ = classify_and_report_stub_changes(
+                logger, scan_dir.name, dir_raw_results, reporting_root
+            )
+            total_files_to_create.extend(create)
+            total_files_to_overwrite.extend(overwrite)
             
         logger.info(f"--- ✅ Kết thúc {scan_dir.name} ---")
         logger.info("")
 
-    return all_results
+    # SỬA: Trả về 2 list tổng
+    return total_files_to_create, total_files_to_overwrite
 
 
 def _process_single_gateway(
@@ -216,7 +235,7 @@ def _process_single_gateway(
         )
         
         if not exported_symbols:
-            logger.warning(f"Bỏ qua {init_file.name}: Không tìm thấy symbols nào để export.")
+            # (Không log warning ở đây, để hàm gọi quyết định)
             return None, 0
 
         # 8. Format (gọi Formatter)

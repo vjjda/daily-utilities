@@ -49,7 +49,6 @@ SGEN_DEFAULTS: Final[Dict[str, Any]] = {
     "ast_all_list_name": AST_ALL_LIST_NAME
 }
 
-
 def main():
     """
     Hàm điều phối chính.
@@ -65,11 +64,10 @@ def main():
     # Group 1: Stub Generation Options
     stubgen_group = parser.add_argument_group("Stub Generation Options")
     stubgen_group.add_argument(
-        # SỬA: Đổi tên arg và cho phép nhiều
         "target_paths",
         type=str,
-        nargs='*', # Chấp nhận 0 hoặc nhiều
-        default=[], # Mặc định list rỗng
+        nargs='*', 
+        default=[], 
         help="Đường dẫn (file hoặc thư mục) để quét. Mặc định là thư mục hiện tại (.)."
     )
     stubgen_group.add_argument(
@@ -93,7 +91,6 @@ def main():
 
     # Group 2: Config Flags
     config_group = parser.add_argument_group("Config Initialization (Chạy riêng lẻ)")
-    # ... (không đổi) ...
     config_group.add_argument(
         "-c", "--config-project",
         action="store_true",
@@ -132,18 +129,17 @@ def main():
         logger.debug("Traceback:", exc_info=True)
         sys.exit(1)
     
-    # 4. Xử lý Path và Validation (SỬA: Dùng logic của ndoc)
+    # 4. Xử lý Path và Validation
     validated_paths: List[Path] = resolve_input_paths(
         logger=logger,
-        raw_paths=args.target_paths, # Lấy từ nargs='*'
-        default_path_str="." # Default là "."
+        raw_paths=args.target_paths,
+        default_path_str="."
     )
 
     if not validated_paths:
         logger.warning("Không tìm thấy đường dẫn hợp lệ nào để quét. Đã dừng.")
         sys.exit(0)
 
-    # Phân loại đường dẫn
     files_to_process: List[Path] = []
     dirs_to_scan: List[Path] = []
     for path in validated_paths:
@@ -154,8 +150,8 @@ def main():
 
     # 5. Chạy Core Logic và Executor
     try:
-        # SỬA: Thay đổi cách gọi process_stubgen_logic
-        results = process_stubgen_logic(
+        # SỬA: Nhận 2 list
+        files_to_create, files_to_overwrite = process_stubgen_logic(
             logger=logger,
             cli_args=args,
             script_file_path=THIS_SCRIPT_PATH,
@@ -163,18 +159,16 @@ def main():
             dirs_to_scan=dirs_to_scan
         )
         
-        # SỬA: Dùng CWD làm gốc báo cáo và gốc chạy Git
-        reporting_root = Path.cwd()
+        reporting_root = Path.cwd() 
         
-        if results:
-            execute_stubgen_action(
-                logger=logger,
-                results=results,
-                force=args.force,
-                scan_root=reporting_root # Dùng CWD
-            )
-        else:
-            log_success(logger, "Không tìm thấy dynamic module gateways nào để xử lý.")
+        # SỬA: Truyền 2 list
+        execute_stubgen_action(
+            logger=logger,
+            files_to_create=files_to_create,
+            files_to_overwrite=files_to_overwrite,
+            force=args.force,
+            scan_root=reporting_root
+        )
        
     except Exception as e:
         logger.error(f"❌ Đã xảy ra lỗi không mong muốn: {e}")
