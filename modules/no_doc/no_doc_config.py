@@ -15,7 +15,7 @@ __all__ = [
 
 
 DEFAULT_START_PATH: Final[str] = "."
-DEFAULT_EXTENSIONS: Final[Set[str]] = {"py"}
+DEFAULT_EXTENSIONS: Final[Set[str]] = {"py", "pyi"}
 
 
 DEFAULT_IGNORE: Final[Set[str]] = {
