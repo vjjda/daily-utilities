@@ -8,9 +8,10 @@ assemble_packed_content: Any
 generate_tree_string: Any
 load_config_files: Any
 load_files_content: Any
+process_pcode_task_dir: Any
+process_pcode_task_file: Any
 resolve_filters: Any
 resolve_output_path: Any
-resolve_start_and_scan_paths: Any
 scan_files: Any
 
 # Static declaration of exported symbols (for Pylance)
@@ -19,8 +20,9 @@ __all__: List[str] = [
     'generate_tree_string',
     'load_config_files',
     'load_files_content',
+    'process_pcode_task_dir',
+    'process_pcode_task_file',
     'resolve_filters',
     'resolve_output_path',
-    'resolve_start_and_scan_paths',
     'scan_files'
 ]
