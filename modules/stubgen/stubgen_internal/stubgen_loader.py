@@ -5,7 +5,6 @@ File Scanning and Config Loading logic for the Stub Generator (sgen) module.
 
 import logging
 from pathlib import Path
-# SỬA: Import thêm Tuple, Dict
 from typing import List, Set, Dict, Any, TYPE_CHECKING, Iterable, Optional, Tuple
 
 try:
@@ -24,7 +23,8 @@ from utils.core import (
     compile_spec_from_patterns 
 )
 
-from .stubgen_config import (
+# SỬA: Import từ thư mục cha (..)
+from ..stubgen_config import (
     PROJECT_CONFIG_FILENAME, CONFIG_FILENAME, CONFIG_SECTION_NAME
 )
 
@@ -37,6 +37,13 @@ def load_config_files(
 ) -> Dict[str, Any]:
     """
     Tải và hợp nhất cấu hình từ .project.toml và .sgen.toml.
+    
+    Args:
+        start_dir: Thư mục bắt đầu quét config.
+        logger: Logger để ghi log.
+
+    Returns:
+        Một dict chứa cấu hình [sgen] đã được hợp nhất.
     """
     return load_and_merge_configs(
         start_dir=start_dir,
@@ -60,7 +67,6 @@ def _is_dynamic_gateway(
     except Exception:
         return False
 
-# SỬA: Thay đổi chữ ký hàm và kiểu trả về
 def find_gateway_files(
     logger: logging.Logger,
     scan_root: Path,
@@ -79,21 +85,20 @@ def find_gateway_files(
             - Dict trạng thái (gitignore_found, gitmodules_found).
     """
 
-    # SỬA: Thêm dict trạng thái
     scan_status = {
         'gitignore_found': False,
         'gitmodules_found': False
     }
 
     gitignore_patterns: List[str] = parse_gitignore(scan_root) 
-    if gitignore_patterns: # SỬA: Cập nhật trạng thái
+    if gitignore_patterns:
         scan_status['gitignore_found'] = True
 
     all_ignore_patterns_list: List[str] = ignore_list + gitignore_patterns
     ignore_spec = compile_spec_from_patterns(all_ignore_patterns_list, scan_root)
 
     submodule_paths = get_submodule_paths(scan_root, logger)
-    if submodule_paths: # SỬA: Cập nhật trạng thái
+    if submodule_paths:
         scan_status['gitmodules_found'] = True
     
     logger.debug(f"Scanning for '__init__.py' within: {scan_root.as_posix()}")
@@ -129,5 +134,4 @@ def find_gateway_files(
         if _is_dynamic_gateway(path, dynamic_import_indicators):
             gateway_files.append(path)
 
-    # SỬA: Trả về tuple
     return gateway_files, scan_status

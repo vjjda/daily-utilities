@@ -12,13 +12,9 @@ from typing import List
 # --- Dynamic Re-export ---
 current_dir = Path(__file__).parent
 
-# Định nghĩa thứ tự load các module nội bộ
+# SỬA: Chỉ export các thành phần "public"
 modules_to_export: List[str] = [
     "stubgen_config",
-    "stubgen_loader",
-    "stubgen_parser", 
-    "stubgen_merger",
-    "stubgen_formatter", 
     "stubgen_core",
     "stubgen_executor"
 ]

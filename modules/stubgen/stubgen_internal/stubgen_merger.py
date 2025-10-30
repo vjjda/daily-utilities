@@ -13,7 +13,8 @@ from utils.core import (
     parse_comma_list
 )
 
-from .stubgen_config import (
+# SỬA: Import từ thư mục cha (..)
+from ..stubgen_config import (
     DEFAULT_IGNORE, 
     DEFAULT_INCLUDE,
     DYNAMIC_IMPORT_INDICATORS,
