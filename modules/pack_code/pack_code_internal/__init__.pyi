@@ -6,6 +6,8 @@ from pathlib import Path
 
 assemble_packed_content: Any
 generate_tree_string: Any
+load_config_files: Any
+load_files_content: Any
 resolve_filters: Any
 resolve_output_path: Any
 resolve_start_and_scan_paths: Any
@@ -15,6 +17,8 @@ scan_files: Any
 __all__: List[str] = [
     'assemble_packed_content',
     'generate_tree_string',
+    'load_config_files',
+    'load_files_content',
     'resolve_filters',
     'resolve_output_path',
     'resolve_start_and_scan_paths',
