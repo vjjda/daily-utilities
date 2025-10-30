@@ -9,6 +9,10 @@ import argparse
 from pathlib import Path
 from typing import Dict, Any, List, Optional, Set, Tuple
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    import pathspec
+
 # Import internal workers
 from . import (
     load_config_files,
@@ -45,13 +49,13 @@ def process_pcode_task_dir(
     logger.info(f"  [Cấu hình áp dụng]")
     logger.info(f"    - Extensions: {sorted(list(ext_filter_set))}")
     logger.info(f"    - Ignore (từ config/CLI+Git): {len(ignore_spec.patterns if ignore_spec else [])} quy tắc")
-    # (Chúng ta có thể làm báo cáo rõ ràng hơn nếu cần, nhưng tạm thời giữ gọn)
     
     # 3. Quét file
+    # SỬA: Đã đổi 'ignore_list=None' thành 'ignore_spec=ignore_spec'
     files_to_pack = scan_files(
          logger=logger,
          start_path=scan_dir, 
-         ignore_list=None, # Đã nằm trong ignore_spec
+         ignore_spec=ignore_spec, # <-- ĐÃ SỬA
          ext_filter_set=ext_filter_set,
          submodule_paths=submodule_paths,
          scan_root=scan_dir, 
