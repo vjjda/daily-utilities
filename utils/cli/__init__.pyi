@@ -4,15 +4,19 @@
 from typing import Any, List, Optional, Set, Dict, Union
 from pathlib import Path
 
+ScanTask: Any
 handle_config_init_request: Any
 handle_project_root_validation: Any
 launch_editor: Any
 prompt_config_overwrite: Any
+resolve_scan_tasks: Any
 
 # Static declaration of exported symbols (for Pylance)
 __all__: List[str] = [
+    'ScanTask',
     'handle_config_init_request',
     'handle_project_root_validation',
     'launch_editor',
-    'prompt_config_overwrite'
+    'prompt_config_overwrite',
+    'resolve_scan_tasks'
 ]
