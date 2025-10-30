@@ -129,7 +129,6 @@ def main():
 
     # 5. Chạy Core Logic và Executor
     try:
-        # SỬA: Đổi tên biến
         results_from_core = process_no_doc_logic(
             logger=logger,
             files_to_process=files_to_process,
@@ -140,10 +139,10 @@ def main():
         
         reporting_root = Path.cwd()
         
-        # SỬA: Truyền dict kết quả vào grouped_results
+        # SỬA: Đổi tên keyword argument từ 'grouped_results' thành 'all_files_to_fix'
         execute_ndoc_action(
             logger=logger, 
-            grouped_results=results_from_core, 
+            all_files_to_fix=results_from_core, 
             dry_run=args.dry_run, 
             force=args.force,
             scan_root=reporting_root,
