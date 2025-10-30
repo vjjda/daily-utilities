@@ -1,5 +1,4 @@
 # Path: modules/stubgen/stubgen_parser.py
-
 """
 AST (Abstract Syntax Tree) Parsing logic for the Stub Generator (sgen) module.
 (Internal module, imported by stubgen_core.py)
@@ -29,7 +28,6 @@ def extract_module_list(
 ) -> List[str]:
     """
     Trích xuất danh sách tên submodule (stems) từ file __init__.py.
-    
     Ưu tiên 1: Phân tích AST để tìm biến `ast_module_list_name` (ví dụ: 'modules_to_export').
     Ưu tiên 2 (Fallback): Liệt kê heuristic tất cả các file .py
                        trong cùng thư mục (trừ __init__.py).
@@ -65,7 +63,6 @@ def _extract_direct_symbols(tree: ast.Module) -> Set[str]:
     """
     Trích xuất (heuristic) các hằng số/types được định nghĩa
     trực tiếp trong __init__.py (ví dụ: Logger, CustomType).
-    
     Chỉ tìm các phép gán ở cấp cao nhất (trước vòng lặp/if đầu tiên)
     và có tên bắt đầu bằng chữ hoa (hoặc là 'Logger').
     """

@@ -1,5 +1,4 @@
 # Path: modules/stubgen/stubgen_executor.py
-
 """
 Execution/Action logic for the Stub Generator (sgen) module.
 (Side-effects: Báo cáo, Xác nhận người dùng, Ghi file, Git commit)
@@ -27,14 +26,12 @@ def execute_stubgen_action(
 ) -> None:
     """
     Hàm thực thi, nhận kết quả từ core, xử lý tương tác và ghi file.
-
     Luồng xử lý:
     1. Phân loại file (create, overwrite, no_change) bằng cách đọc I/O.
     2. Báo cáo cho người dùng.
     3. Hỏi xác nhận (nếu `force=False`).
     4. Ghi file (I/O Ghi).
     5. Tự động `git add` và `git commit` các file đã thay đổi.
-
     Args:
         logger: Logger.
         results: Danh sách StubResult từ core.

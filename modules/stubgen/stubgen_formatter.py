@@ -18,7 +18,6 @@ def format_stub_content(
 ) -> str:
     """
     Tạo nội dung (string) cho file .pyi.
-    
     Args:
         init_path: Đường dẫn đến file __init__.py nguồn.
         project_root: Gốc dự án (để tính đường dẫn tương đối).

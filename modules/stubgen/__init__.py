@@ -1,8 +1,6 @@
 # Path: modules/stubgen/__init__.py
-
 """
 Module Gateway (Facade) for stubgen.
-
 Tự động export tất cả các thành phần public (`__all__`) 
 từ các submodule bên trong.
 """
