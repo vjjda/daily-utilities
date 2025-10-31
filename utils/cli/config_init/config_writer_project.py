@@ -7,7 +7,7 @@ import sys
 try:
     import tomlkit
     from tomlkit.exceptions import ParseError, ConvertError
-    # Import các kiểu cụ thể
+
     from tomlkit.items import Table, Item
     from tomlkit.toml_document import TOMLDocument
 except ImportError:
@@ -30,17 +30,13 @@ def write_project_config_section(
     config_section_name: str,
     new_section_content_string: str,
 ) -> Optional[Path]:
-    """
-    Ghi/cập nhật một section vào file .project.toml, 
-    bảo toàn comment và cấu trúc.
-    """
 
     if tomlkit is None:
         raise ImportError("Thư viện 'tomlkit' không được cài đặt.")
 
     should_write = True
     try:
-        # 1. Tải file .project.toml hiện có (nếu có)
+
         content = (
             config_file_path.read_text(encoding="utf-8")
             if config_file_path.exists()
@@ -48,23 +44,21 @@ def write_project_config_section(
         )
         main_doc: TOMLDocument = tomlkit.parse(content)
 
-        # 2. Phân tích nội dung mới (từ template)
         try:
-            parsed_template_doc: TOMLDocument = tomlkit.parse(new_section_content_string)
+            parsed_template_doc: TOMLDocument = tomlkit.parse(
+                new_section_content_string
+            )
             if config_section_name not in parsed_template_doc:
                 raise ValueError(
                     f"Generated content unexpectedly missing section [{config_section_name}] after parsing."
                 )
-            
-            # SỬA: Lấy Table object (Item) từ template, *KHÔNG unwrap*
-            # new_section_table giờ đây là một tomlkit.Table, không phải dict
-            new_section_table: Table = parsed_template_doc[config_section_name] # type: ignore
-            
+
+            new_section_table: Table = parsed_template_doc[config_section_name]  # type: ignore
+
         except (ParseError, ValueError, Exception) as e:
             logger.error(f"❌ Lỗi khi phân tích nội dung section đã tạo: {e}")
             raise
 
-        # 3. Kiểm tra ghi đè
         section_existed = config_section_name in main_doc
         if section_existed:
             should_write = prompt_config_overwrite(
@@ -74,31 +68,24 @@ def write_project_config_section(
         if should_write is None:
             return None
 
-        # 4. SỬA LOGIC: Gán (Assign) thay vì Thêm (Add)
         if should_write:
             if not section_existed:
-                # --- TRƯỜNG HỢP 1: Section MỚI ---
+
                 logger.debug(f"Section [{config_section_name}] mới. Thêm vào file.")
-                main_doc.add(tomlkit.nl()) # Thêm dòng mới
+                main_doc.add(tomlkit.nl())
                 main_doc.add(tomlkit.comment("--- (Section được tạo/cập nhật) ---"))
-                # SỬA: Dùng phép gán key-value để thêm Table (với comment)
+
                 main_doc[config_section_name] = new_section_table
             else:
-                # --- TRƯỜNG HỢP 2: Section ĐÃ TỒN TẠI (Merge) ---
-                logger.debug(f"Section [{config_section_name}] đã tồn tại. Đang merge key...")
-                
-                existing_section_table: Table = main_doc[config_section_name] # type: ignore
-                
-                # SỬA: Lặp qua các key trong Table MỚI (từ template)
-                for key in new_section_table.keys(): 
-                    # SỬA: Lấy Item (value + trivia/comment) từ template
-                    new_item: Item = new_section_table.item(key) # type: ignore
-                    
-                    # SỬA: Gán đè/thêm Item (value + comment) vào Bảng CŨ
-                    # (Đây là logic đúng để bảo toàn comment)
-                    existing_section_table[key] = new_item 
+                # --- SỬA LỖI ---
+                # Logic cũ (bị lỗi) là merge từng key, làm mất comment.
+                # Logic mới là thay thế TOÀN BỘ section.
+                logger.debug(
+                    f"Section [{config_section_name}] đã tồn tại. Đang ghi đè (Overwrite)..."
+                )
+                main_doc[config_section_name] = new_section_table
+                # --- KẾT THÚC SỬA LỖI ---
 
-            # 5. Ghi file
             with config_file_path.open("w", encoding="utf-8") as f:
                 tomlkit.dump(main_doc, f)
 
