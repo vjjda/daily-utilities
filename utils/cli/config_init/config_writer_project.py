@@ -7,14 +7,12 @@ import sys
 try:
     import tomlkit
     from tomlkit.exceptions import ParseError, ConvertError
-    # SỬA: Import các kiểu cụ thể
     from tomlkit.items import Table, Item
     from tomlkit.toml_document import TOMLDocument
 except ImportError:
     tomlkit = None
     ParseError = Exception
     ConvertError = Exception
-    # SỬA: Tạo type stubs
     Table = Dict[str, Any]
     Item = Any
     TOMLDocument = Dict[str, Any]
@@ -56,7 +54,6 @@ def write_project_config_section(
                 raise ValueError(
                     f"Generated content unexpectedly missing section [{config_section_name}] after parsing."
                 )
-            # SỬA: Lấy Item (bao gồm Table và trivia)
             new_section_item: Item = parsed_template_doc.item(config_section_name) # type: ignore
             new_section_table: Table = new_section_item.unwrap() # type: ignore
         except (ParseError, ValueError, Exception) as e:
@@ -76,26 +73,23 @@ def write_project_config_section(
         # 4. SỬA LOGIC: Merge thông minh
         if should_write:
             if not section_existed:
-                # Nếu section chưa tồn tại, thêm Item mới (giữ comment)
+                # Nếu section chưa tồn tại, thêm nó vào
                 main_doc.add(tomlkit.comment("--- (Section được tạo/cập nhật bởi bootstrap) ---"))
-                main_doc.add(new_section_item) # Thêm Item (Table + trivia)
+                
+                # SỬA: Dùng phép gán key-value, không dùng .add(item)
+                # Dòng .add(new_section_item) đã gây lỗi
+                main_doc[config_section_name] = new_section_table 
             else:
                 # Nếu section đã tồn tại, merge từng key một
-                # SỬA: Lấy Item (Table) CŨ
                 existing_section_item: Item = main_doc.item(config_section_name) # type: ignore
                 existing_section_table: Table = existing_section_item.unwrap() # type: ignore
                 
-                # SỬA: Lặp qua các key trong Table MỚI
-                for key in new_section_table.keys(): # .keys() là đúng cho Table (dict-like)
-                    # Lấy Item MỚI (từ Table MỚI)
+                for key in new_section_table.keys(): 
                     new_item: Item = new_section_table.item(key) # type: ignore
                     
-                    # Gán giá trị (value) vào Table CŨ
                     existing_section_table[key] = new_item.unwrap()
                     
-                    # Sao chép comment/trivia
                     if new_item and new_item.trivia.comment:
-                        # Lấy Item CŨ (từ Table CŨ)
                         item_in_doc: Item = existing_section_table.item(key) # type: ignore
                         item_in_doc.trivia.comment = new_item.trivia.comment
                         item_in_doc.trivia.indent = new_item.trivia.indent
@@ -113,6 +107,7 @@ def write_project_config_section(
         raise
     except (ParseError, ConvertError, Exception) as e:
         logger.error(f"❌ Lỗi không mong muốn khi cập nhật TOML (tomlkit): {e}")
-        raise
+        # SỬA: Ném lại lỗi gốc để traceback rõ ràng hơn
+        raise e
 
     return config_file_path
