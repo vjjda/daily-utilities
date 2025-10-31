@@ -20,7 +20,7 @@ from utils.core import (
 from ..pack_code_config import (
     DEFAULT_EXTENSIONS,
     DEFAULT_IGNORE,
-    DEFAULT_INCLUDE,  # Đảm bảo đã thêm dòng này
+    DEFAULT_INCLUDE,
     DEFAULT_CLEAN_EXTENSIONS,
     DEFAULT_OUTPUT_DIR,
     DEFAULT_FORMAT_EXTENSIONS,
@@ -37,7 +37,7 @@ def resolve_filters(
 ) -> Tuple[
     Set[str],
     Optional["pathspec.PathSpec"],
-    Optional["pathspec.PathSpec"],  # Kiểu trả về (tuple) phải có 6 mục
+    Optional["pathspec.PathSpec"],
     Set[Path],
     Set[str],
     Set[str],
@@ -73,7 +73,6 @@ def resolve_filters(
         f"Tổng cộng {len(all_ignore_patterns_list)} quy tắc ignore đã biên dịch cho gốc {scan_root.name}."
     )
 
-    # --- LOGIC CHO INCLUDE ---
     default_include_set = DEFAULT_INCLUDE if DEFAULT_INCLUDE is not None else set()
     final_include_list = resolve_config_list(
         cli_str_value=cli_args.get("include"),
@@ -85,7 +84,6 @@ def resolve_filters(
         logger.debug(
             f"Set 'include' cuối cùng (để lọc): {sorted(list(final_include_list))}"
         )
-    # --- KẾT THÚC LOGIC INCLUDE ---
 
     submodule_paths = get_submodule_paths(scan_root, logger)
 
@@ -120,17 +118,14 @@ def resolve_filters(
         f"Set 'format_extensions' cuối cùng (để định dạng): {sorted(list(format_extensions_set))}"
     )
 
-    # --- SỬA LỖI (QUAN TRỌNG) ---
-    # Đảm bảo bạn trả về 6 giá trị
     return (
         ext_filter_set,
         ignore_spec,
-        include_spec,  # <-- Giá trị thứ 3
+        include_spec,
         submodule_paths,
         clean_extensions_set,
         format_extensions_set,
     )
-    # --- KẾT THÚC SỬA LỖI ---
 
 
 def resolve_output_path(

@@ -1,3 +1,4 @@
+# Path: modules/pack_code/pack_code_internal/pack_code_task_file.py
 import logging
 import argparse
 from pathlib import Path
@@ -43,9 +44,7 @@ def process_pack_code_task_file(
         logger,
         file_path,
         ignore_spec,
-        # --- SỬA LỖI ---
-        include_spec, # Thêm tham số còn thiếu (vị trí thứ 4)
-        # --- KẾT THÚC SỬA LỖI ---
+        include_spec,
         ext_filter_set,
         submodule_paths,
         scan_dir,

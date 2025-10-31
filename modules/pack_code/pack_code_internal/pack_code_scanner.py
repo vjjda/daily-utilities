@@ -15,7 +15,7 @@ def scan_files(
     logger: logging.Logger,
     start_path: Path,
     ignore_spec: Optional["pathspec.PathSpec"],
-    include_spec: Optional["pathspec.PathSpec"],  # <-- THÊM THAM SỐ
+    include_spec: Optional["pathspec.PathSpec"],
     ext_filter_set: Set[str],
     submodule_paths: Set[Path],
     scan_root: Path,
@@ -42,8 +42,8 @@ def scan_files(
     ignored_count = 0
     ext_mismatch_count = 0
     submodule_skip_count = 0
-    include_mismatch_count = 0  # <-- THÊM COUNTER
-    
+    include_mismatch_count = 0
+
     for file_path in all_files:
         processed_count += 1
         if file_path.is_dir():
@@ -94,7 +94,7 @@ def scan_files(
 
     logger.debug(f"Quét hoàn tất: Đã xử lý {processed_count} mục.")
     logger.debug(f" -> Bỏ qua (quy tắc ignore): {ignored_count}")
-    logger.debug(f" -> Bỏ qua (không khớp include): {include_mismatch_count}")  # <-- THÊM LOGGING
+    logger.debug(f" -> Bỏ qua (không khớp include): {include_mismatch_count}")
     logger.debug(f" -> Bỏ qua (submodule): {submodule_skip_count}")
     logger.debug(f" -> Bỏ qua (extension): {ext_mismatch_count}")
     logger.debug(f" -> File hợp lệ: {len(files_to_pack)}")

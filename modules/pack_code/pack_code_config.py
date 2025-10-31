@@ -20,7 +20,7 @@ DEFAULT_EXTENSIONS: Final[str] = (
     "md,py,txt,json,xml,yaml,yml,ini,cfg,cfg.py,sh,bash,zsh,toml,template"
 )
 DEFAULT_IGNORE: Final[str] = ".venv,venv,__pycache__,.git,.hg,.svn,.DS_Store"
-DEFAULT_INCLUDE: Final[Optional[Set[str]]] = None  # <-- THÊM DÒNG NÀY
+DEFAULT_INCLUDE: Final[Optional[Set[str]]] = None
 DEFAULT_OUTPUT_DIR: Final[str] = "~/Documents/code.context"
 
 DEFAULT_CLEAN_EXTENSIONS: Final[Set[str]] = {"py", "zsh", "sh"}
