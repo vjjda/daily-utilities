@@ -1,3 +1,4 @@
+# Path: scripts/pack_code.py
 import sys
 import argparse
 import logging
@@ -69,10 +70,6 @@ def main():
         help="Chỉ định file output. Mặc định: tự động tạo trong 'output_dir'.",
     )
     pack_group.add_argument(
-        # --- SỬA LỖI ---
-        # Loại bỏ cờ ngắn "-S"
-        # "-S",
-        # --- KẾT THÚC SỬA LỖI ---
         "--stdout",
         action="store_true",
         help="In kết quả ra màn hình (stdout) thay vì ghi vào file.",
@@ -188,9 +185,7 @@ def main():
         logger.warning("Không tìm thấy đường dẫn hợp lệ nào để quét. Đã dừng.")
         sys.exit(0)
 
-    reporting_root = resolve_reporting_root(
-        logger, validated_paths, cli_root_arg=None
-    )
+    reporting_root = resolve_reporting_root(logger, validated_paths, cli_root_arg=None)
 
     files_to_process: List[Path] = []
     dirs_to_scan: List[Path] = []

@@ -63,14 +63,10 @@ def main():
     )
 
     pack_group.add_argument(
-        # --- SỬA LỖI 1 ---
-        # Đổi cờ format sang -b / --beautify
         "-b",
         "--beautify",
-        # Đảm bảo action="store_true" và dest="format" để logic core vẫn hoạt động
         action="store_true",
-        dest="format", 
-        # --- KẾT THÚC SỬA LỖI 1 ---
+        dest="format",
         help="Định dạng (format) code SAU KHI làm sạch (ví dụ: chạy Black cho .py).",
     )
     pack_group.add_argument(
@@ -94,10 +90,7 @@ def main():
         help="Danh sách pattern (giống .gitignore) để bỏ qua khi quét (THÊM vào config).",
     )
     pack_group.add_argument(
-        # --- SỬA LỖI 2 ---
-        # Đổi -F thành -f
         "-f",
-        # --- KẾT THÚC SỬA LỖI 2 ---
         "--force",
         action="store_true",
         help="Ghi đè file mà không hỏi xác nhận (chỉ áp dụng ở chế độ fix).",
@@ -119,10 +112,6 @@ def main():
     )
 
     args = parser.parse_args()
-    
-    # Đảm bảo logic core vẫn nhận đúng cờ 'format'
-    # Nếu bạn dùng dest="beautify" thì phải sửa cả logic core
-    # print(args) # Debug để xem args.format có được set không
 
     logger = setup_logging(script_name="Ndoc")
     logger.debug("Ndoc script started.")
