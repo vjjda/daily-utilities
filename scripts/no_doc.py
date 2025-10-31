@@ -19,7 +19,6 @@ try:
         DEFAULT_START_PATH,
         DEFAULT_EXTENSIONS,
         DEFAULT_IGNORE,
-        # SỬA: Thêm config format
         DEFAULT_FORMAT_EXTENSIONS,
         CONFIG_FILENAME,
         PROJECT_CONFIG_FILENAME,
@@ -36,7 +35,6 @@ TEMPLATE_FILENAME: Final[str] = "no_doc.toml.template"
 NDOC_DEFAULTS: Final[Dict[str, Any]] = {
     "extensions": sorted(list(DEFAULT_EXTENSIONS)),
     "ignore": sorted(list(DEFAULT_IGNORE)),
-    # SỬA: Thêm config format
     "format_extensions": sorted(list(DEFAULT_FORMAT_EXTENSIONS)),
 }
 
@@ -63,7 +61,7 @@ def main():
         action="store_true",
         help="Loại bỏ cả docstring và tất cả comments (#) khỏi file (ngoại trừ shebang).",
     )
-    # SỬA: Thêm cờ -f/--format
+
     pack_group.add_argument(
         "-f",
         "--format",
@@ -91,15 +89,14 @@ def main():
         help="Danh sách pattern (giống .gitignore) để bỏ qua khi quét (THÊM vào config).",
     )
     pack_group.add_argument(
-        # (Đổi tên cờ từ pcode, dùng -F (Force) thay vì -f)
-        "-F", 
+        "-F",
         "--force",
         action="store_true",
         help="Ghi đè file mà không hỏi xác nhận (chỉ áp dụng ở chế độ fix).",
     )
 
     config_group = parser.add_argument_group("Khởi tạo Cấu hình (chạy riêng)")
-    # ... (không đổi) ...
+
     config_group.add_argument(
         "-c",
         "--config-project",
@@ -112,7 +109,7 @@ def main():
         action="store_true",
         help=f"Khởi tạo/cập nhật file {CONFIG_FILENAME} (scope 'local').",
     )
-    
+
     args = parser.parse_args()
 
     logger = setup_logging(script_name="Ndoc")
@@ -160,7 +157,7 @@ def main():
             logger=logger,
             files_to_process=files_to_process,
             dirs_to_scan=dirs_to_scan,
-            cli_args=args, # SỬA: args giờ chứa cờ .format
+            cli_args=args,
             script_file_path=THIS_SCRIPT_PATH,
         )
 
@@ -170,8 +167,9 @@ def main():
             logger=logger,
             all_files_to_fix=results_from_core,
             dry_run=args.dry_run,
-            force=args.force, # SỬA: Đổi tên cờ thành -F
+            force=args.force,
             scan_root=reporting_root,
+            git_warning_str="",
         )
     except Exception as e:
         logger.error(f"❌ Đã xảy ra lỗi không mong muốn: {e}")
