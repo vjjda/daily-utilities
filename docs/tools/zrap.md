@@ -68,7 +68,7 @@ zrap <script_path> [options]
 
   - (Tùy chọn) Ghi đè file output nếu nó đã tồn tại.
 
------
+---
 
 ## Ví dụ (Examples)
 
