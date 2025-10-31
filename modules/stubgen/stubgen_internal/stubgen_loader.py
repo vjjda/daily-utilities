@@ -42,7 +42,8 @@ def load_config_files(start_dir: Path, logger: logging.Logger) -> Dict[str, Any]
 def _is_dynamic_gateway(path: Path, dynamic_import_indicators: List[str]) -> bool:
     try:
         content = path.read_text(encoding="utf-8")
-        return all(indicator in content for indicator in dynamic_import_indicators)
+        # Thay đổi all() thành any()
+        return any(indicator in content for indicator in dynamic_import_indicators)
     except Exception:
         return False
 
