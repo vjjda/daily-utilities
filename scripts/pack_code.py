@@ -16,13 +16,14 @@ sys.path.append(str(PROJECT_ROOT))
 
 try:
     from utils.logging_config import setup_logging, log_success
-    # SỬA: Import 'resolve_reporting_root'
     from utils.cli import handle_config_init_request, resolve_input_paths, resolve_reporting_root
     from utils.core import parse_comma_list
     from modules.pack_code.pack_code_config import (
         DEFAULT_START_PATH, DEFAULT_EXTENSIONS, DEFAULT_IGNORE,
         DEFAULT_CLEAN_EXTENSIONS, DEFAULT_OUTPUT_DIR,
         PROJECT_CONFIG_FILENAME, CONFIG_FILENAME, CONFIG_SECTION_NAME,
+        # SỬA: Thêm config format
+        DEFAULT_FORMAT_EXTENSIONS
     )
     from modules.pack_code import (
         process_pack_code_logic,
@@ -39,6 +40,8 @@ PCODE_DEFAULTS: Final[Dict[str, Any]] = {
     "extensions": list(parse_comma_list(DEFAULT_EXTENSIONS)),
     "ignore": list(parse_comma_list(DEFAULT_IGNORE)),
     "clean_extensions": sorted(list(DEFAULT_CLEAN_EXTENSIONS)),
+    # SỬA: Thêm config format
+    "format_extensions": sorted(list(DEFAULT_FORMAT_EXTENSIONS)),
 }
 
 
@@ -57,7 +60,6 @@ def main():
         default=[],
         help='Các đường dẫn (file hoặc thư mục) để quét. Mặc định: ".".',
     )
-    # SỬA: Thêm cờ --root
     pack_group.add_argument(
         "-r",
         "--root",
@@ -65,7 +67,6 @@ def main():
         default=None,
         help="Đường dẫn gốc (Project Root) tường minh để tính toán '# Path:'.\nMặc định: Tự động tìm gốc Git từ các đường dẫn đầu vào.",
     )
-    # ... (các cờ -o, -a, -e, -x, -I, -N, -d, --stdout, --no-header, --no-tree, --copy không đổi) ...
     pack_group.add_argument(
         "-o",
         "--output",
@@ -78,6 +79,13 @@ def main():
         "--all-clean",
         action="store_true",
         help="Làm sạch (xóa docstring/comment) nội dung của các file có đuôi trong 'clean_extensions' trước khi đóng gói.",
+    )
+    # SỬA: Thêm cờ -f/--format
+    pack_group.add_argument(
+        "-f",
+        "--format",
+        action="store_true",
+        help="Định dạng (format) nội dung của các file có đuôi trong 'format_extensions' (ví dụ: chạy Black cho .py).",
     )
     pack_group.add_argument(
         "-e",
@@ -93,6 +101,7 @@ def main():
         default=None,
         help="Chỉ định/sửa đổi danh sách đuôi file cần làm sạch KHI -a được bật (vd: 'py,js'). Hỗ trợ +/-/~.",
     )
+    # (Tạm thời chưa thêm -X/--format-extensions để giữ đơn giản, sẽ dùng config)
     pack_group.add_argument(
         "-I",
         "--ignore",
@@ -173,8 +182,6 @@ def main():
         logger.error(f"❌ Đã xảy ra lỗi khi khởi tạo config: {e}")
         logger.debug("Traceback:", exc_info=True)
         sys.exit(1)
-
-    # --- SỬA: Logic xử lý đa đầu vào VÀ --root ---
     
     # 1. Resolve tất cả đường dẫn
     validated_paths: List[Path] = resolve_input_paths(
@@ -186,11 +193,11 @@ def main():
         logger.warning("Không tìm thấy đường dẫn hợp lệ nào để quét. Đã dừng.")
         sys.exit(0)
 
-    # 2. SỬA: Gọi tiện ích mới
+    # 2. Xác định Gốc Báo Cáo
     reporting_root = resolve_reporting_root(
         logger, 
         validated_paths, 
-        args.root # Truyền giá trị từ cờ -r/--root
+        args.root 
     )
 
     # 3. Phân loại file/thư mục
@@ -201,7 +208,6 @@ def main():
     output_path_obj = Path(args.output).expanduser() if args.output else None
     
     cli_args_dict = {
-        # (Đã loại bỏ 'start_path')
         "output": output_path_obj,
         "stdout": args.stdout,
         "extensions": args.extensions,
@@ -213,18 +219,19 @@ def main():
         "copy_to_clipboard": args.copy_to_clipboard,
         "all_clean": args.all_clean,
         "clean_extensions": args.clean_extensions,
-        # (Không cần truyền 'root' vì nó đã được xử lý)
+        # SỬA: Thêm cờ format
+        "format": args.format,
     }
 
     try:
-        # 5. Gọi Core với logic mới
+        # 5. Gọi Core
         result = process_pack_code_logic(
             logger=logger,
             cli_args=cli_args_dict,
             files_to_process=files_to_process,
             dirs_to_scan=dirs_to_scan,
-            reporting_root=reporting_root, # Truyền gốc báo cáo
-            script_file_path=PROJECT_ROOT / "scripts" / "pack_code.py"
+            reporting_root=reporting_root,
+            script_file_path=THIS_SCRIPT_PATH # SỬA: Dùng THIS_SCRIPT_PATH
         )
         if result:
             execute_pack_code_action(logger=logger, result=result)
