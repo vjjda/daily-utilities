@@ -4,7 +4,7 @@
 # Cài đặt Black tiêu chuẩn để thống nhất
 line-length = 88
 # Sử dụng cùng phiên bản target với pyright để nhất quán 
-target-version = ['py314'] 
+target-version = ['py313'] 
 include = '\.pyi?$'
 exclude = '''
 /(
