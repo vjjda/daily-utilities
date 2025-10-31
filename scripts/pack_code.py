@@ -23,6 +23,7 @@ try:
         DEFAULT_START_PATH,
         DEFAULT_EXTENSIONS,
         DEFAULT_IGNORE,
+        DEFAULT_INCLUDE,
         DEFAULT_CLEAN_EXTENSIONS,
         DEFAULT_FORMAT_EXTENSIONS,
         DEFAULT_OUTPUT_DIR,
@@ -42,6 +43,7 @@ PCODE_DEFAULTS: Final[Dict[str, Any]] = {
     "output_dir": DEFAULT_OUTPUT_DIR,
     "extensions": sorted(list(parse_comma_list(DEFAULT_EXTENSIONS))),
     "ignore": sorted(list(parse_comma_list(DEFAULT_IGNORE))),
+    "include": sorted(list(DEFAULT_INCLUDE)) if DEFAULT_INCLUDE else [],  # <-- THÊM DÒNG NÀY
     "clean_extensions": sorted(list(DEFAULT_CLEAN_EXTENSIONS)),
     "format_extensions": sorted(list(DEFAULT_FORMAT_EXTENSIONS)),
 }
@@ -82,6 +84,13 @@ def main():
         type=str,
         default=None,
         help="Danh sách pattern (giống .gitignore) để BỎ QUA (THÊM vào config).",
+    )
+    pack_group.add_argument(
+        "-i",
+        "--include",
+        type=str,
+        default=None,
+        help="Bộ lọc dương (inclusion filter). CHỈ giữ lại file/thư mục khớp (THÊM vào config).",
     )
     pack_group.add_argument(
         "-N",

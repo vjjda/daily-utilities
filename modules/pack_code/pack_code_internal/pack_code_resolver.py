@@ -20,6 +20,7 @@ from utils.core import (
 from ..pack_code_config import (
     DEFAULT_EXTENSIONS,
     DEFAULT_IGNORE,
+    DEFAULT_INCLUDE,  # <-- THÊM DÒNG NÀY
     DEFAULT_CLEAN_EXTENSIONS,
     DEFAULT_OUTPUT_DIR,
     DEFAULT_FORMAT_EXTENSIONS,
@@ -64,6 +65,20 @@ def resolve_filters(
     logger.debug(
         f"Tổng cộng {len(all_ignore_patterns_list)} quy tắc ignore đã biên dịch cho gốc {scan_root.name}."
     )
+
+    # --- THÊM LOGIC MỚI CHO INCLUDE ---
+    default_include_set = DEFAULT_INCLUDE if DEFAULT_INCLUDE is not None else set()
+    final_include_list = resolve_config_list(
+        cli_str_value=cli_args.get("include"),
+        file_list_value=file_config.get("include"),
+        default_set_value=default_include_set,
+    )
+    include_spec = compile_spec_from_patterns(final_include_list, scan_root)
+    if final_include_list:
+        logger.debug(
+            f"Set 'include' cuối cùng (để lọc): {sorted(list(final_include_list))}"
+        )
+    # --- KẾT THÚC LOGIC MỚI ---
 
     submodule_paths = get_submodule_paths(scan_root, logger)
 

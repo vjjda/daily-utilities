@@ -34,6 +34,7 @@ def process_pack_code_task_file(
     (
         ext_filter_set,
         ignore_spec,
+        include_spec,  # <-- THÊM BIẾN
         submodule_paths,
         clean_extensions_set,
         format_extensions_set,
@@ -43,6 +44,7 @@ def process_pack_code_task_file(
         logger,
         file_path,
         ignore_spec,
+        include_spec,
         ext_filter_set,
         submodule_paths,
         scan_dir,

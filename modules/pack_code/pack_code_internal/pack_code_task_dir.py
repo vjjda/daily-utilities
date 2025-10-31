@@ -32,6 +32,7 @@ def process_pack_code_task_dir(
     (
         ext_filter_set,
         ignore_spec,
+        include_spec,  # <-- THÊM BIẾN
         submodule_paths,
         clean_extensions_set,
         format_extensions_set,
@@ -42,6 +43,10 @@ def process_pack_code_task_dir(
     logger.info(
         f"    - Ignore (từ config/CLI+Git): {len(ignore_spec.patterns if ignore_spec else [])} quy tắc"
     )
+    if include_spec:
+        logger.info(
+            f"    - Include (từ config/CLI): {len(include_spec.patterns)} quy tắc"
+        )
 
     logger.info(f"    - Clean Extensions (-a): {sorted(list(clean_extensions_set))}")
     logger.info(f"    - Format Extensions (-f): {sorted(list(format_extensions_set))}")
