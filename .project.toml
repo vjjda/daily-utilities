@@ -1,3 +1,6 @@
+
+# --- (Section được tạo/cập nhật) ---
+
 [tree]
 
 # level (Optional[int]): Giới hạn độ sâu hiển thị của cây.
@@ -42,40 +45,7 @@ dirs-only = []
 # Mặc định: (Không lọc - {toml_extensions} là None)
 # extensions = 
 
-[cpath]
-
-# extensions (List[str]): Danh sách các đuôi file cần quét.
-# Ghi đè hoàn toàn danh sách mặc định của script.
-# Ví dụ: extensions = ["py", "js", "ts", "md"]
-# Mặc định: {toml_extensions}
-extensions = ["css", "js", "py", "pyi", "scss", "sh", "template.toml", "ts", "zsh"]
-
-# ignore (List[str]): Danh sách các pattern (giống .gitignore) để bỏ qua.
-# Các pattern này sẽ được NỐI VÀO danh sách mặc định của script.
-# Ví dụ: ignore = ["*.log", "temp/", "build*/"]
-# Mặc định (được thêm vào): {toml_ignore}
-ignore = [".git", ".venv", "__pycache__", "build", "dist", "node_modules", "out", "venv"]
-
-[sgen]
-
-# ignore (List[str]): Các pattern (giống .gitignore) để bỏ qua khi quét.
-# Các pattern này sẽ được NỐI VÀO danh sách mặc định của script.
-# Ví dụ: ignore = ["*_test.py", "**/legacy/*"]
-# Mặc định (được thêm vào): {toml_ignore}
-ignore = ["*.pyc", "*.pyo", ".git", ".venv", "__pycache__", "build", "dist", "node_modules", "out", "venv"]
-
-# include (List[str]): Bộ lọc dương. Chỉ xử lý các file khớp với pattern này.
-# Hoạt động sau khi đã áp dụng 'restrict' và 'ignore'.
-# Các pattern này sẽ được NỐI VÀO danh sách mặc định (thường là rỗng).
-# Ví dụ: include = ["modules/core/**", "utils/network.py"]
-# Mặc định (được thêm vào): {toml_include}
-include = []
-
-dynamic_import_indicators = ["import_module", "globals()[name]", "globals()[name] = obj"]
-
-ast_module_list_name = "modules_to_export"
-
-ast_all_list_name = "__all__"
+# --- (Section được tạo/cập nhật) ---
 
 [pcode]
 
@@ -84,28 +54,13 @@ output_dir = "~/Documents/code.context"
 # Danh sách các đuôi file (extensions) cần bao gồm.
 # Bất kỳ giá trị nào ở đây sẽ GHI ĐÈ hoàn toàn danh sách mặc định.
 # (CLI: -e "py,md" / +e "ts" / ~e "log")
-extensions = ["md", "cfg.py", "bash", "zsh", "txt", "ini", "template", "xml", "cfg", "py", "sh", "yaml", "toml", "yml", "json"]
+extensions = ["sh", "bash", "xml", "yml", "toml", "yaml", "json", "cfg", "py", "md", "template", "cfg.py", "ini", "zsh", "txt"]
 
 # Danh sách các pattern (kiểu .gitignore) để bỏ qua.
 # Các giá trị này sẽ được THÊM vào danh sách mặc định.
 # (CLI: -I "*.log,build/")
-ignore = [".git", ".hg", "venv", "__pycache__", ".DS_Store", ".venv", ".svn"]
+ignore = ["venv", ".hg", ".git", ".venv", "__pycache__", ".svn", ".DS_Store"]
 
 clean_extensions = ["py", "sh", "zsh"]
-
-format_extensions = ["py"]
-
-[ndoc]
-
-# extensions (List[str]): Danh sách các đuôi file cần bao gồm.
-# GHI ĐÈ hoàn toàn danh sách mặc định CỦA SCRIPT.
-# Ví dụ: extensions = ["py", "pycst"]
-# Mặc định (từ config set): {toml_extensions} # Placeholder vẫn là list
-extensions = ["py"]
-
-# ignore (List[str]): Danh sách các pattern (kiểu .gitignore) để bỏ qua.
-# Các giá trị này sẽ được THÊM vào danh sách mặc định.
-# Ví dụ: ignore = ["**/tests/*"] # Placeholder vẫn là list
-ignore = [".DS_Store", ".git", ".hg", ".svn", ".venv", "__pycache__", "build", "dist", "node_modules", "out", "venv"]
 
 format_extensions = ["py"]
