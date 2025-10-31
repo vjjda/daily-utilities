@@ -73,7 +73,6 @@ def write_project_config_section(
 
                 logger.debug(f"Section [{config_section_name}] mới. Thêm vào file.")
                 main_doc.add(tomlkit.nl())
-                main_doc.add(tomlkit.comment("--- (Section được tạo/cập nhật) ---"))
 
                 main_doc[config_section_name] = new_section_table
             else:
