@@ -105,6 +105,26 @@ def main():
         help="Chế độ chạy thử. Chỉ hiển thị cây thư mục và danh sách file, không đọc/ghi nội dung.",
     )
     pack_group.add_argument(
+        "-a",
+        "--all-clean",
+        action="store_true",
+        help="Làm sạch nội dung (xóa docstring/comment) của các file trong 'clean_extensions'.",
+    )
+    pack_group.add_argument(
+        "-x",
+        "--clean-extensions",
+        type=str,
+        default=None,
+        help="Ghi đè/sửa đổi danh sách đuôi file cần LÀM SẠCH (khi -a được bật). Hỗ trợ + và ~.",
+    )
+    pack_group.add_argument(
+        "-b",
+        "--beautify",
+        action="store_true",
+        dest="format",
+        help="Định dạng (format) code TRƯỚC KHI đóng gói (ví dụ: chạy Black cho .py).",
+    )
+    pack_group.add_argument(
         "--stdout",
         action="store_true",
         help="In kết quả ra màn hình (stdout) thay vì ghi vào file.",
@@ -124,26 +144,6 @@ def main():
         action="store_true",
         dest="copy_to_clipboard",
         help="Tự động sao chép ĐƯỜNG DẪN file output vào clipboard.",
-    )
-    pack_group.add_argument(
-        "-a",
-        "--all-clean",
-        action="store_true",
-        help="Làm sạch nội dung (xóa docstring/comment) của các file trong 'clean_extensions'.",
-    )
-    pack_group.add_argument(
-        "-x",
-        "--clean-extensions",
-        type=str,
-        default=None,
-        help="Ghi đè/sửa đổi danh sách đuôi file cần LÀM SẠCH (khi -a được bật). Hỗ trợ + và ~.",
-    )
-    pack_group.add_argument(
-        "-b",
-        "--beautify",
-        action="store_true",
-        dest="format",
-        help="Định dạng (format) code TRƯỚC KHI đóng gói (ví dụ: chạy Black cho .py).",
     )
 
     config_group = parser.add_argument_group("Khởi tạo Cấu hình (chạy riêng)")
