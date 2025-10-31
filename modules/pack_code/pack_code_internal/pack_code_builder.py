@@ -31,12 +31,21 @@ def assemble_packed_content(
             rel_path_str = result["rel_path"]
 
             if not no_header:
-                header = f"===== Path: {rel_path_str} ====="
-                final_content_lines.append(header)
+                # --- SỬA LỖI ---
+                # Thay thế separator cũ bằng cặp Start/End
+                start_header = f"[START_FILE_CONTENT: {rel_path_str}]"
+                end_header = f"[END_FILE_CONTENT: {rel_path_str}]"
+                
+                final_content_lines.append(start_header)
+                final_content_lines.append(content)
+                final_content_lines.append(end_header)
+                final_content_lines.append("\n") # Thêm dòng trống để tách biệt
+                # --- KẾT THÚC SỬA LỖI ---
+            else:
+                # Logic cũ khi --no-header
+                final_content_lines.append(content)
 
-            final_content_lines.append(content)
 
-            if not no_header:
-                final_content_lines.append("\n")
-
-    return "\n".join(final_content_lines)
+    # Đảm bảo file cuối cùng không có 2 dòng trống
+    final_content = "\n".join(final_content_lines)
+    return final_content.rstrip() + "\n"
