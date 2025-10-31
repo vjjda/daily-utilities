@@ -26,15 +26,15 @@ def generate_config_content(
         raise ImportError("Thư viện 'tomlkit' không được cài đặt.")
 
     template_path = module_dir / template_filename
-    template_lines = load_text_template(template_path, logger).splitlines()
+    template_lines = load_text_template(template_path, logger).splitlines() 
 
     output_lines: List[str] = []
 
     output_lines.append(f"[{config_section_name}]")
     output_lines.append("")
 
-    key_line_pattern = re.compile(r"^(\s*)(#?\s*)([\w-]+)(\s*=.*?)?\s*(#.*)?$")
-    placeholder_pattern = re.compile(r"\{toml_(\w+)\}")
+    key_line_pattern = re.compile(r"^(\s*)(#?\s*)([\w-]+)(\s*=.*?)?\s*(#.*)?$") 
+    placeholder_pattern = re.compile(r"\{toml_(\w+)\}") 
 
     key_comments: Dict[str, str] = {}
     current_key_comment = ""
@@ -47,7 +47,7 @@ def generate_config_content(
         ):
             in_section = True
             continue
-        if in_section and stripped_line.startswith("[") and stripped_line.endswith("]"):
+        if in_section and stripped_line.startswith("[") and stripped_line.endswith("]"): 
             in_section = False
             break
         if not in_section:
@@ -56,48 +56,44 @@ def generate_config_content(
         if stripped_line.startswith("#"):
             current_key_comment = (
                 f"{current_key_comment}\n{line}" if current_key_comment else line
-            )
+            ) 
             continue
 
         match = key_line_pattern.match(line)
         if match:
             key_name = match.group(3)
             if current_key_comment:
-                placeholder_suffix_in_val = ""
-                equals_part = match.group(4) or ""
-                placeholder_match = placeholder_pattern.search(equals_part)
-                if placeholder_match:
-                    placeholder_suffix_in_val = placeholder_match.group(1).replace(
-                        "_", "-"
-                    )
-                if key_name == placeholder_suffix_in_val or not placeholder_match:
-                    key_comments[key_name] = current_key_comment.strip()
+                # --- SỬA LỖI ---
+                # Xóa logic kiểm tra placeholder [cite: 718, 719]
+                # Chỉ cần gán comment đã buffer cho key tìm thấy.
+                key_comments[key_name] = current_key_comment.strip()
+                # --- KẾT THÚC SỬA LỖI ---
 
-            current_key_comment = ""
+            current_key_comment = "" 
 
             trailing_comment = match.group(5)
             if trailing_comment:
-                existing_comment = key_comments.get(key_name, "")
+                existing_comment = key_comments.get(key_name, "") 
 
                 separator = " " if existing_comment else ""
                 key_comments[key_name] = (
                     f"{existing_comment}{separator}{trailing_comment.strip()}"
-                )
+                ) 
 
         elif stripped_line == "":
             if current_key_comment:
-                current_key_comment += "\n"
+                current_key_comment += "\n" 
         else:
-            current_key_comment = ""
+            current_key_comment = "" 
 
-    for key, value in effective_defaults.items():
+    for key, value in effective_defaults.items(): 
 
         if key in key_comments:
             output_lines.append(key_comments[key])
 
         if value is not None:
             value_str = format_value_to_toml(value)
-            output_lines.append(f"{key} = {value_str}")
+            output_lines.append(f"{key} = {value_str}") 
         else:
             output_lines.append(f"# {key} = ")
         output_lines.append("")
@@ -113,6 +109,6 @@ def generate_config_content(
     if f"[{config_section_name}]" not in final_content.splitlines()[0]:
         raise ValueError(
             f"Generated content missing section header '[{config_section_name}]'."
-        )
+        ) 
 
     return final_content
