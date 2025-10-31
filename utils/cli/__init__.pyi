@@ -9,6 +9,7 @@ handle_project_root_validation: Any
 launch_editor: Any
 prompt_config_overwrite: Any
 resolve_input_paths: Any
+resolve_reporting_root: Any
 
 # Static declaration of exported symbols (for Pylance)
 __all__: List[str] = [
@@ -17,4 +18,5 @@ __all__: List[str] = [
     "launch_editor",
     "prompt_config_overwrite",
     "resolve_input_paths",
+    "resolve_reporting_root",
 ]
