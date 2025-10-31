@@ -17,7 +17,7 @@ CONSOLE_LOG_LEVEL: Final[str] = "INFO"
 FILE_LOG_LEVEL: Final[str] = "DEBUG"
 
 
-MAX_THREAD_WORKERS: Final[int] = os.cpu_count() or 8
+MAX_THREAD_WORKERS: Final[int] = os.cpu_count() or 4
 
 
 DEFAULT_EXTENSIONS_LANG_MAP: Final[Dict[str, str]] = {
