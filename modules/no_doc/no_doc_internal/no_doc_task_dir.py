@@ -1,8 +1,10 @@
 # Path: modules/no_doc/no_doc_internal/no_doc_task_dir.py
 import logging
 import argparse
+import os
 from pathlib import Path
 from typing import Dict, Any, List, Optional, Set, Tuple
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from . import (
     load_config_files,
@@ -75,26 +77,53 @@ def process_no_doc_task_dir(
         logger.info("")
         return []
 
-    logger.info(f"  -> ⚡ Tìm thấy {len(files_in_dir)} file, đang phân tích...")
+    logger.info(f"  -> ⚡ Tìm thấy {len(files_in_dir)} file, đang phân tích (song song)...")
 
     dir_results: List[FileResult] = []
     all_clean: bool = getattr(cli_args, "all_clean", False)
 
+    # Xác định các file cần chạy (chưa được xử lý)
+    files_to_submit: List[Path] = []
     for file_path in files_in_dir:
         resolved_file = file_path.resolve()
         if resolved_file in processed_files:
             continue
-
-        result = analyze_file_for_cleaning_and_formatting(
-            file_path=file_path,
-            logger=logger,
-            all_clean=all_clean,
-            format_flag=format_flag,
-            format_extensions_set=final_format_extensions_set,
-        )
-        if result:
-            dir_results.append(result)
+        
+        # Thêm vào set *trước* khi đưa vào pool để tránh trùng lặp
         processed_files.add(resolved_file)
+        files_to_submit.append(file_path)
+
+    if not files_to_submit:
+        logger.info("  -> ✅ Tất cả file đã được xử lý (do là file input riêng lẻ).")
+    else:
+        # Sử dụng ThreadPoolExecutor để chạy song song
+        max_workers = os.cpu_count() or 4
+        logger.debug(f"Sử dụng ThreadPoolExecutor với max_workers={max_workers}")
+
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            future_to_file = {
+                executor.submit(
+                    analyze_file_for_cleaning_and_formatting,
+                    file_path,
+                    logger,
+                    all_clean,
+                    format_flag,
+                    final_format_extensions_set,
+                ): file_path
+                for file_path in files_to_submit
+            }
+
+            for future in as_completed(future_to_file):
+                file_path = future_to_file[future]
+                try:
+                    result = future.result()
+                    if result:
+                        dir_results.append(result)
+                except Exception as e:
+                    logger.error(f"❌ Lỗi khi xử lý file song song '{file_path.name}': {e}")
+    
+    # Sắp xếp kết quả để đảm bảo thứ tự báo cáo ổn định
+    dir_results.sort(key=lambda r: r["path"])
 
     if dir_results:
         print_dry_run_report_for_group(
