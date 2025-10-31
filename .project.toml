@@ -7,12 +7,14 @@ output_dir = "~/Documents/code.context"
 # Danh sách các đuôi file (extensions) cần bao gồm.
 # Bất kỳ giá trị nào ở đây sẽ GHI ĐÈ hoàn toàn danh sách mặc định.
 # (CLI: -e "py,md" / +e "ts" / ~e "log")
-extensions = ["yaml", "ini", "md", "cfg", "sh", "template", "json", "py", "cfg.py", "xml", "zsh", "txt", "toml", "yml", "bash"]
+extensions = ["bash", "cfg", "cfg.py", "ini", "json", "md", "py", "sh", "template", "toml", "txt", "xml", "yaml", "yml", "zsh"]
 
 # Danh sách các pattern (kiểu .gitignore) để bỏ qua.
 # Các giá trị này sẽ được THÊM vào danh sách mặc định.
 # (CLI: -I "*.log,build/")
-ignore = [".venv", ".hg", ".git", "venv", "__pycache__", ".svn", ".DS_Store"]
+ignore = [".DS_Store", ".git", ".hg", ".svn", ".venv", "__pycache__", "venv"]
+
+include = []
 
 # Danh sách các đuôi file cần LÀM SẠCH (clean) khi dùng -a/--all-clean.
 # GHI ĐÈ hoàn toàn danh sách mặc định (thường là ["py"]).
