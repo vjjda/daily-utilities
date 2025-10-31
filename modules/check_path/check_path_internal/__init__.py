@@ -8,13 +8,11 @@ from typing import List
 current_dir = Path(__file__).parent
 
 modules_to_export: List[str] = [
-    
     "check_path_loader",
     "check_path_merger",
     "check_path_scanner",
     "check_path_rules",
     "check_path_analyzer",
-    
     "check_path_task_file",
     "check_path_task_dir",
 ]
@@ -25,8 +23,8 @@ for submodule_stem in modules_to_export:
     try:
         module = import_module(f".{submodule_stem}", package=__name__)
 
-        if hasattr(module, '__all__'):
-            public_symbols = getattr(module, '__all__')
+        if hasattr(module, "__all__"):
+            public_symbols = getattr(module, "__all__")
             for name in public_symbols:
                 obj = getattr(module, name)
                 globals()[name] = obj
@@ -39,11 +37,11 @@ for submodule_stem in modules_to_export:
 
 
 del Path, import_module, List, current_dir, modules_to_export, submodule_stem
-if 'module' in locals():
+if "module" in locals():
     del module
-if 'public_symbols' in locals():
+if "public_symbols" in locals():
     del public_symbols
-if 'name' in locals():
+if "name" in locals():
     del name
-if 'obj' in locals():
+if "obj" in locals():
     del obj

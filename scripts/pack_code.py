@@ -5,7 +5,7 @@ import argparse
 import logging
 from pathlib import Path
 from typing import Optional, List, Dict, Any, Final
-import os 
+import os
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -13,13 +13,22 @@ sys.path.append(str(PROJECT_ROOT))
 
 try:
     from utils.logging_config import setup_logging, log_success
-    from utils.cli import handle_config_init_request, resolve_input_paths, resolve_reporting_root
+    from utils.cli import (
+        handle_config_init_request,
+        resolve_input_paths,
+        resolve_reporting_root,
+    )
     from utils.core import parse_comma_list
     from modules.pack_code.pack_code_config import (
-        DEFAULT_START_PATH, DEFAULT_EXTENSIONS, DEFAULT_IGNORE,
-        DEFAULT_CLEAN_EXTENSIONS, DEFAULT_OUTPUT_DIR,
-        PROJECT_CONFIG_FILENAME, CONFIG_FILENAME, CONFIG_SECTION_NAME,
-        DEFAULT_FORMAT_EXTENSIONS
+        DEFAULT_START_PATH,
+        DEFAULT_EXTENSIONS,
+        DEFAULT_IGNORE,
+        DEFAULT_CLEAN_EXTENSIONS,
+        DEFAULT_OUTPUT_DIR,
+        PROJECT_CONFIG_FILENAME,
+        CONFIG_FILENAME,
+        CONFIG_SECTION_NAME,
+        DEFAULT_FORMAT_EXTENSIONS,
     )
     from modules.pack_code import (
         process_pack_code_logic,
@@ -175,31 +184,23 @@ def main():
         logger.error(f"❌ Đã xảy ra lỗi khi khởi tạo config: {e}")
         logger.debug("Traceback:", exc_info=True)
         sys.exit(1)
-    
-    
+
     validated_paths: List[Path] = resolve_input_paths(
         logger=logger,
         raw_paths=args.start_paths_arg,
-        default_path_str=DEFAULT_START_PATH
+        default_path_str=DEFAULT_START_PATH,
     )
     if not validated_paths:
         logger.warning("Không tìm thấy đường dẫn hợp lệ nào để quét. Đã dừng.")
         sys.exit(0)
 
-    
-    reporting_root = resolve_reporting_root(
-        logger, 
-        validated_paths, 
-        args.root 
-    )
+    reporting_root = resolve_reporting_root(logger, validated_paths, args.root)
 
-    
     files_to_process: List[Path] = [p for p in validated_paths if p.is_file()]
     dirs_to_scan: List[Path] = [p for p in validated_paths if p.is_dir()]
 
-    
     output_path_obj = Path(args.output).expanduser() if args.output else None
-    
+
     cli_args_dict = {
         "output": output_path_obj,
         "stdout": args.stdout,
@@ -216,14 +217,14 @@ def main():
     }
 
     try:
-        
+
         result = process_pack_code_logic(
             logger=logger,
             cli_args=cli_args_dict,
             files_to_process=files_to_process,
             dirs_to_scan=dirs_to_scan,
-            reporting_root=reporting_root, 
-            script_file_path=THIS_SCRIPT_PATH 
+            reporting_root=reporting_root,
+            script_file_path=THIS_SCRIPT_PATH,
         )
         if result:
             execute_pack_code_action(logger=logger, result=result)
@@ -237,6 +238,7 @@ def main():
         logger.error(f"❌ Đã xảy ra lỗi không mong muốn: {e}")
         logger.debug("Traceback:", exc_info=True)
         sys.exit(1)
+
 
 if __name__ == "__main__":
     try:

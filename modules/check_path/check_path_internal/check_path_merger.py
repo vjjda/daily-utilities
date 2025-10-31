@@ -35,7 +35,7 @@ def merge_check_path_configs(
     final_extensions_set = resolve_set_modification(
         tentative_set=tentative_extensions, cli_string=cli_extensions
     )
-    
+
     final_extensions_list = sorted(list(final_extensions_set))
 
     final_ignore_list = resolve_config_list(

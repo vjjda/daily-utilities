@@ -8,25 +8,28 @@ from utils.logging_config import log_success
 
 __all__ = ["execute_check_path_action", "print_dry_run_report_for_group"]
 
-FileResult = Dict[str, Any] 
+FileResult = Dict[str, Any]
+
 
 def print_dry_run_report_for_group(
     logger: logging.Logger,
     group_name: str,
     files_in_group: List[FileResult],
-    scan_root: Path 
+    scan_root: Path,
 ) -> None:
-    logger.warning(f"\n   --- 📄 Nhóm: {group_name} ({len(files_in_group)} file cần sửa) ---")
+    logger.warning(
+        f"\n   --- 📄 Nhóm: {group_name} ({len(files_in_group)} file cần sửa) ---"
+    )
     for info in files_in_group:
         file_path: Path = info["path"]
         first_line = info["line"]
         fix_preview = info["fix_preview"]
-        
+
         try:
             rel_path = file_path.relative_to(scan_root).as_posix()
         except ValueError:
-            rel_path = str(file_path) 
-            
+            rel_path = str(file_path)
+
         logger.warning(f"   -> {rel_path}")
         logger.warning(f"      (Dòng 1 hiện tại: {first_line})")
         logger.warning(f"      (Đề xuất:     {fix_preview})")
@@ -37,7 +40,7 @@ def execute_check_path_action(
     all_files_to_fix: List[FileResult],
     dry_run: bool,
     force: bool,
-    scan_root: Path 
+    scan_root: Path,
 ) -> None:
 
     total_files_to_fix = len(all_files_to_fix)
@@ -85,9 +88,8 @@ def execute_check_path_action(
                         e,
                     )
                 except ValueError:
-                     
+
                     logger.info(f"Đã sửa (absolute path): {target_path.as_posix()}")
                     written_count += 1
-
 
             log_success(logger, f"Hoàn tất! Đã sửa {written_count} file.")

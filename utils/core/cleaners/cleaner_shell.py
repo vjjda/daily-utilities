@@ -33,11 +33,10 @@ def clean_shell_code(
     for line in lines:
         stripped_line = line.strip()
 
-        
         if stripped_line.startswith("# Path:"):
             cleaned_code_block.append(line)
             continue
-        
+
         in_single_quotes = False
         in_double_quotes = False
         comment_start_index = -1
@@ -48,7 +47,7 @@ def clean_shell_code(
             elif char == '"' and (i == 0 or line[i - 1] != "\\"):
                 in_double_quotes = not in_double_quotes
             elif char == "#" and not in_single_quotes and not in_double_quotes:
-                
+
                 comment_start_index = i
                 break
 

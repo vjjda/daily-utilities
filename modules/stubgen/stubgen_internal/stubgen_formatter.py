@@ -14,7 +14,7 @@ def format_stub_content(
 ) -> str:
 
     if not all_exported_symbols:
-        
+
         return stub_template_str.format(
             module_name=init_path.parent.name,
             symbol_declarations="# (No symbols found)",
@@ -23,32 +23,28 @@ def format_stub_content(
 
     sorted_symbols = sorted(list(all_exported_symbols))
 
-    
     symbol_declarations = "\n".join(f"{symbol}: Any" for symbol in sorted_symbols)
 
-    
     quoted_symbols = [f'"{symbol}"' for symbol in sorted_symbols]
 
-    
     all_list_body: str
     all_list_repr: str
 
     if not quoted_symbols:
-        
+
         all_list_repr = "[]"
     else:
-        
+
         all_list_body = ",\n".join(
             f"    {symbol_repr}" for symbol_repr in quoted_symbols
         )
-        
+
         all_list_body += ","
-        
+
         all_list_repr = f"[\n{all_list_body}\n]"
 
     module_name = init_path.parent.name
 
-    
     return stub_template_str.format(
         module_name=module_name,
         symbol_declarations=symbol_declarations,

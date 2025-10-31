@@ -9,10 +9,10 @@ current_dir = Path(__file__).parent
 
 
 modules_to_export: List[str] = [
-    "ui_helpers", 
-    "config_writer", 
+    "ui_helpers",
+    "config_writer",
     "path_resolver",
-    "reporting_root_resolver" 
+    "reporting_root_resolver",
 ]
 
 __all__: List[str] = []
@@ -21,14 +21,14 @@ for module_name in modules_to_export:
     try:
         module = import_module(f".{module_name}", package=__name__)
 
-        if hasattr(module, '__all__'):
-            public_symbols = getattr(module, '__all__')
+        if hasattr(module, "__all__"):
+            public_symbols = getattr(module, "__all__")
             for name in public_symbols:
                 obj = getattr(module, name)
                 globals()[name] = obj
             __all__.extend(public_symbols)
         else:
-             print(
+            print(
                 f"Cảnh báo: Module '{module_name}' trong utils/cli thiếu định nghĩa __all__."
             )
 

@@ -11,17 +11,16 @@ from .check_path_rules import apply_line_comment_rule, apply_block_comment_rule
 
 __all__ = ["analyze_single_file_for_path_comment"]
 
-FileResult = Dict[str, Any] 
+FileResult = Dict[str, Any]
+
 
 def analyze_single_file_for_path_comment(
-    file_path: Path, 
-    scan_root: Path, 
-    logger: logging.Logger
+    file_path: Path, scan_root: Path, logger: logging.Logger
 ) -> Optional[FileResult]:
     try:
         relative_path = file_path.relative_to(scan_root)
     except ValueError:
-        
+
         relative_path = file_path.relative_to(file_path.parent)
 
     file_ext = "".join(file_path.suffixes)
@@ -66,7 +65,9 @@ def analyze_single_file_for_path_comment(
             prefix = rule["comment_prefix"]
             suffix = rule["comment_suffix"]
             padding = " " if rule.get("padding", False) else ""
-            correct_comment = f"{prefix}{padding}Path: {relative_path.as_posix()}{padding}{suffix}\n"
+            correct_comment = (
+                f"{prefix}{padding}Path: {relative_path.as_posix()}{padding}{suffix}\n"
+            )
             correct_comment_str = correct_comment
             new_lines = apply_block_comment_rule(lines, correct_comment, rule)
         else:
@@ -86,7 +87,7 @@ def analyze_single_file_for_path_comment(
                 "new_lines": new_lines,
                 "fix_preview": fix_preview_str,
             }
-            
+
     except Exception as e:
         logger.error(f"Lỗi xử lý file {relative_path.as_posix()}: {e}")
         logger.debug("Traceback:", exc_info=True)

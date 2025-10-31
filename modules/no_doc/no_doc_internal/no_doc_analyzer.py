@@ -4,31 +4,27 @@ from pathlib import Path
 from typing import Optional, Dict, Any, Set
 import sys
 
-# Thiết lập sys.path
+
 if not "PROJECT_ROOT" in locals():
     sys.path.append(str(Path(__file__).resolve().parent.parent.parent.parent))
 
-# SỬA: Import cả 'clean_code' và 'format_code'
+
 from utils.core import clean_code, format_code
 from utils.constants import DEFAULT_EXTENSIONS_LANG_MAP
 
-# SỬA: Đổi tên hàm
+
 __all__ = ["analyze_file_for_cleaning_and_formatting"]
 
 FileResult = Dict[str, Any]
 
-# SỬA: Chữ ký hàm mới
+
 def analyze_file_for_cleaning_and_formatting(
-    file_path: Path, 
-    logger: logging.Logger, 
+    file_path: Path,
+    logger: logging.Logger,
     all_clean: bool,
     format_flag: bool,
-    format_extensions_set: Set[str]
+    format_extensions_set: Set[str],
 ) -> Optional[FileResult]:
-    """
-    Phân tích file, đọc nội dung, làm sạch (clean) và
-    sau đó định dạng (format), rồi trả về kết quả nếu nội dung thay đổi.
-    """
     try:
         original_content = file_path.read_text(encoding="utf-8")
     except (IOError, UnicodeDecodeError) as e:
@@ -49,8 +45,6 @@ def analyze_file_for_cleaning_and_formatting(
         )
         return None
 
-    # --- BƯỚC 1: LÀM SẠCH (Clean) ---
-    # (Luôn chạy clean_code, vì nó xóa docstring ngay cả khi all_clean=False)
     cleaned_content = clean_code(
         code_content=original_content,
         language=language_id,
@@ -60,21 +54,17 @@ def analyze_file_for_cleaning_and_formatting(
 
     final_content = cleaned_content
 
-    # --- BƯỚC 2: ĐỊNH DẠNG (Format) ---
-    # (Chỉ chạy nếu cờ -f được bật VÀ extension khớp)
     if format_flag and file_ext in format_extensions_set:
         logger.debug(f"   -> Đang định dạng '{file_path.name}' (sau khi làm sạch)...")
-        # Truyền file_path để Black tìm pyproject.toml
+
         formatted_content = format_code(
-            code_content=cleaned_content, # Format nội dung *đã làm sạch*
+            code_content=cleaned_content,
             language=language_id,
             logger=logger,
-            file_path=file_path 
+            file_path=file_path,
         )
         final_content = formatted_content
-    
-    # --- KẾT THÚC ---
-    
+
     if final_content != original_content:
         return {
             "path": file_path,

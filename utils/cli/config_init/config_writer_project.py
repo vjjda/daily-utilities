@@ -76,14 +76,11 @@ def write_project_config_section(
 
                 main_doc[config_section_name] = new_section_table
             else:
-                # --- SỬA LỖI ---
-                # Logic cũ (bị lỗi) là merge từng key, làm mất comment.
-                # Logic mới là thay thế TOÀN BỘ section.
+
                 logger.debug(
                     f"Section [{config_section_name}] đã tồn tại. Đang ghi đè (Overwrite)..."
                 )
                 main_doc[config_section_name] = new_section_table
-                # --- KẾT THÚC SỬA LỖI ---
 
             with config_file_path.open("w", encoding="utf-8") as f:
                 tomlkit.dump(main_doc, f)

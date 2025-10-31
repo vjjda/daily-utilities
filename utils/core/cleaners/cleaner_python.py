@@ -5,27 +5,36 @@ from typing import Union, Sequence, Optional
 try:
     import libcst as cst
     from libcst import BaseStatement, RemovalSentinel, RemoveFromParent
+
     LIBCST_AVAILABLE = True
 except ImportError:
     LIBCST_AVAILABLE = False
-    # ... (Phần fallback không đổi) ...
+
     class CSTNode:
         pass
+
     class Comment(CSTNode):
         pass
+
     class Module(CSTNode):
         pass
+
     class ClassDef(CSTNode):
         pass
+
     class FunctionDef(CSTNode):
         pass
+
     class AsyncFunctionDef(CSTNode):
         pass
+
     BaseStatement = CSTNode
     RemovalSentinel = object()
     RemoveFromParent = object()
+
     class ParserSyntaxError(Exception):
         pass
+
     class VersionCannotParseError(Exception):
         pass
 
@@ -54,22 +63,21 @@ if LIBCST_AVAILABLE:
         def leave_Comment(
             self, original_node: cst.Comment, updated_node: cst.Comment
         ) -> Union[cst.Comment, RemovalSentinel]:
-            
+
             if not self.all_clean:
-                return updated_node # Giữ tất cả comment nếu không phải all_clean
-            
-            # SỬA: Dùng strip() để xử lý comment inline
-            comment_text = original_node.value.strip() 
-            
-            # Giữ lại Shebang, Path comments, và type ignores
-            if (comment_text.startswith("#!") or 
-                comment_text.startswith("# Path:") or
-                comment_text.startswith("# type: ignore") or
-                comment_text.startswith("# pyright: ignore")):
                 return updated_node
-                
-            # Ngược lại, nếu all_clean=True, xóa comment
-            return RemoveFromParent() # pyright: ignore[reportCallIssue]
+
+            comment_text = original_node.value.strip()
+
+            if (
+                comment_text.startswith("#!")
+                or comment_text.startswith("# Path:")
+                or comment_text.startswith("# type: ignore")
+                or comment_text.startswith("# pyright: ignore")
+            ):
+                return updated_node
+
+            return RemoveFromParent()  # pyright: ignore[reportCallIssue]
 
         def _remove_docstring_from_body(
             self, body: Sequence[BaseStatement]
@@ -79,8 +87,6 @@ if LIBCST_AVAILABLE:
                 return body[1:]
             return None
 
-        # ... (các hàm leave_Module, leave_ClassDef, leave_FunctionDef,
-        #  leave_AsyncFunctionDef không thay đổi) ...
         def leave_Module(
             self, original_node: cst.Module, updated_node: cst.Module
         ) -> cst.Module:
@@ -117,9 +123,9 @@ if LIBCST_AVAILABLE:
 
         def leave_AsyncFunctionDef(
             self,
-            original_node: cst.AsyncFunctionDef, # pyright: ignore[reportAttributeAccessIssue]
-            updated_node: cst.AsyncFunctionDef, # pyright: ignore[reportAttributeAccessIssue]
-        ) -> cst.AsyncFunctionDef: # pyright: ignore[reportAttributeAccessIssue]
+            original_node: cst.AsyncFunctionDef,  # pyright: ignore[reportAttributeAccessIssue]
+            updated_node: cst.AsyncFunctionDef,  # pyright: ignore[reportAttributeAccessIssue]
+        ) -> cst.AsyncFunctionDef:  # pyright: ignore[reportAttributeAccessIssue]
             new_inner_body_tuple = self._remove_docstring_from_body(
                 updated_node.body.body
             )
@@ -131,6 +137,7 @@ if LIBCST_AVAILABLE:
             return updated_node
 
 else:
+
     def clean_python_code(
         code_content: str, logger: logging.Logger, all_clean: bool = False
     ) -> str:

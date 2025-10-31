@@ -6,7 +6,7 @@ __all__ = [
     "DEFAULT_START_PATH",
     "DEFAULT_EXTENSIONS",
     "DEFAULT_IGNORE",
-    "DEFAULT_FORMAT_EXTENSIONS", # SỬA: Thêm
+    "DEFAULT_FORMAT_EXTENSIONS",
     "PROJECT_CONFIG_FILENAME",
     "CONFIG_FILENAME",
     "CONFIG_SECTION_NAME",
@@ -16,11 +16,20 @@ DEFAULT_START_PATH: Final[str] = "."
 DEFAULT_EXTENSIONS: Final[Set[str]] = {"py"}
 
 DEFAULT_IGNORE: Final[Set[str]] = {
-    ".venv", "venv", "__pycache__", ".git", ".hg", ".svn",
-    "node_modules", "dist", "build", "out", ".DS_Store",
+    ".venv",
+    "venv",
+    "__pycache__",
+    ".git",
+    ".hg",
+    ".svn",
+    "node_modules",
+    "dist",
+    "build",
+    "out",
+    ".DS_Store",
 }
 
-# SỬA: Thêm (mặc định chỉ format .py)
+
 DEFAULT_FORMAT_EXTENSIONS: Final[Set[str]] = {"py"}
 
 PROJECT_CONFIG_FILENAME: Final[str] = ".project.toml"

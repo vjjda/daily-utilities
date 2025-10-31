@@ -4,7 +4,7 @@ import argparse
 import logging
 from pathlib import Path
 from typing import List, Optional, Set, Dict, Any, Final
-import os 
+import os
 
 try:
     import tomllib
@@ -19,7 +19,11 @@ sys.path.append(str(PROJECT_ROOT))
 
 from utils.logging_config import setup_logging, log_success
 
-from utils.cli import handle_config_init_request, resolve_input_paths, resolve_reporting_root
+from utils.cli import (
+    handle_config_init_request,
+    resolve_input_paths,
+    resolve_reporting_root,
+)
 
 
 from modules.check_path import (
@@ -40,6 +44,7 @@ CPATH_DEFAULTS: Final[Dict[str, Any]] = {
     "extensions": DEFAULT_EXTENSIONS,
     "ignore": DEFAULT_IGNORE,
 }
+
 
 def main():
 
@@ -63,7 +68,7 @@ def main():
         default=None,
         help="Đường dẫn gốc (Project Root) tường minh để tính toán '# Path:'.\nMặc định: Tự động tìm gốc Git từ các đường dẫn đầu vào.",
     )
-    
+
     path_check_group.add_argument(
         "-e",
         "--extensions",
@@ -92,7 +97,7 @@ def main():
     )
 
     config_group = parser.add_argument_group("Config Initialization (Chạy riêng lẻ)")
-    
+
     config_group.add_argument(
         "-c",
         "--config-project",
@@ -111,7 +116,6 @@ def main():
     logger = setup_logging(script_name="CPath")
     logger.debug("CPath script started.")
 
-    
     try:
         config_action_taken = handle_config_init_request(
             logger=logger,
@@ -131,26 +135,18 @@ def main():
         logger.debug("Traceback:", exc_info=True)
         sys.exit(1)
 
-    
     validated_paths: List[Path] = resolve_input_paths(
-        logger=logger,
-        raw_paths=args.start_paths_arg,
-        default_path_str="."
+        logger=logger, raw_paths=args.start_paths_arg, default_path_str="."
     )
     if not validated_paths:
         logger.warning("Không tìm thấy đường dẫn hợp lệ nào để quét. Đã dừng.")
         sys.exit(0)
 
-    
-    reporting_root = resolve_reporting_root(
-        logger,
-        validated_paths,
-        args.root 
-    )
+    reporting_root = resolve_reporting_root(logger, validated_paths, args.root)
 
     files_to_process: List[Path] = [p for p in validated_paths if p.is_file()]
     dirs_to_scan: List[Path] = [p for p in validated_paths if p.is_dir()]
-    
+
     check_mode = args.dry_run
     force_mode = args.force
 
@@ -161,7 +157,7 @@ def main():
             dirs_to_scan=dirs_to_scan,
             cli_args=args,
             script_file_path=THIS_SCRIPT_PATH,
-            reporting_root=reporting_root 
+            reporting_root=reporting_root,
         )
 
         execute_check_path_action(
@@ -169,13 +165,14 @@ def main():
             all_files_to_fix=files_to_fix,
             dry_run=check_mode,
             force=force_mode,
-            scan_root=reporting_root, 
+            scan_root=reporting_root,
         )
 
     except Exception as e:
         logger.error(f"❌ Đã xảy ra lỗi không mong muốn: {e}")
         logger.debug("Traceback:", exc_info=True)
         sys.exit(1)
+
 
 if __name__ == "__main__":
     try:

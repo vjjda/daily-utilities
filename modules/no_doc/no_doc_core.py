@@ -1,7 +1,4 @@
 # Path: modules/no_doc/no_doc_core.py
-"""
-Core Orchestration logic for the no_doc module.
-"""
 
 import logging
 import argparse
@@ -22,6 +19,7 @@ __all__ = ["process_no_doc_logic"]
 
 FileResult = Dict[str, Any]
 
+
 def process_no_doc_logic(
     logger: logging.Logger,
     files_to_process: List[Path],
@@ -29,11 +27,7 @@ def process_no_doc_logic(
     cli_args: argparse.Namespace,
     script_file_path: Path,
 ) -> List[FileResult]:
-    """
-    Điều phối toàn bộ quá trình xóa docstring (Orchestrator).
-    Xử lý file và thư mục, in báo cáo xen kẽ.
-    """
-    
+
     all_results: List[FileResult] = []
     processed_files: Set[Path] = set()
     reporting_root = Path.cwd()
@@ -44,12 +38,12 @@ def process_no_doc_logic(
             "⚠️ Chế độ ALL-CLEAN đã bật: Sẽ loại bỏ cả Docstring VÀ Comments (nếu cleaner hỗ trợ)."
         )
 
-    # SỬA: Lấy cờ format
     format_flag: bool = getattr(cli_args, "format", False)
     if format_flag:
-        logger.info("⚡ Chế độ FORMAT (-f) đã bật: Code sẽ được định dạng sau khi làm sạch.")
+        logger.info(
+            "⚡ Chế độ FORMAT (-f) đã bật: Code sẽ được định dạng sau khi làm sạch."
+        )
 
-    # 1. Hợp nhất config MỘT LẦN cho các file lẻ
     cli_extensions_str: Optional[str] = getattr(cli_args, "extensions", None)
     default_file_config = merge_ndoc_configs(
         logger=logger,
@@ -58,19 +52,21 @@ def process_no_doc_logic(
         file_config_data={},
     )
     file_extensions = set(default_file_config["final_extensions_list"])
-    file_extensions_with_dot = {f".{ext}" if not ext.startswith('.') else ext for ext in file_extensions}
-    # SỬA: Lấy format extensions
+    file_extensions_with_dot = {
+        f".{ext}" if not ext.startswith(".") else ext for ext in file_extensions
+    }
+
     file_format_extensions_set = default_file_config["final_format_extensions_set"]
 
-
-    # 2. XỬ LÝ CÁC FILE RIÊNG LẺ
     if files_to_process:
         logger.info(f"Đang xử lý {len(files_to_process)} file riêng lẻ...")
         logger.info(f"  [Cấu hình áp dụng cho file lẻ]")
         logger.info(f"    - Extensions: {sorted(list(file_extensions))}")
-        logger.info(f"    - Format Extensions: {sorted(list(file_format_extensions_set))}")
+        logger.info(
+            f"    - Format Extensions: {sorted(list(file_format_extensions_set))}"
+        )
         logger.info(f"    - (Bỏ qua .gitignore và config file)")
-        
+
         for file_path in files_to_process:
             results = process_no_doc_task_file(
                 file_path=file_path,
@@ -79,13 +75,11 @@ def process_no_doc_logic(
                 logger=logger,
                 processed_files=processed_files,
                 reporting_root=reporting_root,
-                # SỬA: Truyền cờ/set format
                 format_flag=format_flag,
-                format_extensions_set=file_format_extensions_set
+                format_extensions_set=file_format_extensions_set,
             )
             all_results.extend(results)
 
-    # 3. XỬ LÝ CÁC THƯ MỤC
     if dirs_to_scan:
         logger.info(f"Đang xử lý {len(dirs_to_scan)} thư mục...")
         for scan_dir in dirs_to_scan:
@@ -96,12 +90,11 @@ def process_no_doc_logic(
                 processed_files=processed_files,
                 reporting_root=reporting_root,
                 script_file_path=script_file_path,
-                # SỬA: Truyền cờ format (set sẽ được load bên trong task)
-                format_flag=format_flag
+                format_flag=format_flag,
             )
             all_results.extend(results)
 
     if not all_results and (files_to_process or dirs_to_scan):
         logger.info("Quét hoàn tất. Không tìm thấy file nào cần thay đổi.")
-        
+
     return all_results
