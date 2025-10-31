@@ -17,9 +17,7 @@ CONSOLE_LOG_LEVEL: Final[str] = "INFO"
 FILE_LOG_LEVEL: Final[str] = "DEBUG"
 
 
-# Số lượng worker tối đa cho các tác vụ song song (clean, format, v.v.)
-# Dựa trên số lõi CPU có sẵn.
-MAX_THREAD_WORKERS: Final[int] = os.cpu_count() or 4
+MAX_THREAD_WORKERS: Final[int] = os.cpu_count() or 8
 
 
 DEFAULT_EXTENSIONS_LANG_MAP: Final[Dict[str, str]] = {

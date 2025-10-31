@@ -47,9 +47,8 @@ def load_files_content(
     cleaned_count = 0
     formatted_count = 0
 
-    # Hàm nội bộ để xử lý từng file (sẽ được gọi song song)
     def _process_single_file(file_path: Path) -> Tuple[Path, Optional[str], str, str]:
-        # Trả về: (path, content, status, log_msg)
+
         try:
             content = file_path.read_text(encoding="utf-8")
             original_content = content
@@ -91,9 +90,9 @@ def load_files_content(
                         file_path=file_path,
                     )
                     if formatted_content != content:
-                        # Chỉ đếm là "formatted" nếu nó chưa bị "cleaned" (vì clean làm thay đổi content)
+
                         if not (all_clean and content == original_content):
-                             file_was_formatted = True
+                            file_was_formatted = True
                         content = formatted_content
                 else:
                     logger.debug(
@@ -101,31 +100,46 @@ def load_files_content(
                     )
 
             status = "ok"
-            if file_was_cleaned: status = "cleaned"
-            if file_was_formatted: status = "formatted"
-            
+            if file_was_cleaned:
+                status = "cleaned"
+            if file_was_formatted:
+                status = "formatted"
+
             return file_path, content, status, ""
 
         except UnicodeDecodeError:
-            return file_path, None, "skipped", f"   -> Bỏ qua (lỗi encoding): {file_path.relative_to(base_dir).as_posix()}"
+            return (
+                file_path,
+                None,
+                "skipped",
+                f"   -> Bỏ qua (lỗi encoding): {file_path.relative_to(base_dir).as_posix()}",
+            )
         except IOError as e:
-            return file_path, None, "skipped", f"   -> Bỏ qua (lỗi I/O: {e}): {file_path.relative_to(base_dir).as_posix()}"
+            return (
+                file_path,
+                None,
+                "skipped",
+                f"   -> Bỏ qua (lỗi I/O: {e}): {file_path.relative_to(base_dir).as_posix()}",
+            )
         except Exception as e:
-            return file_path, None, "skipped", f"    -> Bỏ qua (lỗi không xác định: {e}): {file_path.relative_to(base_dir).as_posix()}"
+            return (
+                file_path,
+                None,
+                "skipped",
+                f"    -> Bỏ qua (lỗi không xác định: {e}): {file_path.relative_to(base_dir).as_posix()}",
+            )
 
-    # Sử dụng ThreadPoolExecutor
     max_workers = MAX_THREAD_WORKERS
     logger.debug(f"Sử dụng ThreadPoolExecutor với max_workers={max_workers}")
 
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         futures = [
-            executor.submit(_process_single_file, file_path)
-            for file_path in file_paths
+            executor.submit(_process_single_file, file_path) for file_path in file_paths
         ]
 
         for future in as_completed(futures):
             f_path, f_content, f_status, log_msg = future.result()
-            
+
             if f_status == "skipped":
                 logger.warning(log_msg)
                 skipped_count += 1
