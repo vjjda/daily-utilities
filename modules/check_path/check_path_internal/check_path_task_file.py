@@ -9,10 +9,9 @@ import argparse
 from pathlib import Path
 from typing import Dict, Any, List, Optional, Set, Tuple
 
-# SỬA: Import trực tiếp từ các file worker
+# Import trực tiếp từ các file worker
 from .check_path_merger import merge_check_path_configs
 from .check_path_analyzer import analyze_single_file_for_path_comment
-# (Config import không cần thiết ở đây, nó đã được chuyển vào core)
 
 # Import hàm báo cáo từ executor (public)
 from ..check_path_executor import print_dry_run_report_for_group
@@ -24,10 +23,10 @@ FileResult = Dict[str, Any] # Type alias
 def process_check_path_task_file(
     file_path: Path,
     cli_args: argparse.Namespace,
-    file_extensions: Set[str], # Set extensions đã merge
+    file_extensions: Set[str],
     logger: logging.Logger,
     processed_files: Set[Path],
-    reporting_root: Path
+    reporting_root: Path # <-- THÊM THAM SỐ MỚI
 ) -> List[FileResult]:
     """
     Xử lý logic cpath cho một file riêng lẻ.
@@ -51,9 +50,8 @@ def process_check_path_task_file(
         return []
 
     # 2. Phân tích
-    # Dùng thư mục cha làm scan_root
-    scan_root = file_path.parent
-    result = analyze_single_file_for_path_comment(file_path, scan_root, logger)
+    # SỬA: Truyền reporting_root làm scan_root cho analyzer
+    result = analyze_single_file_for_path_comment(file_path, reporting_root, logger)
     if result:
         file_only_results.append(result)
     processed_files.add(resolved_file)

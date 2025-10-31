@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     import pathspec
 
-# SỬA: Import trực tiếp từ các file worker
+# Import trực tiếp từ các file worker
 from .check_path_loader import load_config_files
 from .check_path_merger import merge_check_path_configs
 from .check_path_scanner import scan_files
@@ -37,7 +37,7 @@ def process_check_path_task_dir(
     cli_args: argparse.Namespace,
     logger: logging.Logger,
     processed_files: Set[Path],
-    reporting_root: Path,
+    reporting_root: Path, # <-- THÊM THAM SỐ MỚI
     script_file_path: Path,
 ) -> List[FileResult]:
     """
@@ -59,12 +59,12 @@ def process_check_path_task_dir(
     final_extensions_list = merged_config["final_extensions_list"]
     final_ignore_list = merged_config["final_ignore_list"] # List từ config
 
-    # 2. Xử lý Ignore Spec (kết hợp .gitignore)
+    # 2. Xử lý Ignore Spec (cục bộ)
     gitignore_patterns: List[str] = parse_gitignore(scan_dir)
     all_ignore_patterns_list: List[str] = final_ignore_list + gitignore_patterns
     ignore_spec = compile_spec_from_patterns(all_ignore_patterns_list, scan_dir)
     
-    # 3. Quét file (dùng scanner mới)
+    # 3. Quét file (cục bộ)
     files_in_dir, scan_status = scan_files(
          logger=logger,
          start_path=scan_dir, 
@@ -97,7 +97,8 @@ def process_check_path_task_dir(
         if resolved_file in processed_files:
             continue 
 
-        result = analyze_single_file_for_path_comment(file_path, scan_dir, logger)
+        # SỬA: Truyền reporting_root làm scan_root cho analyzer
+        result = analyze_single_file_for_path_comment(file_path, reporting_root, logger)
         if result:
             dir_results.append(result)
         processed_files.add(resolved_file)

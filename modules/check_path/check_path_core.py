@@ -28,6 +28,7 @@ def process_check_path_logic(
     dirs_to_scan: List[Path],
     cli_args: argparse.Namespace,
     script_file_path: Path,
+    reporting_root: Path # <-- THÊM THAM SỐ MỚI
 ) -> List[FileResult]:
     """
     Điều phối toàn bộ quá trình kiểm tra path comment (Orchestrator).
@@ -35,7 +36,7 @@ def process_check_path_logic(
     
     all_results: List[FileResult] = []
     processed_files: Set[Path] = set()
-    reporting_root = Path.cwd()
+    # (reporting_root giờ được truyền từ entrypoint)
 
     # 1. Hợp nhất config MỘT LẦN cho các file lẻ
     cli_extensions_str: Optional[str] = getattr(cli_args, "extensions", None)
@@ -45,9 +46,8 @@ def process_check_path_logic(
         cli_ignore=None,
         file_config_data={},
     )
-    # SỬA: Config của cpath trả về list, không phải set
     file_extensions = set(default_file_config["final_extensions_list"])
-    # Cần thêm dấu . vào extensions cho cpath
+    # Thêm dấu . vào extensions cho cpath
     file_extensions_with_dot = {f".{ext}" if not ext.startswith('.') else ext for ext in file_extensions}
 
 
@@ -65,7 +65,7 @@ def process_check_path_logic(
                 file_extensions=file_extensions_with_dot,
                 logger=logger,
                 processed_files=processed_files,
-                reporting_root=reporting_root,
+                reporting_root=reporting_root # <-- TRUYỀN XUỐNG
             )
             all_results.extend(results)
 
@@ -78,7 +78,7 @@ def process_check_path_logic(
                 cli_args=cli_args,
                 logger=logger,
                 processed_files=processed_files,
-                reporting_root=reporting_root,
+                reporting_root=reporting_root, # <-- TRUYỀN XUỐNG
                 script_file_path=script_file_path,
             )
             all_results.extend(results)
