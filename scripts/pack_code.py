@@ -70,11 +70,6 @@ def main():
         help="Chỉ định file output. Mặc định: tự động tạo trong 'output_dir'.",
     )
     pack_group.add_argument(
-        "--stdout",
-        action="store_true",
-        help="In kết quả ra màn hình (stdout) thay vì ghi vào file.",
-    )
-    pack_group.add_argument(
         "-e",
         "--extensions",
         type=str,
@@ -99,6 +94,11 @@ def main():
         "--dry-run",
         action="store_true",
         help="Chế độ chạy thử. Chỉ hiển thị cây thư mục và danh sách file, không đọc/ghi nội dung.",
+    )
+    pack_group.add_argument(
+        "--stdout",
+        action="store_true",
+        help="In kết quả ra màn hình (stdout) thay vì ghi vào file.",
     )
     pack_group.add_argument(
         "--no-header",
