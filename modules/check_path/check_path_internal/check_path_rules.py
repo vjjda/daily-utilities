@@ -1,5 +1,4 @@
-# Path: modules/check_path/check_path_rules.py
-
+# Path: modules/check_path/check_path_internal/check_path_rules.py
 from typing import List, Dict, Any
 
 __all__ = ["apply_line_comment_rule", "apply_block_comment_rule"]
@@ -13,10 +12,8 @@ def apply_line_comment_rule(
 
     if line1_is_shebang and not is_executable:
         lines.pop(0)
-
         if not lines:
             return lines
-
         line1_is_shebang = False
 
     line1_is_path = lines[0].startswith(f"{check_prefix} Path:")
@@ -26,7 +23,6 @@ def apply_line_comment_rule(
         line2_is_path = True
 
     if line1_is_shebang:
-
         if line2_is_path:
             if lines[1] != correct_path_comment:
                 lines[1] = correct_path_comment
@@ -34,7 +30,6 @@ def apply_line_comment_rule(
             lines.insert(1, correct_path_comment)
 
     elif line1_is_path:
-
         if len(lines) > 1 and lines[1].startswith("#!"):
             if is_executable:
                 lines[0], lines[1] = lines[1], lines[0]
@@ -45,12 +40,9 @@ def apply_line_comment_rule(
                 if lines[0] != correct_path_comment:
                     lines[0] = correct_path_comment
         else:
-
             if lines[0] != correct_path_comment:
                 lines[0] = correct_path_comment
-
     else:
-
         lines.insert(0, correct_path_comment)
 
     return lines
