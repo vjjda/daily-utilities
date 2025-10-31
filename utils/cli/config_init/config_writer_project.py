@@ -57,6 +57,7 @@ def write_project_config_section(
                 )
             
             # SỬA: Lấy Table object (Item) từ template, *KHÔNG unwrap*
+            # new_section_table giờ đây là một tomlkit.Table, không phải dict
             new_section_table: Table = parsed_template_doc[config_section_name] # type: ignore
             
         except (ParseError, ValueError, Exception) as e:
@@ -113,6 +114,7 @@ def write_project_config_section(
         raise
     except (ParseError, ConvertError, Exception) as e:
         logger.error(f"❌ Lỗi không mong muốn khi cập nhật TOML (tomlkit): {e}")
+        # SỬA: Ném lại lỗi gốc để traceback rõ ràng hơn
         raise e
 
     return config_file_path
