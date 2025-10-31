@@ -1,150 +1,143 @@
-# Path: scripts/pack_code.py
-
 import sys
 import argparse
 import logging
 from pathlib import Path
-from typing import Optional, List, Dict, Any, Final
-import os
-
+from typing import Optional, Final, Dict, Any, List, Set
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.append(str(PROJECT_ROOT))
 
 try:
-    from utils.logging_config import setup_logging, log_success
+    from utils.logging_config import setup_logging
     from utils.cli import (
         handle_config_init_request,
         resolve_input_paths,
         resolve_reporting_root,
     )
     from utils.core import parse_comma_list
-    from modules.pack_code.pack_code_config import (
+
+    from modules.pack_code import (
+        process_pack_code_logic,
+        execute_pack_code_action,
         DEFAULT_START_PATH,
         DEFAULT_EXTENSIONS,
         DEFAULT_IGNORE,
         DEFAULT_CLEAN_EXTENSIONS,
-        DEFAULT_OUTPUT_DIR,
-        PROJECT_CONFIG_FILENAME,
-        CONFIG_FILENAME,
-        CONFIG_SECTION_NAME,
         DEFAULT_FORMAT_EXTENSIONS,
-    )
-    from modules.pack_code import (
-        process_pack_code_logic,
-        execute_pack_code_action,
+        DEFAULT_OUTPUT_DIR,
+        CONFIG_FILENAME,
+        PROJECT_CONFIG_FILENAME,
+        CONFIG_SECTION_NAME,
     )
 except ImportError as e:
-    print(f"Lỗi: Không thể import các tiện ích/module dự án: {e}", file=sys.stderr)
+    print(f"Lỗi: Không thể import project utilities/modules: {e}", file=sys.stderr)
     sys.exit(1)
-
 
 THIS_SCRIPT_PATH: Final[Path] = Path(__file__).resolve()
 MODULE_DIR: Final[Path] = PROJECT_ROOT / "modules" / "pack_code"
 TEMPLATE_FILENAME: Final[str] = "pack_code.toml.template"
+
 PCODE_DEFAULTS: Final[Dict[str, Any]] = {
     "output_dir": DEFAULT_OUTPUT_DIR,
-    "extensions": list(parse_comma_list(DEFAULT_EXTENSIONS)),
-    "ignore": list(parse_comma_list(DEFAULT_IGNORE)),
+    "extensions": sorted(list(parse_comma_list(DEFAULT_EXTENSIONS))),
+    "ignore": sorted(list(parse_comma_list(DEFAULT_IGNORE))),
     "clean_extensions": sorted(list(DEFAULT_CLEAN_EXTENSIONS)),
     "format_extensions": sorted(list(DEFAULT_FORMAT_EXTENSIONS)),
 }
 
 
 def main():
-
     parser = argparse.ArgumentParser(
-        description="Đóng gói nội dung của nhiều file/thư mục thành một file văn bản duy nhất.",
-        epilog="Ví dụ: pcode ./src -e 'py,md' -o context.txt",
+        description="Đóng gói mã nguồn thành một file context duy nhất cho LLM.",
+        epilog="Ví dụ: pcode . -e 'py,md' -a -o 'my_context.txt'",
+        formatter_class=argparse.RawTextHelpFormatter,
     )
 
-    pack_group = parser.add_argument_group("Tùy chọn Đóng gói")
+    pack_group = parser.add_argument_group("Tùy chọn Đóng gói Code")
     pack_group.add_argument(
         "start_paths_arg",
         type=str,
         nargs="*",
         default=[],
-        help='Các đường dẫn (file hoặc thư mục) để quét. Mặc định: ".".',
-    )
-    pack_group.add_argument(
-        "-r",
-        "--root",
-        type=str,
-        default=None,
-        help="Đường dẫn gốc (Project Root) tường minh để tính toán '# Path:'.\nMặc định: Tự động tìm gốc Git từ các đường dẫn đầu vào.",
+        help=f'Các đường dẫn (file hoặc thư mục) để quét. Mặc định: "{DEFAULT_START_PATH}".',
     )
     pack_group.add_argument(
         "-o",
         "--output",
-        type=str,
+        type=Path,
         default=None,
-        help="File output để ghi. Mặc định: '[output_dir]/<start_name>_context.txt' (từ config).",
+        help="Chỉ định file output. Mặc định: tự động tạo trong 'output_dir'.",
     )
     pack_group.add_argument(
-        "-a",
-        "--all-clean",
+        # --- SỬA LỖI ---
+        # Loại bỏ cờ ngắn "-S"
+        # "-S",
+        # --- KẾT THÚC SỬA LỖI ---
+        "--stdout",
         action="store_true",
-        help="Làm sạch (xóa docstring/comment) nội dung của các file có đuôi trong 'clean_extensions' trước khi đóng gói.",
-    )
-    pack_group.add_argument(
-        "-f",
-        "--format",
-        action="store_true",
-        help="Định dạng (format) nội dung của các file có đuôi trong 'format_extensions' (ví dụ: chạy Black cho .py).",
+        help="In kết quả ra màn hình (stdout) thay vì ghi vào file.",
     )
     pack_group.add_argument(
         "-e",
         "--extensions",
         type=str,
         default=None,
-        help="Chỉ bao gồm các đuôi file này (vd: 'py,md'). Hỗ trợ +/-/~.",
-    )
-    pack_group.add_argument(
-        "-x",
-        "--clean-extensions",
-        type=str,
-        default=None,
-        help="Chỉ định/sửa đổi danh sách đuôi file cần làm sạch KHI -a được bật (vd: 'py,js'). Hỗ trợ +/-/~.",
+        help="Danh sách đuôi file cần BAO GỒM. Hỗ trợ + (thêm) và ~ (bớt).",
     )
     pack_group.add_argument(
         "-I",
         "--ignore",
         type=str,
         default=None,
-        help="Các pattern (giống .gitignore) để bỏ qua (THÊM vào config).",
+        help="Danh sách pattern (giống .gitignore) để BỎ QUA (THÊM vào config).",
     )
     pack_group.add_argument(
         "-N",
         "--no-gitignore",
         action="store_true",
-        help="Không tôn trọng các file .gitignore.",
+        help="Không tự động đọc và áp dụng các quy tắc từ file .gitignore.",
     )
     pack_group.add_argument(
         "-d",
         "--dry-run",
         action="store_true",
-        help="Chỉ in danh sách file sẽ được đóng gói (không đọc/in nội dung).",
-    )
-    pack_group.add_argument(
-        "--stdout",
-        action="store_true",
-        help="In kết quả ra stdout (console) thay vì ghi file.",
+        help="Chế độ chạy thử. Chỉ hiển thị cây thư mục và danh sách file, không đọc/ghi nội dung.",
     )
     pack_group.add_argument(
         "--no-header",
         action="store_true",
-        help="Không in header phân tách ('===== path/to/file.py =====').",
+        help="Không in dòng header '===== Path: ... =====' trước nội dung mỗi file.",
     )
     pack_group.add_argument(
         "--no-tree",
         action="store_true",
-        help="Không in cây thư mục của các file được chọn ở đầu output.",
+        help="Không hiển thị cây thư mục ở đầu file output.",
     )
     pack_group.add_argument(
         "--copy",
         action="store_true",
         dest="copy_to_clipboard",
-        help="Sao chép file output (không phải nội dung) vào clipboard hệ thống.",
+        help="Tự động sao chép ĐƯỜNG DẪN file output vào clipboard.",
+    )
+    pack_group.add_argument(
+        "-a",
+        "--all-clean",
+        action="store_true",
+        help="Làm sạch nội dung (xóa docstring/comment) của các file trong 'clean_extensions'.",
+    )
+    pack_group.add_argument(
+        "-x",
+        "--clean-extensions",
+        type=str,
+        default=None,
+        help="Ghi đè/sửa đổi danh sách đuôi file cần LÀM SẠCH (khi -a được bật). Hỗ trợ + và ~.",
+    )
+    pack_group.add_argument(
+        "-b",
+        "--beautify",
+        action="store_true",
+        dest="format",
+        help="Định dạng (format) code TRƯỚC KHI đóng gói (ví dụ: chạy Black cho .py).",
     )
 
     config_group = parser.add_argument_group("Khởi tạo Cấu hình (chạy riêng)")
@@ -158,13 +151,13 @@ def main():
         "-C",
         "--config-local",
         action="store_true",
-        help=f"Khởi tạo/cập nhật file {CONFIG_FILENAME} cục bộ.",
+        help=f"Khởi tạo/cập nhật file {CONFIG_FILENAME} (scope 'local').",
     )
 
     args = parser.parse_args()
 
-    logger = setup_logging(script_name="pcode")
-    logger.debug("Script pcode bắt đầu.")
+    logger = setup_logging(script_name="PCode")
+    logger.debug("PCode script started.")
 
     try:
         config_action_taken = handle_config_init_request(
@@ -190,35 +183,27 @@ def main():
         raw_paths=args.start_paths_arg,
         default_path_str=DEFAULT_START_PATH,
     )
+
     if not validated_paths:
         logger.warning("Không tìm thấy đường dẫn hợp lệ nào để quét. Đã dừng.")
         sys.exit(0)
 
-    reporting_root = resolve_reporting_root(logger, validated_paths, args.root)
+    reporting_root = resolve_reporting_root(
+        logger, validated_paths, cli_root_arg=None
+    )
 
-    files_to_process: List[Path] = [p for p in validated_paths if p.is_file()]
-    dirs_to_scan: List[Path] = [p for p in validated_paths if p.is_dir()]
-
-    output_path_obj = Path(args.output).expanduser() if args.output else None
-
-    cli_args_dict = {
-        "output": output_path_obj,
-        "stdout": args.stdout,
-        "extensions": args.extensions,
-        "ignore": args.ignore,
-        "no_gitignore": args.no_gitignore,
-        "dry_run": args.dry_run,
-        "no_header": args.no_header,
-        "no_tree": args.no_tree,
-        "copy_to_clipboard": args.copy_to_clipboard,
-        "all_clean": args.all_clean,
-        "clean_extensions": args.clean_extensions,
-        "format": args.format,
-    }
+    files_to_process: List[Path] = []
+    dirs_to_scan: List[Path] = []
+    for path in validated_paths:
+        if path.is_file():
+            files_to_process.append(path)
+        elif path.is_dir():
+            dirs_to_scan.append(path)
 
     try:
+        cli_args_dict = vars(args)
 
-        result = process_pack_code_logic(
+        results_from_core = process_pack_code_logic(
             logger=logger,
             cli_args=cli_args_dict,
             files_to_process=files_to_process,
@@ -226,14 +211,9 @@ def main():
             reporting_root=reporting_root,
             script_file_path=THIS_SCRIPT_PATH,
         )
-        if result:
-            execute_pack_code_action(logger=logger, result=result)
-        if (
-            not (args.dry_run or args.stdout)
-            and result
-            and result.get("status") == "ok"
-        ):
-            log_success(logger, "Hoạt động hoàn tất thành công.")
+
+        execute_pack_code_action(logger=logger, result=results_from_core)
+
     except Exception as e:
         logger.error(f"❌ Đã xảy ra lỗi không mong muốn: {e}")
         logger.debug("Traceback:", exc_info=True)
@@ -244,5 +224,5 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print("\n\n❌ Hoạt động bị dừng bởi người dùng.")
+        print("\n\n❌ [Lệnh dừng] Đã dừng đóng gói Code.")
         sys.exit(1)
