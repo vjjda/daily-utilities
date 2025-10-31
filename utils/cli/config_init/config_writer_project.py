@@ -56,7 +56,8 @@ def write_project_config_section(
                     f"Generated content unexpectedly missing section [{config_section_name}] after parsing."
                 )
             
-            # Lấy Table object MỚI (đây là tomlkit.Table, không phải dict)
+            # SỬA: Lấy Table object (Item) từ template, *KHÔNG unwrap*
+            # new_section_table giờ đây là một tomlkit.Table, không phải dict
             new_section_table: Table = parsed_template_doc[config_section_name] # type: ignore
             
         except (ParseError, ValueError, Exception) as e:
@@ -88,9 +89,9 @@ def write_project_config_section(
                 
                 existing_section_table: Table = main_doc[config_section_name] # type: ignore
                 
-                # Lặp qua các key trong Table MỚI (từ template)
+                # SỬA: Lặp qua các key trong Table MỚI (từ template)
                 for key in new_section_table.keys(): 
-                    # Lấy Item MỚI (value + trivia/comment) từ template
+                    # SỬA: Lấy Item (value + trivia/comment) từ template
                     new_item: Item = new_section_table.item(key) # type: ignore
                     
                     # SỬA: Gán đè/thêm Item (value + comment) vào Bảng CŨ
