@@ -1,5 +1,8 @@
 # Path: modules/no_doc/no_doc_internal/no_doc_task_dir.py
-
+"""
+(Internal Task)
+Handles the logic for processing a user-specified directory.
+"""
 
 import logging
 import argparse
@@ -10,16 +13,15 @@ from . import (
     load_config_files,
     merge_ndoc_configs,
     scan_files,
-    analyze_file_content,
+    # SỬA: Đổi tên analyzer
+    analyze_file_for_cleaning_and_formatting,
 )
 
 from ..no_doc_executor import print_dry_run_report_for_group
 
-
 __all__ = ["process_no_doc_task_dir"]
 
 FileResult = Dict[str, Any]
-
 
 def process_no_doc_task_dir(
     scan_dir: Path,
@@ -28,6 +30,8 @@ def process_no_doc_task_dir(
     processed_files: Set[Path],
     reporting_root: Path,
     script_file_path: Path,
+    # SỬA: Thêm tham số format
+    format_flag: bool
 ) -> List[FileResult]:
     logger.info(f"--- 📁 Quét thư mục: {scan_dir.name} ---")
 
@@ -43,6 +47,8 @@ def process_no_doc_task_dir(
     )
     final_extensions_list = merged_config["final_extensions_list"]
     final_ignore_list = merged_config["final_ignore_list"]
+    # SỬA: Lấy set format
+    final_format_extensions_set = merged_config["final_format_extensions_set"]
 
     files_in_dir, scan_status = scan_files(
         logger=logger,
@@ -56,6 +62,8 @@ def process_no_doc_task_dir(
     logger.info(f"  [Cấu hình áp dụng]")
     logger.info(f"    - Extensions: {sorted(list(final_extensions_list))}")
     logger.info(f"    - Ignore (từ config/CLI): {final_ignore_list}")
+    # SỬA: Thêm log
+    logger.info(f"    - Format Extensions (-f): {sorted(list(final_format_extensions_set))}")
     logger.info(
         f"    - Tải .gitignore cục bộ: {'Có' if scan_status['gitignore_found'] else 'Không'}"
     )
@@ -81,7 +89,14 @@ def process_no_doc_task_dir(
         if resolved_file in processed_files:
             continue
 
-        result = analyze_file_content(file_path, logger, all_clean)
+        # SỬA: Gọi analyzer mới
+        result = analyze_file_for_cleaning_and_formatting(
+            file_path=file_path, 
+            logger=logger, 
+            all_clean=all_clean,
+            format_flag=format_flag,
+            format_extensions_set=final_format_extensions_set
+        )
         if result:
             dir_results.append(result)
         processed_files.add(resolved_file)
@@ -90,6 +105,8 @@ def process_no_doc_task_dir(
         print_dry_run_report_for_group(
             logger, scan_dir.name, dir_results, reporting_root
         )
+    else:
+        logger.info(f"  -> ✅ Tất cả file trong thư mục đã sạch / đã định dạng.") # SỬA
 
     logger.info(f"--- ✅ Kết thúc {scan_dir.name} ---")
     logger.info("")

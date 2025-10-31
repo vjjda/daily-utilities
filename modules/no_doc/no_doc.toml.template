@@ -15,3 +15,9 @@ extensions = {toml_extensions} # Placeholder vẫn là list
 # Các giá trị này sẽ được THÊM vào danh sách mặc định.
 # Ví dụ: ignore = ["**/tests/*"]
 ignore = {toml_ignore} # Placeholder vẫn là list
+
+# (Tùy chọn) Danh sách các đuôi file cần FORMAT khi dùng -f/--format.
+# GHI ĐÈ hoàn toàn danh sách mặc định (thường là ["py"]).
+# (Hiện chưa có cờ CLI để sửa đổi danh sách này)
+# Ví dụ: format_extensions = ["py"]
+format_extensions = {toml_format_extensions}
