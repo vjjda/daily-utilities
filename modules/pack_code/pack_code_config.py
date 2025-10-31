@@ -17,7 +17,7 @@ __all__ = [
 
 DEFAULT_START_PATH: Final[str] = "."
 DEFAULT_EXTENSIONS: Final[str] = (
-    "md,py,txt,json,xml,yaml,yml,ini,cfg,cfg.py,sh,bash,zsh,toml,template"
+    "md,py,txt,json,xml,yaml,yml,ini,cfg,cfg.py,sh,bash,zsh,toml,template,gitignore"
 )
 DEFAULT_IGNORE: Final[str] = ".venv,venv,__pycache__,.git,.hg,.svn,.DS_Store"
 DEFAULT_INCLUDE: Final[Optional[Set[str]]] = None
