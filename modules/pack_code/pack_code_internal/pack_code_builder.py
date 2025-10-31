@@ -32,8 +32,8 @@ def assemble_packed_content(
 
             if not no_header:
 
-                start_header = f"[START_FILE_CONTENT: {rel_path_str}]"
-                end_header = f"[END_FILE_CONTENT: {rel_path_str}]"
+                start_header = f"[[START_FILE_CONTENT: {rel_path_str}]]"
+                end_header = f"[[END_FILE_CONTENT: {rel_path_str}]]"
 
                 final_content_lines.append(start_header)
                 final_content_lines.append(content)
