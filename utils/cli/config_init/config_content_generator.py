@@ -82,7 +82,6 @@ def generate_config_content(
         else:
             current_key_comment = ""
 
-    # Sắp xếp các mục theo tên key để đảm bảo thứ tự file TOML ổn định
     for key, value in sorted(effective_defaults.items()):
 
         if key in key_comments:

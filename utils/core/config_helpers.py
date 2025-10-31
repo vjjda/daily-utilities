@@ -37,7 +37,6 @@ def format_value_to_toml(value: Any) -> str:
 
         a = tomlkit.array()
 
-        # Đây là logic đúng: chỉ sort set, giữ nguyên list
         items = sorted(list(value)) if isinstance(value, set) else value
         for item in items:
 

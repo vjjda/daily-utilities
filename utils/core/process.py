@@ -38,9 +38,11 @@ def run_command(
             encoding="utf-8",
         )
 
-        stdout_clean = result.stdout.strip()
-        logger.debug(f"Lệnh '{command_list[0]}' thành công. Output:\n{stdout_clean}")
-        return True, stdout_clean
+        # Không .strip() stdout, vì nó sẽ xóa mất dòng trắng cuối
+        # file mà các formatter (như Black) cố tình thêm vào.
+        stdout_content = result.stdout
+        logger.debug(f"Lệnh '{command_list[0]}' thành công.")
+        return True, stdout_content
 
     except subprocess.CalledProcessError as e:
 
