@@ -32,9 +32,8 @@ DEFAULT_INCLUDE: Final[Optional[Set[str]]] = None
 
 
 DYNAMIC_IMPORT_INDICATORS: Final[List[str]] = [
-    "import_module",
     "globals()[name]",
-    "globals()[name] = obj",
+    "globals().update",
 ]
 
 
