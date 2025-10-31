@@ -1,31 +1,28 @@
 # Path: scripts/pack_code.py
-
+"""
+Entrypoint (cổng vào) cho pcode (Pack Code).
+"""
 
 import sys
 import argparse
 import logging
 from pathlib import Path
 from typing import Optional, List, Dict, Any, Final
-import os
+import os 
 
-
+# --- Thiết lập sys.path ---
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.append(str(PROJECT_ROOT))
 
 try:
     from utils.logging_config import setup_logging, log_success
-
-    from utils.cli import handle_config_init_request, resolve_input_paths
+    # SỬA: Import 'resolve_reporting_root'
+    from utils.cli import handle_config_init_request, resolve_input_paths, resolve_reporting_root
     from utils.core import parse_comma_list
     from modules.pack_code.pack_code_config import (
-        DEFAULT_START_PATH,
-        DEFAULT_EXTENSIONS,
-        DEFAULT_IGNORE,
-        DEFAULT_CLEAN_EXTENSIONS,
-        DEFAULT_OUTPUT_DIR,
-        PROJECT_CONFIG_FILENAME,
-        CONFIG_FILENAME,
-        CONFIG_SECTION_NAME,
+        DEFAULT_START_PATH, DEFAULT_EXTENSIONS, DEFAULT_IGNORE,
+        DEFAULT_CLEAN_EXTENSIONS, DEFAULT_OUTPUT_DIR,
+        PROJECT_CONFIG_FILENAME, CONFIG_FILENAME, CONFIG_SECTION_NAME,
     )
     from modules.pack_code import (
         process_pack_code_logic,
@@ -60,7 +57,15 @@ def main():
         default=[],
         help='Các đường dẫn (file hoặc thư mục) để quét. Mặc định: ".".',
     )
-
+    # SỬA: Thêm cờ --root
+    pack_group.add_argument(
+        "-r",
+        "--root",
+        type=str,
+        default=None,
+        help="Đường dẫn gốc (Project Root) tường minh để tính toán '# Path:'.\nMặc định: Tự động tìm gốc Git từ các đường dẫn đầu vào.",
+    )
+    # ... (các cờ -o, -a, -e, -x, -I, -N, -d, --stdout, --no-header, --no-tree, --copy không đổi) ...
     pack_group.add_argument(
         "-o",
         "--output",
@@ -130,7 +135,7 @@ def main():
     )
 
     config_group = parser.add_argument_group("Khởi tạo Cấu hình (chạy riêng)")
-
+    # ... (không đổi) ...
     config_group.add_argument(
         "-c",
         "--config-project",
@@ -149,6 +154,7 @@ def main():
     logger = setup_logging(script_name="pcode")
     logger.debug("Script pcode bắt đầu.")
 
+    # ... (Config init không đổi) ...
     try:
         config_action_taken = handle_config_init_request(
             logger=logger,
@@ -168,42 +174,34 @@ def main():
         logger.debug("Traceback:", exc_info=True)
         sys.exit(1)
 
+    # --- SỬA: Logic xử lý đa đầu vào VÀ --root ---
+    
+    # 1. Resolve tất cả đường dẫn
     validated_paths: List[Path] = resolve_input_paths(
         logger=logger,
         raw_paths=args.start_paths_arg,
-        default_path_str=DEFAULT_START_PATH,
+        default_path_str=DEFAULT_START_PATH
     )
     if not validated_paths:
         logger.warning("Không tìm thấy đường dẫn hợp lệ nào để quét. Đã dừng.")
         sys.exit(0)
 
-    reporting_root: Optional[Path]
-    try:
+    # 2. SỬA: Gọi tiện ích mới
+    reporting_root = resolve_reporting_root(
+        logger, 
+        validated_paths, 
+        args.root # Truyền giá trị từ cờ -r/--root
+    )
 
-        abs_path_strings = [str(p.resolve()) for p in validated_paths]
-        common_path_str = os.path.commonpath(abs_path_strings)
-        reporting_root = Path(common_path_str)
-
-        if reporting_root.is_file():
-            reporting_root = reporting_root.parent
-
-    except ValueError:
-
-        reporting_root = None
-
-    if reporting_root:
-        logger.debug(f"Gốc báo cáo (Reporting Root) được xác định: {reporting_root}")
-    else:
-        logger.debug(
-            "Không tìm thấy gốc báo cáo chung. Sẽ sử dụng đường dẫn tuyệt đối."
-        )
-
+    # 3. Phân loại file/thư mục
     files_to_process: List[Path] = [p for p in validated_paths if p.is_file()]
     dirs_to_scan: List[Path] = [p for p in validated_paths if p.is_dir()]
 
+    # 4. Chuẩn bị CLI args
     output_path_obj = Path(args.output).expanduser() if args.output else None
-
+    
     cli_args_dict = {
+        # (Đã loại bỏ 'start_path')
         "output": output_path_obj,
         "stdout": args.stdout,
         "extensions": args.extensions,
@@ -215,17 +213,18 @@ def main():
         "copy_to_clipboard": args.copy_to_clipboard,
         "all_clean": args.all_clean,
         "clean_extensions": args.clean_extensions,
+        # (Không cần truyền 'root' vì nó đã được xử lý)
     }
 
     try:
-
+        # 5. Gọi Core với logic mới
         result = process_pack_code_logic(
             logger=logger,
             cli_args=cli_args_dict,
             files_to_process=files_to_process,
             dirs_to_scan=dirs_to_scan,
-            reporting_root=reporting_root,
-            script_file_path=PROJECT_ROOT / "scripts" / "pack_code.py",
+            reporting_root=reporting_root, # Truyền gốc báo cáo
+            script_file_path=PROJECT_ROOT / "scripts" / "pack_code.py"
         )
         if result:
             execute_pack_code_action(logger=logger, result=result)
@@ -239,7 +238,6 @@ def main():
         logger.error(f"❌ Đã xảy ra lỗi không mong muốn: {e}")
         logger.debug("Traceback:", exc_info=True)
         sys.exit(1)
-
 
 if __name__ == "__main__":
     try:

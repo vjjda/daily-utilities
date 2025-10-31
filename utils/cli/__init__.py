@@ -1,14 +1,22 @@
 # Path: utils/cli/__init__.py
+"""
+Cổng giao tiếp (Facade) cho các tiện ích giao diện dòng lệnh (CLI).
+"""
 
 from pathlib import Path
 from importlib import import_module
 from typing import List
 
-
+# --- Tự động Tái xuất (Dynamic Re-export) ---
 current_dir = Path(__file__).parent
 
-
-modules_to_export: List[str] = ["ui_helpers", "config_writer", "path_resolver"]
+# SỬA: Thêm 'reporting_root_resolver'
+modules_to_export: List[str] = [
+    "ui_helpers", 
+    "config_writer", 
+    "path_resolver",
+    "reporting_root_resolver" # <-- THÊM MỚI
+]
 
 __all__: List[str] = []
 
@@ -16,21 +24,21 @@ for module_name in modules_to_export:
     try:
         module = import_module(f".{module_name}", package=__name__)
 
-        if hasattr(module, "__all__"):
-            public_symbols = getattr(module, "__all__")
+        if hasattr(module, '__all__'):
+            public_symbols = getattr(module, '__all__')
             for name in public_symbols:
                 obj = getattr(module, name)
                 globals()[name] = obj
             __all__.extend(public_symbols)
         else:
-            print(
+             print(
                 f"Cảnh báo: Module '{module_name}' trong utils/cli thiếu định nghĩa __all__."
             )
 
     except ImportError as e:
         print(f"Cảnh báo: Không thể import từ {module_name} trong utils/cli: {e}")
 
-
+# Dọn dẹp
 del Path, import_module, List, current_dir, modules_to_export
 if "module_name" in locals():
     del module_name
