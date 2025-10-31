@@ -79,25 +79,25 @@ def process_stubgen_task_dir(
         logger.info("")
         return [], []
 
-    logger.info(f"  -> ⚡ Tìm thấy {len(gateway_files)} gateway, đang phân tích (song song)...")
+    logger.info(
+        f"  -> ⚡ Tìm thấy {len(gateway_files)} gateway, đang phân tích (song song)..."
+    )
 
     dir_raw_results: List[Dict[str, Any]] = []
-    
-    # Xác định các file cần chạy (chưa được xử lý)
+
     files_to_submit: List[Path] = []
     for init_file in gateway_files:
         resolved_file = init_file.resolve()
         if resolved_file in processed_files:
             continue
-            
-        # Thêm vào set *trước* khi đưa vào pool để tránh trùng lặp
+
         processed_files.add(resolved_file)
         files_to_submit.append(init_file)
 
     if not files_to_submit:
         logger.info("  -> ✅ Tất cả file đã được xử lý (do là file input riêng lẻ).")
     else:
-        # Sử dụng ThreadPoolExecutor để chạy song song
+
         max_workers = os.cpu_count() or 4
         logger.debug(f"Sử dụng ThreadPoolExecutor với max_workers={max_workers}")
 
@@ -118,7 +118,7 @@ def process_stubgen_task_dir(
                 init_file = future_to_file[future]
                 try:
                     stub_content, symbols_count = future.result()
-                    
+
                     if stub_content:
                         stub_path = init_file.with_suffix(".pyi")
                         dir_raw_results.append(
@@ -127,13 +127,16 @@ def process_stubgen_task_dir(
                                 "stub_path": stub_path,
                                 "content": stub_content,
                                 "symbols_count": symbols_count,
-                                "rel_path": stub_path.relative_to(reporting_root).as_posix(),
+                                "rel_path": stub_path.relative_to(
+                                    reporting_root
+                                ).as_posix(),
                             }
                         )
                 except Exception as e:
-                    logger.error(f"❌ Lỗi khi xử lý file song song '{init_file.name}': {e}")
+                    logger.error(
+                        f"❌ Lỗi khi xử lý file song song '{init_file.name}': {e}"
+                    )
 
-    # Sắp xếp kết quả để đảm bảo thứ tự báo cáo ổn định
     dir_raw_results.sort(key=lambda r: r["stub_path"])
 
     create, overwrite, _ = classify_and_report_stub_changes(
