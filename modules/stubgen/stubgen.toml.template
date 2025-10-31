@@ -18,10 +18,10 @@ include = {toml_include}
 # --- Cấu hình nâng cao (Ít khi cần thay đổi) ---
 
 # dynamic_import_indicators (List[str]): Các chuỗi code nhận diện gateway động.
-# dynamic_import_indicators = ["import_module", "globals()[name] = obj"]
+dynamic_import_indicators = ["import_module", "globals()[name] = obj"]
 
 # ast_module_list_name (str): Tên biến list chứa danh sách submodule trong AST.
-# ast_module_list_name = "modules_to_export"
+ast_module_list_name = "modules_to_export"
 
 # ast_all_list_name (str): Tên biến list __all__ trong AST của submodule.
-# ast_all_list_name = "__all__"
+ast_all_list_name = "__all__"
