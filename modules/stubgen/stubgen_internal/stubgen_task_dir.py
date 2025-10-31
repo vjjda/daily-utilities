@@ -2,8 +2,10 @@
 
 import logging
 import argparse
+import os
 from pathlib import Path
 from typing import Dict, Any, List, Optional, Set, Tuple
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from typing import TYPE_CHECKING
 
@@ -77,34 +79,62 @@ def process_stubgen_task_dir(
         logger.info("")
         return [], []
 
-    logger.info(f"  -> ⚡ Tìm thấy {len(gateway_files)} gateway, đang phân tích...")
+    logger.info(f"  -> ⚡ Tìm thấy {len(gateway_files)} gateway, đang phân tích (song song)...")
 
     dir_raw_results: List[Dict[str, Any]] = []
+    
+    # Xác định các file cần chạy (chưa được xử lý)
+    files_to_submit: List[Path] = []
     for init_file in gateway_files:
         resolved_file = init_file.resolve()
         if resolved_file in processed_files:
             continue
-
-        stub_content, symbols_count = process_single_gateway(
-            init_file=init_file,
-            scan_root=scan_dir,
-            merged_config=merged_config,
-            stub_template_str=stub_template_str,
-            logger=logger,
-        )
-
-        if stub_content:
-            stub_path = init_file.with_suffix(".pyi")
-            dir_raw_results.append(
-                {
-                    "init_path": init_file,
-                    "stub_path": stub_path,
-                    "content": stub_content,
-                    "symbols_count": symbols_count,
-                    "rel_path": stub_path.relative_to(reporting_root).as_posix(),
-                }
-            )
+            
+        # Thêm vào set *trước* khi đưa vào pool để tránh trùng lặp
         processed_files.add(resolved_file)
+        files_to_submit.append(init_file)
+
+    if not files_to_submit:
+        logger.info("  -> ✅ Tất cả file đã được xử lý (do là file input riêng lẻ).")
+    else:
+        # Sử dụng ThreadPoolExecutor để chạy song song
+        max_workers = os.cpu_count() or 4
+        logger.debug(f"Sử dụng ThreadPoolExecutor với max_workers={max_workers}")
+
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            future_to_file = {
+                executor.submit(
+                    process_single_gateway,
+                    init_file,
+                    scan_dir,
+                    merged_config,
+                    stub_template_str,
+                    logger,
+                ): init_file
+                for init_file in files_to_submit
+            }
+
+            for future in as_completed(future_to_file):
+                init_file = future_to_file[future]
+                try:
+                    stub_content, symbols_count = future.result()
+                    
+                    if stub_content:
+                        stub_path = init_file.with_suffix(".pyi")
+                        dir_raw_results.append(
+                            {
+                                "init_path": init_file,
+                                "stub_path": stub_path,
+                                "content": stub_content,
+                                "symbols_count": symbols_count,
+                                "rel_path": stub_path.relative_to(reporting_root).as_posix(),
+                            }
+                        )
+                except Exception as e:
+                    logger.error(f"❌ Lỗi khi xử lý file song song '{init_file.name}': {e}")
+
+    # Sắp xếp kết quả để đảm bảo thứ tự báo cáo ổn định
+    dir_raw_results.sort(key=lambda r: r["stub_path"])
 
     create, overwrite, _ = classify_and_report_stub_changes(
         logger, scan_dir.name, dir_raw_results, reporting_root
