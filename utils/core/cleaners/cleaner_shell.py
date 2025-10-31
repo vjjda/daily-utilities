@@ -1,5 +1,4 @@
 # Path: utils/core/cleaners/cleaner_shell.py
-
 import logging
 import re
 from typing import List
@@ -32,6 +31,13 @@ def clean_shell_code(
 
     cleaned_code_block = []
     for line in lines:
+        stripped_line = line.strip()
+
+        # SỬA: Thêm điều kiện giữ lại # Path:
+        if stripped_line.startswith("# Path:"):
+            cleaned_code_block.append(line)
+            continue
+        
         in_single_quotes = False
         in_double_quotes = False
         comment_start_index = -1
@@ -42,19 +48,15 @@ def clean_shell_code(
             elif char == '"' and (i == 0 or line[i - 1] != "\\"):
                 in_double_quotes = not in_double_quotes
             elif char == "#" and not in_single_quotes and not in_double_quotes:
-
+                # Nếu là comment (và không phải # Path:), đánh dấu để xóa
                 comment_start_index = i
                 break
 
         if comment_start_index != -1:
-
             cleaned_part = line[:comment_start_index].rstrip()
-
             if cleaned_part:
                 cleaned_code_block.append(cleaned_part)
-
         else:
-
             if line.strip():
                 cleaned_code_block.append(line)
 
