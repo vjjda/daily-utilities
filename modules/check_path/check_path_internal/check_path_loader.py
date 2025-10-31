@@ -1,5 +1,4 @@
-# Path: modules/check_path/check_path_loader.py
-
+# Path: modules/check_path/check_path_internal/check_path_loader.py
 import logging
 import sys
 from pathlib import Path
@@ -13,8 +12,8 @@ except ImportError:
     )
     sys.exit(1)
 
-
-from .check_path_config import (
+# SỬA: Import từ thư mục cha (..)
+from ..check_path_config import (
     PROJECT_CONFIG_FILENAME,
     CONFIG_SECTION_NAME,
     CONFIG_FILENAME,

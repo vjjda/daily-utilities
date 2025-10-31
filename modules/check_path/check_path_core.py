@@ -1,51 +1,89 @@
 # Path: modules/check_path/check_path_core.py
-
 import logging
 import argparse
 from pathlib import Path
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Set
+import sys
 
-from .check_path_loader import load_config_files
-from .check_path_merger import merge_check_path_configs
-from .check_path_scanner import scan_for_files
-from .check_path_analyzer import analyze_files_for_path_comments
+# Thiết lập sys.path
+if not 'PROJECT_ROOT' in locals():
+    sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
+
+# SỬA: Import các hàm Task từ facade nội bộ
+from .check_path_internal import (
+    merge_check_path_configs,
+    process_check_path_task_file,
+    process_check_path_task_dir
+)
+from .check_path_config import DEFAULT_EXTENSIONS
 
 __all__ = ["process_check_path_logic"]
 
+FileResult = Dict[str, Any] # Type alias
 
+# SỬA: Chữ ký hàm mới
 def process_check_path_logic(
     logger: logging.Logger,
-    project_root: Path,
+    files_to_process: List[Path],
+    dirs_to_scan: List[Path],
     cli_args: argparse.Namespace,
     script_file_path: Path,
-) -> List[Dict[str, Any]]:
+) -> List[FileResult]:
+    """
+    Điều phối toàn bộ quá trình kiểm tra path comment (Orchestrator).
+    """
+    
+    all_results: List[FileResult] = []
+    processed_files: Set[Path] = set()
+    reporting_root = Path.cwd()
 
-    file_config_data = load_config_files(project_root, logger)
-
-    cli_extensions: Optional[str] = getattr(cli_args, "extensions", None)
-    cli_ignore: Optional[str] = getattr(cli_args, "ignore", None)
-
-    merged_config = merge_check_path_configs(
+    # 1. Hợp nhất config MỘT LẦN cho các file lẻ
+    cli_extensions_str: Optional[str] = getattr(cli_args, "extensions", None)
+    default_file_config = merge_check_path_configs(
         logger=logger,
-        cli_extensions=cli_extensions,
-        cli_ignore=cli_ignore,
-        file_config_data=file_config_data,
+        cli_extensions=cli_extensions_str,
+        cli_ignore=None,
+        file_config_data={},
     )
+    # SỬA: Config của cpath trả về list, không phải set
+    file_extensions = set(default_file_config["final_extensions_list"])
+    # Cần thêm dấu . vào extensions cho cpath
+    file_extensions_with_dot = {f".{ext}" if not ext.startswith('.') else ext for ext in file_extensions}
 
-    final_extensions_list = merged_config["final_extensions_list"]
-    final_ignore_list = merged_config["final_ignore_list"]
 
-    target_dir_str: Optional[str] = getattr(cli_args, "target_directory_arg", None)
-    check_mode: bool = getattr(cli_args, "dry_run", False)
+    # 2. XỬ LÝ CÁC FILE RIÊNG LẺ
+    if files_to_process:
+        logger.info(f"Đang xử lý {len(files_to_process)} file riêng lẻ...")
+        logger.info(f"  [Cấu hình áp dụng cho file lẻ]")
+        logger.info(f"    - Extensions: {sorted(list(file_extensions))}")
+        logger.info(f"    - (Bỏ qua .gitignore và config file)")
+        
+        for file_path in files_to_process:
+            results = process_check_path_task_file(
+                file_path=file_path,
+                cli_args=cli_args,
+                file_extensions=file_extensions_with_dot,
+                logger=logger,
+                processed_files=processed_files,
+                reporting_root=reporting_root,
+            )
+            all_results.extend(results)
 
-    files_to_process = scan_for_files(
-        logger=logger,
-        project_root=project_root,
-        target_dir_str=target_dir_str if target_dir_str != "." else None,
-        extensions=final_extensions_list,
-        ignore_list=final_ignore_list,
-        script_file_path=script_file_path,
-        check_mode=check_mode,
-    )
+    # 3. XỬ LÝ CÁC THƯ MỤC
+    if dirs_to_scan:
+        logger.info(f"Đang xử lý {len(dirs_to_scan)} thư mục...")
+        for scan_dir in dirs_to_scan:
+            results = process_check_path_task_dir(
+                scan_dir=scan_dir,
+                cli_args=cli_args,
+                logger=logger,
+                processed_files=processed_files,
+                reporting_root=reporting_root,
+                script_file_path=script_file_path,
+            )
+            all_results.extend(results)
 
-    return analyze_files_for_path_comments(files_to_process, project_root, logger)
+    if not all_results and (files_to_process or dirs_to_scan):
+        logger.info("Quét hoàn tất. Tất cả file đã tuân thủ.")
+        
+    return all_results

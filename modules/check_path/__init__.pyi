@@ -11,14 +11,9 @@ CONFIG_SECTION_NAME: Any
 DEFAULT_EXTENSIONS: Any
 DEFAULT_IGNORE: Any
 PROJECT_CONFIG_FILENAME: Any
-analyze_files_for_path_comments: Any
-apply_block_comment_rule: Any
-apply_line_comment_rule: Any
 execute_check_path_action: Any
-load_config_files: Any
-merge_check_path_configs: Any
+print_dry_run_report_for_group: Any
 process_check_path_logic: Any
-scan_for_files: Any
 
 # Static declaration of exported symbols (for Pylance)
 __all__: List[str] = [
@@ -29,12 +24,7 @@ __all__: List[str] = [
     "DEFAULT_EXTENSIONS",
     "DEFAULT_IGNORE",
     "PROJECT_CONFIG_FILENAME",
-    "analyze_files_for_path_comments",
-    "apply_block_comment_rule",
-    "apply_line_comment_rule",
     "execute_check_path_action",
-    "load_config_files",
-    "merge_check_path_configs",
+    "print_dry_run_report_for_group",
     "process_check_path_logic",
-    "scan_for_files",
 ]

@@ -1,10 +1,10 @@
-# Path: modules/check_path/check_path_merger.py
-
+# Path: modules/check_path/check_path_internal/check_path_merger.py
 import logging
 from typing import Dict, Any, List, Set, Optional
 
 from utils.core import resolve_config_list, parse_comma_list, resolve_set_modification
-from .check_path_config import DEFAULT_EXTENSIONS, DEFAULT_IGNORE
+# SỬA: Import từ thư mục cha (..)
+from ..check_path_config import DEFAULT_EXTENSIONS, DEFAULT_IGNORE
 
 __all__ = ["merge_check_path_configs"]
 
@@ -20,7 +20,6 @@ def merge_check_path_configs(
 
     file_ext_list: Optional[List[str]]
     if isinstance(file_extensions_value, str):
-
         file_ext_list = list(parse_comma_list(file_extensions_value))
     else:
         file_ext_list = file_extensions_value
@@ -36,16 +35,7 @@ def merge_check_path_configs(
     final_extensions_set = resolve_set_modification(
         tentative_set=tentative_extensions, cli_string=cli_extensions
     )
-
-    if cli_extensions:
-        logger.debug(
-            f"Đã áp dụng logic CLI: '{cli_extensions}'. Set 'extensions' cuối cùng: {sorted(list(final_extensions_set))}"
-        )
-    else:
-        logger.debug(
-            f"Set 'extensions' cuối cùng (không có CLI): {sorted(list(final_extensions_set))}"
-        )
-
+    
     final_extensions_list = sorted(list(final_extensions_set))
 
     final_ignore_list = resolve_config_list(

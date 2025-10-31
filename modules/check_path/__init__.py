@@ -1,22 +1,15 @@
 # Path: modules/check_path/__init__.py
-
 from pathlib import Path
 from importlib import import_module
 from typing import List
 
-
 current_dir = Path(__file__).parent
 
-
+# SỬA: Dùng danh sách export tường minh
 modules_to_export: List[str] = [
     "check_path_config",
-    "check_path_loader",
-    "check_path_merger",
-    "check_path_analyzer",
     "check_path_core",
     "check_path_executor",
-    "check_path_rules",
-    "check_path_scanner",
 ]
 
 __all__: List[str] = []
@@ -33,7 +26,6 @@ for module_name in modules_to_export:
             __all__.extend(public_symbols)
     except ImportError as e:
         print(f"Warning: Could not import symbols from {module_name}: {e}")
-
 
 del Path, import_module, List, current_dir, modules_to_export, module_name
 if "module" in locals():
