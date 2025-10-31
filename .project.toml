@@ -54,12 +54,12 @@ output_dir = "~/Documents/code.context"
 # Danh sách các đuôi file (extensions) cần bao gồm.
 # Bất kỳ giá trị nào ở đây sẽ GHI ĐÈ hoàn toàn danh sách mặc định.
 # (CLI: -e "py,md" / +e "ts" / ~e "log")
-extensions = ["sh", "bash", "xml", "yml", "toml", "yaml", "json", "cfg", "py", "md", "template", "cfg.py", "ini", "zsh", "txt"]
+extensions = ["ini", "cfg.py", "template", "sh", "bash", "xml", "yaml", "toml", "cfg", "zsh", "txt", "json", "py", "md", "yml"]
 
 # Danh sách các pattern (kiểu .gitignore) để bỏ qua.
 # Các giá trị này sẽ được THÊM vào danh sách mặc định.
 # (CLI: -I "*.log,build/")
-ignore = ["venv", ".hg", ".git", ".venv", "__pycache__", ".svn", ".DS_Store"]
+ignore = ["__pycache__", ".svn", ".venv", "venv", ".hg", ".git", ".DS_Store"]
 
 clean_extensions = ["py", "sh", "zsh"]
 
