@@ -83,21 +83,28 @@ output_dir = "~/Documents/code.context"
 # Danh sách các đuôi file (extensions) cần bao gồm.
 # Bất kỳ giá trị nào ở đây sẽ GHI ĐÈ hoàn toàn danh sách mặc định.
 # (CLI: -e "py,md" / +e "ts" / ~e "log")
-extensions = ["bash", "template", "xml", "py", "cfg", "sh", "yml", "yaml", "toml", "cfg.py", "ini", "md", "json", "zsh", "txt"]
+extensions = ["md", "cfg.py", "bash", "zsh", "txt", "ini", "template", "xml", "cfg", "py", "sh", "yaml", "toml", "yml", "json"]
 
 # Danh sách các pattern (kiểu .gitignore) để bỏ qua.
 # Các giá trị này sẽ được THÊM vào danh sách mặc định.
 # (CLI: -I "*.log,build/")
-ignore = [".svn", ".git", ".DS_Store", ".hg", "venv", "__pycache__", ".venv"]
+ignore = [".git", ".hg", "venv", "__pycache__", ".DS_Store", ".venv", ".svn"]
+
+clean_extensions = ["py", "sh", "zsh"]
+
+format_extensions = ["py"]
 
 [ndoc]
 
 # extensions (List[str]): Danh sách các đuôi file cần bao gồm.
-# GHI ĐÈ hoàn toàn danh sách mặc định CỦA SCRIPT (là keys của map).
-# Ví dụ: extensions = ["py", "js"] # Chỉ xử lý py và js nếu có cleaner # Placeholder vẫn là list
-extensions = ["bash", "py", "sh", "zsh"]
+# GHI ĐÈ hoàn toàn danh sách mặc định CỦA SCRIPT.
+# Ví dụ: extensions = ["py", "pycst"]
+# Mặc định (từ config set): {toml_extensions} # Placeholder vẫn là list
+extensions = ["py"]
 
 # ignore (List[str]): Danh sách các pattern (kiểu .gitignore) để bỏ qua.
 # Các giá trị này sẽ được THÊM vào danh sách mặc định.
 # Ví dụ: ignore = ["**/tests/*"] # Placeholder vẫn là list
 ignore = [".DS_Store", ".git", ".hg", ".svn", ".venv", "__pycache__", "build", "dist", "node_modules", "out", "venv"]
+
+format_extensions = ["py"]
