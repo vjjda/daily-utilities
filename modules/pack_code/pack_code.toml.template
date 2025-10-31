@@ -1,4 +1,3 @@
-# Path: modules/pack_code/pack_code.toml.template
 # File cấu hình cục bộ cho `pcode` (pack_code).
 #
 # Được tạo tự động bởi `pcode --config-local`.

@@ -1,4 +1,3 @@
-# Path: modules/no_doc/no_doc.toml.template
 # File cấu hình cục bộ cho `ndoc` (No Doc).
 #
 # Cài đặt tại đây sẽ GHI ĐÈ cài đặt trong `.project.toml`.
