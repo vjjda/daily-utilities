@@ -1,5 +1,4 @@
 # Path: utils/cli/config_init/config_writer_project.py
-
 import logging
 from pathlib import Path
 from typing import Optional, Dict, Any
@@ -13,7 +12,6 @@ except ImportError:
     ParseError = Exception
     ConvertError = Exception
 
-
 from ..ui_helpers import prompt_config_overwrite
 from utils.logging_config import log_success
 
@@ -26,13 +24,17 @@ def write_project_config_section(
     config_section_name: str,
     new_section_content_string: str,
 ) -> Optional[Path]:
+    """
+    Ghi/cập nhật một section vào file .project.toml, 
+    bảo toàn comment và cấu trúc.
+    """
 
     if tomlkit is None:
-
         raise ImportError("Thư viện 'tomlkit' không được cài đặt.")
 
     should_write = True
     try:
+        # 1. Tải file .project.toml hiện có (nếu có)
         content = (
             config_file_path.read_text(encoding="utf-8")
             if config_file_path.exists()
@@ -40,6 +42,20 @@ def write_project_config_section(
         )
         main_doc = tomlkit.parse(content)
 
+        # 2. Phân tích nội dung mới (từ template)
+        try:
+            parsed_template_doc = tomlkit.parse(new_section_content_string)
+            if config_section_name not in parsed_template_doc:
+                raise ValueError(
+                    f"Generated content unexpectedly missing section [{config_section_name}] after parsing."
+                )
+            # Đây là Table object mới, chứa đầy đủ key, value VÀ comment
+            new_section_table = parsed_template_doc[config_section_name]
+        except (ParseError, ValueError, Exception) as e:
+            logger.error(f"❌ Lỗi khi phân tích nội dung section đã tạo: {e}")
+            raise
+
+        # 3. Kiểm tra ghi đè
         section_existed = config_section_name in main_doc
         if section_existed:
             should_write = prompt_config_overwrite(
@@ -49,21 +65,24 @@ def write_project_config_section(
         if should_write is None:
             return None
 
+        # 4. SỬA LOGIC: Merge thông minh thay vì gán đè
         if should_write:
-            try:
+            if not section_existed:
+                # Nếu section chưa tồn tại, thêm nó vào (cách này giữ comment)
+                main_doc.add(tomlkit.comment("--- (Section được tạo/cập nhật bởi bootstrap) ---"))
+                main_doc.add(config_section_name, new_section_table)
+            else:
+                # Nếu section đã tồn tại, merge từng key một
+                # để bảo toàn các comment hiện có VÀ thêm comment mới
+                existing_section = main_doc[config_section_name]
+                
+                # Lặp qua các item MỚI (từ template, có comment)
+                for key, value in new_section_table.items():
+                    # Gán giá trị mới (tomlkit sẽ tự động
+                    # giữ lại comment của item 'value' nếu nó là tomlkit item)
+                    existing_section[key] = value
 
-                parsed_section_doc = tomlkit.parse(new_section_content_string)
-                if config_section_name not in parsed_section_doc:
-                    raise ValueError(
-                        f"Generated content unexpectedly missing section [{config_section_name}] after parsing."
-                    )
-                new_section_object = parsed_section_doc[config_section_name]
-            except (ParseError, ValueError, Exception) as e:
-                logger.error(f"❌ Lỗi khi phân tích nội dung section đã tạo: {e}")
-                raise
-
-            main_doc[config_section_name] = new_section_object
-
+            # 5. Ghi file
             with config_file_path.open("w", encoding="utf-8") as f:
                 tomlkit.dump(main_doc, f)
 
