@@ -22,7 +22,6 @@ try:
         DEFAULT_START_PATH, DEFAULT_EXTENSIONS, DEFAULT_IGNORE,
         DEFAULT_CLEAN_EXTENSIONS, DEFAULT_OUTPUT_DIR,
         PROJECT_CONFIG_FILENAME, CONFIG_FILENAME, CONFIG_SECTION_NAME,
-        # SỬA: Thêm config format
         DEFAULT_FORMAT_EXTENSIONS
     )
     from modules.pack_code import (
@@ -33,6 +32,8 @@ except ImportError as e:
     print(f"Lỗi: Không thể import các tiện ích/module dự án: {e}", file=sys.stderr)
     sys.exit(1)
 
+# SỬA: Thêm lại THIS_SCRIPT_PATH
+THIS_SCRIPT_PATH: Final[Path] = Path(__file__).resolve()
 MODULE_DIR: Final[Path] = PROJECT_ROOT / "modules" / "pack_code"
 TEMPLATE_FILENAME: Final[str] = "pack_code.toml.template"
 PCODE_DEFAULTS: Final[Dict[str, Any]] = {
@@ -40,7 +41,6 @@ PCODE_DEFAULTS: Final[Dict[str, Any]] = {
     "extensions": list(parse_comma_list(DEFAULT_EXTENSIONS)),
     "ignore": list(parse_comma_list(DEFAULT_IGNORE)),
     "clean_extensions": sorted(list(DEFAULT_CLEAN_EXTENSIONS)),
-    # SỬA: Thêm config format
     "format_extensions": sorted(list(DEFAULT_FORMAT_EXTENSIONS)),
 }
 
@@ -80,7 +80,6 @@ def main():
         action="store_true",
         help="Làm sạch (xóa docstring/comment) nội dung của các file có đuôi trong 'clean_extensions' trước khi đóng gói.",
     )
-    # SỬA: Thêm cờ -f/--format
     pack_group.add_argument(
         "-f",
         "--format",
@@ -101,7 +100,6 @@ def main():
         default=None,
         help="Chỉ định/sửa đổi danh sách đuôi file cần làm sạch KHI -a được bật (vd: 'py,js'). Hỗ trợ +/-/~.",
     )
-    # (Tạm thời chưa thêm -X/--format-extensions để giữ đơn giản, sẽ dùng config)
     pack_group.add_argument(
         "-I",
         "--ignore",
@@ -144,7 +142,6 @@ def main():
     )
 
     config_group = parser.add_argument_group("Khởi tạo Cấu hình (chạy riêng)")
-    # ... (không đổi) ...
     config_group.add_argument(
         "-c",
         "--config-project",
@@ -163,7 +160,6 @@ def main():
     logger = setup_logging(script_name="pcode")
     logger.debug("Script pcode bắt đầu.")
 
-    # ... (Config init không đổi) ...
     try:
         config_action_taken = handle_config_init_request(
             logger=logger,
@@ -219,7 +215,6 @@ def main():
         "copy_to_clipboard": args.copy_to_clipboard,
         "all_clean": args.all_clean,
         "clean_extensions": args.clean_extensions,
-        # SỬA: Thêm cờ format
         "format": args.format,
     }
 
@@ -230,8 +225,8 @@ def main():
             cli_args=cli_args_dict,
             files_to_process=files_to_process,
             dirs_to_scan=dirs_to_scan,
-            reporting_root=reporting_root,
-            script_file_path=THIS_SCRIPT_PATH # SỬA: Dùng THIS_SCRIPT_PATH
+            reporting_root=reporting_root, 
+            script_file_path=THIS_SCRIPT_PATH # SỬA: Giờ đã hợp lệ
         )
         if result:
             execute_pack_code_action(logger=logger, result=result)
