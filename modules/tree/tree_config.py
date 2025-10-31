@@ -1,5 +1,4 @@
 # Path: modules/tree/tree_config.py
-
 from typing import Set, Optional, Final
 
 __all__ = [

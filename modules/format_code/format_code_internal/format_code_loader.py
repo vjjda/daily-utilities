@@ -1,5 +1,4 @@
 # Path: modules/format_code/format_code_internal/format_code_loader.py
-
 import logging
 import sys
 from pathlib import Path

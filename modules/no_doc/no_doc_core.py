@@ -1,5 +1,4 @@
 # Path: modules/no_doc/no_doc_core.py
-
 import logging
 import argparse
 from pathlib import Path

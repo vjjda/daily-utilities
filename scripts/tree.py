@@ -1,5 +1,4 @@
 # Path: scripts/tree.py
-
 import sys
 import argparse
 import logging

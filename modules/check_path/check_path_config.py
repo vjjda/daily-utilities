@@ -1,5 +1,4 @@
 # Path: modules/check_path/check_path_config.py
-
 from typing import Dict, Any, Set, Final
 
 __all__ = [

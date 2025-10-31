@@ -1,5 +1,4 @@
 # Path: utils/cli/reporting_root_resolver.py
-
 import logging
 import os
 import sys

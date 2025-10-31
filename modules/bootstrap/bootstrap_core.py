@@ -1,5 +1,4 @@
 # Path: modules/bootstrap/bootstrap_core.py
-
 import logging
 import sys
 import argparse

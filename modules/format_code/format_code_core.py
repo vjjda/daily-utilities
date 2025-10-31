@@ -1,5 +1,4 @@
 # Path: modules/format_code/format_code_core.py
-
 import logging
 import argparse
 from pathlib import Path

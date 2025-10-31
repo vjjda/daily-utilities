@@ -1,5 +1,4 @@
 # Path: utils/cli/config_init/__init__.py
-
 from pathlib import Path
 from importlib import import_module
 from typing import List

@@ -1,5 +1,4 @@
 # Path: utils/cli/ui_helpers.py
-
 import logging
 from pathlib import Path
 from typing import Tuple, Optional, List

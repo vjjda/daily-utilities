@@ -1,5 +1,4 @@
 # Path: utils/core/formatters/formatter_python.py
-
 import logging
 import subprocess
 from pathlib import Path

@@ -1,5 +1,4 @@
 # Path: modules/check_path/check_path_internal/check_path_task_file.py
-
 import logging
 import argparse
 from pathlib import Path

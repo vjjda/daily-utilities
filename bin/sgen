@@ -1,6 +1,5 @@
 #!/usr/bin/env zsh
 # Path: bin/sgen
-
 # 1. Find the project root (the directory this script is in, then up one level)
 SCRIPT_PATH="$(readlink -f "$0" 2>/dev/null || realpath "$0" 2>/dev/null || echo "$0")"
 PROJECT_ROOT=$(cd "$(dirname "$SCRIPT_PATH")/.." && pwd)

@@ -1,5 +1,4 @@
 # Path: modules/check_path/check_path_internal/check_path_scanner.py
-
 import logging
 from pathlib import Path
 import sys

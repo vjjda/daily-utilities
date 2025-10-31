@@ -1,5 +1,4 @@
 # Path: modules/format_code/format_code_internal/format_code_scanner.py
-
 import logging
 from pathlib import Path
 import sys

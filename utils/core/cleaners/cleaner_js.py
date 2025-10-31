@@ -1,5 +1,4 @@
 # Path: utils/core/cleaners/cleaner_js.py
-
 import logging
 import re
 from typing import List, Final

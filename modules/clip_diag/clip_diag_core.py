@@ -1,5 +1,4 @@
 # Path: modules/clip_diag/clip_diag_core.py
-
 import hashlib
 import re
 import pyperclip

@@ -1,5 +1,4 @@
 # Path: modules/no_doc/no_doc_internal/no_doc_task_file.py
-
 import logging
 import argparse
 from pathlib import Path

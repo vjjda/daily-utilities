@@ -1,5 +1,4 @@
 # Path: modules/stubgen/stubgen_internal/stubgen_formatter.py
-
 from pathlib import Path
 from typing import Set
 

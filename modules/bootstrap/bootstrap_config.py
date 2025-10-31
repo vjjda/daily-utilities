@@ -1,5 +1,4 @@
 # Path: modules/bootstrap/bootstrap_config.py
-
 from pathlib import Path
 from typing import Dict, Set, Final
 

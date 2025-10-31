@@ -1,5 +1,4 @@
 # Path: utils/constants.py
-
 from pathlib import Path
 from typing import Final, Dict
 

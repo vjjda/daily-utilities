@@ -1,5 +1,4 @@
 # Path: modules/format_code/format_code_internal/format_code_merger.py
-
 import logging
 from typing import Dict, Any, List, Set, Optional
 import sys

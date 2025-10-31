@@ -1,5 +1,4 @@
 # Path: utils/cli/config_init/config_writer_local.py
-
 import logging
 from pathlib import Path
 from typing import Optional

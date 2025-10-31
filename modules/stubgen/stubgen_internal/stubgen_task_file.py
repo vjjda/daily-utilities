@@ -1,6 +1,5 @@
 # Path: modules/stubgen/stubgen_internal/stubgen_task_file.py
 
-
 import logging
 import argparse
 from pathlib import Path

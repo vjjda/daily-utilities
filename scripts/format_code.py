@@ -1,6 +1,5 @@
 # Path: scripts/format_code.py
 
-
 import sys
 import argparse
 import logging

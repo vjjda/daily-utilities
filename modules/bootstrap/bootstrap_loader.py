@@ -1,5 +1,4 @@
 # Path: modules/bootstrap/bootstrap_loader.py
-
 import logging
 import sys
 from pathlib import Path

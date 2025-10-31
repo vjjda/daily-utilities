@@ -1,6 +1,5 @@
 #!/usr/bin/env zsh
 # Path: bin/ndoc
-
 # Wrapper Zsh cho script Python (tạo tự động bởi bootstrap_tool.py)
 # Chế độ: relative (mặc định)
 
