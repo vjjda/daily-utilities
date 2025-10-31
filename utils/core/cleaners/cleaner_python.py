@@ -69,7 +69,7 @@ if LIBCST_AVAILABLE:
                 return updated_node
                 
             # Ngược lại, nếu all_clean=True, xóa comment
-            return RemoveFromParent()
+            return RemoveFromParent() # pyright: ignore[reportCallIssue]
 
         def _remove_docstring_from_body(
             self, body: Sequence[BaseStatement]
@@ -117,9 +117,9 @@ if LIBCST_AVAILABLE:
 
         def leave_AsyncFunctionDef(
             self,
-            original_node: cst.AsyncFunctionDef,
-            updated_node: cst.AsyncFunctionDef,
-        ) -> cst.AsyncFunctionDef:
+            original_node: cst.AsyncFunctionDef, # pyright: ignore[reportAttributeAccessIssue]
+            updated_node: cst.AsyncFunctionDef, # pyright: ignore[reportAttributeAccessIssue]
+        ) -> cst.AsyncFunctionDef: # pyright: ignore[reportAttributeAccessIssue]
             new_inner_body_tuple = self._remove_docstring_from_body(
                 updated_node.body.body
             )
