@@ -44,7 +44,7 @@ def main():
     parser = argparse.ArgumentParser(
         description="Công cụ quét và xóa docstring (và tùy chọn comment) khỏi file mã nguồn.",
         epilog="Mặc định: Chạy ở chế độ sửa lỗi. Dùng -d để chạy thử.",
-        formatter_class=argse.RawTextHelpFormatter,
+        formatter_class=argparse.RawTextHelpFormatter,
     )
 
     pack_group = parser.add_argument_group("Tùy chọn Xử lý Docstring")
