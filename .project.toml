@@ -30,33 +30,6 @@ output_dir = "~/Documents/code.context"
 
 [tree]
 
-# level (Optional[int]): Giới hạn độ sâu hiển thị của cây.
-# Bỏ comment và đặt giá trị số nguyên dương, ví dụ: level = 3
-# Mặc định: không giới hạn (None)
-# level = 
-
-# show-submodules (bool): Hiển thị nội dung của Git submodules.
-# Mặc định: false (ẩn submodules)
-show-submodules = false
-
-# use-gitignore (bool): Có tôn trọng file .gitignore hay không.
-# Cờ --no-gitignore trên CLI sẽ ghi đè giá trị này thành false.
-# Mặc định: true (luôn tôn trọng nếu là kho Git)
-use-gitignore = false
-
-# ignore (List[str]): Danh sách các pattern (giống .gitignore) để ẩn hoàn toàn khỏi cây.
-# Các pattern này sẽ được NỐI VÀO danh sách mặc định của script.
-# Ví dụ: ignore = ["*.tmp", ".env"]
-# Mặc định (được thêm vào): {toml_ignore}
-ignore = [".git", ".venv", "__pycache__", "node_modules", "venv"]
-
-# prune (List[str]): Danh sách các pattern thư mục để "cắt tỉa".
-# Thư mục sẽ hiển thị nhưng nội dung bên trong bị ẩn ([...]).
-# Các pattern này sẽ được NỐI VÀO danh sách mặc định của script.
-# Ví dụ: prune = ["node_modules/", "vendor/"]
-# Mặc định (được thêm vào): {toml_prune}
-prune = ["build", "dist"]
-
 # dirs-only (Union[str, List[str], None]): Chế độ chỉ hiển thị thư mục.
 # - "_ALL_": Chỉ hiển thị thư mục cho toàn bộ cây (tương đương cờ -d).
 # - ["pattern1", "pattern2/"]: Chỉ hiển thị thư mục con BÊN TRONG các thư mục khớp pattern.
@@ -72,6 +45,33 @@ dirs-only = []
 # Mặc định: (Không lọc - {toml_extensions} là None)
 # extensions = 
 
+# ignore (List[str]): Danh sách các pattern (giống .gitignore) để ẩn hoàn toàn khỏi cây.
+# Các pattern này sẽ được NỐI VÀO danh sách mặc định của script.
+# Ví dụ: ignore = ["*.tmp", ".env"]
+# Mặc định (được thêm vào): {toml_ignore}
+ignore = [".git", ".venv", "__pycache__", "node_modules", "venv"]
+
+# level (Optional[int]): Giới hạn độ sâu hiển thị của cây.
+# Bỏ comment và đặt giá trị số nguyên dương, ví dụ: level = 3
+# Mặc định: không giới hạn (None)
+# level = 
+
+# prune (List[str]): Danh sách các pattern thư mục để "cắt tỉa".
+# Thư mục sẽ hiển thị nhưng nội dung bên trong bị ẩn ([...]).
+# Các pattern này sẽ được NỐI VÀO danh sách mặc định của script.
+# Ví dụ: prune = ["node_modules/", "vendor/"]
+# Mặc định (được thêm vào): {toml_prune}
+prune = ["build", "dist"]
+
+# show-submodules (bool): Hiển thị nội dung của Git submodules.
+# Mặc định: false (ẩn submodules)
+show-submodules = false
+
+# use-gitignore (bool): Có tôn trọng file .gitignore hay không.
+# Cờ --no-gitignore trên CLI sẽ ghi đè giá trị này thành false.
+# Mặc định: true (luôn tôn trọng nếu là kho Git)
+use-gitignore = false
+
 [ndoc]
 
 # extensions (List[str]): Danh sách các đuôi file cần bao gồm.
@@ -80,16 +80,16 @@ dirs-only = []
 # Mặc định (từ config set): {toml_extensions} # Placeholder vẫn là list
 extensions = ["py"]
 
-# ignore (List[str]): Danh sách các pattern (kiểu .gitignore) để bỏ qua.
-# Các giá trị này sẽ được THÊM vào danh sách mặc định.
-# Ví dụ: ignore = ["**/tests/*"] # Placeholder vẫn là list
-ignore = [".DS_Store", ".git", ".hg", ".svn", ".venv", "__pycache__", "build", "dist", "node_modules", "out", "venv"]
-
 # (Tùy chọn) Danh sách các đuôi file cần FORMAT khi dùng -f/--format.
 # GHI ĐÈ hoàn toàn danh sách mặc định (thường là ["py"]).
 # (Hiện chưa có cờ CLI để sửa đổi danh sách này)
 # Ví dụ: format_extensions = ["py"]
 format_extensions = ["py"]
+
+# ignore (List[str]): Danh sách các pattern (kiểu .gitignore) để bỏ qua.
+# Các giá trị này sẽ được THÊM vào danh sách mặc định.
+# Ví dụ: ignore = ["**/tests/*"] # Placeholder vẫn là list
+ignore = [".DS_Store", ".git", ".hg", ".svn", ".venv", "__pycache__", "build", "dist", "node_modules", "out", "venv"]
 
 [cpath]
 
