@@ -1,13 +1,10 @@
 # Path: modules/pack_code/pack_code_core.py
-"""
-Logic cốt lõi cho pack_code (Orchestrator).
-"""
 
 import logging
 from pathlib import Path
 from typing import Dict, Any, List, Optional, Set, Tuple
 
-# Import các hàm Task và các worker cần thiết
+
 from .pack_code_internal import (
     process_pack_code_task_file,
     process_pack_code_task_dir,
@@ -19,7 +16,7 @@ from .pack_code_internal import (
 
 __all__ = ["process_pack_code_logic"]
 
-FileResult = Dict[str, Any] # Type alias
+FileResult = Dict[str, Any] 
 
 def process_pack_code_logic(
     logger: logging.Logger,
@@ -29,22 +26,18 @@ def process_pack_code_logic(
     reporting_root: Optional[Path], 
     script_file_path: Path
 ) -> Dict[str, Any]:
-    """
-    Hàm logic chính (Orchestrator) cho pack_code.
-    Điều phối việc quét, đọc, làm sạch và đóng gói nội dung.
-    """
     logger.info("Đang chạy logic cốt lõi...")
 
     try:
         all_file_results: List[FileResult] = []
         processed_files: Set[Path] = set() 
         
-        # SỬA: Lấy cờ format
+        
         format_flag: bool = cli_args.get("format", False)
         if format_flag:
             logger.info("⚡ Chế độ FORMAT (-f) đã bật: Nội dung file sẽ được định dạng.")
 
-        # 1. XỬ LÝ CÁC FILE RIÊNG LẺ
+        
         if files_to_process:
             for file_path in files_to_process:
                 results = process_pack_code_task_file(
@@ -57,7 +50,7 @@ def process_pack_code_logic(
                 )
                 all_file_results.extend(results)
 
-        # 2. XỬ LÝ CÁC THƯ MỤC
+        
         if dirs_to_scan:
             logger.info(f"Đang xử lý {len(dirs_to_scan)} thư mục...")
             for scan_dir in dirs_to_scan:
@@ -71,7 +64,7 @@ def process_pack_code_logic(
                 )
                 all_file_results.extend(results)
 
-        # --- 3. GIAI ĐOẠN "BUILD" (SAU KHI THU THẬP) ---
+        
         
         if not all_file_results:
             logger.warning("Không tìm thấy file nào khớp với tiêu chí.")
@@ -82,13 +75,13 @@ def process_pack_code_logic(
         dry_run: bool = cli_args.get("dry_run", False)
         no_tree: bool = cli_args.get("no_tree", False)
 
-        # 4. Tạo cây thư mục
+        
         tree_str = ""
         if not no_tree:
             logger.debug("Đang tạo cây thư mục...")
             tree_str = generate_tree_string(all_file_results, reporting_root)
 
-        # 5. Ghép nối nội dung cuối cùng
+        
         final_content = assemble_packed_content(
             all_file_results=all_file_results,
             tree_str=tree_str,
@@ -96,7 +89,7 @@ def process_pack_code_logic(
             dry_run=dry_run,
         )
 
-        # 6. Xác định đường dẫn file output
+        
         config_load_dir = reporting_root if reporting_root else Path.cwd()
         file_config = load_config_files(config_load_dir, logger)
         
@@ -104,7 +97,7 @@ def process_pack_code_logic(
             logger, cli_args, file_config, reporting_root
         )
 
-        # 7. Trả về Result Object cho Executor
+        
         return {
             'status': 'ok',
             'final_content': final_content,

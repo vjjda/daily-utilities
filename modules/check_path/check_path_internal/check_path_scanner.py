@@ -1,15 +1,11 @@
 # Path: modules/check_path/check_path_internal/check_path_scanner.py
-"""
-File Scanning logic for the check_path module.
-(Internal module, imported by check_path_core)
-"""
 
 import logging
 from pathlib import Path
 import sys
 from typing import List, Set, Optional, TYPE_CHECKING, Iterable, Tuple, Dict
 
-# Thiết lập sys.path
+
 if not 'PROJECT_ROOT' in locals():
     sys.path.append(str(Path(__file__).resolve().parent.parent.parent.parent))
 
@@ -33,15 +29,11 @@ __all__ = ["scan_files"]
 def scan_files(
     logger: logging.Logger,
     start_path: Path,
-    ignore_spec: Optional["pathspec.PathSpec"], # SỬA: Nhận spec
+    ignore_spec: Optional["pathspec.PathSpec"], 
     extensions: List[str],
     scan_root: Path,
     script_file_path: Path
 ) -> Tuple[List[Path], Dict[str, bool]]:
-    """
-    Quét thư mục dự án, lọc file, và trả về danh sách file sạch.
-    (Logic này được sao chép từ ndoc/format_code scanner)
-    """
     scan_status = {
         'gitignore_found': False,
         'gitmodules_found': False
@@ -57,12 +49,12 @@ def scan_files(
     if submodule_paths:
         scan_status['gitmodules_found'] = True
 
-    # SỬA: Đã xử lý gitignore ở task_dir, nhưng scanner vẫn cần
+    
     gitignore_patterns: List[str] = parse_gitignore(scan_root)
     if gitignore_patterns:
         scan_status['gitignore_found'] = True
         
-    # (Lưu ý: ignore_spec đã bao gồm gitignore nếu có)
+    
     
     all_files: List[Path] = []
  

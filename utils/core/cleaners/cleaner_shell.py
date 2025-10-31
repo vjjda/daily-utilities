@@ -33,7 +33,7 @@ def clean_shell_code(
     for line in lines:
         stripped_line = line.strip()
 
-        # SỬA: Thêm điều kiện giữ lại # Path:
+        
         if stripped_line.startswith("# Path:"):
             cleaned_code_block.append(line)
             continue
@@ -48,7 +48,7 @@ def clean_shell_code(
             elif char == '"' and (i == 0 or line[i - 1] != "\\"):
                 in_double_quotes = not in_double_quotes
             elif char == "#" and not in_single_quotes and not in_double_quotes:
-                # Nếu là comment (và không phải # Path:), đánh dấu để xóa
+                
                 comment_start_index = i
                 break
 

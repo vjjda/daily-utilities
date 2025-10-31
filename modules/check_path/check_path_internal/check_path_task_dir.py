@@ -1,8 +1,4 @@
 # Path: modules/check_path/check_path_internal/check_path_task_dir.py
-"""
-(Internal Task)
-Handles the logic for processing a user-specified directory.
-"""
 
 import logging
 import argparse
@@ -13,39 +9,36 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     import pathspec
 
-# Import trực tiếp từ các file worker
+
 from .check_path_loader import load_config_files
 from .check_path_merger import merge_check_path_configs
 from .check_path_scanner import scan_files
 from .check_path_analyzer import analyze_single_file_for_path_comment
 
-# Import utils
+
 from utils.core import (
     parse_gitignore,
     compile_spec_from_patterns
 )
 
-# Import hàm báo cáo từ executor (public)
+
 from ..check_path_executor import print_dry_run_report_for_group
 
 __all__ = ["process_check_path_task_dir"]
 
-FileResult = Dict[str, Any] # Type alias
+FileResult = Dict[str, Any] 
 
 def process_check_path_task_dir(
     scan_dir: Path,
     cli_args: argparse.Namespace,
     logger: logging.Logger,
     processed_files: Set[Path],
-    reporting_root: Path, # <-- THÊM THAM SỐ MỚI
+    reporting_root: Path, 
     script_file_path: Path,
 ) -> List[FileResult]:
-    """
-    Xử lý logic cpath cho một thư mục đầu vào.
-    """
     logger.info(f"--- 📁 Quét thư mục: {scan_dir.name} ---")
     
-    # 1. Tải/Merge Config (cục bộ)
+    
     file_config_data = load_config_files(scan_dir, logger)
     cli_extensions: Optional[str] = getattr(cli_args, "extensions", None)
     cli_ignore: Optional[str] = getattr(cli_args, "ignore", None)
@@ -57,14 +50,14 @@ def process_check_path_task_dir(
         file_config_data=file_config_data,
     )
     final_extensions_list = merged_config["final_extensions_list"]
-    final_ignore_list = merged_config["final_ignore_list"] # List từ config
+    final_ignore_list = merged_config["final_ignore_list"] 
 
-    # 2. Xử lý Ignore Spec (cục bộ)
+    
     gitignore_patterns: List[str] = parse_gitignore(scan_dir)
     all_ignore_patterns_list: List[str] = final_ignore_list + gitignore_patterns
     ignore_spec = compile_spec_from_patterns(all_ignore_patterns_list, scan_dir)
     
-    # 3. Quét file (cục bộ)
+    
     files_in_dir, scan_status = scan_files(
          logger=logger,
          start_path=scan_dir, 
@@ -74,7 +67,7 @@ def process_check_path_task_dir(
          script_file_path=script_file_path
     )
     
-    # 4. In báo cáo cấu hình
+    
     logger.info(f"  [Cấu hình áp dụng]")
     logger.info(f"    - Extensions: {sorted(list(final_extensions_list))}")
     logger.info(f"    - Ignore (từ config): {final_ignore_list}")
@@ -89,7 +82,7 @@ def process_check_path_task_dir(
 
     logger.info(f"  -> ⚡ Tìm thấy {len(files_in_dir)} file, đang phân tích...")
 
-    # 5. Phân tích file
+    
     dir_results: List[FileResult] = []
     
     for file_path in files_in_dir:
@@ -97,13 +90,13 @@ def process_check_path_task_dir(
         if resolved_file in processed_files:
             continue 
 
-        # SỬA: Truyền reporting_root làm scan_root cho analyzer
+        
         result = analyze_single_file_for_path_comment(file_path, reporting_root, logger)
         if result:
             dir_results.append(result)
         processed_files.add(resolved_file)
         
-    # 6. Báo cáo kết quả nhóm
+    
     if dir_results:
         print_dry_run_report_for_group(logger, scan_dir.name, dir_results, reporting_root)
     else:

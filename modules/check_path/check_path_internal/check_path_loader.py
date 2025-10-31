@@ -12,7 +12,7 @@ except ImportError:
     )
     sys.exit(1)
 
-# SỬA: Import từ thư mục cha (..)
+
 from ..check_path_config import (
     PROJECT_CONFIG_FILENAME,
     CONFIG_SECTION_NAME,

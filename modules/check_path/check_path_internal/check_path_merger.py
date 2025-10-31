@@ -3,7 +3,7 @@ import logging
 from typing import Dict, Any, List, Set, Optional
 
 from utils.core import resolve_config_list, parse_comma_list, resolve_set_modification
-# SỬA: Import từ thư mục cha (..)
+
 from ..check_path_config import DEFAULT_EXTENSIONS, DEFAULT_IGNORE
 
 __all__ = ["merge_check_path_configs"]

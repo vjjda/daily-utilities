@@ -8,17 +8,14 @@ from utils.logging_config import log_success
 
 __all__ = ["execute_check_path_action", "print_dry_run_report_for_group"]
 
-FileResult = Dict[str, Any] # Type alias
+FileResult = Dict[str, Any] 
 
 def print_dry_run_report_for_group(
     logger: logging.Logger,
     group_name: str,
     files_in_group: List[FileResult],
-    scan_root: Path # Đây sẽ là reporting_root
+    scan_root: Path 
 ) -> None:
-    """
-    In báo cáo tóm tắt (dry-run) cho một nhóm file đã xử lý.
-    """
     logger.warning(f"\n   --- 📄 Nhóm: {group_name} ({len(files_in_group)} file cần sửa) ---")
     for info in files_in_group:
         file_path: Path = info["path"]
@@ -28,7 +25,7 @@ def print_dry_run_report_for_group(
         try:
             rel_path = file_path.relative_to(scan_root).as_posix()
         except ValueError:
-            rel_path = str(file_path) # Fallback nếu nằm ngoài
+            rel_path = str(file_path) 
             
         logger.warning(f"   -> {rel_path}")
         logger.warning(f"      (Dòng 1 hiện tại: {first_line})")
@@ -40,11 +37,8 @@ def execute_check_path_action(
     all_files_to_fix: List[FileResult],
     dry_run: bool,
     force: bool,
-    scan_root: Path # Đây sẽ là reporting_root
+    scan_root: Path 
 ) -> None:
-    """
-    Xử lý danh sách các file cần sửa, thực hiện side-effects.
-    """
 
     total_files_to_fix = len(all_files_to_fix)
 
@@ -91,7 +85,7 @@ def execute_check_path_action(
                         e,
                     )
                 except ValueError:
-                     # Fallback nếu file nằm ngoài scan_root (reporting_root)
+                     
                     logger.info(f"Đã sửa (absolute path): {target_path.as_posix()}")
                     written_count += 1
 

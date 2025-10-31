@@ -1,23 +1,20 @@
 # Path: modules/check_path/check_path_internal/__init__.py
-"""
-Facade nội bộ cho các thành phần "worker" và "task" của check_path (cpath).
-"""
 
 from pathlib import Path
 from importlib import import_module
 from typing import List
 
-# --- Tự động Tái xuất (Dynamic Re-export) ---
+
 current_dir = Path(__file__).parent
 
 modules_to_export: List[str] = [
-    # Workers
+    
     "check_path_loader",
     "check_path_merger",
     "check_path_scanner",
     "check_path_rules",
     "check_path_analyzer",
-    # Tasks
+    
     "check_path_task_file",
     "check_path_task_dir",
 ]
@@ -40,7 +37,7 @@ for submodule_stem in modules_to_export:
             f"Cảnh báo: Không thể import từ {submodule_stem} trong module {__name__}: {e}"
         )
 
-# Dọn dẹp
+
 del Path, import_module, List, current_dir, modules_to_export, submodule_stem
 if 'module' in locals():
     del module

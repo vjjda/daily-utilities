@@ -4,27 +4,24 @@ import os
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 
-# SỬA: Import từ thư mục cha (..) và nội bộ (.)
+
 from ..check_path_config import COMMENT_RULES_BY_EXT
 from .check_path_rules import apply_line_comment_rule, apply_block_comment_rule
 
-# SỬA: Đổi tên hàm và __all__
+
 __all__ = ["analyze_single_file_for_path_comment"]
 
-FileResult = Dict[str, Any] # Type alias
+FileResult = Dict[str, Any] 
 
 def analyze_single_file_for_path_comment(
     file_path: Path, 
-    scan_root: Path, # SỬA: Dùng scan_root cục bộ
+    scan_root: Path, 
     logger: logging.Logger
 ) -> Optional[FileResult]:
-    """
-    Phân tích MỘT file cho path comment.
-    """
     try:
         relative_path = file_path.relative_to(scan_root)
     except ValueError:
-        # Fallback nếu file nằm ngoài (ví dụ: file lẻ)
+        
         relative_path = file_path.relative_to(file_path.parent)
 
     file_ext = "".join(file_path.suffixes)

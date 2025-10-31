@@ -8,7 +8,7 @@ try:
     LIBCST_AVAILABLE = True
 except ImportError:
     LIBCST_AVAILABLE = False
-    # ... (Phần fallback không đổi) ...
+    
     class CSTNode:
         pass
     class Comment(CSTNode):
@@ -55,17 +55,17 @@ if LIBCST_AVAILABLE:
             self, original_node: cst.Comment, updated_node: cst.Comment
         ) -> Union[cst.Comment, RemovalSentinel]:
             
-            # SỬA: Logic bảo toàn comment
+            
             if not self.all_clean:
-                return updated_node # Giữ tất cả comment nếu không phải all_clean
+                return updated_node 
             
             comment_value = original_node.value
-            # Giữ lại Shebang và Path comments ngay cả khi all_clean=True
+            
             if comment_value.startswith("#!") or comment_value.startswith("# Path:"):
                 return updated_node
                 
-            # Ngược lại, nếu all_clean=True, xóa comment
-            return RemoveFromParent() # pyright: ignore[reportCallIssue]
+            
+            return RemoveFromParent() 
 
         def _remove_docstring_from_body(
             self, body: Sequence[BaseStatement]
@@ -111,9 +111,9 @@ if LIBCST_AVAILABLE:
 
         def leave_AsyncFunctionDef(
             self,
-            original_node: cst.AsyncFunctionDef, # pyright: ignore[reportAttributeAccessIssue]
-            updated_node: cst.AsyncFunctionDef, # pyright: ignore[reportAttributeAccessIssue]
-        ) -> cst.AsyncFunctionDef: # pyright: ignore[reportAttributeAccessIssue]
+            original_node: cst.AsyncFunctionDef, 
+            updated_node: cst.AsyncFunctionDef, 
+        ) -> cst.AsyncFunctionDef: 
             new_inner_body_tuple = self._remove_docstring_from_body(
                 updated_node.body.body
             )
@@ -125,7 +125,7 @@ if LIBCST_AVAILABLE:
             return updated_node
 
 else:
-    # ... (Fallback function không đổi) ...
+    
     def clean_python_code(
         code_content: str, logger: logging.Logger, all_clean: bool = False
     ) -> str:

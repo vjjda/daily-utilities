@@ -5,7 +5,7 @@ from typing import List
 
 current_dir = Path(__file__).parent
 
-# SỬA: Dùng danh sách export tường minh
+
 modules_to_export: List[str] = [
     "check_path_config",
     "check_path_core",

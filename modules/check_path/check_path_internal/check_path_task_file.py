@@ -1,24 +1,20 @@
 # Path: modules/check_path/check_path_internal/check_path_task_file.py
-"""
-(Internal Task)
-Handles the logic for processing a single, user-specified source file.
-"""
 
 import logging
 import argparse
 from pathlib import Path
 from typing import Dict, Any, List, Optional, Set, Tuple
 
-# Import trực tiếp từ các file worker
+
 from .check_path_merger import merge_check_path_configs
 from .check_path_analyzer import analyze_single_file_for_path_comment
 
-# Import hàm báo cáo từ executor (public)
+
 from ..check_path_executor import print_dry_run_report_for_group
 
 __all__ = ["process_check_path_task_file"]
 
-FileResult = Dict[str, Any] # Type alias
+FileResult = Dict[str, Any] 
 
 def process_check_path_task_file(
     file_path: Path,
@@ -26,11 +22,8 @@ def process_check_path_task_file(
     file_extensions: Set[str],
     logger: logging.Logger,
     processed_files: Set[Path],
-    reporting_root: Path # <-- THÊM THAM SỐ MỚI
+    reporting_root: Path 
 ) -> List[FileResult]:
-    """
-    Xử lý logic cpath cho một file riêng lẻ.
-    """
     logger.info(f"--- 📄 Đang xử lý file: {file_path.relative_to(reporting_root).as_posix()} ---")
     
     file_only_results: List[FileResult] = []
@@ -40,8 +33,8 @@ def process_check_path_task_file(
         logger.info("")
         return []
         
-    # 1. Kiểm tra extension
-    file_ext = "".join(file_path.suffixes) # Giữ dấu .
+    
+    file_ext = "".join(file_path.suffixes) 
     if file_ext not in file_extensions:
         logger.warning(
             f"⚠️ Bỏ qua file '{file_path.name}': không khớp extensions ({file_ext})"
@@ -49,18 +42,18 @@ def process_check_path_task_file(
         logger.info("")
         return []
 
-    # 2. Phân tích
-    # SỬA: Truyền reporting_root làm scan_root cho analyzer
+    
+    
     result = analyze_single_file_for_path_comment(file_path, reporting_root, logger)
     if result:
         file_only_results.append(result)
     processed_files.add(resolved_file)
     
-    # 3. Báo cáo
+    
     if file_only_results:
         print_dry_run_report_for_group(logger, file_path.name, file_only_results, reporting_root)
     else:
         logger.info(f"  -> ✅ Path comment đã chính xác.")
 
-    logger.info("") # Dòng trống
+    logger.info("") 
     return file_only_results

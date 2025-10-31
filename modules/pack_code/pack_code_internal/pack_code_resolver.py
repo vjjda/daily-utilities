@@ -22,7 +22,7 @@ from ..pack_code_config import (
     DEFAULT_IGNORE,
     DEFAULT_CLEAN_EXTENSIONS,
     DEFAULT_OUTPUT_DIR,
-    # SỬA: Thêm
+    
     DEFAULT_FORMAT_EXTENSIONS
 )
 
@@ -34,12 +34,9 @@ def resolve_filters(
     cli_args: Dict[str, Any],
     file_config: Dict[str, Any],
     scan_root: Path,
-) -> Tuple[Set[str], Optional["pathspec.PathSpec"], Set[Path], Set[str], Set[str]]: # SỬA: Thêm 1 kiểu trả về
-    """
-    Hợp nhất các cấu hình filter (extensions, ignore, submodules, clean_extensions, format_extensions).
-    """
+) -> Tuple[Set[str], Optional["pathspec.PathSpec"], Set[Path], Set[str], Set[str]]: 
 
-    # 1. Hợp nhất Extensions (để quét)
+    
     file_ext_list = file_config.get("extensions")
     default_ext_set = parse_comma_list(DEFAULT_EXTENSIONS)
     tentative_extensions: Set[str]
@@ -54,7 +51,7 @@ def resolve_filters(
         f"Set 'extensions' cuối cùng (để quét): {sorted(list(ext_filter_set))}"
     )
 
-    # 2. Hợp nhất Ignore
+    
     default_ignore_set = parse_comma_list(DEFAULT_IGNORE)
     config_cli_ignore_list = resolve_config_list(
         cli_str_value=cli_args.get("ignore"),
@@ -71,10 +68,10 @@ def resolve_filters(
         f"Tổng cộng {len(all_ignore_patterns_list)} quy tắc ignore đã biên dịch cho gốc {scan_root.name}."
     )
 
-    # 3. Lấy đường dẫn Submodules (cục bộ)
+    
     submodule_paths = get_submodule_paths(scan_root, logger)
 
-    # 4. Hợp nhất Clean Extensions
+    
     file_clean_ext_list = file_config.get("clean_extensions")
     default_clean_ext_set = DEFAULT_CLEAN_EXTENSIONS
     tentative_clean_extensions: Set[str]
@@ -91,7 +88,7 @@ def resolve_filters(
         f"Set 'clean_extensions' cuối cùng (để làm sạch): {sorted(list(clean_extensions_set))}"
     )
     
-    # 5. SỬA: Hợp nhất Format Extensions (Chỉ đọc từ config, không có CLI)
+    
     file_format_ext_list = file_config.get("format_extensions")
     default_format_ext_set = DEFAULT_FORMAT_EXTENSIONS
     
@@ -107,7 +104,7 @@ def resolve_filters(
         f"Set 'format_extensions' cuối cùng (để định dạng): {sorted(list(format_extensions_set))}"
     )
 
-    # SỬA: Trả về 5-tuple
+    
     return ext_filter_set, ignore_spec, submodule_paths, clean_extensions_set, format_extensions_set
 
 
@@ -117,9 +114,6 @@ def resolve_output_path(
     file_config: Dict[str, Any],
     reporting_root: Optional[Path],
 ) -> Optional[Path]:
-    """
-    Xác định đường dẫn file output cuối cùng.
-    """
     if cli_args.get("stdout", False) or cli_args.get("dry_run", False): 
         return None
         

@@ -7,7 +7,7 @@ __all__ = [
     "DEFAULT_EXTENSIONS",
     "DEFAULT_IGNORE",
     "DEFAULT_CLEAN_EXTENSIONS",
-    "DEFAULT_FORMAT_EXTENSIONS", # SỬA: Thêm
+    "DEFAULT_FORMAT_EXTENSIONS", 
     "DEFAULT_OUTPUT_DIR",
     "PROJECT_CONFIG_FILENAME",
     "CONFIG_FILENAME",
@@ -23,7 +23,7 @@ DEFAULT_OUTPUT_DIR: Final[str] = "~/Documents/code.context"
 
 DEFAULT_CLEAN_EXTENSIONS: Final[Set[str]] = {"py", "zsh", "sh"}
 
-# SỬA: Thêm default cho format
+
 DEFAULT_FORMAT_EXTENSIONS: Final[Set[str]] = {"py"}
 
 PROJECT_CONFIG_FILENAME: Final[str] = ".project.toml"

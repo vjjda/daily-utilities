@@ -1,21 +1,18 @@
 # Path: utils/cli/__init__.py
-"""
-Cổng giao tiếp (Facade) cho các tiện ích giao diện dòng lệnh (CLI).
-"""
 
 from pathlib import Path
 from importlib import import_module
 from typing import List
 
-# --- Tự động Tái xuất (Dynamic Re-export) ---
+
 current_dir = Path(__file__).parent
 
-# SỬA: Thêm 'reporting_root_resolver'
+
 modules_to_export: List[str] = [
     "ui_helpers", 
     "config_writer", 
     "path_resolver",
-    "reporting_root_resolver" # <-- THÊM MỚI
+    "reporting_root_resolver" 
 ]
 
 __all__: List[str] = []
@@ -38,7 +35,7 @@ for module_name in modules_to_export:
     except ImportError as e:
         print(f"Cảnh báo: Không thể import từ {module_name} trong utils/cli: {e}")
 
-# Dọn dẹp
+
 del Path, import_module, List, current_dir, modules_to_export
 if "module_name" in locals():
     del module_name

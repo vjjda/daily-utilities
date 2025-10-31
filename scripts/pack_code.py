@@ -1,7 +1,4 @@
 # Path: scripts/pack_code.py
-"""
-Entrypoint (cổng vào) cho pcode (Pack Code).
-"""
 
 import sys
 import argparse
@@ -10,7 +7,7 @@ from pathlib import Path
 from typing import Optional, List, Dict, Any, Final
 import os 
 
-# --- Thiết lập sys.path ---
+
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.append(str(PROJECT_ROOT))
 
@@ -32,7 +29,7 @@ except ImportError as e:
     print(f"Lỗi: Không thể import các tiện ích/module dự án: {e}", file=sys.stderr)
     sys.exit(1)
 
-# SỬA: Thêm lại THIS_SCRIPT_PATH
+
 THIS_SCRIPT_PATH: Final[Path] = Path(__file__).resolve()
 MODULE_DIR: Final[Path] = PROJECT_ROOT / "modules" / "pack_code"
 TEMPLATE_FILENAME: Final[str] = "pack_code.toml.template"
@@ -179,7 +176,7 @@ def main():
         logger.debug("Traceback:", exc_info=True)
         sys.exit(1)
     
-    # 1. Resolve tất cả đường dẫn
+    
     validated_paths: List[Path] = resolve_input_paths(
         logger=logger,
         raw_paths=args.start_paths_arg,
@@ -189,18 +186,18 @@ def main():
         logger.warning("Không tìm thấy đường dẫn hợp lệ nào để quét. Đã dừng.")
         sys.exit(0)
 
-    # 2. Xác định Gốc Báo Cáo
+    
     reporting_root = resolve_reporting_root(
         logger, 
         validated_paths, 
         args.root 
     )
 
-    # 3. Phân loại file/thư mục
+    
     files_to_process: List[Path] = [p for p in validated_paths if p.is_file()]
     dirs_to_scan: List[Path] = [p for p in validated_paths if p.is_dir()]
 
-    # 4. Chuẩn bị CLI args
+    
     output_path_obj = Path(args.output).expanduser() if args.output else None
     
     cli_args_dict = {
@@ -219,14 +216,14 @@ def main():
     }
 
     try:
-        # 5. Gọi Core
+        
         result = process_pack_code_logic(
             logger=logger,
             cli_args=cli_args_dict,
             files_to_process=files_to_process,
             dirs_to_scan=dirs_to_scan,
             reporting_root=reporting_root, 
-            script_file_path=THIS_SCRIPT_PATH # SỬA: Giờ đã hợp lệ
+            script_file_path=THIS_SCRIPT_PATH 
         )
         if result:
             execute_pack_code_action(logger=logger, result=result)

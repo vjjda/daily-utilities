@@ -1,15 +1,11 @@
 # Path: modules/pack_code/pack_code_internal/pack_code_task_file.py
-"""
-(Internal Task)
-Handles the logic for processing a single, user-specified source file.
-"""
 
 import logging
 import argparse
 from pathlib import Path
 from typing import Dict, Any, List, Optional, Set, Tuple
 
-# Import internal workers
+
 from . import (
     load_config_files,
     resolve_filters,
@@ -19,7 +15,7 @@ from . import (
 
 __all__ = ["process_pack_code_task_file"]
 
-FileResult = Dict[str, Any] # Type alias
+FileResult = Dict[str, Any] 
 
 def process_pack_code_task_file(
     file_path: Path,
@@ -29,9 +25,6 @@ def process_pack_code_task_file(
     reporting_root: Optional[Path],
     script_file_path: Path
 ) -> List[FileResult]:
-    """
-    Xử lý logic pack_code cho một file riêng lẻ.
-    """
     logger.info(f"--- 📄 Đang xử lý file: {file_path.name} ---")
     
     resolved_file = file_path.resolve()
@@ -40,16 +33,16 @@ def process_pack_code_task_file(
         logger.info("")
         return []
 
-    # 1. Tải Config/Filter cục bộ (dựa trên thư mục cha)
+    
     scan_dir = file_path.parent
     file_config = load_config_files(scan_dir, logger)
     
-    # SỬA: Giải nén 5-tuple
+    
     ext_filter_set, ignore_spec, submodule_paths, clean_extensions_set, format_extensions_set = resolve_filters(
         logger, cli_args, file_config, scan_dir
     )
 
-    # 2. Quét (chỉ file này)
+    
     files_to_pack = scan_files(
         logger, file_path, ignore_spec, ext_filter_set, submodule_paths, 
         scan_dir, script_file_path
@@ -62,8 +55,8 @@ def process_pack_code_task_file(
         
     logger.info(f"  -> ⚡ Phân tích 1 file...")
     
-    # 3. Đọc & Làm sạch & Định dạng
-    # SỬA: Truyền cờ/set mới
+    
+    
     files_content = load_files_content(
         logger=logger,
         file_paths=files_to_pack, 
@@ -77,7 +70,7 @@ def process_pack_code_task_file(
     processed_files.add(resolved_file)
     final_results: List[FileResult] = []
 
-    # 4. Tính toán Path và tạo Result Object
+    
     for f_path, f_content in files_content.items():
         rel_path: str
         if reporting_root:

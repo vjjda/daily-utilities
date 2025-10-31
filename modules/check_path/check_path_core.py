@@ -5,11 +5,11 @@ from pathlib import Path
 from typing import List, Optional, Dict, Any, Set
 import sys
 
-# Thiết lập sys.path
+
 if not 'PROJECT_ROOT' in locals():
     sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
-# SỬA: Import các hàm Task từ facade nội bộ
+
 from .check_path_internal import (
     merge_check_path_configs,
     process_check_path_task_file,
@@ -19,26 +19,23 @@ from .check_path_config import DEFAULT_EXTENSIONS
 
 __all__ = ["process_check_path_logic"]
 
-FileResult = Dict[str, Any] # Type alias
+FileResult = Dict[str, Any] 
 
-# SỬA: Chữ ký hàm mới
+
 def process_check_path_logic(
     logger: logging.Logger,
     files_to_process: List[Path],
     dirs_to_scan: List[Path],
     cli_args: argparse.Namespace,
     script_file_path: Path,
-    reporting_root: Path # <-- THÊM THAM SỐ MỚI
+    reporting_root: Path 
 ) -> List[FileResult]:
-    """
-    Điều phối toàn bộ quá trình kiểm tra path comment (Orchestrator).
-    """
     
     all_results: List[FileResult] = []
     processed_files: Set[Path] = set()
-    # (reporting_root giờ được truyền từ entrypoint)
+    
 
-    # 1. Hợp nhất config MỘT LẦN cho các file lẻ
+    
     cli_extensions_str: Optional[str] = getattr(cli_args, "extensions", None)
     default_file_config = merge_check_path_configs(
         logger=logger,
@@ -47,11 +44,11 @@ def process_check_path_logic(
         file_config_data={},
     )
     file_extensions = set(default_file_config["final_extensions_list"])
-    # Thêm dấu . vào extensions cho cpath
+    
     file_extensions_with_dot = {f".{ext}" if not ext.startswith('.') else ext for ext in file_extensions}
 
 
-    # 2. XỬ LÝ CÁC FILE RIÊNG LẺ
+    
     if files_to_process:
         logger.info(f"Đang xử lý {len(files_to_process)} file riêng lẻ...")
         logger.info(f"  [Cấu hình áp dụng cho file lẻ]")
@@ -65,11 +62,11 @@ def process_check_path_logic(
                 file_extensions=file_extensions_with_dot,
                 logger=logger,
                 processed_files=processed_files,
-                reporting_root=reporting_root # <-- TRUYỀN XUỐNG
+                reporting_root=reporting_root 
             )
             all_results.extend(results)
 
-    # 3. XỬ LÝ CÁC THƯ MỤC
+    
     if dirs_to_scan:
         logger.info(f"Đang xử lý {len(dirs_to_scan)} thư mục...")
         for scan_dir in dirs_to_scan:
@@ -78,7 +75,7 @@ def process_check_path_logic(
                 cli_args=cli_args,
                 logger=logger,
                 processed_files=processed_files,
-                reporting_root=reporting_root, # <-- TRUYỀN XUỐNG
+                reporting_root=reporting_root, 
                 script_file_path=script_file_path,
             )
             all_results.extend(results)
