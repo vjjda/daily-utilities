@@ -65,7 +65,7 @@ def write_project_config_section(
         if should_write is None:
             return None
 
-        # 4. SỬA LOGIC: Merge thông minh thay vì gán đè
+        # 4. SỬA LOGIC: Merge thông minh
         if should_write:
             if not section_existed:
                 # Nếu section chưa tồn tại, thêm nó vào (cách này giữ comment)
@@ -73,14 +73,21 @@ def write_project_config_section(
                 main_doc.add(config_section_name, new_section_table)
             else:
                 # Nếu section đã tồn tại, merge từng key một
-                # để bảo toàn các comment hiện có VÀ thêm comment mới
                 existing_section = main_doc[config_section_name]
                 
-                # Lặp qua các item MỚI (từ template, có comment)
-                for key, value in new_section_table.items():
-                    # Gán giá trị mới (tomlkit sẽ tự động
-                    # giữ lại comment của item 'value' nếu nó là tomlkit item)
-                    existing_section[key] = value
+                # Lặp qua các key trong nội dung MỚI (từ template)
+                for key in new_section_table:
+                    # Lấy item mới (bao gồm value và comment/trivia)
+                    new_item = new_section_table.item(key)
+                    
+                    # Gán giá trị mới (hoặc cập nhật giá trị cũ)
+                    existing_section[key] = new_item.unwrap()
+                    
+                    # SỬA: Sao chép tường minh comment/trivia từ template
+                    if new_item and new_item.trivia.comment:
+                        item_in_doc = existing_section.item(key)
+                        item_in_doc.trivia.comment = new_item.trivia.comment
+                        item_in_doc.trivia.indent = new_item.trivia.indent
 
             # 5. Ghi file
             with config_file_path.open("w", encoding="utf-8") as f:
