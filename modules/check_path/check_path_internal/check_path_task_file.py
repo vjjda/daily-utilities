@@ -9,12 +9,10 @@ import argparse
 from pathlib import Path
 from typing import Dict, Any, List, Optional, Set, Tuple
 
-# Import internal workers
-from . import (
-    merge_check_path_configs,
-    analyze_single_file_for_path_comment
-)
-from ..check_path_config import DEFAULT_EXTENSIONS
+# SỬA: Import trực tiếp từ các file worker
+from .check_path_merger import merge_check_path_configs
+from .check_path_analyzer import analyze_single_file_for_path_comment
+# (Config import không cần thiết ở đây, nó đã được chuyển vào core)
 
 # Import hàm báo cáo từ executor (public)
 from ..check_path_executor import print_dry_run_report_for_group

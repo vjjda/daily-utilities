@@ -13,13 +13,12 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     import pathspec
 
-# Import internal workers
-from . import (
-    load_config_files,
-    merge_check_path_configs,
-    scan_files,
-    analyze_single_file_for_path_comment
-)
+# SỬA: Import trực tiếp từ các file worker
+from .check_path_loader import load_config_files
+from .check_path_merger import merge_check_path_configs
+from .check_path_scanner import scan_files
+from .check_path_analyzer import analyze_single_file_for_path_comment
+
 # Import utils
 from utils.core import (
     parse_gitignore,
@@ -69,8 +68,8 @@ def process_check_path_task_dir(
     files_in_dir, scan_status = scan_files(
          logger=logger,
          start_path=scan_dir, 
-         ignore_spec=ignore_spec, # Truyền spec đã biên dịch
-         extensions=final_extensions_list, # Truyền list đuôi file
+         ignore_spec=ignore_spec, 
+         extensions=final_extensions_list, 
          scan_root=scan_dir, 
          script_file_path=script_file_path
     )
