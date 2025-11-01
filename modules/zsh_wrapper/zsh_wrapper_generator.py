@@ -4,29 +4,23 @@ import os
 from pathlib import Path
 from typing import Dict, Optional
 
-# Chuyển TEMPLATE_DIR từ core.py sang đây
+
 TEMPLATE_DIR = Path(__file__).parent / "templates"
 
 __all__ = ["generate_wrapper_content"]
 
 
 def _load_template(template_name: str) -> str:
-    """
-    (Được chuyển từ core.py)
-    """
     path = TEMPLATE_DIR / template_name
     if not path.exists():
         raise FileNotFoundError(f"Không tìm thấy template: {template_name}")
-    
+
     lines = path.read_text(encoding="utf-8").splitlines()
     filtered_lines = [line for line in lines if not line.strip().startswith("# Path:")]
     return "\n".join(filtered_lines)
 
 
 def _prepare_absolute_mode(template_content: str, paths: Dict[str, Path]) -> str:
-    """
-    (Được chuyển từ core.py)
-    """
     return (
         template_content.replace("__PROJECT_ROOT_ABS__", str(paths["project_root"]))
         .replace("__VENV_PATH_ABS__", str(paths["venv_path"]))
@@ -37,9 +31,6 @@ def _prepare_absolute_mode(template_content: str, paths: Dict[str, Path]) -> str
 def _prepare_relative_mode(
     logger: logging.Logger, template_content: str, paths: Dict[str, Path]
 ) -> str:
-    """
-    (Được chuyển từ core.py)
-    """
     output_dir = paths["output_path"].parent
     try:
         project_root_rel_to_output = os.path.relpath(
@@ -76,9 +67,6 @@ def generate_wrapper_content(
     venv_name: str,
     mode: str,
 ) -> Optional[str]:
-    """
-    (Được chuyển từ _generate_wrapper_content trong core.py)
-    """
     venv_path = project_root / venv_name
 
     paths = {
