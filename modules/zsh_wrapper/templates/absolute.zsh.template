@@ -7,9 +7,9 @@
 # File này CÓ THỂ di chuyển. Dự án KHÔNG THỂ di chuyển.
 
 # --- 1. Thiết lập Đường dẫn Tuyệt đối (Hard-coded) ---
-local PROJECT_ROOT="{project_root_abs}"
-local VENV_PATH_ABS="{venv_path_abs}"
-local SCRIPT_PATH_ABS="{script_path_abs}"
+local PROJECT_ROOT="__PROJECT_ROOT_ABS__"
+local VENV_PATH_ABS="__VENV_PATH_ABS__"
+local SCRIPT_PATH_ABS="__SCRIPT_PATH_ABS__"
 
 # --- 2. Kích hoạt Môi trường & PYTHONPATH ---
 if [ -f "$VENV_PATH_ABS/bin/activate" ]; then
@@ -28,7 +28,7 @@ if [[ "$@" == *register-python-argcomplete* ]]; then
     tool_name=$(basename "$0")
     
     # Thay thế tên wrapper ($tool_name) bằng đường dẫn Python script thật ($SCRIPT_PATH_ABS)
-    # SỬA LỖI: Sử dụng cú pháp Zsh an toàn, không xung đột với Python format
+    # Cú pháp Zsh này an toàn vì không dùng {}
     local modified_command
     modified_command=("${@//$tool_name/$SCRIPT_PATH_ABS}")
 

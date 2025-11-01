@@ -12,13 +12,13 @@ local SCRIPT_DIR
 SCRIPT_DIR=$( (cd -P -- "$(dirname -- "$0")" && pwd -P) )
 
 # Đường dẫn tương đối từ wrapper lên Project Root (do zrap tính toán)
-local PROJECT_ROOT_REL_TO_OUTPUT="{project_root_rel_to_output}"
+local PROJECT_ROOT_REL_TO_OUTPUT="__PROJECT_ROOT_REL_TO_OUTPUT__"
 local PROJECT_ROOT
 PROJECT_ROOT=$( (cd -P -- "$SCRIPT_DIR/$PROJECT_ROOT_REL_TO_OUTPUT" && pwd -P) )
 
 # Đường dẫn venv và script (tương đối so với Project Root)
-local VENV_PATH_REL_TO_PROJECT="{venv_path_rel_to_project}"
-local SCRIPT_PATH_REL_TO_PROJECT="{script_path_rel_to_project}"
+local VENV_PATH_REL_TO_PROJECT="__VENV_PATH_REL_TO_PROJECT__"
+local SCRIPT_PATH_REL_TO_PROJECT="__SCRIPT_PATH_REL_TO_PROJECT__"
 
 # Tính đường dẫn tuyệt đối cuối cùng
 local VENV_PATH_ABS="$PROJECT_ROOT/$VENV_PATH_REL_TO_PROJECT"
@@ -41,7 +41,7 @@ if [[ "$@" == *register-python-argcomplete* ]]; then
     tool_name=$(basename "$0")
     
     # Thay thế tên wrapper ($tool_name) bằng đường dẫn Python script thật ($SCRIPT_PATH_ABS)
-    # SỬA LỖI: Sử dụng cú pháp Zsh an toàn, không xung đột với Python format
+    # Cú pháp Zsh này an toàn vì không dùng {}
     local modified_command
     modified_command=("${@//$tool_name/$SCRIPT_PATH_ABS}")
 

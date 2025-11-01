@@ -50,10 +50,11 @@ def _find_project_root(
 
 
 def _prepare_absolute_mode(template_content: str, paths: Dict[str, Path]) -> str:
-    return template_content.format(
-        project_root_abs=str(paths["project_root"]),
-        venv_path_abs=str(paths["venv_path"]),
-        script_path_abs=str(paths["script_path"]),
+    # SỬA LỖI: Dùng .replace() thay vì .format() để tránh xung đột cú pháp Zsh
+    return (
+        template_content.replace("__PROJECT_ROOT_ABS__", str(paths["project_root"]))
+        .replace("__VENV_PATH_ABS__", str(paths["venv_path"]))
+        .replace("__SCRIPT_PATH_ABS__", str(paths["script_path"]))
     )
 
 
@@ -62,7 +63,6 @@ def _prepare_relative_mode(
 ) -> str:
     output_dir = paths["output_path"].parent
     try:
-
         project_root_rel_to_output = os.path.relpath(
             paths["project_root"], start=output_dir
         )
@@ -75,11 +75,20 @@ def _prepare_relative_mode(
     venv_path_rel_to_project = paths["venv_path"].relative_to(paths["project_root"])
     output_path_rel_to_project = paths["output_path"].relative_to(paths["project_root"])
 
-    return template_content.format(
-        project_root_rel_to_output=project_root_rel_to_output,
-        venv_path_rel_to_project=venv_path_rel_to_project.as_posix(),
-        script_path_rel_to_project=script_path_rel_to_project.as_posix(),
-        output_path_rel_to_project=output_path_rel_to_project.as_posix(),
+    # SỬA LỖI: Dùng .replace() thay vì .format() để tránh xung đột cú pháp Zsh
+    return (
+        template_content.replace(
+            "__PROJECT_ROOT_REL_TO_OUTPUT__", project_root_rel_to_output
+        )
+        .replace(
+            "__VENV_PATH_REL_TO_PROJECT__", venv_path_rel_to_project.as_posix()
+        )
+        .replace(
+            "__SCRIPT_PATH_REL_TO_PROJECT__", script_path_rel_to_project.as_posix()
+        )
+        .replace(
+            "__OUTPUT_PATH_REL_TO_PROJECT__", output_path_rel_to_project.as_posix()
+        )
     )
 
 
@@ -127,6 +136,7 @@ def _generate_wrapper_content(
         return None
     except Exception as e:
         logger.error(f"❌ Lỗi không mong muốn khi tạo nội dung wrapper: {e}")
+        logger.debug("Traceback:", exc_info=True)  # Thêm debug
         return None
 
 
@@ -202,6 +212,5 @@ def run_zsh_wrapper(logger: logging.Logger, cli_args: argparse.Namespace) -> boo
         execute_zsh_wrapper_action(logger=logger, result=result_for_executor)
         return True
     except Exception as e:
-
         logger.error(f"❌ Lỗi trong quá trình thực thi ghi file: {e}")
         return False
