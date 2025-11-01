@@ -134,4 +134,9 @@ def main():
         sys.exit(1)
     except Exception as e:
         logger.error(f"❌ Đã xảy ra lỗi không mong muốn trong quá trình bootstrap: {e}")
-        logger.debug("Traceback:", exc_info=
+        logger.debug("Traceback:", exc_info=True)
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
