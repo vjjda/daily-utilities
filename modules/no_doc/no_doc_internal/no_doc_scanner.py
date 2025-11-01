@@ -31,13 +31,14 @@ def scan_files(
     logger: logging.Logger,
     start_path: Path,
     ignore_list: List[str],
-    extensions: List[str],
+    extensions: List[str],  # Đây là list từ config
     scan_root: Path,
     script_file_path: Path,
 ) -> Tuple[List[Path], Dict[str, bool]]:
-
+    """
+    Quét file dựa trên logic (ĐÃ SỬA) glob-trước-lọc-sau.
+    """
     scan_status = {"gitignore_found": False, "gitmodules_found": False}
-
     scan_path = start_path.resolve()
 
     if not scan_path.exists():
@@ -56,14 +57,24 @@ def scan_files(
     ignore_spec = compile_spec_from_patterns(all_ignore_patterns_list, scan_root)
 
     all_files: List[Path] = []
+    extensions_set = set(extensions)  # Chuyển thành Set để tra cứu O(1)
 
     if scan_path.is_dir():
-        for ext in extensions:
-            all_files.extend(scan_path.rglob(f"*.{ext}"))
-    elif scan_path.is_file():
+        # --- START FIX ---
+        # 1. Glob tất cả các file trước
+        logger.debug(f"Scanner (fixed): Chạy rglob('*') trên {scan_path.name}")
+        all_files_raw = [p for p in scan_path.rglob("*") if p.is_file()]
 
+        # 2. Lọc file dựa trên extensions_set
+        for f in all_files_raw:
+            file_ext = "".join(f.suffixes).lstrip(".")
+            if file_ext in extensions_set:
+                all_files.append(f)
+        # --- END FIX ---
+    elif scan_path.is_file():
+        # Logic cho file đơn lẻ vẫn giữ nguyên
         file_ext = "".join(scan_path.suffixes).lstrip(".")
-        if file_ext in extensions:
+        if file_ext in extensions_set:
             all_files.append(scan_path)
         else:
             logger.warning(
@@ -75,6 +86,9 @@ def scan_files(
 
     for file_path in all_files:
         abs_file_path = file_path.resolve()
+
+        if abs_file_path.samefile(script_file_path.resolve()):
+            continue
 
         is_in_submodule = any(abs_file_path.is_relative_to(p) for p in submodule_paths)
         if is_in_submodule:
