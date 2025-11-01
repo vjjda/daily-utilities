@@ -13,10 +13,6 @@ TEMPLATE_DIR: Any
 TYPE_HINT_MAP: Any
 TYPING_IMPORTS: Any
 execute_bootstrap_action: Any
-get_cli_args: Any
-load_bootstrap_config: Any
-load_spec_file: Any
-load_template: Any
 process_bootstrap_logic: Any
 
 # Static declaration of exported symbols (for Pylance)
@@ -30,9 +26,5 @@ __all__: List[str] = [
     "TYPE_HINT_MAP",
     "TYPING_IMPORTS",
     "execute_bootstrap_action",
-    "get_cli_args",
-    "load_bootstrap_config",
-    "load_spec_file",
-    "load_template",
     "process_bootstrap_logic",
 ]
