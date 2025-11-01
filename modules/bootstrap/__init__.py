@@ -12,6 +12,7 @@ modules_to_export: List[str] = [
     "bootstrap_builder",
     "bootstrap_core",
     "bootstrap_executor",
+    "bootstrap_internal",  # <-- THÊM DÒNG NÀY
 ]
 
 __all__: List[str] = []
