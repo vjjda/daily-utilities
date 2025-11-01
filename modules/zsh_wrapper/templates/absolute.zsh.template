@@ -1,4 +1,4 @@
-#!/usr/bin/env zsh
+# Path: modules/zsh_wrapper/templates/absolute.zsh.template
 # (zrap wrapper - absolute mode)
 #
 # Dùng file này để cài đặt script ra bên ngoài dự án (ví dụ: $HOME/bin).

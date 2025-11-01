@@ -110,18 +110,39 @@ def _generate_wrapper_content(
     }
     logger.debug(f"Đã giải quyết các đường dẫn cuối cùng: {paths}")
 
-    final_content = ""
     try:
+        # --- LOGIC HEADER MỚI ---
+        shebang = "#!/usr/bin/env zsh"
+        path_comment = ""
+
+        if mode == "absolute":
+            # Yêu cầu của bạn: Dùng đường dẫn tuyệt đối cho file được tạo ra
+            path_comment = f"# Path: {output_path.as_posix()}"
+        else:  # mode == "relative"
+            # Yêu cầu của bạn: Dùng đường dẫn tương đối (so với project_root)
+            try:
+                relative_output_path = output_path.relative_to(project_root).as_posix()
+                path_comment = f"# Path: {relative_output_path}"
+            except ValueError:
+                # Fallback nếu output nằm ngoài project root (trường hợp hiếm)
+                logger.warning(f"Không thể tính toán đường dẫn relative cho # Path: (output nằm ngoài project).")
+                path_comment = f"# Path: {output_path.as_posix()} (Warning: Non-relative)"
+        
+        # --- KẾT THÚC LOGIC HEADER MỚI ---
+
+        template_body = ""
         if mode == "absolute":
             logger.info("Chế độ 'absolute': Tạo wrapper với đường dẫn tuyệt đối.")
             template = _load_template("absolute.zsh.template")
-            final_content = _prepare_absolute_mode(template, paths)
+            template_body = _prepare_absolute_mode(template, paths)
 
         elif mode == "relative":
             logger.info("Chế độ 'relative': Tạo wrapper với đường dẫn tương đối.")
             template = _load_template("relative.zsh.template")
-            final_content = _prepare_relative_mode(logger, template, paths)
+            template_body = _prepare_relative_mode(logger, template, paths)
 
+        # Lắp ráp file cuối cùng
+        final_content = f"{shebang}\n{path_comment}\n\n{template_body}"
         return final_content
 
     except ValueError:
@@ -136,7 +157,7 @@ def _generate_wrapper_content(
         return None
     except Exception as e:
         logger.error(f"❌ Lỗi không mong muốn khi tạo nội dung wrapper: {e}")
-        logger.debug("Traceback:", exc_info=True)  # Thêm debug
+        logger.debug("Traceback:", exc_info=True)
         return None
 
 
