@@ -9,7 +9,7 @@ clean_extensions = ["py", "sh", "zsh"]
 # Danh sách các đuôi file (extensions) cần bao gồm.
 # Bất kỳ giá trị nào ở đây sẽ GHI ĐÈ hoàn toàn danh sách mặc định.
 # (CLI: -e "py,md" / +e "ts" / ~e "log")
-extensions = ["bash", "cfg", "cfg.py", "gitignore", "ini", "json", "md", "py", "sh", "template", "toml", "txt", "xml", "yaml", "yml", "zsh"]
+extensions = ["bash", "cfg", "cfg.py", "gitignore", "ini", "json", "md", "py", "pyi", "sh", "template", "toml", "txt", "xml", "yaml", "yml", "zsh"]
 
 # Danh sách các đuôi file cần FORMAT khi dùng -f/--format.
 # GHI ĐÈ hoàn toàn danh sách mặc định (thường là ["py"]).
@@ -107,6 +107,17 @@ ignore = [".git", ".venv", "__pycache__", "build", "dist", "node_modules", "out"
 
 [sgen]
 
+# ast_all_list_name (str): Tên biến list __all__ trong AST của submodule.
+ast_all_list_name = "__all__"
+
+# ast_module_list_name (str): Tên biến list chứa danh sách submodule trong AST.
+ast_module_list_name = "modules_to_export"
+
+# --- Cấu hình nâng cao (Ít khi cần thay đổi) ---
+
+# dynamic_import_indicators (List[str]): Các chuỗi code nhận diện gateway động.
+dynamic_import_indicators = ["globals()[name]", "globals().update"]
+
 # ignore (List[str]): Các pattern (giống .gitignore) để bỏ qua khi quét.
 # Các pattern này sẽ được NỐI VÀO danh sách mặc định của script.
 # Ví dụ: ignore = ["*_test.py", "**/legacy/*"]
@@ -119,14 +130,3 @@ ignore = ["*.pyc", "*.pyo", ".git", ".venv", "__pycache__", "build", "dist", "no
 # Ví dụ: include = ["modules/core/**", "utils/network.py"]
 # Mặc định (được thêm vào): {toml_include}
 include = []
-
-# --- Cấu hình nâng cao (Ít khi cần thay đổi) ---
-
-# dynamic_import_indicators (List[str]): Các chuỗi code nhận diện gateway động.
-dynamic_import_indicators = ["import_module", "globals()[name]", "globals()[name] = obj"]
-
-# ast_module_list_name (str): Tên biến list chứa danh sách submodule trong AST.
-ast_module_list_name = "modules_to_export"
-
-# ast_all_list_name (str): Tên biến list __all__ trong AST của submodule.
-ast_all_list_name = "__all__"
