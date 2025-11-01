@@ -38,11 +38,30 @@ def main():
         formatter_class=argparse.RawTextHelpFormatter,
     )
 
+    # --- START CHANGE ---
     parser.add_argument(
         "script_path_arg",
         type=str,
-        help="Đường dẫn đến file Python cần wrap.\nUse '~' for home directory.",
+        nargs="?",  # 1. Làm cho nó tùy chọn
+        default=None, # 2. Mặc định là None
+        help="Đường dẫn đến file Python cần wrap (TÙY CHỌN nếu dùng -n).\nUse '~' for home directory.",
     )
+
+    parser.add_argument(
+        "-n",
+        "--name",
+        type=str,
+        default=None,
+        help="Tên của tool (ví dụ: 'ndoc'). Sẽ tự động tìm 'scripts/ndoc.py'.\nƯu tiên hơn 'script_path_arg'.",
+    )
+
+    parser.add_argument(
+        "-M",
+        "--multi-mode",
+        action="store_true",
+        help="Tạo cả hai wrapper 'relative' (cho bin/) và 'absolute' (cho ~/bin).",
+    )
+    # --- END CHANGE ---
 
     parser.add_argument(
         "-o",
@@ -90,17 +109,17 @@ def main():
     logger.debug("Zrap script started.")
 
     try:
-
-        success = run_zsh_wrapper(logger=logger, cli_args=args)
+        # Đẩy logic vào core, truyền PROJECT_ROOT vào
+        success = run_zsh_wrapper(
+            logger=logger, cli_args=args, project_root=PROJECT_ROOT
+        )
 
         if success:
             log_success(logger, "Hoàn thành.")
         else:
-
             sys.exit(1)
 
     except Exception as e:
-
         logger.error(f"❌ Đã xảy ra lỗi không mong muốn ở entrypoint: {e}")
         logger.debug("Traceback:", exc_info=True)
         sys.exit(1)
