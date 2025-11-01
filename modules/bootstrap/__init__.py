@@ -10,12 +10,10 @@ current_dir = Path(__file__).parent
 # --- THAY ĐỔI: Cập nhật danh sách export ---
 modules_to_export: List[str] = [
     "bootstrap_config",
-    # "bootstrap_loader", # Đã chuyển vào internal
-    # "bootstrap_utils",  # Đã chuyển vào internal
     "bootstrap_builder",
     "bootstrap_core",
     "bootstrap_executor",
-    "bootstrap_internal", # Thêm module internal mới
+    # "bootstrap_internal", # Xóa, đây là private
 ]
 
 __all__: List[str] = []
@@ -27,7 +25,7 @@ for module_name in modules_to_export:
         if hasattr(module, "__all__"):
             public_symbols = getattr(module, "__all__")
     
-            for name in public_symbols: 
+            for name in public_symbols:
                 obj = getattr(module, name)
                 globals()[name] = obj
             __all__.extend(public_symbols)
@@ -40,8 +38,7 @@ del Path, import_module, List, current_dir, modules_to_export, module_name
 if "module" in locals():
     del module
 if "public_symbols" in locals():
- 
-    del public_symbols 
+    del public_symbols
 if "name" in locals():
     del name
 if "obj" in locals():
