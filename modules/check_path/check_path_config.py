@@ -34,6 +34,7 @@ DEFAULT_EXTENSIONS: Final[Set[str]] = {
     "zsh",
     "sh",
     "template.toml",
+    "",
 }
 
 
@@ -78,4 +79,5 @@ COMMENT_RULES_BY_EXT: Final[Dict[str, Dict[str, Any]]] = {
     ".md": COMMENT_RULES["md_block"],
     ".py.template": COMMENT_RULES["hash_line"],
     ".template.toml": COMMENT_RULES["hash_line"],
+    "": COMMENT_RULES["hash_line"],
 }
