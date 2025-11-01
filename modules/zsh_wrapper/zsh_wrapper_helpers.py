@@ -4,17 +4,12 @@ import sys
 from pathlib import Path
 from typing import Optional, Callable, Final
 
-from .zsh_wrapper_config import (
-    DEFAULT_WRAPPER_RELATIVE_DIR,
-    DEFAULT_WRAPPER_ABSOLUTE_PATH,
-)
 
 __all__ = [
     "resolve_default_output_path",
     "resolve_output_path_interactively",
     "resolve_root_interactively",
 ]
-
 
 PathValidator = Callable[[Path, logging.Logger], bool]
 
@@ -108,12 +103,14 @@ def resolve_default_output_path(
     tool_name: str,
     mode: str,
     project_root: Path,
+    relative_dir_name: str,
+    absolute_dir_path: Path,
 ) -> Path:
     if mode == "absolute":
-        return DEFAULT_WRAPPER_ABSOLUTE_PATH / tool_name
+        return absolute_dir_path / tool_name
     else:
 
-        return project_root / DEFAULT_WRAPPER_RELATIVE_DIR / tool_name
+        return project_root / relative_dir_name / tool_name
 
 
 def resolve_output_path_interactively(
@@ -122,11 +119,19 @@ def resolve_output_path_interactively(
     output_arg: Optional[Path],
     mode: str,
     project_root: Path,
+    relative_dir_name: str,
+    absolute_dir_path: Path,
 ) -> Path:
     if output_arg is not None:
         return output_arg.resolve()
 
-    default_output_path = resolve_default_output_path(tool_name, mode, project_root)
+    default_output_path = resolve_default_output_path(
+        tool_name,
+        mode,
+        project_root,
+        relative_dir_name,
+        absolute_dir_path,
+    )
 
     if mode == "absolute":
         logger.warning(f"⚠️ Output path (-o) not specified for 'absolute' mode.")

@@ -1,4 +1,4 @@
-# Path: modules/zsh_wrapper/templates/zsh_wrapper.toml.template
+# Path: modules/zsh_wrapper/zsh_wrapper.toml.template
 #
 # Cấu hình mặc định cho 'zrap' (Zsh Wrapper Generator).
 #
@@ -15,3 +15,12 @@ mode = "{toml_mode}"
 # Tên thư mục môi trường ảo (virtual environment) cần kích hoạt.
 # Mặc định: "{toml_venv}"
 venv = "{toml_venv}"
+
+# Thư mục (con) mặc định để lưu wrapper 'relative' (tính từ gốc project).
+# Mặc định: "{toml_relative_dir}"
+relative_dir = "{toml_relative_dir}"
+
+# Đường dẫn (tuyệt đối) mặc định để lưu wrapper 'absolute'.
+# Hỗ trợ '~' cho thư mục home.
+# Mặc định: "{toml_absolute_dir}"
+absolute_dir = "{toml_absolute_dir}"

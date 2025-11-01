@@ -18,6 +18,8 @@ __all__ = [
 
 DEFAULT_MODE: Final[str] = "relative"
 DEFAULT_VENV: Final[str] = ".venv"
+
+
 DEFAULT_WRAPPER_RELATIVE_DIR: Final[str] = "bin"
 DEFAULT_WRAPPER_ABSOLUTE_PATH: Final[Path] = Path.home() / "bin"
 
@@ -30,4 +32,6 @@ TEMPLATE_FILENAME: Final[str] = "zsh_wrapper.toml.template"
 ZRAP_DEFAULTS: Final[Dict[str, Any]] = {
     "mode": DEFAULT_MODE,
     "venv": DEFAULT_VENV,
+    "relative_dir": DEFAULT_WRAPPER_RELATIVE_DIR,
+    "absolute_dir": str(DEFAULT_WRAPPER_ABSOLUTE_PATH),
 }
