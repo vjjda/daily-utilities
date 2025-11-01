@@ -1,9 +1,10 @@
 # Path: modules/bootstrap/bootstrap_internal/bootstrap_generator.py
 from typing import Dict, Any, Optional
 
-# --- THAY ĐỔI: Import từ loader nội bộ và builder bên ngoài ---
-from .bootstrap_loader import load_template
+# --- THAY ĐỔI: Import loader từ cấp cha ---
+from ..bootstrap_loader import load_template
 from ..bootstrap_builder import (
+# ... (Nội dung import builder giữ nguyên) ...
     build_config_constants,
     build_config_all_list,
     build_config_imports,
@@ -17,6 +18,7 @@ from ..bootstrap_builder import (
 )
 
 __all__ = [
+# ... (Nội dung __all__ giữ nguyên) ...
     "generate_bin_wrapper",
     "generate_script_entrypoint",
     "generate_module_file",
@@ -26,7 +28,8 @@ __all__ = [
 
 
 def generate_bin_wrapper(config: Dict[str, Any]) -> str:
-    template = load_template("bin_wrapper.zsh.template") 
+# ... (Nội dung hàm giữ nguyên) ...
+    template = load_template("bin_wrapper.zsh.template")
     return template.format(
         tool_name=config["meta"]["tool_name"], script_file=config["meta"]["script_file"]
     )
@@ -35,7 +38,8 @@ def generate_bin_wrapper(config: Dict[str, Any]) -> str:
 def generate_script_entrypoint(
     config: Dict[str, Any], cli_interface_override: Optional[str] = None
 ) -> str:
-    cli_config = config.get("cli", {}) 
+# ... (Nội dung hàm giữ nguyên) ...
+    cli_config = config.get("cli", {})
     cli_help_config = cli_config.get("help", {})
 
     interface_type = cli_interface_override or cli_config.get("interface", "typer")
@@ -85,9 +89,9 @@ except ImportError:
 
     else:
 
-        template = load_template("script_entrypoint_typer.py.template") 
+        template = load_template("script_entrypoint_typer.py.template")
 
-        typer_app_code = build_typer_app_code(config) 
+        typer_app_code = build_typer_app_code(config)
         typer_main_sig = build_typer_main_signature(config)
         typer_path_expands = build_typer_path_expands(config)
         typer_args_pass = build_typer_args_pass_to_core(config)
@@ -106,12 +110,13 @@ except ImportError:
 
 
 def generate_module_file(config: Dict[str, Any], file_type: str) -> str:
+# ... (Nội dung hàm giữ nguyên) ...
     template_name_map = {
         "config": "module_config.py.template",
         "core": "module_core.py.template",
         "executor": "module_executor.py.template",
         "loader": "module_loader.py.template",
-    } 
+    }
     template_name = template_name_map[file_type]
     template = load_template(template_name)
 
@@ -128,12 +133,14 @@ def generate_module_file(config: Dict[str, Any], file_type: str) -> str:
 
 
 def generate_module_init_file(config: Dict[str, Any]) -> str:
-    template = load_template("module_init.py.template") 
+# ... (Nội dung hàm giữ nguyên) ...
+    template = load_template("module_init.py.template")
     return template.format(module_name=config["module_name"])
 
 
 def generate_doc_file(config: Dict[str, Any]) -> str:
-    template = load_template("doc_file.md.template") 
+# ... (Nội dung hàm giữ nguyên) ...
+    template = load_template("doc_file.md.template")
 
     return template.format(
         tool_name=config["meta"]["tool_name"],

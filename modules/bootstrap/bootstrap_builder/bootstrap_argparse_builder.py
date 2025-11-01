@@ -3,13 +3,14 @@ from typing import Dict, Any, List
 from pathlib import Path
 
 
-# --- THAY ĐỔI: Import util từ internal ---
-from ..bootstrap_internal import get_cli_args
+# --- THAY ĐỔI: Import util từ cấp cha ---
+from ..bootstrap_utils import get_cli_args
 
 __all__ = ["build_argparse_arguments", "build_path_expands", "build_args_pass_to_core"]
 
 
 def build_argparse_arguments(config: Dict[str, Any]) -> str:
+# ... (Nội dung hàm giữ nguyên) ...
     code_lines: List[str] = []
     args = get_cli_args(config)
 
@@ -17,7 +18,7 @@ def build_argparse_arguments(config: Dict[str, Any]) -> str:
         code_lines.append("    # (Không có đối số CLI nào được định nghĩa trong spec)")
         return "\n".join(code_lines)
 
-    for arg in args: 
+    for arg in args:
         name = arg["name"]
         py_type_str = arg.get("type", "str")
         help_str = arg.get("help", f"Văn bản trợ giúp cho {name}.")
@@ -27,7 +28,7 @@ def build_argparse_arguments(config: Dict[str, Any]) -> str:
 
         if is_argument:
 
-            arg_params.append(f'        "{name}",') 
+            arg_params.append(f'        "{name}",')
         else:
 
             name_flags = [f'"--{name}"']
@@ -39,7 +40,7 @@ def build_argparse_arguments(config: Dict[str, Any]) -> str:
 
             if arg.get("default", False) is True:
 
-                arg_params.append(f'        action="store_false",') 
+                arg_params.append(f'        action="store_false",')
             else:
 
                 arg_params.append(f'        action="store_true",')
@@ -47,7 +48,7 @@ def build_argparse_arguments(config: Dict[str, Any]) -> str:
             arg_params.append(f"        type=int,")
 
         else:
-            arg_params.append(f"        type=str,") 
+            arg_params.append(f"        type=str,")
 
         if is_argument:
 
@@ -58,12 +59,12 @@ def build_argparse_arguments(config: Dict[str, Any]) -> str:
 
         else:
 
-            if py_type_str != "bool": 
+            if py_type_str != "bool":
                 if "default" in arg:
                     arg_params.append(f"        default={repr(arg['default'])},")
                 else:
 
-                    arg_params.append(f"        default=None,") 
+                    arg_params.append(f"        default=None,")
 
         arg_params.append(f"        help={repr(help_str)}")
 
@@ -75,11 +76,12 @@ def build_argparse_arguments(config: Dict[str, Any]) -> str:
 
 
 def build_path_expands(config: Dict[str, Any]) -> str:
+# ... (Nội dung hàm giữ nguyên) ...
     code_lines: List[str] = []
     path_args = [arg for arg in get_cli_args(config) if arg.get("type") == "Path"]
 
     if not path_args:
-        code_lines.append("    # (Không có đối số Path nào cần expand)") 
+        code_lines.append("    # (Không có đối số Path nào cần expand)")
         return "\n".join(code_lines)
 
     for arg in path_args:
@@ -91,13 +93,14 @@ def build_path_expands(config: Dict[str, Any]) -> str:
         else:
 
             code_lines.append(
-                f"    {var_name} = Path(args.{name}).expanduser() if args.{name} else None" 
+                f"    {var_name} = Path(args.{name}).expanduser() if args.{name} else None"
             )
 
     return "\n".join(code_lines)
 
 
 def build_args_pass_to_core(config: Dict[str, Any]) -> str:
+# ... (Nội dung hàm giữ nguyên) ...
     code_lines: List[str] = []
     args = get_cli_args(config)
 
@@ -105,7 +108,7 @@ def build_args_pass_to_core(config: Dict[str, Any]) -> str:
         code_lines.append("        # (Không có đối số CLI nào để truyền)")
         return "\n".join(code_lines)
 
-    for arg in args: 
+    for arg in args:
         name = arg["name"]
 
         if arg.get("type") == "Path":

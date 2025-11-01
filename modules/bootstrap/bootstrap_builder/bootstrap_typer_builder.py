@@ -3,9 +3,11 @@ from typing import Dict, Any, List, Optional as TypingOptional
 
 
 from ..bootstrap_config import TYPE_HINT_MAP, TYPING_IMPORTS
-from ..bootstrap_internal import get_cli_args
+# --- THAY ĐỔI: Import util từ cấp cha ---
+from ..bootstrap_utils import get_cli_args
 
 __all__ = [
+# ... (Nội dung __all__ giữ nguyên) ...
     "build_typer_app_code",
     "build_typer_path_expands",
     "build_typer_args_pass_to_core",
@@ -14,6 +16,7 @@ __all__ = [
 
 
 def build_typer_app_code(config: Dict[str, Any]) -> str:
+# ... (Nội dung hàm giữ nguyên) ...
     cli_config = config.get("cli", {})
     help_config = cli_config.get("help", {})
 
@@ -24,9 +27,7 @@ def build_typer_app_code(config: Dict[str, Any]) -> str:
         f"app = typer.Typer(",
         f"    help={repr(desc)},",
         f"    epilog={repr(epilog)},",
-        # --- THAY ĐỔI: Bật tính năng autocompletion của Typer ---
         f"    add_completion=True,",
-        # --- KẾT THÚC THAY ĐỔI ---
         f"    context_settings={{",
         f"        'help_option_names': ['--help', '-h'],",
         f"    }}",
@@ -36,6 +37,7 @@ def build_typer_app_code(config: Dict[str, Any]) -> str:
 
 
 def build_typer_path_expands(config: Dict[str, Any]) -> str:
+# ... (Nội dung hàm giữ nguyên) ...
     code_lines: List[str] = []
     path_args = [arg for arg in get_cli_args(config) if arg.get("type") == "Path"]
 
@@ -59,6 +61,7 @@ def build_typer_path_expands(config: Dict[str, Any]) -> str:
 
 
 def build_typer_args_pass_to_core(config: Dict[str, Any]) -> str:
+# ... (Nội dung hàm giữ nguyên) ...
     code_lines: List[str] = []
     args = get_cli_args(config)
 
@@ -80,6 +83,7 @@ def build_typer_args_pass_to_core(config: Dict[str, Any]) -> str:
 
 
 def build_typer_main_signature(config: Dict[str, Any]) -> str:
+# ... (Nội dung hàm giữ nguyên) ...
     code_lines: List[str] = [f"def main(", f"    ctx: typer.Context,"]
 
     args = get_cli_args(config)
