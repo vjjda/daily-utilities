@@ -6,13 +6,14 @@ from pathlib import Path
 from typing import Dict, Any, Tuple, Optional
 
 
-from .bootstrap_generator import (
+from .bootstrap_internal import (
     generate_bin_wrapper,
     generate_script_entrypoint,
     generate_module_file,
     generate_module_init_file,
     generate_doc_file,
 )
+
 
 __all__ = [
     "process_bootstrap_logic",

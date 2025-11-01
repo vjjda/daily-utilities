@@ -14,8 +14,9 @@ except ImportError:
         tomllib = None
 
 
-from .bootstrap_config import TEMPLATE_DIR, CONFIG_SECTION_NAME
+from ..bootstrap_config import TEMPLATE_DIR, CONFIG_SECTION_NAME
 from utils.core import load_project_config_section, load_text_template
+
 
 __all__ = ["load_template", "load_bootstrap_config", "load_spec_file"]
 

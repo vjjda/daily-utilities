@@ -1,9 +1,8 @@
-# Path: modules/bootstrap/bootstrap_typer_builder.py
+# Path: modules/bootstrap/bootstrap_internal/bootstrap_typer_builder.py
 from typing import Dict, Any, List, Optional as TypingOptional
 
 
-from .bootstrap_config import TYPE_HINT_MAP, TYPING_IMPORTS
-
+from ..bootstrap_config import TYPE_HINT_MAP, TYPING_IMPORTS
 from .bootstrap_utils import get_cli_args
 
 __all__ = [
