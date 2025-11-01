@@ -5,6 +5,12 @@ import logging
 from pathlib import Path
 from typing import Optional, Final
 
+# THÊM MỚI: Import Argcomplete (tùy chọn)
+try:
+    import argcomplete
+except ImportError:
+    argcomplete = None
+
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.append(str(PROJECT_ROOT))
@@ -45,6 +51,10 @@ def main():
         action="store_true",
         help="Filter out emojis from the clipboard content before processing.",
     )
+
+    # THÊM MỚI: Kích hoạt argcomplete
+    if argcomplete:
+        argcomplete.autocomplete(parser)
 
     args = parser.parse_args()
 

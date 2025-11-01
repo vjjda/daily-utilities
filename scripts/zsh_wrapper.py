@@ -5,6 +5,12 @@ import logging
 from pathlib import Path
 from typing import Optional
 
+# THÊM MỚI: Import Argcomplete (tùy chọn)
+try:
+    import argcomplete
+except ImportError:
+    argcomplete = None
+
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.append(str(PROJECT_ROOT))
@@ -74,6 +80,10 @@ def main():
     parser.add_argument(
         "-f", "--force", action="store_true", help="Ghi đè file output nếu đã tồn tại."
     )
+
+    # THÊM MỚI: Kích hoạt argcomplete
+    if argcomplete:
+        argcomplete.autocomplete(parser)
 
     args = parser.parse_args()
 

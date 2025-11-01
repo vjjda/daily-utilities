@@ -5,6 +5,12 @@ import logging
 from pathlib import Path
 from typing import Optional, Final, Dict, Any, List, Set
 
+# THÊM MỚI: Import Argcomplete (tùy chọn)
+try:
+    import argcomplete
+except ImportError:
+    argcomplete = None
+
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.append(str(PROJECT_ROOT))
 
@@ -110,6 +116,10 @@ def main():
         action="store_true",
         help=f"Khởi tạo/cập nhật file {CONFIG_FILENAME} (scope 'local').",
     )
+
+    # THÊM MỚI: Kích hoạt argcomplete
+    if argcomplete:
+        argcomplete.autocomplete(parser)
 
     args = parser.parse_args()
 

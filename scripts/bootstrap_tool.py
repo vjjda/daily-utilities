@@ -6,6 +6,12 @@ import os
 from pathlib import Path
 from typing import Dict, Any, List, Optional, Final
 
+# THÊM MỚI: Import Argcomplete (tùy chọn)
+try:
+    import argcomplete
+except ImportError:
+    argcomplete = None
+
 
 PROJECT_ROOT: Final[Path] = Path(__file__).resolve().parent.parent
 sys.path.append(str(PROJECT_ROOT))
@@ -57,6 +63,10 @@ def main():
         help="Ghi đè (overwrite) loại interface (typer/argparse) được định nghĩa trong file spec.",
     )
 
+    # THÊM MỚI: Kích hoạt argcomplete
+    if argcomplete:
+        argcomplete.autocomplete(parser)
+
     args = parser.parse_args()
 
     try:
@@ -88,7 +98,6 @@ def main():
 
         logger.info(f"🚀 Bắt đầu bootstrap:")
         try:
-
             spec_rel_path = spec_file_path.relative_to(PROJECT_ROOT).as_posix()
         except ValueError:
             spec_rel_path = spec_file_path.as_posix()
@@ -125,9 +134,4 @@ def main():
         sys.exit(1)
     except Exception as e:
         logger.error(f"❌ Đã xảy ra lỗi không mong muốn trong quá trình bootstrap: {e}")
-        logger.debug("Traceback:", exc_info=True)
-        sys.exit(1)
-
-
-if __name__ == "__main__":
-    main()
+        logger.debug("Traceback:", exc_info=
