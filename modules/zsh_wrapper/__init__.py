@@ -10,6 +10,8 @@ current_dir = Path(__file__).parent
 modules_to_export: List[str] = [
     "zsh_wrapper_config",
     "zsh_wrapper_helpers",
+    "zsh_wrapper_resolver",  # <-- THÊM MỚI
+    "zsh_wrapper_generator", # <-- THÊM MỚI
     "zsh_wrapper_core",
     "zsh_wrapper_executor",
 ]
