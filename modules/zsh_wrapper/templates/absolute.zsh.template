@@ -20,4 +20,4 @@ fi
 
 # --- 3. Thực thi Script (Hỗ trợ Typer & Argcomplete) ---
 # Thêm $PROJECT_ROOT vào PYTHONPATH (inline) và thực thi script Python.
-exec PYTHONPATH="$PROJECT_ROOT:$PYTHONPATH" python "$SCRIPT_PATH_ABS" "$@"
+PYTHONPATH="$PROJECT_ROOT:$PYTHONPATH" python "$SCRIPT_PATH_ABS" "$@"
