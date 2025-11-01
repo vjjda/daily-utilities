@@ -5,7 +5,7 @@ import argparse
 from pathlib import Path
 from typing import Dict, Any, Tuple, Optional
 
-# --- THAY ĐỔI: Import workers và utils từ internal ---
+
 from .bootstrap_internal import (
     generate_bin_wrapper,
     generate_script_entrypoint,
@@ -18,7 +18,7 @@ __all__ = [
     "process_bootstrap_logic",
 ]
 
-# --- THAY ĐỔI: Logic của 'orchestrator' được chuyển về đây ---
+
 def process_bootstrap_logic(
     logger: logging.Logger,
     config: Dict[str, Any],

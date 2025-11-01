@@ -6,4 +6,4 @@ __all__ = ["get_cli_args"]
 
 def get_cli_args(config: Dict[str, Any]) -> List[Dict[str, Any]]:
 
-    return config.get("cli", {}).get("args", []) 
+    return config.get("cli", {}).get("args", [])
