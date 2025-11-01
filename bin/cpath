@@ -1,4 +1,6 @@
 #!/usr/bin/env zsh
+# Path: bin/cpath
+
 # Path: modules/zsh_wrapper/templates/relative.zsh.template
 # (zrap wrapper - relative mode)
 #
