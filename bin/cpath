@@ -1,18 +1,54 @@
 #!/usr/bin/env zsh
-# Path: bin/cpath
-# 1. Find the project root (the directory this script is in, then up one level)
-SCRIPT_PATH="$(readlink -f "$0" 2>/dev/null || realpath "$0" 2>/dev/null || echo "$0")"
-PROJECT_ROOT=$(cd "$(dirname "$SCRIPT_PATH")/.." && pwd)
-VENV_PATH="$PROJECT_ROOT/.venv"
+# Path: modules/zsh_wrapper/templates/relative.zsh.template
+# (zrap wrapper - relative mode)
+#
+# Dùng file này để chạy script bên trong dự án.
+# Nó dựa vào vị trí TƯƠNG ĐỐI của file này để tìm Project Root.
+# File này KHÔNG THỂ di chuyển. Dự án CÓ THỂ di chuyển.
 
-# 2. Activate virtual environment if it exists
-if [ -d "$VENV_PATH" ];
-then
-    source "$VENV_PATH/bin/activate"
+# --- 1. Thiết lập Đường dẫn Tương đối ---
+# Tìm thư mục chứa file wrapper này
+local SCRIPT_DIR
+SCRIPT_DIR=$( (cd -P -- "$(dirname -- "$0")" && pwd -P) )
+
+# Đường dẫn tương đối từ wrapper lên Project Root (do zrap tính toán)
+local PROJECT_ROOT_REL_TO_OUTPUT=".."
+local PROJECT_ROOT
+PROJECT_ROOT=$( (cd -P -- "$SCRIPT_DIR/$PROJECT_ROOT_REL_TO_OUTPUT" && pwd -P) )
+
+# Đường dẫn venv và script (tương đối so với Project Root)
+local VENV_PATH_REL_TO_PROJECT=".venv"
+local SCRIPT_PATH_REL_TO_PROJECT="scripts/check_path.py"
+
+# Tính đường dẫn tuyệt đối cuối cùng
+local VENV_PATH_ABS="$PROJECT_ROOT/$VENV_PATH_REL_TO_PROJECT"
+local SCRIPT_PATH_ABS="$PROJECT_ROOT/$SCRIPT_PATH_REL_TO_PROJECT"
+
+# --- 2. Kích hoạt Môi trường & PYTHONPATH ---
+if [ -f "$VENV_PATH_ABS/bin/activate" ]; then
+    source "$VENV_PATH_ABS/bin/activate"
 else
-    # Allow running without venv, but log a warning
-    echo "⚠️ Warning: No virtual environment found at $VENV_PATH. Using system Python."
+    echo "zrap (relative): Lỗi: Không tìm thấy venv tại $VENV_PATH_ABS" >&2
+    exit 1
+fi
+export PYTHONPATH="$PROJECT_ROOT"
+
+# --- 3. Xử lý Autocomplete & Thực thi ---
+
+# **PHÁT HIỆN ARGCOMPLETE REGISTER**:
+if [[ "$@" == *register-python-argcomplete* ]]; then
+    local tool_name
+    tool_name=$(basename "$0")
+    
+    # Thay thế tên wrapper ($tool_name) bằng đường dẫn Python script thật ($SCRIPT_PATH_ABS)
+    # Cú pháp Zsh này an toàn vì không dùng {}
+    local modified_command
+    modified_command=("${@//$tool_name/$SCRIPT_PATH_ABS}")
+
+    # Chạy lệnh đăng ký đã được sửa đổi
+    eval "$modified_command"
+    exit $?
 fi
 
-# 3. Run the main Python script, passing all arguments ($@)
-PYTHONPATH="$PROJECT_ROOT:$PYTHONPATH" python "$PROJECT_ROOT/scripts/check_path.py" "$@"
+# **THỰC THI BÌNH THƯỜNG (hoặc TYPER/ARGCOMPLETE RUNTIME)**:
+exec python "$SCRIPT_PATH_ABS" "$@"
