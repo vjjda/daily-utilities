@@ -50,7 +50,7 @@ def _find_project_root(
 
 
 def _prepare_absolute_mode(template_content: str, paths: Dict[str, Path]) -> str:
-    # SỬA LỖI: Dùng .replace() thay vì .format() để tránh xung đột cú pháp Zsh
+
     return (
         template_content.replace("__PROJECT_ROOT_ABS__", str(paths["project_root"]))
         .replace("__VENV_PATH_ABS__", str(paths["venv_path"]))
@@ -75,14 +75,11 @@ def _prepare_relative_mode(
     venv_path_rel_to_project = paths["venv_path"].relative_to(paths["project_root"])
     output_path_rel_to_project = paths["output_path"].relative_to(paths["project_root"])
 
-    # SỬA LỖI: Dùng .replace() thay vì .format() để tránh xung đột cú pháp Zsh
     return (
         template_content.replace(
             "__PROJECT_ROOT_REL_TO_OUTPUT__", project_root_rel_to_output
         )
-        .replace(
-            "__VENV_PATH_REL_TO_PROJECT__", venv_path_rel_to_project.as_posix()
-        )
+        .replace("__VENV_PATH_REL_TO_PROJECT__", venv_path_rel_to_project.as_posix())
         .replace(
             "__SCRIPT_PATH_REL_TO_PROJECT__", script_path_rel_to_project.as_posix()
         )
@@ -111,24 +108,26 @@ def _generate_wrapper_content(
     logger.debug(f"Đã giải quyết các đường dẫn cuối cùng: {paths}")
 
     try:
-        # --- LOGIC HEADER MỚI ---
+
         shebang = "#!/usr/bin/env zsh"
         path_comment = ""
 
         if mode == "absolute":
-            # Yêu cầu của bạn: Dùng đường dẫn tuyệt đối cho file được tạo ra
+
             path_comment = f"# Path: {output_path.as_posix()}"
-        else:  # mode == "relative"
-            # Yêu cầu của bạn: Dùng đường dẫn tương đối (so với project_root)
+        else:
+
             try:
                 relative_output_path = output_path.relative_to(project_root).as_posix()
                 path_comment = f"# Path: {relative_output_path}"
             except ValueError:
-                # Fallback nếu output nằm ngoài project root (trường hợp hiếm)
-                logger.warning(f"Không thể tính toán đường dẫn relative cho # Path: (output nằm ngoài project).")
-                path_comment = f"# Path: {output_path.as_posix()} (Warning: Non-relative)"
-        
-        # --- KẾT THÚC LOGIC HEADER MỚI ---
+
+                logger.warning(
+                    f"Không thể tính toán đường dẫn relative cho # Path: (output nằm ngoài project)."
+                )
+                path_comment = (
+                    f"# Path: {output_path.as_posix()} (Warning: Non-relative)"
+                )
 
         template_body = ""
         if mode == "absolute":
@@ -141,7 +140,6 @@ def _generate_wrapper_content(
             template = _load_template("relative.zsh.template")
             template_body = _prepare_relative_mode(logger, template, paths)
 
-        # Lắp ráp file cuối cùng
         final_content = f"{shebang}\n{path_comment}\n\n{template_body}"
         return final_content
 

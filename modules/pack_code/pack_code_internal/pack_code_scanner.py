@@ -51,12 +51,6 @@ def scan_files(
 
         abs_file_path = file_path.resolve()
 
-        # --- VÔ HIỆU HÓA TỰ LOẠI TRỪ ---
-        # if abs_file_path.samefile(script_file_path):
-        #     logger.debug("Bỏ qua (chính file script pack_code.py)")
-        #     continue
-        # --- KẾT THÚC VÔ HIỆU HÓA ---
-
         if any(abs_file_path.is_relative_to(p.resolve()) for p in submodule_paths):
             logger.debug(
                 f"Bỏ qua (submodule): {file_path.relative_to(scan_root).as_posix()}"

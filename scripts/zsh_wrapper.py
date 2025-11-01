@@ -5,7 +5,7 @@ import logging
 from pathlib import Path
 from typing import Optional
 
-# THÊM MỚI: Import Argcomplete (tùy chọn)
+
 try:
     import argcomplete
 except ImportError:
@@ -81,7 +81,6 @@ def main():
         "-f", "--force", action="store_true", help="Ghi đè file output nếu đã tồn tại."
     )
 
-    # THÊM MỚI: Kích hoạt argcomplete
     if argcomplete:
         argcomplete.autocomplete(parser)
 

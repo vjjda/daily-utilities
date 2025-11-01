@@ -13,7 +13,7 @@ except ImportError:
     except ImportError:
         tomllib = None
 
-# THÊM MỚI: Import Argcomplete (tùy chọn)
+
 try:
     import argcomplete
 except ImportError:
@@ -141,11 +141,10 @@ def main():
         action="store_true",
         help="Khởi tạo/cập nhật file .tree.toml (scope 'local').",
     )
-    
-    # THÊM MỚI: Kích hoạt argcomplete
+
     if argcomplete:
         argcomplete.autocomplete(parser)
-        
+
     args = parser.parse_args()
 
     logger = setup_logging(script_name="tree")

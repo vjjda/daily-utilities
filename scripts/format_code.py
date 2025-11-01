@@ -6,7 +6,7 @@ import logging
 from pathlib import Path
 from typing import Optional, Final, Dict, Any, List, Set
 
-# THÊM MỚI: Import Argcomplete (tùy chọn)
+
 try:
     import argcomplete
 except ImportError:
@@ -84,7 +84,6 @@ def main():
         help="Ghi đè file mà không hỏi xác nhận (chỉ áp dụng ở chế độ fix).",
     )
 
-    # THÊM MỚI: Kích hoạt argcomplete
     if argcomplete:
         argcomplete.autocomplete(parser)
 

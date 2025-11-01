@@ -14,7 +14,7 @@ except ImportError:
     except ImportError:
         tomllib = None
 
-# THÊM MỚI: Import Argcomplete (tùy chọn)
+
 try:
     import argcomplete
 except ImportError:
@@ -117,7 +117,6 @@ def main():
         help=f"Khởi tạo/cập nhật file {CONFIG_FILENAME} (scope 'local').",
     )
 
-    # THÊM MỚI: Kích hoạt argcomplete
     if argcomplete:
         argcomplete.autocomplete(parser)
 

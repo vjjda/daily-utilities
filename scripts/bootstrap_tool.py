@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 from typing import Dict, Any, List, Optional, Final
 
-# THÊM MỚI: Import Argcomplete (tùy chọn)
+
 try:
     import argcomplete
 except ImportError:
@@ -63,7 +63,6 @@ def main():
         help="Ghi đè (overwrite) loại interface (typer/argparse) được định nghĩa trong file spec.",
     )
 
-    # THÊM MỚI: Kích hoạt argcomplete
     if argcomplete:
         argcomplete.autocomplete(parser)
 

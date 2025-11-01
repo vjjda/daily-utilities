@@ -5,7 +5,7 @@ import logging
 from pathlib import Path
 from typing import Optional, List, Set, Dict, Any, Final
 
-# THÊM MỚI: Import Argcomplete (tùy chọn)
+
 try:
     import argcomplete
 except ImportError:
@@ -105,7 +105,6 @@ def main():
         help=f"Khởi tạo/cập nhật file {CONFIG_FILENAME} (scope 'local').",
     )
 
-    # THÊM MỚI: Kích hoạt argcomplete
     if argcomplete:
         argcomplete.autocomplete(parser)
 

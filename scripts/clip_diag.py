@@ -5,7 +5,7 @@ import logging
 from pathlib import Path
 from typing import Optional, Final
 
-# THÊM MỚI: Import Argcomplete (tùy chọn)
+
 try:
     import argcomplete
 except ImportError:
@@ -52,7 +52,6 @@ def main():
         help="Filter out emojis from the clipboard content before processing.",
     )
 
-    # THÊM MỚI: Kích hoạt argcomplete
     if argcomplete:
         argcomplete.autocomplete(parser)
 
