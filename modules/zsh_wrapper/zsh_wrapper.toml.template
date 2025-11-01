@@ -4,7 +4,7 @@
 #
 # Chạy 'zrap -C' (local) hoặc 'zrap -c' (project) để tạo/cập nhật file này.
 #
-[zrap]
+[{config_section_name}]
 
 # Chế độ (mode) mặc định khi tạo wrapper.
 # - "relative": Wrapper sử dụng đường dẫn tương đối (project di chuyển được).
