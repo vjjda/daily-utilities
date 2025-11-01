@@ -51,9 +51,11 @@ def scan_files(
 
         abs_file_path = file_path.resolve()
 
-        if abs_file_path.samefile(script_file_path):
-            logger.debug("Bỏ qua (chính file script pack_code.py)")
-            continue
+        # --- VÔ HIỆU HÓA TỰ LOẠI TRỪ ---
+        # if abs_file_path.samefile(script_file_path):
+        #     logger.debug("Bỏ qua (chính file script pack_code.py)")
+        #     continue
+        # --- KẾT THÚC VÔ HIỆU HÓA ---
 
         if any(abs_file_path.is_relative_to(p.resolve()) for p in submodule_paths):
             logger.debug(
@@ -79,7 +81,6 @@ def scan_files(
         file_ext = "".join(file_path.suffixes).lstrip(".")
         if file_ext not in ext_filter_set:
             if start_path.is_file() and abs_file_path.samefile(start_path.resolve()):
-
                 logger.warning(
                     f"File chỉ định {start_path.name} bị bỏ qua do không khớp extension."
                 )
