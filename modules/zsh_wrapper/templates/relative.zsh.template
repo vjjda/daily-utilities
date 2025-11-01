@@ -1,5 +1,5 @@
 #!/usr/bin/env zsh
-# Path: modules/zsh_wrapper/templates/relative.zsh.template
+# Path: __PROJECT_ROOT_REL_TO_OUTPUT__
 # (zrap wrapper - relative mode)
 #
 # Dùng file này để chạy script bên trong dự án.
