@@ -3,7 +3,6 @@ from typing import Dict, Any, List, Optional as TypingOptional
 
 
 from ..bootstrap_config import TYPE_HINT_MAP, TYPING_IMPORTS
-# --- THAY ĐỔI: Import util từ internal ---
 from ..bootstrap_internal import get_cli_args
 
 __all__ = [
@@ -24,8 +23,10 @@ def build_typer_app_code(config: Dict[str, Any]) -> str:
     code_lines = [
         f"app = typer.Typer(",
         f"    help={repr(desc)},",
-        f"    epilog={repr(epilog)},", 
-        f"    add_completion=False,",
+        f"    epilog={repr(epilog)},",
+        # --- THAY ĐỔI: Bật tính năng autocompletion của Typer ---
+        f"    add_completion=True,",
+        # --- KẾT THÚC THAY ĐỔI ---
         f"    context_settings={{",
         f"        'help_option_names': ['--help', '-h'],",
         f"    }}",
@@ -36,7 +37,7 @@ def build_typer_app_code(config: Dict[str, Any]) -> str:
 
 def build_typer_path_expands(config: Dict[str, Any]) -> str:
     code_lines: List[str] = []
-    path_args = [arg for arg in get_cli_args(config) if arg.get("type") == "Path"] 
+    path_args = [arg for arg in get_cli_args(config) if arg.get("type") == "Path"]
 
     if not path_args:
         code_lines.append("    # (Không có đối số Path nào cần expand)")
@@ -51,7 +52,7 @@ def build_typer_path_expands(config: Dict[str, Any]) -> str:
         else:
 
             code_lines.append(
-                f"    {var_name} = {name}.expanduser() if {name} else None" 
+                f"    {var_name} = {name}.expanduser() if {name} else None"
             )
 
     return "\n".join(code_lines)
@@ -62,7 +63,7 @@ def build_typer_args_pass_to_core(config: Dict[str, Any]) -> str:
     args = get_cli_args(config)
 
     if not args:
-        code_lines.append("        # (Không có đối số CLI nào để truyền)") 
+        code_lines.append("        # (Không có đối số CLI nào để truyền)")
         return "\n".join(code_lines)
 
     for arg in args:
@@ -73,7 +74,7 @@ def build_typer_args_pass_to_core(config: Dict[str, Any]) -> str:
             code_lines.append(f"        {name}={var_name},")
         else:
 
-            code_lines.append(f"         {name}={name},") 
+            code_lines.append(f"         {name}={name},")
 
     return "\n".join(code_lines)
 
@@ -92,7 +93,7 @@ def build_typer_main_signature(config: Dict[str, Any]) -> str:
 
     if needs_optional:
 
-        pass 
+        pass
 
     for arg in args:
         name = arg["name"]
@@ -107,7 +108,7 @@ def build_typer_main_signature(config: Dict[str, Any]) -> str:
 
         if "default" in arg:
 
-            if py_type == "bool": 
+            if py_type == "bool":
 
                 default_repr = str(arg["default"]).capitalize()
             else:
@@ -116,7 +117,7 @@ def build_typer_main_signature(config: Dict[str, Any]) -> str:
         else:
 
             if py_type == "bool":
-                default_repr = "False" 
+                default_repr = "False"
             else:
                 if is_argument:
 
@@ -125,7 +126,7 @@ def build_typer_main_signature(config: Dict[str, Any]) -> str:
 
                     default_repr = "None"
 
-                type_hint = f"Optional[{type_hint}]" 
+                type_hint = f"Optional[{type_hint}]"
 
         if is_argument:
             code_lines.append(f"    {name}: {type_hint} = typer.Argument(")
@@ -133,7 +134,7 @@ def build_typer_main_signature(config: Dict[str, Any]) -> str:
             code_lines.append(f"        help={repr(help_str)}")
 
             code_lines.append(f"    ),")
-        else: 
+        else:
             code_lines.append(f"    {name}: {type_hint} = typer.Option(")
             code_lines.append(f"        {default_repr},")
 
@@ -142,7 +143,7 @@ def build_typer_main_signature(config: Dict[str, Any]) -> str:
             if "short" in arg:
                 option_names.append(f"\"{arg['short']}\"")
 
-            option_names.append(f'"--{name}"') 
+            option_names.append(f'"--{name}"')
 
             code_lines.append(f"        {', '.join(option_names)},")
 
