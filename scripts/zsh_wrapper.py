@@ -26,7 +26,7 @@ try:
         PROJECT_CONFIG_FILENAME,
         CONFIG_SECTION_NAME,
         ZRAP_DEFAULTS,
-        TEMPLATE_FILENAME,  # <-- THÊM DÒNG NÀY
+        TEMPLATE_FILENAME,
     )
 
 except ImportError as e:

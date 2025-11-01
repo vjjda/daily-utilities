@@ -130,3 +130,24 @@ ignore = ["*.pyc", "*.pyo", ".git", ".venv", "__pycache__", "build", "dist", "no
 # Ví dụ: include = ["modules/core/**", "utils/network.py"]
 # Mặc định (được thêm vào): {toml_include}
 include = []
+
+[zrap]
+
+# Đường dẫn (tuyệt đối) mặc định để lưu wrapper 'absolute'.
+# Hỗ trợ '~' cho thư mục home.
+# Mặc định: "{toml_absolute_dir}"
+absolute_dir = "/Users/hieucao/bin"
+
+# Chế độ (mode) mặc định khi tạo wrapper.
+# - "relative": Wrapper sử dụng đường dẫn tương đối (project di chuyển được).
+# - "absolute": Wrapper sử dụng đường dẫn tuyệt đối (wrapper di chuyển được).
+# Mặc định: "{toml_mode}"
+mode = "relative"
+
+# Thư mục (con) mặc định để lưu wrapper 'relative' (tính từ gốc project).
+# Mặc định: "{toml_relative_dir}"
+relative_dir = "bin"
+
+# Tên thư mục môi trường ảo (virtual environment) cần kích hoạt.
+# Mặc định: "{toml_venv}"
+venv = ".venv"
