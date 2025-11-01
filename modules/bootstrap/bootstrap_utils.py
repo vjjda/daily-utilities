@@ -1,4 +1,4 @@
-# Path: modules/bootstrap/bootstrap_builder/bootstrap_utils.py
+# Path: modules/bootstrap/bootstrap_utils.py
 from typing import Dict, Any, List
 
 __all__ = ["get_cli_args"]

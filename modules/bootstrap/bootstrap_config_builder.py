@@ -1,8 +1,8 @@
-# Path: modules/bootstrap/bootstrap_builder/bootstrap_config_builder.py
+# Path: modules/bootstrap/bootstrap_config_builder.py
 from typing import Dict, Any, List
 
 
-from .bootstrap_utils import get_cli_args # Sửa từ '..bootstrap_internal.bootstrap_utils'
+from .bootstrap_utils import get_cli_args # Sửa: từ .bootstrap_utils (đã đúng)
 
 __all__ = ["build_config_constants", "build_config_all_list", "build_config_imports"]
 

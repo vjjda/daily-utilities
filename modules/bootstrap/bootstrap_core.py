@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Dict, Any, Tuple, Optional
 
 
-from .bootstrap_internal import (
+from .bootstrap_generator import ( # Sửa: từ .bootstrap_internal
     generate_bin_wrapper,
     generate_script_entrypoint,
     generate_module_file,

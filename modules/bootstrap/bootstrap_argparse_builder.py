@@ -1,9 +1,9 @@
-# Path: modules/bootstrap/bootstrap_builder/bootstrap_argparse_builder.py
+# Path: modules/bootstrap/bootstrap_argparse_builder.py
 from typing import Dict, Any, List
 from pathlib import Path
 
 
-from .bootstrap_utils import get_cli_args # Sửa từ '..bootstrap_internal.bootstrap_utils'
+from .bootstrap_utils import get_cli_args # Sửa: từ .bootstrap_utils (đã đúng)
 
 __all__ = ["build_argparse_arguments", "build_path_expands", "build_args_pass_to_core"]
 

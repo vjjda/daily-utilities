@@ -9,10 +9,15 @@ current_dir = Path(__file__).parent
 
 modules_to_export: List[str] = [
     "bootstrap_config",
-    "bootstrap_builder",
     "bootstrap_core",
     "bootstrap_executor",
-    "bootstrap_internal",  # <-- THÊM DÒNG NÀY
+    # Các file đã làm phẳng:
+    "bootstrap_loader",
+    "bootstrap_generator",
+    "bootstrap_utils",
+    "bootstrap_argparse_builder",
+    "bootstrap_config_builder",
+    "bootstrap_typer_builder",
 ]
 
 __all__: List[str] = []

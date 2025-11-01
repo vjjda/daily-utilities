@@ -1,10 +1,10 @@
-# Path: modules/bootstrap/bootstrap_builder/bootstrap_typer_builder.py
+# Path: modules/bootstrap/bootstrap_typer_builder.py
 from typing import Dict, Any, List, Optional as TypingOptional
 
 
-from ..bootstrap_config import TYPE_HINT_MAP, TYPING_IMPORTS
+from .bootstrap_config import TYPE_HINT_MAP, TYPING_IMPORTS # Sửa: từ ..bootstrap_config
 
-from .bootstrap_utils import get_cli_args # Sửa từ '..bootstrap_internal.bootstrap_utils'
+from .bootstrap_utils import get_cli_args # Sửa: từ .bootstrap_utils (đã đúng)
 
 __all__ = [
     "build_typer_app_code",
