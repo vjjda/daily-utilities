@@ -1,4 +1,4 @@
-# Path: modules/bootstrap/__init__.py
+# Path: modules/bootstrap/bootstrap_internal/__init__.py
 from pathlib import Path
 from importlib import import_module
 from typing import List
@@ -7,15 +7,11 @@ from typing import List
 current_dir = Path(__file__).parent
 
 
-# --- THAY ĐỔI: Cập nhật danh sách export ---
 modules_to_export: List[str] = [
-    "bootstrap_config",
-    # "bootstrap_loader", # Đã chuyển vào internal
-    # "bootstrap_utils",  # Đã chuyển vào internal
-    "bootstrap_builder",
-    "bootstrap_core",
-    "bootstrap_executor",
-    "bootstrap_internal", # Thêm module internal mới
+    "bootstrap_loader",
+    "bootstrap_utils",
+    "bootstrap_generator",
+    "bootstrap_orchestrator",
 ]
 
 __all__: List[str] = []
@@ -26,22 +22,20 @@ for module_name in modules_to_export:
 
         if hasattr(module, "__all__"):
             public_symbols = getattr(module, "__all__")
-    
-            for name in public_symbols: 
+            for name in public_symbols:
                 obj = getattr(module, name)
                 globals()[name] = obj
             __all__.extend(public_symbols)
 
     except ImportError as e:
-        print(f"Cảnh báo: Không thể import từ {module_name}: {e}")
+        print(f"Cảnh báo: Không thể import từ {module_name} trong bootstrap_internal: {e}")
 
 
 del Path, import_module, List, current_dir, modules_to_export, module_name
 if "module" in locals():
     del module
 if "public_symbols" in locals():
- 
-    del public_symbols 
+    del public_symbols
 if "name" in locals():
     del name
 if "obj" in locals():

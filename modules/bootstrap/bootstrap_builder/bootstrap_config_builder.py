@@ -1,7 +1,8 @@
 # Path: modules/bootstrap/bootstrap_builder/bootstrap_config_builder.py
 from typing import Dict, Any, List
 
-from ..bootstrap_utils import get_cli_args
+# --- THAY ĐỔI: Import util từ internal ---
+from ..bootstrap_internal import get_cli_args
 
 __all__ = ["build_config_constants", "build_config_all_list", "build_config_imports"]
 
@@ -17,7 +18,7 @@ def build_config_constants(config: Dict[str, Any]) -> str:
 
     if not default_args:
         code_lines.append(
-            "# (Không có hằng số mặc định nào được định nghĩa trong tool.spec.toml)"
+            "# (Không có hằng số mặc định nào được định nghĩa trong tool.spec.toml)" 
         )
         return "\n".join(code_lines)
 
@@ -34,7 +35,7 @@ def build_config_all_list(config: Dict[str, Any]) -> str:
     default_args = [
         arg
         for arg in get_cli_args(config)
-        if "default" in arg and arg.get("type") != "bool"
+        if "default" in arg and arg.get("type") != "bool" 
     ]
     if not default_args:
         return ""
@@ -50,7 +51,7 @@ def build_config_all_list(config: Dict[str, Any]) -> str:
 def build_config_imports(module_name: str, config: Dict[str, Any]) -> str:
     default_args = [
         arg
-        for arg in get_cli_args(config)
+        for arg in get_cli_args(config) 
         if "default" in arg and arg.get("type") != "bool"
     ]
 
