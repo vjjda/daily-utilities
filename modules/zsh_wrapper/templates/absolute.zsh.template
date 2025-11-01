@@ -10,31 +10,14 @@ local PROJECT_ROOT="__PROJECT_ROOT_ABS__"
 local VENV_PATH_ABS="__VENV_PATH_ABS__"
 local SCRIPT_PATH_ABS="__SCRIPT_PATH_ABS__"
 
-# --- 2. Kích hoạt Môi trường & PYTHONPATH ---
+# --- 2. Kích hoạt Môi trường ---
 if [ -f "$VENV_PATH_ABS/bin/activate" ]; then
     source "$VENV_PATH_ABS/bin/activate"
 else
     echo "zrap (absolute): Lỗi: Không tìm thấy venv tại $VENV_PATH_ABS" >&2
     exit 1
 fi
-export PYTHONPATH="$PROJECT_ROOT"
 
-# --- 3. Xử lý Autocomplete & Thực thi ---
-
-# **PHÁT HIỆN ARGCOMPLETE REGISTER**:
-if [[ "$@" == *register-python-argcomplete* ]]; then
-    local tool_name
-    tool_name=$(basename "$0")
-    
-    # Thay thế tên wrapper ($tool_name) bằng đường dẫn Python script thật ($SCRIPT_PATH_ABS)
-    # Cú pháp Zsh này an toàn vì không dùng {}
-    local modified_command
-    modified_command=("${@//$tool_name/$SCRIPT_PATH_ABS}")
-
-    # Chạy lệnh đăng ký đã được sửa đổi
-    eval "$modified_command"
-    exit $?
-fi
-
-# **THỰC THI BÌNH THƯỜNG (hoặc TYPER/ARGCOMPLETE RUNTIME)**:
-exec python "$SCRIPT_PATH_ABS" "$@"
+# --- 3. Thực thi Script (Hỗ trợ Typer & Argcomplete) ---
+# Thêm $PROJECT_ROOT vào PYTHONPATH (inline) và thực thi script Python.
+exec PYTHONPATH="$PROJECT_ROOT:$PYTHONPATH" python "$SCRIPT_PATH_ABS" "$@"
