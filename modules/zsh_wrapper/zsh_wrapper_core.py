@@ -26,7 +26,13 @@ def _load_template(template_name: str) -> str:
     path = TEMPLATE_DIR / template_name
     if not path.exists():
         raise FileNotFoundError(f"Không tìm thấy template: {template_name}")
-    return path.read_text(encoding="utf-8")
+    
+    # --- START FIX ---
+    # Đọc tất cả các dòng và lọc bỏ dòng Path comment của template
+    lines = path.read_text(encoding="utf-8").splitlines()
+    filtered_lines = [line for line in lines if not line.strip().startswith("# Path:")]
+    return "\n".join(filtered_lines)
+    # --- END FIX ---
 
 
 def _find_project_root(
