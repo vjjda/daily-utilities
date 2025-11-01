@@ -16,16 +16,22 @@ __all__ = [
 ]
 
 DEFAULT_START_PATH: Final[str] = "."
-DEFAULT_EXTENSIONS: Final[str] = (
-    "md,py,pyi,txt,json,xml,yaml,yml,ini,cfg,cfg.py,sh,bash,zsh,toml,template,gitignore"
-)
-DEFAULT_IGNORE: Final[str] = ".venv,venv,__pycache__,.git,.hg,.svn,.DS_Store"
+
+# --- START CHANGE ---
+# Chuyển từ str sang Set[str]
+DEFAULT_EXTENSIONS: Final[Set[str]] = {
+    "md", "py", "pyi", "txt", "json", "xml", "yaml", "yml", "ini", "cfg", 
+    "cfg.py", "sh", "bash", "zsh", "toml", "template", "gitignore", ""
+}
+DEFAULT_IGNORE: Final[Set[str]] = {
+    ".venv", "venv", "__pycache__", ".git", ".hg", ".svn", ".DS_Store"
+}
+# --- END CHANGE ---
+
 DEFAULT_INCLUDE: Final[Optional[Set[str]]] = None
 DEFAULT_OUTPUT_DIR: Final[str] = "~/Documents/code.context"
 
 DEFAULT_CLEAN_EXTENSIONS: Final[Set[str]] = {"py", "zsh", "sh"}
-
-
 DEFAULT_FORMAT_EXTENSIONS: Final[Set[str]] = {"py"}
 
 PROJECT_CONFIG_FILENAME: Final[str] = ".project.toml"

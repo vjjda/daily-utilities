@@ -47,8 +47,12 @@ TEMPLATE_FILENAME: Final[str] = "pack_code.toml.template"
 
 PCODE_DEFAULTS: Final[Dict[str, Any]] = {
     "output_dir": DEFAULT_OUTPUT_DIR,
-    "extensions": sorted(list(parse_comma_list(DEFAULT_EXTENSIONS))),
-    "ignore": sorted(list(parse_comma_list(DEFAULT_IGNORE))),
+    
+    # --- START CHANGE ---
+    "extensions": sorted(list(DEFAULT_EXTENSIONS)), # <-- Xóa parse_comma_list
+    "ignore": sorted(list(DEFAULT_IGNORE)),         # <-- Xóa parse_comma_list
+    # --- END CHANGE ---
+    
     "include": sorted(list(DEFAULT_INCLUDE)) if DEFAULT_INCLUDE else [],
     "clean_extensions": sorted(list(DEFAULT_CLEAN_EXTENSIONS)),
     "format_extensions": sorted(list(DEFAULT_FORMAT_EXTENSIONS)),

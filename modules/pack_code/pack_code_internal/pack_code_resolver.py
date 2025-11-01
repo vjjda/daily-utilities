@@ -44,7 +44,12 @@ def resolve_filters(
 ]:
 
     file_ext_list = file_config.get("extensions")
-    default_ext_set = parse_comma_list(DEFAULT_EXTENSIONS)
+    
+    # --- START CHANGE (Extensions) ---
+    # default_ext_set = parse_comma_list(DEFAULT_EXTENSIONS) # <-- XÓA DÒNG NÀY 
+    default_ext_set = DEFAULT_EXTENSIONS                      # <-- THAY BẰNG DÒNG NÀY
+    # --- END CHANGE ---
+
     tentative_extensions: Set[str]
     if file_ext_list is not None:
         tentative_extensions = set(file_ext_list)
@@ -57,7 +62,11 @@ def resolve_filters(
         f"Set 'extensions' cuối cùng (để quét): {sorted(list(ext_filter_set))}"
     )
 
-    default_ignore_set = parse_comma_list(DEFAULT_IGNORE)
+    # --- START CHANGE (Ignore) ---
+    # default_ignore_set = parse_comma_list(DEFAULT_IGNORE) # <-- XÓA DÒNG NÀY 
+    default_ignore_set = DEFAULT_IGNORE                        # <-- THAY BẰNG DÒNG NÀY
+    # --- END CHANGE ---
+
     config_cli_ignore_list = resolve_config_list(
         cli_str_value=cli_args.get("ignore"),
         file_list_value=file_config.get("ignore"),
