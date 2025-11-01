@@ -1,5 +1,5 @@
+# Path: modules/zsh_wrapper/templates/relative.zsh.template
 #!/usr/bin/env zsh
-# Path: {output_path_rel_to_project}
 # (zrap wrapper - relative mode)
 #
 # Dùng file này để chạy script bên trong dự án.
@@ -36,18 +36,14 @@ export PYTHONPATH="$PROJECT_ROOT"
 # --- 3. Xử lý Autocomplete & Thực thi ---
 
 # **PHÁT HIỆN ARGCOMPLETE REGISTER**:
-# Nếu lệnh là 'register-python-argcomplete ... cpath',
-# chúng ta cần thay 'cpath' bằng 'scripts/check_path.py'
-# và chạy lệnh *bên trong* venv.
 if [[ "$@" == *register-python-argcomplete* ]]; then
     local tool_name
     tool_name=$(basename "$0")
     
     # Thay thế tên wrapper ($tool_name) bằng đường dẫn Python script thật ($SCRIPT_PATH_ABS)
-    # zsh string replacement: ${@//pattern/replacement}
+    # SỬA LỖI: Sử dụng cú pháp Zsh an toàn, không xung đột với Python format
     local modified_command
-    # SỬA LỖI: Dùng ${{...}} để escape cú pháp Zsh khỏi Python format
-    modified_command=(${{@//$tool_name/$SCRIPT_PATH_ABS}})
+    modified_command=("${@//$tool_name/$SCRIPT_PATH_ABS}")
 
     # Chạy lệnh đăng ký đã được sửa đổi
     eval "$modified_command"
@@ -55,6 +51,4 @@ if [[ "$@" == *register-python-argcomplete* ]]; then
 fi
 
 # **THỰC THI BÌNH THƯỜNG (hoặc TYPER/ARGCOMPLETE RUNTIME)**:
-# (Bao gồm cả khi user nhấn TAB, ví dụ: _BTOOL_COMPLETE=... hoặc _ARGCOMPLETE=1 ...)
-# Biến môi trường và "$@" được truyền thẳng vào script Python.
 exec python "$SCRIPT_PATH_ABS" "$@"

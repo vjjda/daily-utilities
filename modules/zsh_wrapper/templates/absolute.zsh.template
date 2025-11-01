@@ -1,3 +1,4 @@
+# Path: modules/zsh_wrapper/templates/absolute.zsh.template
 #!/usr/bin/env zsh
 # (zrap wrapper - absolute mode)
 #
@@ -27,9 +28,9 @@ if [[ "$@" == *register-python-argcomplete* ]]; then
     tool_name=$(basename "$0")
     
     # Thay thế tên wrapper ($tool_name) bằng đường dẫn Python script thật ($SCRIPT_PATH_ABS)
+    # SỬA LỖI: Sử dụng cú pháp Zsh an toàn, không xung đột với Python format
     local modified_command
-    # SỬA LỖI: Dùng ${{...}} để escape cú pháp Zsh khỏi Python format
-    modified_command=(${{@//$tool_name/$SCRIPT_PATH_ABS}})
+    modified_command=("${@//$tool_name/$SCRIPT_PATH_ABS}")
 
     # Chạy lệnh đăng ký đã được sửa đổi
     eval "$modified_command"
