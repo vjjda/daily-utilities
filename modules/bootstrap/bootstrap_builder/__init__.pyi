@@ -14,6 +14,7 @@ build_typer_app_code: Any
 build_typer_args_pass_to_core: Any
 build_typer_main_signature: Any
 build_typer_path_expands: Any
+get_cli_args: Any
 
 # Static declaration of exported symbols (for Pylance)
 __all__: List[str] = [
@@ -27,4 +28,5 @@ __all__: List[str] = [
     "build_typer_args_pass_to_core",
     "build_typer_main_signature",
     "build_typer_path_expands",
+    "get_cli_args",
 ]
