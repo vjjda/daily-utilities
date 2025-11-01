@@ -38,12 +38,11 @@ def main():
         formatter_class=argparse.RawTextHelpFormatter,
     )
 
-    # --- START CHANGE ---
     parser.add_argument(
         "script_path_arg",
         type=str,
-        nargs="?",  # 1. Làm cho nó tùy chọn
-        default=None, # 2. Mặc định là None
+        nargs="?",
+        default=None,
         help="Đường dẫn đến file Python cần wrap (TÙY CHỌN nếu dùng -n).\nUse '~' for home directory.",
     )
 
@@ -61,7 +60,6 @@ def main():
         action="store_true",
         help="Tạo cả hai wrapper 'relative' (cho bin/) và 'absolute' (cho ~/bin).",
     )
-    # --- END CHANGE ---
 
     parser.add_argument(
         "-o",
@@ -109,7 +107,7 @@ def main():
     logger.debug("Zrap script started.")
 
     try:
-        # Đẩy logic vào core, truyền PROJECT_ROOT vào
+
         success = run_zsh_wrapper(
             logger=logger, cli_args=args, project_root=PROJECT_ROOT
         )

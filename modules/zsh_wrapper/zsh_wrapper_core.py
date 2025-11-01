@@ -22,14 +22,12 @@ __all__ = ["run_zsh_wrapper"]
 
 TEMPLATE_DIR = Path(__file__).parent / "templates"
 
-# ... (Các hàm _load_template, _find_project_root, _prepare_absolute_mode, 
-# _prepare_relative_mode, _generate_wrapper_content giữ nguyên y như cũ) ...
 
 def _load_template(template_name: str) -> str:
     path = TEMPLATE_DIR / template_name
     if not path.exists():
         raise FileNotFoundError(f"Không tìm thấy template: {template_name}")
-    
+
     lines = path.read_text(encoding="utf-8").splitlines()
     filtered_lines = [line for line in lines if not line.strip().startswith("# Path:")]
     return "\n".join(filtered_lines)
@@ -160,42 +158,37 @@ def _generate_wrapper_content(
         return None
 
 
-# --- START SỬA LỖI HÀM NÀY ---
 def run_zsh_wrapper(
     logger: logging.Logger, cli_args: argparse.Namespace, project_root: Path
 ) -> bool:
-    """
-    Logic điều phối chính, xử lý các cờ -n và -M.
-    """
 
-    # 1. Xác định Tên (Output) và Đường dẫn Script (Input)
     tool_name: Optional[str] = getattr(cli_args, "name", None)
     script_path_arg_str: Optional[str] = getattr(cli_args, "script_path_arg", None)
     script_path: Optional[Path] = None
 
     if script_path_arg_str:
-        # Ưu tiên đối số vị trí cho INPUT script
+
         script_path = Path(script_path_arg_str).expanduser().resolve()
         if not tool_name:
-            # Nếu -n không được cung cấp, lấy tên từ script
+
             tool_name = script_path.stem
             logger.debug(f"Lấy tên tool từ script: {tool_name}")
         else:
-            # Cả hai đều được cung cấp
-            logger.debug(f"Sử dụng script {script_path_arg_str} và output name {tool_name}")
+
+            logger.debug(
+                f"Sử dụng script {script_path_arg_str} và output name {tool_name}"
+            )
 
     elif tool_name:
-        # KHÔNG có đối số vị trí, chỉ có -n
-        # Dùng -n để đoán cả input và output
+
         logger.debug(f"Sử dụng tên từ cờ -n ({tool_name}) để đoán script input")
         script_path_str = f"scripts/{tool_name}.py"
         script_path = project_root / script_path_str
-    
+
     else:
         logger.error("❌ Lỗi: Phải cung cấp tên tool (-n) hoặc đường dẫn script.")
         return False
 
-    # 2. Xác thực Input
     if not script_path or not script_path.is_file():
         logger.error(
             f"❌ Lỗi: Script path không tồn tại hoặc không phải là file: {script_path}"
@@ -203,19 +196,16 @@ def run_zsh_wrapper(
         return False
 
     if not tool_name:
-         logger.error(f"❌ Lỗi: Không thể xác định tên tool (output name).")
-         return False
+        logger.error(f"❌ Lỗi: Không thể xác định tên tool (output name).")
+        return False
 
     try:
         rel_script_path = script_path.relative_to(project_root).as_posix()
     except ValueError:
         rel_script_path = script_path.as_posix()
-        
-    logger.info(
-        f"Tool: {tool_name}, Script: {rel_script_path}"
-    )
 
-    # 3. Find Project Root
+    logger.info(f"Tool: {tool_name}, Script: {rel_script_path}")
+
     root_arg_str: Optional[str] = getattr(cli_args, "root", None)
     initial_root, is_fallback = _find_project_root(logger, script_path, root_arg_str)
 
@@ -232,7 +222,6 @@ def run_zsh_wrapper(
 
     logger.info(f"Root đã xác định cuối cùng: {final_root.as_posix()}")
 
-    # 4. Determine modes
     modes_to_run: List[str]
     if getattr(cli_args, "multi_mode", False):
         modes_to_run = ["relative", "absolute"]
@@ -240,7 +229,6 @@ def run_zsh_wrapper(
     else:
         modes_to_run = [getattr(cli_args, "mode", DEFAULT_MODE)]
 
-    # 5. Get other args
     venv_name: str = getattr(cli_args, "venv", DEFAULT_VENV)
     force: bool = getattr(cli_args, "force", False)
     output_arg_str: Optional[str] = getattr(cli_args, "output", None)
@@ -250,36 +238,36 @@ def run_zsh_wrapper(
         logger.warning(
             f"⚠️ Cờ -o ({output_arg_path.name}) bị bỏ qua khi dùng -M (multi-mode)."
         )
-        output_arg_path = None  # Hủy cờ -o nếu dùng -M
+        output_arg_path = None
 
     all_success = True
 
-    # 6. Loop and execute
     for mode in modes_to_run:
         logger.info(f"--- 🚀 Đang xử lý mode: {mode} ---")
         final_output_path: Path
 
         if output_arg_path:
-            # Chỉ dùng -o nếu không phải multi-mode
+
             final_output_path = output_arg_path.resolve()
         else:
-            # Tự động xác định đường dẫn
-            # Luôn không tương tác nếu dùng -n hoặc -M
-            is_non_interactive = getattr(cli_args, "name") or getattr(
-                cli_args, "multi_mode"
-            ) or getattr(cli_args, "script_path_arg")
-            
+
+            is_non_interactive = (
+                getattr(cli_args, "name")
+                or getattr(cli_args, "multi_mode")
+                or getattr(cli_args, "script_path_arg")
+            )
+
             if tool_name and is_non_interactive:
-                # Nếu dùng -n, -M, hoặc script_path_arg, chúng ta dùng logic mặc định (không tương tác)
+
                 final_output_path = resolve_default_output_path(
                     tool_name, mode, final_root
                 )
             else:
-                # Dùng logic cũ (có thể tương tác) nếu chỉ chạy zrap (không tham số)
+
                 final_output_path = resolve_output_path_interactively(
                     logger=logger,
                     tool_name=tool_name,
-                    output_arg=None,  # đã check ở trên
+                    output_arg=None,
                     mode=mode,
                     project_root=final_root,
                 )
@@ -296,7 +284,7 @@ def run_zsh_wrapper(
         if final_content is None:
             logger.error(f"❌ Không thể tạo nội dung wrapper (mode: {mode}).")
             all_success = False
-            continue  # Thử mode tiếp theo (nếu có)
+            continue
 
         result_for_executor = {
             "status": "ok",

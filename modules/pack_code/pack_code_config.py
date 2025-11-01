@@ -17,16 +17,37 @@ __all__ = [
 
 DEFAULT_START_PATH: Final[str] = "."
 
-# --- START CHANGE ---
-# Chuyển từ str sang Set[str]
+
 DEFAULT_EXTENSIONS: Final[Set[str]] = {
-    "md", "py", "pyi", "txt", "json", "xml", "yaml", "yml", "ini", "cfg", 
-    "cfg.py", "sh", "bash", "zsh", "toml", "template", "gitignore", ""
+    "md",
+    "py",
+    "pyi",
+    "txt",
+    "json",
+    "xml",
+    "yaml",
+    "yml",
+    "ini",
+    "cfg",
+    "cfg.py",
+    "sh",
+    "bash",
+    "zsh",
+    "toml",
+    "template",
+    "gitignore",
+    "",
 }
 DEFAULT_IGNORE: Final[Set[str]] = {
-    ".venv", "venv", "__pycache__", ".git", ".hg", ".svn", ".DS_Store"
+    ".venv",
+    "venv",
+    "__pycache__",
+    ".git",
+    ".hg",
+    ".svn",
+    ".DS_Store",
 }
-# --- END CHANGE ---
+
 
 DEFAULT_INCLUDE: Final[Optional[Set[str]]] = None
 DEFAULT_OUTPUT_DIR: Final[str] = "~/Documents/code.context"

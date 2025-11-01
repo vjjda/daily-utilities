@@ -1,26 +1,38 @@
+#!/usr/bin/env zsh
 # Path: bin/btool
+
+# (zrap wrapper - relative mode)
 #
-# File wrapper này sử dụng đường dẫn tương đối.
-# Toàn bộ project
-# (bao gồm cả wrapper này) có thể được di chuyển cùng nhau.
-# CẢNH BÁO: KHÔNG di chuyển file này. Hãy dùng symlink nếu cần.
-# 1. Find the project root
-SCRIPT_PATH="$(readlink -f "$0" 2>/dev/null || realpath "$0" 2>/dev/null || echo "$0")"
-PROJECT_ROOT=$(cd "$(dirname "$SCRIPT_PATH")/.." && pwd)
+# Dùng file này để chạy script bên trong dự án.
+# Nó dựa vào vị trí TƯƠNG ĐỐI của file này để tìm Project Root.
+# File này KHÔNG THỂ di chuyển. Dự án CÓ THỂ di chuyển.
 
-# --- Relative Paths (Calculated by zrap) ---
-VENV_PATH="$PROJECT_ROOT/.venv"
-# --- MODIFIED: Cập nhật đường dẫn script ---
-SCRIPT_TO_RUN="$PROJECT_ROOT/scripts/bootstrap_tool.py"
-# --- END MODIFIED ---
+# --- 1. Thiết lập Đường dẫn Tương đối ---
+# Tìm thư mục chứa file wrapper này
+local SCRIPT_DIR
+SCRIPT_DIR=$( (cd -P -- "$(dirname -- "$0")" && pwd -P) )
 
-# 2. Activate virtual environment
-if [ -d "$VENV_PATH" ];
-then
-    source "$VENV_PATH/bin/activate"
+# Đường dẫn tương đối từ wrapper lên Project Root (do zrap tính toán)
+local PROJECT_ROOT_REL_TO_OUTPUT=".."
+local PROJECT_ROOT
+PROJECT_ROOT=$( (cd -P -- "$SCRIPT_DIR/$PROJECT_ROOT_REL_TO_OUTPUT" && pwd -P) )
+
+# Đường dẫn venv và script (tương đối so với Project Root)
+local VENV_PATH_REL_TO_PROJECT=".venv"
+local SCRIPT_PATH_REL_TO_PROJECT="scripts/bootstrap_tool.py"
+
+# Tính đường dẫn tuyệt đối cuối cùng
+local VENV_PATH_ABS="$PROJECT_ROOT/$VENV_PATH_REL_TO_PROJECT"
+local SCRIPT_PATH_ABS="$PROJECT_ROOT/$SCRIPT_PATH_REL_TO_PROJECT"
+
+# --- 2. Kích hoạt Môi trường ---
+if [ -f "$VENV_PATH_ABS/bin/activate" ]; then
+    source "$VENV_PATH_ABS/bin/activate"
 else
-    echo "⚠️ Warning: No virtual environment found at $VENV_PATH."
+    echo "zrap (relative): Lỗi: Không tìm thấy venv tại $VENV_PATH_ABS" >&2
+    exit 1
 fi
 
-# 3. Run the main Python script
-PYTHONPATH="$PROJECT_ROOT:$PYTHONPATH" python "$SCRIPT_TO_RUN" "$@"
+# --- 3. Thực thi Script (Hỗ trợ Typer & Argcomplete) ---
+# Thêm $PROJECT_ROOT vào PYTHONPATH (inline) và thực thi script Python.
+PYTHONPATH="$PROJECT_ROOT:$PYTHONPATH" python "$SCRIPT_PATH_ABS" "$@"

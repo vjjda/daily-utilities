@@ -31,7 +31,7 @@ def scan_files(
     logger: logging.Logger,
     start_path: Path,
     ignore_list: List[str],
-    extensions: List[str],  
+    extensions: List[str],
     scan_root: Path,
     script_file_path: Path,
 ) -> Tuple[List[Path], Dict[str, bool]]:
@@ -54,22 +54,20 @@ def scan_files(
     ignore_spec = compile_spec_from_patterns(all_ignore_patterns_list, scan_root)
 
     all_files: List[Path] = []
-    extensions_set = set(extensions)  
+    extensions_set = set(extensions)
 
     if scan_path.is_dir():
-        
-        
+
         logger.debug(f"Scanner (fixed): Chạy rglob('*') trên {scan_path.name}")
         all_files_raw = [p for p in scan_path.rglob("*") if p.is_file()]
 
-        
         for f in all_files_raw:
             file_ext = "".join(f.suffixes).lstrip(".")
             if file_ext in extensions_set:
                 all_files.append(f)
-        
+
     elif scan_path.is_file():
-        
+
         file_ext = "".join(scan_path.suffixes).lstrip(".")
         if file_ext in extensions_set:
             all_files.append(scan_path)

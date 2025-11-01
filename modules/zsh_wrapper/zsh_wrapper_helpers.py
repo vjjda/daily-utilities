@@ -10,7 +10,7 @@ from .zsh_wrapper_config import (
 )
 
 __all__ = [
-    "resolve_default_output_path", # <-- THÊM MỚI
+    "resolve_default_output_path",
     "resolve_output_path_interactively",
     "resolve_root_interactively",
 ]
@@ -18,8 +18,7 @@ __all__ = [
 
 PathValidator = Callable[[Path, logging.Logger], bool]
 
-# ... (Các hàm _validate_output_path, _validate_root_path, _resolve_path_via_prompt giữ nguyên) ...
-# ... (Nội dung các hàm này không thay đổi) ...
+
 def _validate_output_path(path: Path, logger: logging.Logger) -> bool:
     parent_dir = path.parent
     if not parent_dir.exists():
@@ -105,26 +104,21 @@ def _resolve_path_via_prompt(
     return selected_path.resolve()
 
 
-# --- HÀM MỚI ---
 def resolve_default_output_path(
     tool_name: str,
     mode: str,
     project_root: Path,
 ) -> Path:
-    """
-    Xác định đường dẫn output mặc định (không tương tác) dựa trên tên và mode.
-    """
     if mode == "absolute":
         return DEFAULT_WRAPPER_ABSOLUTE_PATH / tool_name
     else:
-        # Mặc định là 'relative'
+
         return project_root / DEFAULT_WRAPPER_RELATIVE_DIR / tool_name
 
 
-# --- HÀM CẬP NHẬT ---
 def resolve_output_path_interactively(
     logger: logging.Logger,
-    tool_name: str, # <-- Thay script_path bằng tool_name
+    tool_name: str,
     output_arg: Optional[Path],
     mode: str,
     project_root: Path,
@@ -132,17 +126,12 @@ def resolve_output_path_interactively(
     if output_arg is not None:
         return output_arg.resolve()
 
-    # --- START CHANGE ---
-    # Tái sử dụng logic xác định đường dẫn mặc định
-    default_output_path = resolve_default_output_path(
-        tool_name, mode, project_root
-    )
-    
+    default_output_path = resolve_default_output_path(tool_name, mode, project_root)
+
     if mode == "absolute":
         logger.warning(f"⚠️ Output path (-o) not specified for 'absolute' mode.")
     else:
         logger.warning("⚠️ Output path (-o) not specified.")
-    # --- END CHANGE ---
 
     prompt_title = "⚠️ Output Path (-o) was not specified.\n   Please select the destination for the Zsh wrapper:"
     suggested_text = f"Use Suggested Path: {default_output_path.as_posix()}"
@@ -163,7 +152,7 @@ def resolve_output_path_interactively(
 
 
 def resolve_root_interactively(logger: logging.Logger, fallback_path: Path) -> Path:
-    # ... (Hàm này giữ nguyên)
+
     prompt_title = "⚠️ Project Root (Git Root) was not found automatically.\n   Please select the Project Root for this wrapper:"
     suggested_text = (
         f"Use Suggested Root: {fallback_path.as_posix()} (Script Parent Directory)"

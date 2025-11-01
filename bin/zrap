@@ -1,7 +1,6 @@
 #!/usr/bin/env zsh
 # Path: bin/zrap
 
-# Path: modules/zsh_wrapper/templates/relative.zsh.template
 # (zrap wrapper - relative mode)
 #
 # Dùng file này để chạy script bên trong dự án.
