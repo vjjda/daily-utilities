@@ -6,7 +6,6 @@ toml==0.10.2
 tomli_w==1.2.0
 tomlkit==0.13.3
 black
-mypy
 libcst
 tomlkit
 tomli_w
