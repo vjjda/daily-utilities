@@ -11,7 +11,6 @@ modules_to_export: List[str] = [
     "bootstrap_config",
     "bootstrap_core",
     "bootstrap_executor",
-    # Các file đã làm phẳng:
     "bootstrap_loader",
     "bootstrap_generator",
     "bootstrap_utils",
