@@ -3,14 +3,13 @@ from typing import Dict, Any, List
 from pathlib import Path
 
 
-# --- THAY ĐỔI: Import util từ cấp cha ---
-from ..bootstrap_utils import get_cli_args
+from ..bootstrap_internal import get_cli_args
 
 __all__ = ["build_argparse_arguments", "build_path_expands", "build_args_pass_to_core"]
 
 
 def build_argparse_arguments(config: Dict[str, Any]) -> str:
-# ... (Nội dung hàm giữ nguyên) ...
+
     code_lines: List[str] = []
     args = get_cli_args(config)
 
@@ -76,7 +75,7 @@ def build_argparse_arguments(config: Dict[str, Any]) -> str:
 
 
 def build_path_expands(config: Dict[str, Any]) -> str:
-# ... (Nội dung hàm giữ nguyên) ...
+
     code_lines: List[str] = []
     path_args = [arg for arg in get_cli_args(config) if arg.get("type") == "Path"]
 
@@ -100,7 +99,7 @@ def build_path_expands(config: Dict[str, Any]) -> str:
 
 
 def build_args_pass_to_core(config: Dict[str, Any]) -> str:
-# ... (Nội dung hàm giữ nguyên) ...
+
     code_lines: List[str] = []
     args = get_cli_args(config)
 

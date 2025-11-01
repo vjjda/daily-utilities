@@ -1,10 +1,9 @@
 # Path: modules/bootstrap/bootstrap_internal/bootstrap_generator.py
 from typing import Dict, Any, Optional
 
-# --- THAY ĐỔI: Import loader từ cấp cha ---
-from ..bootstrap_loader import load_template
+
+from .bootstrap_loader import load_template
 from ..bootstrap_builder import (
-# ... (Nội dung import builder giữ nguyên) ...
     build_config_constants,
     build_config_all_list,
     build_config_imports,
@@ -18,7 +17,6 @@ from ..bootstrap_builder import (
 )
 
 __all__ = [
-# ... (Nội dung __all__ giữ nguyên) ...
     "generate_bin_wrapper",
     "generate_script_entrypoint",
     "generate_module_file",
@@ -28,7 +26,7 @@ __all__ = [
 
 
 def generate_bin_wrapper(config: Dict[str, Any]) -> str:
-# ... (Nội dung hàm giữ nguyên) ...
+
     template = load_template("bin_wrapper.zsh.template")
     return template.format(
         tool_name=config["meta"]["tool_name"], script_file=config["meta"]["script_file"]
@@ -38,7 +36,7 @@ def generate_bin_wrapper(config: Dict[str, Any]) -> str:
 def generate_script_entrypoint(
     config: Dict[str, Any], cli_interface_override: Optional[str] = None
 ) -> str:
-# ... (Nội dung hàm giữ nguyên) ...
+
     cli_config = config.get("cli", {})
     cli_help_config = cli_config.get("help", {})
 
@@ -60,7 +58,7 @@ def generate_script_entrypoint(
 
         formatted_description = repr(raw_description)
         formatted_epilog = repr(raw_epilog)
-        
+
         argcomplete_imports_code = """
 try:
     import argcomplete
@@ -110,7 +108,7 @@ except ImportError:
 
 
 def generate_module_file(config: Dict[str, Any], file_type: str) -> str:
-# ... (Nội dung hàm giữ nguyên) ...
+
     template_name_map = {
         "config": "module_config.py.template",
         "core": "module_core.py.template",
@@ -124,7 +122,6 @@ def generate_module_file(config: Dict[str, Any], file_type: str) -> str:
 
     if file_type == "config":
         config_constants_code = build_config_constants(config)
-
         config_all_code = build_config_all_list(config)
         format_dict["config_constants"] = config_constants_code
         format_dict["config_all_constants"] = config_all_code
@@ -133,13 +130,13 @@ def generate_module_file(config: Dict[str, Any], file_type: str) -> str:
 
 
 def generate_module_init_file(config: Dict[str, Any]) -> str:
-# ... (Nội dung hàm giữ nguyên) ...
+
     template = load_template("module_init.py.template")
     return template.format(module_name=config["module_name"])
 
 
 def generate_doc_file(config: Dict[str, Any]) -> str:
-# ... (Nội dung hàm giữ nguyên) ...
+
     template = load_template("doc_file.md.template")
 
     return template.format(

@@ -7,15 +7,14 @@ from typing import List
 current_dir = Path(__file__).parent
 
 
-# --- THAY ĐỔI: Xóa loader và utils ---
 modules_to_export: List[str] = [
-    # "bootstrap_loader", # Đã di chuyển
-    # "bootstrap_utils", # Đã di chuyển
     "bootstrap_generator",
+    "bootstrap_loader",
+    "bootstrap_utils",
 ]
 
 __all__: List[str] = []
-# ... (Nội dung vòng lặp giữ nguyên) ...
+
 for module_name in modules_to_export:
     try:
         module = import_module(f".{module_name}", package=__name__)
@@ -28,7 +27,9 @@ for module_name in modules_to_export:
             __all__.extend(public_symbols)
 
     except ImportError as e:
-        print(f"Cảnh báo: Không thể import từ {module_name} trong bootstrap_internal: {e}")
+        print(
+            f"Cảnh báo: Không thể import từ {module_name} trong bootstrap_internal: {e}"
+        )
 
 
 del Path, import_module, List, current_dir, modules_to_export, module_name
