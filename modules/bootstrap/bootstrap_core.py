@@ -41,27 +41,41 @@ def generate_bin_wrapper(config: Dict[str, Any]) -> str:
 def generate_script_entrypoint(
     config: Dict[str, Any], cli_interface_override: Optional[str] = None
 ) -> str:
-    cli_config = config.get("cli", {})
-    cli_help_config = cli_config.get("help", {})
+    cli_config = config.get("cli", {}) 
+    cli_help_config = cli_config.get("help", {}) 
 
-    interface_type = cli_interface_override or cli_config.get("interface", "typer")
+    interface_type = cli_interface_override or cli_config.get("interface", "typer") 
 
-    config_imports_code = build_config_imports(config["module_name"], config)
+    config_imports_code = build_config_imports(config["module_name"], config) 
 
     if interface_type == "argparse":
-        template = load_template("script_entrypoint_argparse.py.template")
+        template = load_template("script_entrypoint_argparse.py.template") 
 
-        argparse_args_code = build_argparse_arguments(config)
-        path_expands_code = build_argparse_path_expands(config)
-        args_pass_code = build_argparse_args_pass_to_core(config)
+        argparse_args_code = build_argparse_arguments(config) 
+        path_expands_code = build_argparse_path_expands(config) 
+        args_pass_code = build_argparse_args_pass_to_core(config) 
 
         raw_description = cli_help_config.get(
-            "description", f"Mô tả cho {config['meta']['tool_name']}."
+            "description", f"Mô tả cho {config['meta']['tool_name']}." 
         )
-        raw_epilog = cli_help_config.get("epilog", "")
+        raw_epilog = cli_help_config.get("epilog", "") 
 
-        formatted_description = repr(raw_description)
-        formatted_epilog = repr(raw_epilog)
+        formatted_description = repr(raw_description) 
+        formatted_epilog = repr(raw_epilog) 
+        
+        # --- THAY ĐỔI: Thêm logic Argcomplete ---
+        # (Dựa trên các script hiện có như scripts/check_path.py)
+        argcomplete_imports_code = """
+try:
+    import argcomplete
+except ImportError:
+    argcomplete = None
+"""
+        argcomplete_logic_code = """
+    if argcomplete:
+        argcomplete.autocomplete(parser)
+"""
+        # --- KẾT THÚC THAY ĐỔI ---
 
         return template.format(
             tool_name=config["meta"]["tool_name"],
@@ -74,16 +88,20 @@ def generate_script_entrypoint(
             argparse_arguments=argparse_args_code,
             argparse_path_expands=path_expands_code,
             argparse_args_pass_to_core=args_pass_code,
+            # --- THAY ĐỔI: Thêm placeholder mới ---
+            argcomplete_imports=argcomplete_imports_code,
+            argcomplete_logic=argcomplete_logic_code,
+            # --- KẾT THÚC THAY ĐỔI ---
         )
 
     else:
+        # ... (Phần code Typer không thay đổi)
+        template = load_template("script_entrypoint_typer.py.template") 
 
-        template = load_template("script_entrypoint_typer.py.template")
-
-        typer_app_code = build_typer_app_code(config)
-        typer_main_sig = build_typer_main_signature(config)
-        typer_path_expands = build_typer_path_expands(config)
-        typer_args_pass = build_typer_args_pass_to_core(config)
+        typer_app_code = build_typer_app_code(config) 
+        typer_main_sig = build_typer_main_signature(config) 
+        typer_path_expands = build_typer_path_expands(config) 
+        typer_args_pass = build_typer_args_pass_to_core(config) 
 
         return template.format(
             tool_name=config["meta"]["tool_name"],
@@ -95,7 +113,7 @@ def generate_script_entrypoint(
             typer_main_function_signature=typer_main_sig,
             typer_path_expands=typer_path_expands,
             typer_args_pass_to_core=typer_args_pass,
-        )
+        ) 
 
 
 def generate_module_file(config: Dict[str, Any], file_type: str) -> str:
@@ -103,7 +121,7 @@ def generate_module_file(config: Dict[str, Any], file_type: str) -> str:
         "config": "module_config.py.template",
         "core": "module_core.py.template",
         "executor": "module_executor.py.template",
-        "loader": "module_loader.py.template",
+        "loader": "module_loader.py.template", 
     }
     template_name = template_name_map[file_type]
     template = load_template(template_name)
@@ -126,14 +144,14 @@ def generate_module_init_file(config: Dict[str, Any]) -> str:
 
 
 def generate_doc_file(config: Dict[str, Any]) -> str:
-    template = load_template("doc_file.md.template")
+    template = load_template("doc_file.md.template") 
 
     return template.format(
         tool_name=config["meta"]["tool_name"],
         short_description=config.get("docs", {}).get(
             "short_description", f'Tài liệu cho {config["meta"]["tool_name"]}.'
         ),
-    )
+    ) 
 
 
 def process_bootstrap_logic(
@@ -145,8 +163,8 @@ def process_bootstrap_logic(
 
     BIN_DIR = configured_paths["BIN_DIR"]
     SCRIPTS_DIR = configured_paths["SCRIPTS_DIR"]
-    MODULES_DIR = configured_paths["MODULES_DIR"]
-    DOCS_DIR = configured_paths["DOCS_DIR"]
+    MODULES_DIR = configured_paths["MODULES_DIR"] 
+    DOCS_DIR = configured_paths["DOCS_DIR"] 
 
     try:
         tool_name = config["meta"]["tool_name"]
@@ -161,8 +179,8 @@ def process_bootstrap_logic(
 
         logger.debug(f"Tên Tool: {tool_name}")
         logger.debug(f"File Script: {script_file}")
-        logger.debug(f"Tên Module: {module_name}")
-        logger.debug(f"Tên Logger: {config['meta']['logger_name']}")
+        logger.debug(f"Tên Module: {module_name}") 
+        logger.debug(f"Tên Logger: {config['meta']['logger_name']}") 
 
     except KeyError as e:
 
@@ -178,12 +196,12 @@ def process_bootstrap_logic(
             "bin": generate_bin_wrapper(config),
             "script": generate_script_entrypoint(
                 config, cli_interface_override=cli_args.interface
-            ),
+            ), 
             "config": generate_module_file(config, "config"),
             "loader": generate_module_file(config, "loader"),
             "core": generate_module_file(config, "core"),
             "executor": generate_module_file(config, "executor"),
-            "init": generate_module_init_file(config),
+            "init": generate_module_init_file(config), 
         }
 
         target_paths = {
@@ -191,9 +209,9 @@ def process_bootstrap_logic(
             "script": SCRIPTS_DIR / script_file,
             "config": module_path / f"{mod_name}_config.py",
             "loader": module_path / f"{mod_name}_loader.py",
-            "core": module_path / f"{mod_name}_core.py",
-            "executor": module_path / f"{mod_name}_executor.py",
-            "init": module_path / "__init__.py",
+            "core": module_path / f"{mod_name}_core.py", 
+            "executor": module_path / f"{mod_name}_executor.py", 
+            "init": module_path / "__init__.py", 
         }
 
         if config.get("docs", {}).get("enabled", False):
@@ -202,8 +220,8 @@ def process_bootstrap_logic(
 
     except Exception as e:
 
-        logger.error(f"❌ Lỗi nghiêm trọng khi tạo nội dung code: {e}")
-        logger.debug("Traceback:", exc_info=True)
+        logger.error(f"❌ Lỗi nghiêm trọng khi tạo nội dung code: {e}") 
+        logger.debug("Traceback:", exc_info=True) 
         sys.exit(1)
 
     return generated_content, target_paths, module_path

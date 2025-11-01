@@ -1,85 +1,120 @@
+# Path: modules/bootstrap/bootstrap_templates/script_entrypoint_argparse.py.template
+#!/usr/bin/env python3
 # Path: scripts/{script_file}
-"""
-Entrypoint (cổng vào) cho tool '{tool_name}'.
-(Tạo tự động bởi bootstrap_tool.py - Giao diện Argparse)
-"""
-
 import sys
-import argparse # Sử dụng Argparse cho CLI
+import argparse
 import logging
 from pathlib import Path
-from typing import Optional, List, Dict, Any # Thêm các type hint cần thiết
+from typing import List, Optional, Set, Dict, Any, Final
 
-# --- Thiết lập sys.path để import utils/modules ---
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-sys.path.append(str(PROJECT_ROOT))
+{argcomplete_imports}
+
+PROJECT_ROOT: Final[Path] = Path(__file__).resolve().parent.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.append(str(PROJECT_ROOT))
 
 try:
     from utils.logging_config import setup_logging, log_success
-    # Import các hằng số config (nếu có)
+    from utils.cli import (
+        handle_config_init_request,
+        resolve_input_paths,
+        resolve_reporting_root,
+    )
+
+    # Import các hằng số default từ config
     {config_imports}
-    # Import các thành phần logic từ module
-    # from modules.{module_name} import process_{module_name}_logic, execute_{module_name}_action
+    
+    # Import các hàm core từ module
+    from modules.{module_name} import (
+        process_{module_name}_logic,
+        execute_{module_name}_action,
+        CONFIG_FILENAME,
+        PROJECT_CONFIG_FILENAME,
+        CONFIG_SECTION_NAME,
+    )
 except ImportError as e:
-    print(f"Lỗi: Không thể import các module cần thiết: {{e}}", file=sys.stderr) 
+    print(f"Lỗi: Không thể import utils hoặc modules.{module_name}: {{e}}", file=sys.stderr)
     sys.exit(1)
 
 
-def main():
-    """Hàm điều phối chính cho script."""
+THIS_SCRIPT_PATH: Final[Path] = Path(__file__).resolve()
+MODULE_DIR: Final[Path] = PROJECT_ROOT / "modules" / "{module_name}"
+TEMPLATE_FILENAME: Final[str] = "{module_name}.toml.template"
 
-    # --- 1. Định nghĩa Parser ---
+# Cập nhật base defaults cho config init (nếu cần)
+TOOL_DEFAULTS: Final[Dict[str, Any]] = {{
+    # "extensions": DEFAULT_EXTENSIONS,
+    # "ignore": DEFAULT_IGNORE,
+}}
+
+
+def main():
+    logger = setup_logging(script_name="{logger_name}")
+    logger.debug("{tool_name} script started.")
+
     parser = argparse.ArgumentParser(
         description={cli_description},
         epilog={cli_epilog},
-        formatter_class=argparse.RawTextHelpFormatter # Giữ nguyên format help text
+        formatter_class=argparse.RawTextHelpFormatter,
     )
 
-    # --- Thêm các đối số vào parser ---
+    # --- Định nghĩa các Argument ---
 {argparse_arguments}
+    # --- Kết thúc định nghĩa Argument ---
 
-    # --- 2. Phân tích đối số ---
+    # --- Cấu hình Argcomplete ---
+{argcomplete_logic}
+    # --- Kết thúc Argcomplete ---
+
     args = parser.parse_args()
-
-    # --- 3. Cấu hình Logging ---
-    logger = setup_logging(script_name="{logger_name}")
-    logger.debug("Script {logger_name} (Argparse) bắt đầu.") 
-
-    # --- 4. Xử lý Path Expand ---
+    
+    # --- Xử lý các đường dẫn (Path) ---
 {argparse_path_expands}
+    # --- Kết thúc xử lý đường dẫn ---
 
     try:
-        # --- 5. Gọi Logic Cốt lõi ---
-        # result = process_{module_name}_logic(
+        # (Phần này dành cho khởi tạo config, có thể giữ lại hoặc xóa nếu không cần)
+        # config_action_taken = handle_config_init_request(
         #     logger=logger,
-{argparse_args_pass_to_core}
+        #     config_project=args.config_project,
+        #     config_local=args.config_local,
+        #     module_dir=MODULE_DIR,
+        #     template_filename=TEMPLATE_FILENAME,
+        #     config_filename=CONFIG_FILENAME,
+        #     project_config_filename=PROJECT_CONFIG_FILENAME,
+        #     config_section_name=CONFIG_SECTION_NAME,
+        #     base_defaults=TOOL_DEFAULTS,
         # )
+        # if config_action_taken:
+        #     sys.exit(0)
 
-        # --- 6. Gọi Executor (nếu cần) ---
-        # if result:
-        #     execute_{module_name}_action(logger=logger, result=result)
-        #     log_success(logger, "Hoạt động hoàn tất.")
+        # --- Gọi logic cốt lõi ---
+        logger.info("Bắt đầu xử lý logic...")
+        
+        # Ví dụ gọi hàm core (cần điều chỉnh các tham số)
+        results_from_core = process_{module_name}_logic(
+            logger=logger,
+            cli_args=args,
+    {argparse_args_pass_to_core}
+        )
+        
+        # Ví dụ gọi hàm executor (cần điều chỉnh các tham số)
+        execute_{module_name}_action(
+            logger=logger,
+            result=results_from_core
+        )
 
-        # --- Xử lý Tạm thời (Xóa sau khi thêm logic) ---
-        logger.info("Logic xử lý chính chưa được triển khai.") 
-        # In các giá trị tham số đã xử lý để kiểm tra
-        processed_args = vars(args).copy()
-        for key, value in processed_args.items():
-             expanded_var_name = f"{{key}}_path"
-             if expanded_var_name in locals():
-                 processed_args[key] = locals()[expanded_var_name]
-        logger.info(f"Các tham số đã xử lý: {{processed_args}}") 
-
+        log_success(logger, "Hoàn tất xử lý.")
 
     except Exception as e:
-        logger.error(f"❌ Đã xảy ra lỗi không mong muốn: {{e}}") 
+        logger.error(f"❌ Đã xảy ra lỗi không mong muốn: {{e}}")
         logger.debug("Traceback:", exc_info=True)
         sys.exit(1)
 
-# --- Chạy ứng dụng ---
+
 if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print("\n\n❌ Hoạt động bị dừng bởi người dùng.") 
+        print("\n\n❌ [Lệnh dừng] Hoạt động bị dừng bởi người dùng.")
         sys.exit(1)
