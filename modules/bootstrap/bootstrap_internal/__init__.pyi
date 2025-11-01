@@ -13,7 +13,6 @@ get_cli_args: Any
 load_bootstrap_config: Any
 load_spec_file: Any
 load_template: Any
-process_bootstrap_logic: Any
 
 # Static declaration of exported symbols (for Pylance)
 __all__: List[str] = [
@@ -26,5 +25,4 @@ __all__: List[str] = [
     "load_bootstrap_config",
     "load_spec_file",
     "load_template",
-    "process_bootstrap_logic",
 ]
