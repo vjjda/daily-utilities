@@ -13,6 +13,12 @@ except ImportError:
     except ImportError:
         tomllib = None
 
+# THÊM MỚI: Import Argcomplete (tùy chọn)
+try:
+    import argcomplete
+except ImportError:
+    argcomplete = None
+
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.append(str(PROJECT_ROOT))
@@ -135,6 +141,11 @@ def main():
         action="store_true",
         help="Khởi tạo/cập nhật file .tree.toml (scope 'local').",
     )
+    
+    # THÊM MỚI: Kích hoạt argcomplete
+    if argcomplete:
+        argcomplete.autocomplete(parser)
+        
     args = parser.parse_args()
 
     logger = setup_logging(script_name="tree")
