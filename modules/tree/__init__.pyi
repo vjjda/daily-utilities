@@ -15,8 +15,6 @@ FALLBACK_SHOW_SUBMODULES: Any
 FALLBACK_USE_GITIGNORE: Any
 PROJECT_CONFIG_FILENAME: Any
 generate_tree: Any
-load_config_files: Any
-merge_config_sources: Any
 print_final_result: Any
 print_status_header: Any
 process_tree_logic: Any
@@ -34,8 +32,6 @@ __all__: List[str] = [
     "FALLBACK_USE_GITIGNORE",
     "PROJECT_CONFIG_FILENAME",
     "generate_tree",
-    "load_config_files",
-    "merge_config_sources",
     "print_final_result",
     "print_status_header",
     "process_tree_logic",
