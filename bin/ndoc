@@ -1,31 +1,39 @@
 #!/usr/bin/env zsh
 # Path: bin/ndoc
-# Wrapper Zsh cho script Python (tạo tự động bởi bootstrap_tool.py)
-# Chế độ: relative (mặc định)
 
-# --- Xác định gốc dự án (PROJECT_ROOT) ---
-# Lấy đường dẫn thư mục chứa wrapper này
-WRAPPER_DIR=$(cd "$(dirname "$0")" && pwd)
-# Đi ngược lên để tìm PROJECT_ROOT (giả định wrapper nằm trong bin/)
-PROJECT_ROOT=$(cd "${WRAPPER_DIR}/.." && pwd)
+# Path: modules/zsh_wrapper/templates/relative.zsh.template
+# (zrap wrapper - relative mode)
+#
+# Dùng file này để chạy script bên trong dự án.
+# Nó dựa vào vị trí TƯƠNG ĐỐI của file này để tìm Project Root.
+# File này KHÔNG THỂ di chuyển. Dự án CÓ THỂ di chuyển.
 
-# --- Thiết lập môi trường ---
-VENV_PATH="${PROJECT_ROOT}/.venv" # Đường dẫn môi trường ảo
-PYTHON_SCRIPT="${PROJECT_ROOT}/scripts/no_doc.py" # Đường dẫn script Python
+# --- 1. Thiết lập Đường dẫn Tương đối ---
+# Tìm thư mục chứa file wrapper này
+local SCRIPT_DIR
+SCRIPT_DIR=$( (cd -P -- "$(dirname -- "$0")" && pwd -P) )
 
-# --- Kích hoạt venv và chạy script ---
-if [ -d "$VENV_PATH" ]; then
-  source "$VENV_PATH/bin/activate"
-  # Thêm thư mục gốc vào PYTHONPATH để import utils, modules
-  export PYTHONPATH="${PROJECT_ROOT}:$PYTHONPATH"
-  # Chạy script Python, truyền tất cả đối số ($@)
-  python "$PYTHON_SCRIPT" "$@"
-  # Tắt venv sau khi chạy xong (tùy chọn)
-  # deactivate
+# Đường dẫn tương đối từ wrapper lên Project Root (do zrap tính toán)
+local PROJECT_ROOT_REL_TO_OUTPUT=".."
+local PROJECT_ROOT
+PROJECT_ROOT=$( (cd -P -- "$SCRIPT_DIR/$PROJECT_ROOT_REL_TO_OUTPUT" && pwd -P) )
+
+# Đường dẫn venv và script (tương đối so với Project Root)
+local VENV_PATH_REL_TO_PROJECT=".venv"
+local SCRIPT_PATH_REL_TO_PROJECT="scripts/no_doc.py"
+
+# Tính đường dẫn tuyệt đối cuối cùng
+local VENV_PATH_ABS="$PROJECT_ROOT/$VENV_PATH_REL_TO_PROJECT"
+local SCRIPT_PATH_ABS="$PROJECT_ROOT/$SCRIPT_PATH_REL_TO_PROJECT"
+
+# --- 2. Kích hoạt Môi trường ---
+if [ -f "$VENV_PATH_ABS/bin/activate" ]; then
+    source "$VENV_PATH_ABS/bin/activate"
 else
-  echo "Lỗi: Không tìm thấy môi trường ảo tại $VENV_PATH" >&2 #
-  exit 1
+    echo "zrap (relative): Lỗi: Không tìm thấy venv tại $VENV_PATH_ABS" >&2
+    exit 1
 fi
 
-# Giữ exit code của script Python gốc
-exit $?
+# --- 3. Thực thi Script (Hỗ trợ Typer & Argcomplete) ---
+# Thêm $PROJECT_ROOT vào PYTHONPATH (inline) và thực thi script Python.
+PYTHONPATH="$PROJECT_ROOT:$PYTHONPATH" python "$SCRIPT_PATH_ABS" "$@"
