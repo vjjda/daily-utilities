@@ -6,19 +6,12 @@ from typing import Final, Dict
 
 PROJECT_ROOT: Final[Path] = Path(__file__).resolve().parent.parent
 
-
 LOG_DIR_NAME: Final[str] = "logs"
-
 LOG_DIR_PATH: Final[Path] = PROJECT_ROOT / LOG_DIR_NAME
-
-
 CONSOLE_LOG_LEVEL: Final[str] = "INFO"
-
 FILE_LOG_LEVEL: Final[str] = "DEBUG"
 
-
 MAX_THREAD_WORKERS: Final[int] = os.cpu_count() or 4
-
 
 DEFAULT_EXTENSIONS_LANG_MAP: Final[Dict[str, str]] = {
     "py": "python",
