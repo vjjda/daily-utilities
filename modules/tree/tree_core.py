@@ -5,8 +5,13 @@ from pathlib import Path
 from typing import Dict, Any, Optional
 
 from utils.core import is_git_repository
-from .tree_loader import load_config_files
-from .tree_merger import merge_config_sources
+
+
+from .tree_internal import (
+    load_config_files,
+    merge_config_sources,
+)
+
 
 __all__ = ["process_tree_logic"]
 

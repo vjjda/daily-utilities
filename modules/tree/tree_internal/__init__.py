@@ -1,16 +1,14 @@
-# Path: modules/tree/__init__.py
+# Path: modules/tree/tree_internal/__init__.py
 from pathlib import Path
 from importlib import import_module
 from typing import List
-
 
 current_dir = Path(__file__).parent
 
 
 modules_to_export: List[str] = [
-    "tree_config",
-    "tree_core",
-    "tree_executor",
+    "tree_loader",
+    "tree_merger",
 ]
 
 __all__: List[str] = []
@@ -25,9 +23,9 @@ for module_name in modules_to_export:
                 obj = getattr(module, name)
                 globals()[name] = obj
             __all__.extend(public_symbols)
-    except ImportError as e:
-        print(f"Warning: Could not import symbols from {module_name}: {e}")
 
+    except ImportError as e:
+        print(f"Warning: Could not import symbols from {module_name} in internal: {e}")
 
 del Path, import_module, List, current_dir, modules_to_export, module_name
 if "module" in locals():

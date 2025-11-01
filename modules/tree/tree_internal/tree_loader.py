@@ -1,4 +1,4 @@
-# Path: modules/tree/tree_loader.py
+# Path: modules/tree/tree_internal/tree_loader.py
 import logging
 import sys
 from pathlib import Path
@@ -12,7 +12,8 @@ except ImportError:
     )
     sys.exit(1)
 
-from .tree_config import CONFIG_FILENAME, PROJECT_CONFIG_FILENAME, CONFIG_SECTION_NAME
+
+from ..tree_config import CONFIG_FILENAME, PROJECT_CONFIG_FILENAME, CONFIG_SECTION_NAME
 
 __all__ = ["load_config_files"]
 

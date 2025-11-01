@@ -1,4 +1,4 @@
-# Path: modules/tree/tree_merger.py
+# Path: modules/tree/tree_internal/tree_merger.py
 from pathlib import Path
 import logging
 import argparse
@@ -22,7 +22,7 @@ from utils.core import (
     resolve_set_modification,
 )
 
-from .tree_config import (
+from ..tree_config import (
     DEFAULT_IGNORE,
     DEFAULT_PRUNE,
     DEFAULT_DIRS_ONLY_LOGIC,
