@@ -1,15 +1,16 @@
-# Path: modules/zsh_wrapper/__init__.py
+# Path: modules/zsh_wrapper/zsh_wrapper_internal/__init__.py
 from pathlib import Path
 from importlib import import_module
 from typing import List
-
 
 current_dir = Path(__file__).parent
 
 
 modules_to_export: List[str] = [
-    "zsh_wrapper_config",
-    "zsh_wrapper_core",
+    "zsh_wrapper_resolver",
+    "zsh_wrapper_generator",
+    "zsh_wrapper_helpers",
+    "zsh_wrapper_executor",
 ]
 
 __all__: List[str] = []
@@ -26,8 +27,7 @@ for module_name in modules_to_export:
             __all__.extend(public_symbols)
 
     except ImportError as e:
-        print(f"Warning: Could not import symbols from {module_name}: {e}")
-
+        print(f"Warning: Could not import symbols from {module_name} in internal: {e}")
 
 del Path, import_module, List, current_dir, modules_to_export, module_name
 if "module" in locals():

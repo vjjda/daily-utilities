@@ -1,4 +1,4 @@
-# Path: modules/zsh_wrapper/zsh_wrapper_resolver.py
+# Path: modules/zsh_wrapper/zsh_wrapper_internal/zsh_wrapper_resolver.py
 import logging
 import argparse
 from pathlib import Path
