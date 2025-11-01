@@ -1,3 +1,4 @@
+# Path: requirements.txt
 libcst==1.8.5
 pathspec==0.12.1
 pyperclip==1.11.0
@@ -8,6 +9,7 @@ black
 mypy
 libcst
 tomlkit
-tomli-w
+tomli_w
 pipreqs
 pipdeptree
+argcomplete
