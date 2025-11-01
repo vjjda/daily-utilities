@@ -1,0 +1,17 @@
+# Path: modules/zsh_wrapper/templates/zsh_wrapper.toml.template
+#
+# Cấu hình mặc định cho 'zrap' (Zsh Wrapper Generator).
+#
+# Chạy 'zrap -C' (local) hoặc 'zrap -c' (project) để tạo/cập nhật file này.
+#
+[zrap]
+
+# Chế độ (mode) mặc định khi tạo wrapper.
+# - "relative": Wrapper sử dụng đường dẫn tương đối (project di chuyển được).
+# - "absolute": Wrapper sử dụng đường dẫn tuyệt đối (wrapper di chuyển được).
+# Mặc định: "{toml_mode}"
+mode = "{toml_mode}"
+
+# Tên thư mục môi trường ảo (virtual environment) cần kích hoạt.
+# Mặc định: "{toml_venv}"
+venv = "{toml_venv}"
