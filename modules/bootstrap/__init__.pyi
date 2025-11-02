@@ -1,5 +1,4 @@
 # Path: modules/bootstrap/__init__.pyi
-"""Statically declared API for bootstrap"""
 
 from typing import Any, List, Optional, Set, Dict, Union
 from pathlib import Path
@@ -15,7 +14,7 @@ TYPING_IMPORTS: Any
 execute_bootstrap_action: Any
 process_bootstrap_logic: Any
 
-# Static declaration of exported symbols (for Pylance)
+
 __all__: List[str] = [
     "CONFIG_SECTION_NAME",
     "DEFAULT_BIN_DIR_NAME",

@@ -1,5 +1,4 @@
 # Path: modules/check_path/__init__.pyi
-"""Statically declared API for check_path"""
 
 from typing import Any, List, Optional, Set, Dict, Union
 from pathlib import Path
@@ -14,7 +13,7 @@ PROJECT_CONFIG_FILENAME: Any
 execute_check_path_action: Any
 process_check_path_logic: Any
 
-# Static declaration of exported symbols (for Pylance)
+
 __all__: List[str] = [
     "COMMENT_RULES",
     "COMMENT_RULES_BY_EXT",

@@ -1,5 +1,4 @@
 # Path: modules/pack_code/__init__.pyi
-"""Statically declared API for pack_code"""
 
 from typing import Any, List, Optional, Set, Dict, Union
 from pathlib import Path
@@ -17,7 +16,7 @@ PROJECT_CONFIG_FILENAME: Any
 execute_pack_code_action: Any
 process_pack_code_logic: Any
 
-# Static declaration of exported symbols (for Pylance)
+
 __all__: List[str] = [
     "CONFIG_FILENAME",
     "CONFIG_SECTION_NAME",

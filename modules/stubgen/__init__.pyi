@@ -1,5 +1,4 @@
 # Path: modules/stubgen/__init__.pyi
-"""Statically declared API for stubgen"""
 
 from typing import Any, List, Optional, Set, Dict, Union
 from pathlib import Path
@@ -15,7 +14,7 @@ PROJECT_CONFIG_FILENAME: Any
 execute_stubgen_action: Any
 process_stubgen_logic: Any
 
-# Static declaration of exported symbols (for Pylance)
+
 __all__: List[str] = [
     "AST_ALL_LIST_NAME",
     "AST_MODULE_LIST_NAME",

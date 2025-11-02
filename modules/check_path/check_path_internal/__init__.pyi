@@ -1,5 +1,4 @@
 # Path: modules/check_path/check_path_internal/__init__.pyi
-"""Statically declared API for check_path_internal"""
 
 from typing import Any, List, Optional, Set, Dict, Union
 from pathlib import Path
@@ -12,7 +11,7 @@ merge_check_path_configs: Any
 process_check_path_task_dir: Any
 scan_files: Any
 
-# Static declaration of exported symbols (for Pylance)
+
 __all__: List[str] = [
     "analyze_single_file_for_path_comment",
     "apply_block_comment_rule",

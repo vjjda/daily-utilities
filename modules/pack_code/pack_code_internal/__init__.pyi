@@ -1,5 +1,4 @@
 # Path: modules/pack_code/pack_code_internal/__init__.pyi
-"""Statically declared API for pack_code_internal"""
 
 from typing import Any, List, Optional, Set, Dict, Union
 from pathlib import Path
@@ -14,7 +13,7 @@ resolve_filters: Any
 resolve_output_path: Any
 scan_files: Any
 
-# Static declaration of exported symbols (for Pylance)
+
 __all__: List[str] = [
     "assemble_packed_content",
     "generate_tree_string",

@@ -1,5 +1,4 @@
 # Path: modules/clip_diag/__init__.pyi
-"""Statically declared API for clip_diag"""
 
 from typing import Any, List, Optional, Set, Dict, Union
 from pathlib import Path
@@ -18,7 +17,7 @@ get_diagram_type_from_clipboard: Any
 process_clipboard_content: Any
 trim_leading_whitespace: Any
 
-# Static declaration of exported symbols (for Pylance)
+
 __all__: List[str] = [
     "APP_CONFIG",
     "DEFAULT_OUTPUT_DIR",

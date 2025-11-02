@@ -1,5 +1,4 @@
 # Path: modules/tree/__init__.pyi
-"""Statically declared API for tree"""
 
 from typing import Any, List, Optional, Set, Dict, Union
 from pathlib import Path
@@ -19,7 +18,7 @@ print_final_result: Any
 print_status_header: Any
 process_tree_logic: Any
 
-# Static declaration of exported symbols (for Pylance)
+
 __all__: List[str] = [
     "CONFIG_FILENAME",
     "CONFIG_SECTION_NAME",
