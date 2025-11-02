@@ -1,7 +1,7 @@
 # Path: modules/format_code/format_code_executor.py
 import logging
 import sys
-import argparse # <-- THÊM IMPORT
+import argparse  # <-- THÊM IMPORT
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 
@@ -10,12 +10,14 @@ if not "PROJECT_ROOT" in locals():
     sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
 from utils.logging_config import log_success
+
 # --- THÊM CÁC IMPORT CẦN THIẾT ---
 from utils.core.git import auto_commit_changes
 from modules.format_code.format_code_internal import (
     load_config_files,
     merge_format_code_configs,
 )
+
 # --- KẾT THÚC THÊM IMPORT ---
 
 
@@ -48,10 +50,10 @@ def print_dry_run_report_for_group(
 def execute_format_code_action(
     logger: logging.Logger,
     all_files_to_fix: List[FileResult],
-    cli_args: argparse.Namespace, # Thay vì dry_run, force
+    cli_args: argparse.Namespace,  # Thay vì dry_run, force
     scan_root: Path,
 ) -> None:
-# --- KẾT THÚC THAY ĐỔI CHỮ KÝ ---
+    # --- KẾT THÚC THAY ĐỔI CHỮ KÝ ---
 
     # --- Lấy giá trị từ cli_args ---
     dry_run: bool = getattr(cli_args, "dry_run", False)
@@ -92,7 +94,7 @@ def execute_format_code_action(
 
         if proceed_to_write:
             written_count = 0
-            files_written_relative: List[str] = [] # <-- Thêm list theo dõi
+            files_written_relative: List[str] = []  # <-- Thêm list theo dõi
             for info in all_files_to_fix:
                 target_path: Path = info["path"]
                 new_content: str = info["new_content"]
@@ -100,7 +102,7 @@ def execute_format_code_action(
                 try:
                     target_path.write_text(new_content, encoding="utf-8")
                     rel_path_str = target_path.relative_to(scan_root).as_posix()
-                    files_written_relative.append(rel_path_str) # <-- Thêm file
+                    files_written_relative.append(rel_path_str)  # <-- Thêm file
                     logger.info(f"Đã định dạng: {rel_path_str}")
                     written_count += 1
                 except IOError as e:
@@ -110,10 +112,13 @@ def execute_format_code_action(
                         e,
                     )
                 except ValueError:
-                    files_written_relative.append(target_path.as_posix()) # <-- Thêm file
-                    logger.info(f"Đã định dạng (absolute path): {target_path.as_posix()}")
+                    files_written_relative.append(
+                        target_path.as_posix()
+                    )  # <-- Thêm file
+                    logger.info(
+                        f"Đã định dạng (absolute path): {target_path.as_posix()}"
+                    )
                     written_count += 1
-
 
             log_success(logger, f"Hoàn tất! Đã định dạng {written_count} file.")
 
@@ -132,7 +137,9 @@ def execute_format_code_action(
                     )
 
                     settings_to_hash = {
-                        "extensions": sorted(list(merged_file_config["final_extensions_list"])),
+                        "extensions": sorted(
+                            list(merged_file_config["final_extensions_list"])
+                        ),
                         "ignore": sorted(list(merged_file_config["final_ignore_list"])),
                     }
 
@@ -141,7 +148,7 @@ def execute_format_code_action(
                         scan_root=scan_root,
                         files_written_relative=files_written_relative,
                         settings_to_hash=settings_to_hash,
-                        commit_scope="style(format)", # Phù hợp cho forc
+                        commit_scope="style(format)",  # Phù hợp cho forc
                         tool_name="forc",
                     )
 
@@ -149,5 +156,7 @@ def execute_format_code_action(
                     logger.error(f"❌ Lỗi khi chuẩn bị auto-commit: {e}")
                     logger.debug("Traceback:", exc_info=True)
             elif files_written_relative:
-                logger.info("Bỏ qua auto-commit. (Không có cờ -g/--git-commit hoặc không phải gốc Git)")
+                logger.info(
+                    "Bỏ qua auto-commit. (Không có cờ -g/--git-commit hoặc không phải gốc Git)"
+                )
             # --- KẾT THÚC LOGIC AUTO-COMMIT ---

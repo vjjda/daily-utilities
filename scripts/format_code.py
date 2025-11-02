@@ -31,11 +31,13 @@ try:
         PROJECT_CONFIG_FILENAME,
         CONFIG_SECTION_NAME,
     )
+
     # --- THÊM IMPORT MODULES.FORMAT_CODE.FORMAT_CODE_INTERNAL ---
     from modules.format_code.format_code_internal import (
         load_config_files,
         merge_format_code_configs,
     )
+
     # --- KẾT THÚC THÊM IMPORT ---
 except ImportError as e:
     print(f"Lỗi: Không thể import project utilities/modules: {e}", file=sys.stderr)
@@ -140,7 +142,7 @@ def main():
         execute_format_code_action(
             logger=logger,
             all_files_to_fix=files_to_fix,
-            cli_args=args, # Truyền toàn bộ args
+            cli_args=args,  # Truyền toàn bộ args
             scan_root=reporting_root,
         )
         # --- KẾT THÚC THAY ĐỔI LỜI GỌI ---
