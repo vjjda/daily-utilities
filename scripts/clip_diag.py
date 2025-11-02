@@ -4,9 +4,7 @@ import argparse
 import logging
 from pathlib import Path
 from typing import Optional, Final
-# --- THÊM IMPORT MỚI ---
 import pyperclip 
-# --- KẾT THÚC IMPORT ---
 
 
 try:
@@ -26,11 +24,9 @@ from modules.clip_diag import (
     process_clipboard_content,
     execute_diagram_generation,
     DEFAULT_TO_ARG,
-    # --- THÊM IMPORT MỚI ---
     detect_diagram_type,
     filter_emoji,
     trim_leading_whitespace,
-    # --- KẾT THÚC IMPORT ---
 )
 
 
@@ -45,7 +41,6 @@ def main():
         formatter_class=argparse.RawTextHelpFormatter,
     )
 
-    # --- TẠO NHÓM XUNG ĐỘT (cho -t và -g) ---
     output_group = parser.add_mutually_exclusive_group()
     
     output_group.add_argument(
@@ -62,7 +57,6 @@ def main():
         action="store_true",
         help="Chế độ kiểm tra: In ra 'Graphviz', 'Mermaid', hoặc 'False' và thoát.",
     )
-    # --- KẾT THÚC NHÓM XUNG ĐỘT ---
 
     parser.add_argument(
         "-f",
@@ -76,7 +70,6 @@ def main():
 
     args = parser.parse_args()
 
-    # --- LOGIC MỚI CHO CỜ -g ---
     if args.is_graph:
         try:
             content = pyperclip.paste()
@@ -87,7 +80,6 @@ def main():
             content = content.replace("\xa0", " ")
             
             if args.filter:
-                # Tạo logger câm (dummy logger) để không làm ảnh hưởng stdout
                 dummy_logger = logging.getLogger("cdiag_silent")
                 dummy_logger.setLevel(logging.CRITICAL + 1)
                 content = filter_emoji(content, dummy_logger)
@@ -110,21 +102,20 @@ def main():
             sys.exit(0)
             
         except Exception:
-            # Nếu có lỗi (ví dụ: không đọc được clipboard), trả về False
             print("False")
             sys.exit(1)
-    # --- KẾT THÚC LOGIC MỚI ---
 
-    # Logic cũ (chạy bình thường nếu không có -g)
     logger = setup_logging(script_name="CDiag")
     logger.debug("CDiag script started.")
 
     try:
 
+        # --- CẬP NHẬT TÊN THAM SỐ TẠI ĐÂY ---
         result = process_clipboard_content(
             logger=logger,
-            filter_emoji=args.filter,
+            enable_filter_emoji=args.filter, 
         )
+        # --- KẾT THÚC CẬP NHẬT ---
 
         if result:
 

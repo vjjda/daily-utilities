@@ -8,22 +8,18 @@ from typing import Optional, Dict, Any, Tuple
 
 from .clip_diag_config import GRAPHVIZ_PREFIX, MERMAID_PREFIX, DEFAULT_OUTPUT_DIR
 
-# --- THAY ĐỔI __all__ ---
 __all__ = [
     "process_clipboard_content",
     "detect_diagram_type",
     "filter_emoji",
     "trim_leading_whitespace",
 ]
-# --- KẾT THÚC THAY ĐỔI ---
 
 
 DiagramResult = Dict[str, Any]
 
 
-# --- ĐỔI TÊN HÀM (bỏ _) ---
 def detect_diagram_type(content: str) -> Optional[str]:
-# --- KẾT THÚC ĐỔI TÊN ---
     stripped_content = content.strip()
     lower_content = stripped_content.lower()
 
@@ -81,9 +77,7 @@ def _remove_comments(content: str, diagram_type: str) -> str:
     return "\n".join(cleaned_lines)
 
 
-# --- ĐỔI TÊN HÀM (bỏ _) ---
 def filter_emoji(content: str, logger: logging.Logger) -> str:
-# --- KẾT THÚC ĐỔI TÊN ---
     logger.info("🔍 Filtering emoji...")
 
     emoji_pattern = re.compile(
@@ -105,9 +99,7 @@ def filter_emoji(content: str, logger: logging.Logger) -> str:
     return emoji_pattern.sub(r"", content)
 
 
-# --- ĐỔI TÊN HÀM (bỏ _) ---
 def trim_leading_whitespace(content: str) -> str:
-# --- KẾT THÚC ĐỔI TÊN ---
     lines = content.splitlines()
     first_code_line_index = -1
 
@@ -130,9 +122,11 @@ def trim_leading_whitespace(content: str) -> str:
     return "\n".join(lines[first_code_line_index:])
 
 
+# --- THAY ĐỔI TÊN THAM SỐ ---
 def process_clipboard_content(
-    logger: logging.Logger, filter_emoji: bool
+    logger: logging.Logger, enable_filter_emoji: bool
 ) -> Optional[DiagramResult]:
+# --- KẾT THÚC THAY ĐỔI ---
 
     try:
         clipboard_content = pyperclip.paste()
@@ -145,19 +139,18 @@ def process_clipboard_content(
 
     processed_content = clipboard_content.replace("\xa0", " ")
 
-    if filter_emoji:
-        # --- CẬP NHẬT TÊN HÀM ĐƯỢC GỌI ---
+    # --- CẬP NHẬT BIẾN IF ---
+    if enable_filter_emoji:
+        # Giờ 'filter_emoji' ở đây là hàm, 'enable_filter_emoji' là bool
         processed_content = filter_emoji(processed_content, logger)
 
     logger.info("🧹 Trimming leading comments/whitespace...")
-    # --- CẬP NHẬT TÊN HÀM ĐƯỢC GỌI ---
     processed_content = trim_leading_whitespace(processed_content)
 
     if not processed_content.strip():
         logger.info("Content is empty after filtering and trimming.")
         return None
 
-    # --- CẬP NHẬT TÊN HÀM ĐƯỢC GỌI ---
     diagram_type = detect_diagram_type(processed_content)
     if not diagram_type:
         logger.error("❌ Could not find valid Graphviz or Mermaid code in clipboard.")
