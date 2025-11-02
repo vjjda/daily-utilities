@@ -43,15 +43,22 @@ def _resolve_simple_flags(
         file_value=file_config.get("level"),
         default_value=DEFAULT_MAX_LEVEL,
     )
-    show_submodules = (
-        args.show_submodules
-        if args.show_submodules
-        else file_config.get("show-submodules", FALLBACK_SHOW_SUBMODULES)
+
+    cli_show_submodules_val = args.show_submodules if args.show_submodules else None
+    file_show_submodules_val = file_config.get("show-submodules")
+    show_submodules = resolve_config_value(
+        cli_value=cli_show_submodules_val,
+        file_value=file_show_submodules_val,
+        default_value=FALLBACK_SHOW_SUBMODULES,
     )
 
-    use_gitignore_from_config = file_config.get("use-gitignore", FALLBACK_USE_GITIGNORE)
-
-    final_use_gitignore = False if args.no_gitignore else use_gitignore_from_config
+    cli_use_gitignore_val = False if args.no_gitignore else None
+    file_use_gitignore_val = file_config.get("use-gitignore")
+    final_use_gitignore = resolve_config_value(
+        cli_value=cli_use_gitignore_val,
+        file_value=file_use_gitignore_val,
+        default_value=FALLBACK_USE_GITIGNORE,
+    )
 
     return {
         "max_level": final_level,
@@ -88,7 +95,6 @@ def _resolve_dirs_only(
     if isinstance(final_dirs_only_mode, list):
         dirs_only_list_custom = set(final_dirs_only_mode)
     elif final_dirs_only_mode is not None and not global_dirs_only:
-
         dirs_only_list_custom = parse_comma_list(final_dirs_only_mode)
 
     final_dirs_only_set = DEFAULT_DIRS_ONLY_LOGIC.union(dirs_only_list_custom)
@@ -111,11 +117,9 @@ def _resolve_extensions(
 
     extensions_filter: Optional[Set[str]]
     if cli_ext_str is None and tentative_extensions is None:
-
         extensions_filter = None
         logger.debug("Không áp dụng bộ lọc 'extensions'.")
     else:
-
         base_set = tentative_extensions if tentative_extensions is not None else set()
         extensions_filter = resolve_set_modification(
             tentative_set=base_set, cli_string=cli_ext_str
@@ -138,7 +142,6 @@ def _compile_specs(
     dirs_only_set: Set[str],
     gitignore_patterns: List[str],
 ) -> Dict[str, Optional["pathspec.PathSpec"]]:
-
     all_ignore_patterns_list: List[str] = ignore_list + gitignore_patterns
     all_prune_patterns_list: List[str] = prune_list
     all_dirs_only_patterns_list: List[str] = sorted(list(dirs_only_set))
@@ -170,7 +173,6 @@ def merge_config_sources(
     logger: logging.Logger,
     is_git_repo: bool,
 ) -> Dict[str, Any]:
-
     if args.full_view:
         logger.info("⚡ Chế độ xem đầy đủ. Bỏ qua mọi bộ lọc và giới hạn.")
         return {
