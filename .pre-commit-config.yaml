@@ -7,32 +7,24 @@ repos:
         name: "NDoc Code Cleaner"
         entry: ndoc -abf
         language: system
-        # Chỉ chạy ndoc cho các file Python 
         types: [python]
         stages: [pre-commit]
-        entry_modifies_files: true
+        # entry_modifies_files: true  <-- XÓA DÒNG NÀY
 
       # 2️⃣ Hook thứ hai: Chạy cpath
       - id: cpath-checker
         name: "CPath Path Comment Checker"
         entry: cpath
         language: system
-        # Chạy cpath trên tất cả các loại file nó hỗ trợ 
-        # (Bạn cũng có thể dùng 'types' hoặc 'files' ở đây để lọc chính xác)
-        # Ví dụ: files: \.(py|pyi|js|sh|zsh|css|ts)$
-        types: [python, shell] # 'text' bắt các file .sh, .zsh
+        types: [python, shell]
         stages: [pre-commit]
-        # cpath có thể sửa file nếu không dùng -d, nên ta cũng thêm entry_modifies_files
-        entry_modifies_files: true
+        # entry_modifies_files: true  <-- XÓA DÒNG NÀY
       
+      # 3️⃣ Hook thứ ba: Chạy stubgen
       - id: stubgen
         name: "Stubs Generator"
         entry: sgen
         language: system
-        # Chạy cpath trên tất cả các loại file nó hỗ trợ 
-        # (Bạn cũng có thể dùng 'types' hoặc 'files' ở đây để lọc chính xác)
-        # Ví dụ: files: \.(py|pyi|js|sh|zsh|css|ts)$
-        types: [python] # 'text' bắt các file .sh, .zsh
+        types: [python]
         stages: [pre-commit]
-        # cpath có thể sửa file nếu không dùng -d, nên ta cũng thêm entry_modifies_files
-        entry_modifies_files: true
+        # entry_modifies_files: true  <-- XÓA DÒNG NÀY
