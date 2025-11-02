@@ -6,7 +6,12 @@ from typing import List, Set, Optional, TYPE_CHECKING
 if TYPE_CHECKING:
     import pathspec
 
-from utils.core import is_path_matched, get_submodule_paths
+# Import helper mới
+from utils.core import (
+    is_path_matched, 
+    get_submodule_paths, 
+    is_extension_matched # <<< THÊM VÀO
+)
 
 __all__ = ["scan_files"]
 
@@ -16,7 +21,7 @@ def scan_files(
     start_path: Path,
     ignore_spec: Optional["pathspec.PathSpec"],
     include_spec: Optional["pathspec.PathSpec"],
-    ext_filter_set: Set[str],
+    ext_filter_set: Set[str], # Đảm bảo đây là Set
     submodule_paths: Set[Path],
     scan_root: Path,
     script_file_path: Path,
@@ -72,8 +77,13 @@ def scan_files(
             include_mismatch_count += 1
             continue
 
-        file_ext = "".join(file_path.suffixes).lstrip(".")
-        if file_ext not in ext_filter_set:
+        # --- THAY ĐỔI LOGIC TẠI ĐÂY ---
+        # Logic cũ:
+        # file_ext = "".join(file_path.suffixes).lstrip(".")
+        # if file_ext not in ext_filter_set:
+        
+        # Logic mới:
+        if not is_extension_matched(file_path, ext_filter_set):
             if start_path.is_file() and abs_file_path.samefile(start_path.resolve()):
                 logger.warning(
                     f"File chỉ định {start_path.name} bị bỏ qua do không khớp extension."
@@ -84,6 +94,7 @@ def scan_files(
             )
             ext_mismatch_count += 1
             continue
+        # --- KẾT THÚC THAY ĐỔI ---
 
         files_to_pack.append(file_path)
 
