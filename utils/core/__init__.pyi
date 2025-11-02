@@ -12,6 +12,7 @@ find_file_upwards: Any
 find_git_root: Any
 format_code: Any
 format_value_to_toml: Any
+generate_config_hash: Any
 get_submodule_paths: Any
 git_add_and_commit: Any
 is_git_repository: Any
@@ -29,7 +30,6 @@ register_formatter: Any
 resolve_config_list: Any
 resolve_config_value: Any
 resolve_set_modification: Any
-generate_config_hash: Any  # <-- Thêm
 run_command: Any
 write_toml_file: Any
 
@@ -43,6 +43,7 @@ __all__: List[str] = [
     "find_git_root",
     "format_code",
     "format_value_to_toml",
+    "generate_config_hash",
     "get_submodule_paths",
     "git_add_and_commit",
     "is_git_repository",
@@ -60,7 +61,6 @@ __all__: List[str] = [
     "resolve_config_list",
     "resolve_config_value",
     "resolve_set_modification",
-    "generate_config_hash",  # <-- Thêm
     "run_command",
     "write_toml_file",
 ]
