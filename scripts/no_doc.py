@@ -18,11 +18,11 @@ sys.path.append(str(PROJECT_ROOT))
 
 try:
     from utils.logging_config import setup_logging
-    # SỬA LỖI: Import thêm resolve_reporting_root
+
     from utils.cli import (
         handle_config_init_request,
         resolve_input_paths,
-        resolve_reporting_root, # <-- Thêm
+        resolve_reporting_root,
     )
     from utils.core import parse_comma_list
     from modules.no_doc.no_doc_internal import (
@@ -155,12 +155,6 @@ def main():
         logger.debug("Traceback:", exc_info=True)
         sys.exit(1)
 
-    # --- SỬA LỖI LOGIC HASH VÀ ROOT ---
-    # Tải cấu hình và hash (phụ thuộc vào root)
-    # Tạm thời dùng CWD để tải config *cho việc hash*
-    # Lưu ý: Điều này giả định bạn chạy từ thư mục có .toml
-    # Một giải pháp tốt hơn là tìm root *trước*
-    
     validated_paths: List[Path] = resolve_input_paths(
         logger=logger,
         raw_paths=args.start_paths_arg,
@@ -171,13 +165,7 @@ def main():
         logger.warning("Không tìm thấy đường dẫn hợp lệ nào để quét. Đã dừng.")
         sys.exit(0)
 
-    # SỬA LỖI: Xác định reporting_root chính xác
-    # (Không có --root arg cho ndoc, nên ta truyền None)
-    reporting_root = resolve_reporting_root(
-        logger, validated_paths, cli_root_arg=None
-    ) 
-    
-    # --- (Logic hash đã được chuyển vào executor) ---
+    reporting_root = resolve_reporting_root(logger, validated_paths, cli_root_arg=None)
 
     files_to_process: List[Path] = []
     dirs_to_scan: List[Path] = []
@@ -196,12 +184,11 @@ def main():
             script_file_path=THIS_SCRIPT_PATH,
         )
 
-        # Truyền reporting_root (là gốc Git) vào scan_root
         execute_ndoc_action(
             logger=logger,
             all_files_to_fix=results_from_core,
             cli_args=args,
-            scan_root=reporting_root, # <-- Sửa lỗi
+            scan_root=reporting_root,
             git_warning_str="",
         )
 

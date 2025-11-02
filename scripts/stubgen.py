@@ -18,11 +18,10 @@ sys.path.append(str(PROJECT_ROOT))
 try:
     from utils.logging_config import setup_logging, log_success
 
-    # SỬA LỖI: Import thêm resolve_reporting_root
     from utils.cli import (
         handle_config_init_request,
         resolve_input_paths,
-        resolve_reporting_root, # <-- Thêm
+        resolve_reporting_root,
     )
 
     from modules.stubgen import (
@@ -38,7 +37,7 @@ try:
         execute_stubgen_action,
     )
 except ImportError as e:
-    # ... (Giữ nguyên) ...
+
     pass
 
 
@@ -142,11 +141,7 @@ def main():
         logger.warning("Không tìm thấy đường dẫn hợp lệ nào để quét. Đã dừng.")
         sys.exit(0)
 
-    # SỬA LỖI: Xác định reporting_root chính xác
-    # (Không có --root arg cho sgen, nên ta truyền None)
-    reporting_root = resolve_reporting_root(
-        logger, validated_paths, cli_root_arg=None
-    ) 
+    reporting_root = resolve_reporting_root(logger, validated_paths, cli_root_arg=None)
 
     files_to_process: List[Path] = []
     dirs_to_scan: List[Path] = []
@@ -166,13 +161,12 @@ def main():
             dirs_to_scan=dirs_to_scan,
         )
 
-        # Truyền reporting_root (là gốc Git) vào scan_root
         execute_stubgen_action(
             logger=logger,
             files_to_create=files_to_create,
             files_to_overwrite=files_to_overwrite,
             force=args.force,
-            scan_root=reporting_root, # <-- Sửa lỗi
+            scan_root=reporting_root,
             cli_args=args,
         )
 
