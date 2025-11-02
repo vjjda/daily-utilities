@@ -13,10 +13,7 @@ if not "PROJECT_ROOT" in locals():
 from .no_doc_internal import (
     merge_ndoc_configs,
     process_no_doc_task_dir,
-    # --- THÊM IMPORT CỐT LÕI ---
     analyze_file_for_cleaning_and_formatting,
-    # print_dry_run_report_for_group, # <-- XÓA DÒNG GÂY LỖI NÀY
-    # --- KẾT THÚC THÊM IMPORT ---
 )
 from utils.constants import MAX_THREAD_WORKERS
 
@@ -112,7 +109,7 @@ def process_no_doc_logic(
                         logger.error(
                             f"❌ Lỗi khi xử lý file song song '{file_path.name}': {e}"
                         )
-        
+
         if file_only_results:
             file_only_results.sort(key=lambda r: r["path"])
             all_results.extend(file_only_results)

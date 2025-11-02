@@ -13,17 +13,14 @@ modules_to_export: List[str] = [
     "no_doc_merger",
     "no_doc_scanner",
     "no_doc_analyzer",
-    "no_doc_task_file", # <-- File này cũng đã bị xóa ở lần trước
+    "no_doc_task_file",
     "no_doc_task_dir",
-    # "no_doc_reporter", # <-- XÓA DÒNG NÀY
 ]
 
-# --- DỌN DẸP LUÔN CẢ TASK_FILE ---
+
 modules_to_export = [
-    m for m in modules_to_export 
-    if m not in ("no_doc_task_file", "no_doc_reporter")
+    m for m in modules_to_export if m not in ("no_doc_task_file", "no_doc_reporter")
 ]
-# --- KẾT THÚC DỌN DẸP ---
 
 
 __all__: List[str] = []
