@@ -18,8 +18,8 @@ __all__ = [
     "git_add_and_commit",
     "find_file_upwards",
     "auto_commit_changes",
-    "find_commit_by_hash", # <-- THÊM MỚI
-    "get_diffed_files",     # <-- THÊM MỚI
+    "find_commit_by_hash",
+    "get_diffed_files",
 ]
 
 
@@ -109,7 +109,6 @@ def parse_gitignore(root: Path) -> List[str]:
         return patterns
 
 
-# --- HÀM MỚI 1 ---
 def find_commit_by_hash(
     logger: logging.Logger, scan_root: Path, settings_hash: str
 ) -> Optional[str]:
@@ -132,10 +131,8 @@ def find_commit_by_hash(
     
     logger.debug(f"Không tìm thấy commit nào khớp với hash: {settings_hash}")
     return None
-# --- KẾT THÚC HÀM MỚI 1 ---
 
 
-# --- HÀM MỚI 2 ---
 def get_diffed_files(
     logger: logging.Logger, scan_root: Path, start_sha: str
 ) -> List[Path]:
@@ -144,12 +141,14 @@ def get_diffed_files(
         logger.warning("Không phải kho Git, không thể lấy diff.")
         return []
 
-    end_sha = "HEAD"
-    command = ["git", "diff", "--name-only", f"{start_sha}...{end_sha}"]
+    # --- THAY ĐỔI LOGIC ---
+    # Bỏ "...HEAD" để so sánh với working tree
+    command = ["git", "diff", "--name-only", start_sha]
     
     success, output = run_command(
-        command, logger, description=f"Lấy diff từ {start_sha[:7]}...{end_sha}", cwd=scan_root
+        command, logger, description=f"Lấy diff từ {start_sha[:7]}...WORKING_TREE", cwd=scan_root
     )
+    # --- KẾT THÚC THAY ĐỔI ---
     
     if success and output.strip():
         relative_paths = [p.strip() for p in output.splitlines() if p.strip()]
@@ -160,7 +159,6 @@ def get_diffed_files(
     
     logger.debug("Không tìm thấy file nào thay đổi hoặc lệnh diff thất bại.")
     return []
-# --- KẾT THÚC HÀM MỚI 2 ---
 
 
 def git_add_and_commit(
