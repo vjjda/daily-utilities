@@ -14,6 +14,7 @@ MMC_PATH: Any
 detect_diagram_type: Any
 execute_diagram_generation: Any
 filter_emoji: Any
+get_diagram_type_from_clipboard: Any
 process_clipboard_content: Any
 trim_leading_whitespace: Any
 
@@ -29,6 +30,7 @@ __all__: List[str] = [
     "detect_diagram_type",
     "execute_diagram_generation",
     "filter_emoji",
+    "get_diagram_type_from_clipboard",
     "process_clipboard_content",
     "trim_leading_whitespace",
 ]
