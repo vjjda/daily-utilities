@@ -1,7 +1,7 @@
 # Path: utils/cli/ui_helpers.py
 import logging
 from pathlib import Path
-from typing import Tuple, Optional, List
+from typing import Tuple, Optional, List, Callable, Any, Dict # <-- THÊM Callable, Any, Dict
 import subprocess
 import platform
 import os
@@ -10,7 +10,18 @@ import sys
 from utils.core import is_git_repository, find_git_root
 from utils.logging_config import log_success
 
-__all__ = ["prompt_config_overwrite", "launch_editor", "handle_project_root_validation"]
+__all__ = [
+    "prompt_config_overwrite",
+    "launch_editor",
+    "handle_project_root_validation",
+    "print_grouped_report", # <-- THÊM MỚI
+]
+
+# --- KIỂU DỮ LIỆU CHUNG ---
+FileResult = Dict[str, Any]
+# Định nghĩa kiểu cho hàm callback
+DetailFormatter = Callable[[FileResult], List[str]]
+# --- KẾT THÚC KIỂU ---
 
 
 def prompt_config_overwrite(
@@ -166,3 +177,38 @@ def handle_project_root_validation(
             log_success(logger, f"✅ Kho Git hợp lệ. Quét từ gốc: {display_root}")
 
     return effective_scan_root, git_warning_str
+
+
+# --- HÀM MỚI ---
+def print_grouped_report(
+    logger: logging.Logger,
+    group_name: str,
+    files_in_group: List[FileResult],
+    scan_root: Path,
+    title_formatter: Callable[[FileResult], str],
+    detail_formatter: DetailFormatter,
+) -> None:
+    """
+    In báo cáo khô (dry-run) được nhóm cho một tập hợp các file.
+
+    Args:
+        logger: Logger để in ra.
+        group_name: Tên của nhóm (ví dụ: tên thư mục).
+        files_in_group: Danh sách các đối tượng FileResult.
+        scan_root: Gốc quét để tính đường dẫn tương đối.
+        title_formatter: Một hàm nhận FileResult và trả về chuỗi tiêu đề (phần sau ->).
+        detail_formatter: Một hàm nhận FileResult và trả về danh sách các chuỗi chi tiết.
+    """
+    logger.warning(
+        f"\n   --- 📄 Nhóm: {group_name} ({len(files_in_group)} file) ---"
+    )
+    for info in files_in_group:
+        # Lấy tiêu đề từ formatter
+        title_line = title_formatter(info)
+        logger.warning(f"   -> {title_line}")
+
+        # Lấy các dòng chi tiết từ formatter
+        detail_lines = detail_formatter(info)
+        for detail_line in detail_lines:
+            logger.warning(f"      {detail_line}")
+# --- KẾT THÚC HÀM MỚI ---
