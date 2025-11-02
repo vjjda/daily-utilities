@@ -16,7 +16,7 @@ from .stubgen_internal import (
 
 StubResult = Dict[str, Any]
 
-# Bỏ 'classify_and_report_stub_changes' khỏi __all__
+
 __all__ = ["execute_stubgen_action"]
 
 
@@ -26,7 +26,6 @@ def _perform_auto_commit(
     files_written_results: List[StubResult],
     cli_args: argparse.Namespace,
 ) -> None:
-    """Tải cấu hình, tạo hash, và thực hiện git commit."""
     if not files_written_results or not is_git_repository(scan_root):
         if files_written_results:
             logger.info(
@@ -35,15 +34,14 @@ def _perform_auto_commit(
         return
 
     try:
-        # Tải cấu hình để hash
+
         file_config_data = load_config_files(scan_root, logger)
         cli_config = {
             "ignore": getattr(cli_args, "ignore", None),
             "include": getattr(cli_args, "include", None),
         }
-        merged_config = merge_stubgen_configs(logger, cli_config, file_config_data) 
+        merged_config = merge_stubgen_configs(logger, cli_config, file_config_data)
 
-        # Tạo dict cài đặt ổn định để hash
         settings_to_hash = {
             "ignore": sorted(list(merged_config["ignore_list"])),
             "include": sorted(list(merged_config["include_list"])),
@@ -52,11 +50,10 @@ def _perform_auto_commit(
             "all_list_name": merged_config["all_list_name"],
         }
 
-        config_hash = generate_config_hash(settings_to_hash, logger) 
+        config_hash = generate_config_hash(settings_to_hash, logger)
 
         relative_paths = [
-            str(r["stub_path"].relative_to(scan_root))
-            for r in files_written_results
+            str(r["stub_path"].relative_to(scan_root)) for r in files_written_results
         ]
 
         commit_msg = f"style(stubs): Cập nhật {len(relative_paths)} file .pyi (sgen) [Settings:{config_hash}]"
@@ -66,7 +63,7 @@ def _perform_auto_commit(
             scan_root=scan_root,
             file_paths_relative=relative_paths,
             commit_message=commit_msg,
-        ) 
+        )
     except Exception as e:
         logger.error(f"❌ Lỗi khi tạo hash hoặc thực thi git commit: {e}")
         logger.debug("Traceback:", exc_info=True)
@@ -118,9 +115,9 @@ def execute_stubgen_action(
                 return str(path)
 
         try:
-            # --- Vòng lặp Ghi File ---
+
             for result in files_to_create:
-                # ... (logic ghi file create) ... 
+
                 result_being_processed = result
                 stub_path: Path = result["stub_path"]
                 content_body: str = result["content"]
@@ -133,7 +130,7 @@ def execute_stubgen_action(
                 files_written_results.append(result)
 
             for result in files_to_overwrite:
-                # ... (logic ghi file overwrite) ... 
+
                 result_being_processed = result
                 stub_path: Path = result["stub_path"]
                 content_body: str = result["content"]
@@ -145,7 +142,6 @@ def execute_stubgen_action(
                 log_success(logger, f"Overwrote stub: {path_str}")
                 written_count += 1
                 files_written_results.append(result)
-            # --- Kết thúc Vòng lặp Ghi File ---
 
         except IOError as e:
             file_name = (
@@ -170,7 +166,4 @@ def execute_stubgen_action(
                 f"\n✨ Stub generation complete. Successfully processed {written_count} files.",
             )
 
-        # --- Gọi Helper Git Commit ---
-        _perform_auto_commit(
-            logger, scan_root, files_written_results, cli_args
-        )
+        _perform_auto_commit(logger, scan_root, files_written_results, cli_args)

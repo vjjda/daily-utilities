@@ -11,7 +11,6 @@ __all__ = ["classify_and_report_stub_changes"]
 
 
 def _split_header_and_content(file_content: str) -> Tuple[Optional[str], str]:
-    """Tách dòng '# Path:' khỏi nội dung file .pyi."""
     if not file_content:
         return None, ""
 
@@ -32,10 +31,6 @@ def classify_and_report_stub_changes(
     group_raw_results: List[StubResult],
     scan_root: Path,
 ) -> Tuple[List[StubResult], List[StubResult], List[StubResult]]:
-    """
-    Phân loại các stub thành: tạo mới, ghi đè, hoặc không đổi.
-    Hàm này cũng chịu trách nhiệm in báo cáo ra logger.
-    """
     files_to_create: List[StubResult] = []
     files_to_overwrite: List[StubResult] = []
     files_no_change: List[StubResult] = []

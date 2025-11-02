@@ -9,10 +9,9 @@ from typing import Dict, Any, List, Optional, Set, Tuple
 from . import (
     merge_stubgen_configs,
     process_single_gateway,
-    # KHÔNG import classify_and_report_stub_changes từ đây
 )
 
-# SỬA LỖI: Import trực tiếp từ file classifier
+
 from .stubgen_classifier import classify_and_report_stub_changes
 
 
@@ -27,7 +26,7 @@ def process_stubgen_task_file(
     processed_files: Set[Path],
     reporting_root: Path,
 ) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
-    # ... (Code của hàm giữ nguyên) ... 
+
     logger.info(
         f"--- 📄 Đang xử lý file: {file_path.relative_to(reporting_root).as_posix()} ---"
     )
