@@ -4,21 +4,19 @@ import sys
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 import argparse
-# import hashlib # Đã xóa
-# import json # Đã xóa
 
-# Import thêm
+
 if not "PROJECT_ROOT" in locals():
     sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
 from utils.logging_config import log_success
 from utils.core.git import is_git_repository, git_add_and_commit
-# Import logic config
+
 from modules.no_doc.no_doc_internal import (
     load_config_files,
     merge_ndoc_configs,
 )
-# Import util hash mới
+
 from utils.core.config_helpers import generate_config_hash
 
 
@@ -52,8 +50,6 @@ def execute_ndoc_action(
     git_warning_str: str,
 ) -> None:
 
-    # ... (Logic dry_run, force, proceed_to_write giữ nguyên) ...
-    
     dry_run: bool = getattr(cli_args, "dry_run", False)
     force: bool = getattr(cli_args, "force", False)
 
@@ -88,7 +84,7 @@ def execute_ndoc_action(
                 sys.exit(0)
 
         if proceed_to_write:
-            # ... (Logic ghi file giữ nguyên) ...
+
             written_count = 0
             files_written_relative: List[str] = []
 
@@ -113,10 +109,9 @@ def execute_ndoc_action(
                 logger, f"Hoàn tất! Đã xóa docstring khỏi {written_count} file."
             )
 
-            # --- Logic Git và Hash ---
             if files_written_relative and is_git_repository(scan_root):
                 try:
-                    # Tải cấu hình để hash
+
                     file_config_data = load_config_files(scan_root, logger)
                     merged_file_config = merge_ndoc_configs(
                         logger,
@@ -125,7 +120,6 @@ def execute_ndoc_action(
                         file_config_data=file_config_data,
                     )
 
-                    # Tạo dict cài đặt ổn định để hash
                     settings_to_hash = {
                         "all_clean": getattr(cli_args, "all_clean", False),
                         "format": getattr(cli_args, "format", False),
@@ -137,10 +131,9 @@ def execute_ndoc_action(
                             list(merged_file_config["final_format_extensions_set"])
                         ),
                     }
-                    
+
                     config_hash = generate_config_hash(settings_to_hash, logger)
 
-                    # --- THAY ĐỔI ĐỊNH DẠNG COMMIT MSG ---
                     commit_msg = f"style(clean): Dọn dẹp {len(files_written_relative)} file (ndoc) [Settings:{config_hash}]"
 
                     git_add_and_commit(
@@ -149,7 +142,7 @@ def execute_ndoc_action(
                         file_paths_relative=files_written_relative,
                         commit_message=commit_msg,
                     )
-                
+
                 except Exception as e:
                     logger.error(f"❌ Lỗi khi tạo hash hoặc thực thi git commit: {e}")
                     logger.debug("Traceback:", exc_info=True)
