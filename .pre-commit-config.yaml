@@ -9,7 +9,6 @@ repos:
         language: system
         types: [python]
         stages: [pre-commit]
-        # entry_modifies_files: true  <-- XÓA DÒNG NÀY
 
       # 2️⃣ Hook thứ hai: Chạy cpath
       - id: cpath-checker
@@ -18,7 +17,6 @@ repos:
         language: system
         types: [python, shell]
         stages: [pre-commit]
-        # entry_modifies_files: true  <-- XÓA DÒNG NÀY
       
       # 3️⃣ Hook thứ ba: Chạy stubgen
       - id: stubgen
@@ -27,4 +25,3 @@ repos:
         language: system
         types: [python]
         stages: [pre-commit]
-        # entry_modifies_files: true  <-- XÓA DÒNG NÀY
