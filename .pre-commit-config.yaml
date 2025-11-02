@@ -1,0 +1,26 @@
+# Path: .pre-commit-config.yaml
+repos:
+  - repo: local
+    hooks:
+      # 1️⃣ Hook đầu tiên: Chạy ndoc
+      - id: ndoc-cleaner
+        name: "NDoc Code Cleaner"
+        entry: $HOME/bin/ndoc -abf
+        language: system
+        # Chỉ chạy ndoc cho các file Python 
+        types: [python]
+        stages: [commit]
+        entry_modifies_files: true
+
+      # 2️⃣ Hook thứ hai: Chạy cpath
+      - id: cpath-checker
+        name: "CPath Path Comment Checker"
+        entry: $HOME/bin/cpath
+        language: system
+        # Chạy cpath trên tất cả các loại file nó hỗ trợ 
+        # (Bạn cũng có thể dùng 'types' hoặc 'files' ở đây để lọc chính xác)
+        # Ví dụ: files: \.(py|pyi|js|sh|zsh|css|ts)$
+        types: [python, shell] # 'text' bắt các file .sh, .zsh
+        stages: [commit]
+        # cpath có thể sửa file nếu không dùng -d, nên ta cũng thêm entry_modifies_files
+        entry_modifies_files: true
