@@ -4,9 +4,8 @@ import argparse
 from pathlib import Path
 from typing import List, Optional, Dict, Any, Tuple, Set
 import sys
-# --- THÊM IMPORT ---
+
 from concurrent.futures import ThreadPoolExecutor, as_completed
-# --- KẾT THÚC THÊM IMPORT ---
 
 
 if not "PROJECT_ROOT" in locals():
@@ -15,16 +14,12 @@ if not "PROJECT_ROOT" in locals():
 
 from .format_code_internal import (
     merge_format_code_configs,
-    # process_format_code_task_file, # <-- SẼ KHÔNG DÙNG NỮA
     process_format_code_task_dir,
-    # --- THÊM IMPORT CÁC HÀM CỐT LÕI ---
     analyze_file_content_for_formatting,
     print_dry_run_report_for_group,
-    # --- KẾT THÚC THÊM IMPORT ---
 )
-# --- THÊM IMPORT ---
+
 from utils.constants import MAX_THREAD_WORKERS
-# --- KẾT THÚC THÊM IMPORT ---
 
 
 __all__ = ["process_format_code_logic"]
@@ -54,7 +49,6 @@ def process_format_code_logic(
     )
     file_extensions = set(default_file_config["final_extensions_list"])
 
-    # --- BẮT ĐẦU KHỐI LOGIC MỚI CHO FILES_TO_PROCESS ---
     if files_to_process:
         logger.info(f"Đang xử lý {len(files_to_process)} file riêng lẻ (song song)...")
         logger.info(f"  [Cấu hình áp dụng cho file lẻ]")
@@ -69,14 +63,13 @@ def process_format_code_logic(
             if resolved_file in processed_files:
                 continue
 
-            # Kiểm tra extension
             file_ext = "".join(file_path.suffixes).lstrip(".")
             if file_ext not in file_extensions:
                 logger.warning(
                     f"⚠️ Bỏ qua file '{file_path.name}': không khớp extensions (.{file_ext})"
                 )
                 continue
-            
+
             processed_files.add(resolved_file)
             files_to_submit.append(file_path)
 
@@ -106,13 +99,16 @@ def process_format_code_logic(
         if file_only_results:
             file_only_results.sort(key=lambda r: r["path"])
             print_dry_run_report_for_group(
-                logger, "File riêng lẻ (stepwise/input)", file_only_results, reporting_root
+                logger,
+                "File riêng lẻ (stepwise/input)",
+                file_only_results,
+                reporting_root,
             )
             all_results.extend(file_only_results)
         elif files_to_submit:
-            logger.info(f"  -> ✅ Tất cả {len(files_to_submit)} file riêng lẻ đã được định dạng.")
-            
-    # --- KẾT THÚC KHỐI LOGIC MỚI ---
+            logger.info(
+                f"  -> ✅ Tất cả {len(files_to_submit)} file riêng lẻ đã được định dạng."
+            )
 
     if dirs_to_scan:
         logger.info(f"Đang xử lý {len(dirs_to_scan)} thư mục...")

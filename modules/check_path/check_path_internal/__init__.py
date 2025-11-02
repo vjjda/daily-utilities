@@ -12,7 +12,6 @@ modules_to_export: List[str] = [
     "check_path_scanner",
     "check_path_rules",
     "check_path_analyzer",
-    # "check_path_task_file", # <-- XÓA DÒNG NÀY
     "check_path_task_dir",
 ]
 
