@@ -40,13 +40,12 @@ def execute_ndoc_action(
     force: bool,
     scan_root: Path,
     git_warning_str: str,
-) -> None:
+) -> List[str]:
 
     total_files_to_fix = len(all_files_to_fix)
 
     if total_files_to_fix == 0:
-
-        return
+        return []
 
     logger.warning(
         f"\n⚠️ Tổng cộng {total_files_to_fix} file cần được sửa (chi tiết ở trên)."
@@ -58,12 +57,11 @@ def execute_ndoc_action(
         )
         sys.exit(1)
     else:
-
         proceed_to_write = force
         if not force:
             try:
                 confirmation = input(
-                    "\nTiếp tục xóa docstring và ghi đè các file này? (y/n): "
+                    "\nTiếp tục xóa docstring và ghi đè các file này?  (y/n): "
                 )
             except EOFError:
                 confirmation = "n"
@@ -78,6 +76,7 @@ def execute_ndoc_action(
 
         if proceed_to_write:
             written_count = 0
+            files_written_relative: List[str] = []
 
             for info in all_files_to_fix:
                 target_path: Path = info["path"]
@@ -86,6 +85,7 @@ def execute_ndoc_action(
                 try:
                     target_path.write_text(new_content, encoding="utf-8")
                     rel_path_str = target_path.relative_to(scan_root).as_posix()
+                    files_written_relative.append(rel_path_str)
                     logger.info(f"Đã sửa: {rel_path_str}")
                     written_count += 1
                 except IOError as e:
@@ -96,5 +96,8 @@ def execute_ndoc_action(
                     )
 
             log_success(
-                logger, f"Hoàn tất! Đã xóa docstring khỏi {written_count} file."
+                logger, f"Hoàn tất!  Đã xóa docstring khỏi {written_count} file."
             )
+            return files_written_relative
+
+    return []
