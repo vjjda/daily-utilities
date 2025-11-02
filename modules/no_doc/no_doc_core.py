@@ -4,7 +4,6 @@ import argparse
 from pathlib import Path
 from typing import List, Optional, Dict, Any, Tuple, Set
 import sys
-
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 
@@ -14,10 +13,11 @@ if not "PROJECT_ROOT" in locals():
 from .no_doc_internal import (
     merge_ndoc_configs,
     process_no_doc_task_dir,
+    # --- THÊM IMPORT CỐT LÕI ---
     analyze_file_for_cleaning_and_formatting,
     print_dry_run_report_for_group,
+    # --- KẾT THÚC THÊM IMPORT ---
 )
-
 from utils.constants import MAX_THREAD_WORKERS
 
 
@@ -66,12 +66,7 @@ def process_no_doc_logic(
 
     if files_to_process:
         logger.info(f"Đang xử lý {len(files_to_process)} file riêng lẻ (song song)...")
-        logger.info(f"  [Cấu hình áp dụng cho file lẻ]")
-        logger.info(f"    - Extensions: {sorted(list(file_extensions))}")
-        logger.info(
-            f"    - Format Extensions: {sorted(list(file_format_extensions_set))}"
-        )
-        logger.info(f"    - (Bỏ qua .gitignore và config file)")
+        # --- XÓA LOGIC IN ---
 
         file_only_results: List[FileResult] = []
         files_to_submit: List[Path] = []
@@ -118,21 +113,12 @@ def process_no_doc_logic(
                         logger.error(
                             f"❌ Lỗi khi xử lý file song song '{file_path.name}': {e}"
                         )
-
+        
+        # --- GỠ BỎ LOGIC IN BÁO CÁO ---
         if file_only_results:
             file_only_results.sort(key=lambda r: r["path"])
-
-            print_dry_run_report_for_group(
-                logger,
-                "File riêng lẻ (stepwise/input)",
-                file_only_results,
-                reporting_root,
-            )
             all_results.extend(file_only_results)
-        elif files_to_submit:
-            logger.info(
-                f"  -> ✅ Tất cả {len(files_to_submit)} file riêng lẻ đã sạch / đã định dạng."
-            )
+        # --- KẾT THÚC GỠ BỎ ---
 
     if dirs_to_scan:
         logger.info(f"Đang xử lý {len(dirs_to_scan)} thư mục...")

@@ -22,7 +22,9 @@ from utils.core import parse_gitignore, compile_spec_from_patterns
 from utils.constants import MAX_THREAD_WORKERS
 
 
-from ..check_path_executor import print_dry_run_report_for_group
+# --- XÓA IMPORT NÀY ---
+# from ..check_path_executor import print_dry_run_report_for_group
+# --- KẾT THÚC XÓA ---
 
 __all__ = ["process_check_path_task_dir"]
 
@@ -129,12 +131,10 @@ def process_check_path_task_dir(
 
     dir_results.sort(key=lambda r: r["path"])
 
-    if dir_results:
-        print_dry_run_report_for_group(
-            logger, scan_dir.name, dir_results, reporting_root
-        )
-    else:
+    # --- GỠ BỎ LOGIC IN BÁO CÁO ---
+    if not dir_results and files_to_submit:
         logger.info(f"  -> ✅ Tất cả file trong thư mục đã tuân thủ.")
+    # --- KẾT THÚC GỠ BỎ ---
 
     logger.info(f"--- ✅ Kết thúc {scan_dir.name} ---")
     logger.info("")

@@ -11,7 +11,6 @@ from modules.check_path.check_path_internal import (
     load_config_files,
     merge_check_path_configs,
 )
-
 from utils.cli.ui_helpers import print_grouped_report
 
 
@@ -26,7 +25,7 @@ def print_dry_run_report_for_group(
     files_in_group: List[FileResult],
     scan_root: Path,
 ) -> None:
-
+    
     def _title_formatter(info: FileResult) -> str:
         file_path: Path = info["path"]
         try:
@@ -38,7 +37,10 @@ def print_dry_run_report_for_group(
     def _detail_formatter(info: FileResult) -> List[str]:
         first_line = info["line"]
         fix_preview = info["fix_preview"]
-        return [f"(Dòng 1 hiện tại: {first_line})", f"(Đề xuất:     {fix_preview})"]
+        return [
+            f"(Dòng 1 hiện tại: {first_line})",
+            f"(Đề xuất:     {fix_preview})"
+        ]
 
     print_grouped_report(
         logger=logger,
@@ -53,7 +55,7 @@ def print_dry_run_report_for_group(
 def execute_check_path_action(
     logger: logging.Logger,
     all_files_to_fix: List[FileResult],
-    cli_args: argparse.Namespace,
+    cli_args: argparse.Namespace, 
     scan_root: Path,
 ) -> None:
 
@@ -63,90 +65,97 @@ def execute_check_path_action(
     total_files_to_fix = len(all_files_to_fix)
 
     if total_files_to_fix == 0:
-        log_success(logger, "Tất cả file đã tuân thủ. Không cần thay đổi.")
+        # Đã được log ở core, chỉ cần return
         return
 
     logger.warning(
-        f"\n⚠️ Tổng cộng {total_files_to_fix} file không tuân thủ quy ước (chi tiết ở trên)."
+        f"\n⚠️ Tổng cộng {total_files_to_fix} file không tuân thủ quy ước."
     )
 
+    # --- CHUYỂN LOGIC DRY-RUN LÊN ĐẦU ---
     if dry_run:
-        logger.warning(f"-> Chạy lại mà không có cờ -d để sửa (hoặc -f để tự động).")
+        logger.info("Chế độ Dry-run: Báo cáo các file cần sửa.")
+        print_dry_run_report_for_group(
+            logger=logger,
+            group_name="Tổng hợp (Dry Run)",
+            files_in_group=all_files_to_fix,
+            scan_root=scan_root
+        )
+        logger.warning(f"\n-> Chạy lại mà không có cờ -d để sửa (hoặc -f để tự động).")
         sys.exit(1)
-    else:
-        proceed_to_write = force
-        if not force:
+    # --- KẾT THÚC CHUYỂN LOGIC ---
+    
+    # Logic xử lý (không phải dry-run)
+    proceed_to_write = force
+    if not force:
+        try:
+            confirmation = input("\nTiếp tục sửa các file này? (y/n): ")
+        except (EOFError, KeyboardInterrupt):
+            confirmation = "n"
+
+        if confirmation.lower() == "y":
+            proceed_to_write = True
+        else:
+            logger.warning("Hoạt động sửa file bị hủy bởi người dùng.")
+            sys.exit(0)
+
+    if proceed_to_write:
+        written_count = 0
+        files_written_relative: List[str] = [] 
+        for info in all_files_to_fix:
+            target_path: Path = info["path"]
+            new_lines: List[str] = info["new_lines"]
             try:
-                confirmation = input("\nTiếp tục sửa các file này? (y/n): ")
-            except (EOFError, KeyboardInterrupt):
-                confirmation = "n"
-
-            if confirmation.lower() == "y":
-                proceed_to_write = True
-            else:
-                logger.warning("Hoạt động sửa file bị hủy bởi người dùng.")
-                sys.exit(0)
-
-        if proceed_to_write:
-            written_count = 0
-            files_written_relative: List[str] = []
-            for info in all_files_to_fix:
-                target_path: Path = info["path"]
-                new_lines: List[str] = info["new_lines"]
-                try:
-                    with target_path.open("w", encoding="utf-8") as f:
-                        f.writelines(new_lines)
-                    rel_path_str = target_path.relative_to(scan_root).as_posix()
-                    files_written_relative.append(rel_path_str)
-                    logger.info(f"Đã sửa: {rel_path_str}")
-                    written_count += 1
-                except IOError as e:
-                    logger.error(
-                        "❌ Lỗi khi ghi file %s: %s",
-                        target_path.relative_to(scan_root).as_posix(),
-                        e,
-                    )
-                except ValueError:
-
-                    files_written_relative.append(target_path.as_posix())
-                    logger.info(f"Đã sửa (absolute path): {target_path.as_posix()}")
-                    written_count += 1
-
-            log_success(logger, f"Hoàn tất! Đã sửa {written_count} file.")
-
-            git_commit: bool = getattr(cli_args, "git_commit", False)
-
-            if git_commit and files_written_relative:
-                try:
-
-                    file_config_data = load_config_files(scan_root, logger)
-                    merged_file_config = merge_check_path_configs(
-                        logger,
-                        cli_extensions=getattr(cli_args, "extensions", None),
-                        cli_ignore=getattr(cli_args, "ignore", None),
-                        file_config_data=file_config_data,
-                    )
-
-                    settings_to_hash = {
-                        "extensions": sorted(
-                            list(merged_file_config["final_extensions_list"])
-                        ),
-                        "ignore": sorted(list(merged_file_config["final_ignore_list"])),
-                    }
-
-                    auto_commit_changes(
-                        logger=logger,
-                        scan_root=scan_root,
-                        files_written_relative=files_written_relative,
-                        settings_to_hash=settings_to_hash,
-                        commit_scope="style(cpath)",
-                        tool_name="cpath",
-                    )
-
-                except Exception as e:
-                    logger.error(f"❌ Lỗi khi chuẩn bị auto-commit: {e}")
-                    logger.debug("Traceback:", exc_info=True)
-            elif files_written_relative:
-                logger.info(
-                    "Bỏ qua auto-commit. (Không có cờ -g/--git-commit hoặc không phải gốc Git)"
+                with target_path.open("w", encoding="utf-8") as f:
+                    f.writelines(new_lines)
+                rel_path_str = target_path.relative_to(scan_root).as_posix()
+                files_written_relative.append(rel_path_str) 
+                logger.info(f"Đã sửa: {rel_path_str}")
+                written_count += 1
+            except IOError as e:
+                logger.error(
+                    "❌ Lỗi khi ghi file %s: %s",
+                    target_path.relative_to(scan_root).as_posix(),
+                    e,
                 )
+            except ValueError:
+                
+                files_written_relative.append(target_path.as_posix()) 
+                logger.info(f"Đã sửa (absolute path): {target_path.as_posix()}")
+                written_count += 1
+
+        log_success(logger, f"Hoàn tất! Đã sửa {written_count} file.")
+
+        
+        git_commit: bool = getattr(cli_args, "git_commit", False)
+
+        if git_commit and files_written_relative:
+            try:
+                
+                file_config_data = load_config_files(scan_root, logger)
+                merged_file_config = merge_check_path_configs(
+                    logger,
+                    cli_extensions=getattr(cli_args, "extensions", None),
+                    cli_ignore=getattr(cli_args, "ignore", None),
+                    file_config_data=file_config_data,
+                )
+
+                settings_to_hash = {
+                    "extensions": sorted(list(merged_file_config["final_extensions_list"])),
+                    "ignore": sorted(list(merged_file_config["final_ignore_list"])),
+                }
+
+                auto_commit_changes(
+                    logger=logger,
+                    scan_root=scan_root,
+                    files_written_relative=files_written_relative,
+                    settings_to_hash=settings_to_hash,
+                    commit_scope="style(cpath)", 
+                    tool_name="cpath",
+                )
+
+            except Exception as e:
+                logger.error(f"❌ Lỗi khi chuẩn bị auto-commit: {e}")
+                logger.debug("Traceback:", exc_info=True)
+        elif files_written_relative:
+            logger.info("Bỏ qua auto-commit. (Không có cờ -g/--git-commit hoặc không phải gốc Git)")
