@@ -167,6 +167,7 @@ def main():
             files_to_overwrite=files_to_overwrite,
             force=args.force,
             scan_root=reporting_root,
+            cli_args=args, # <-- THÊM THAM SỐ CÒN THIẾU
         )
 
     except Exception as e:
