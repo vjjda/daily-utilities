@@ -1,4 +1,3 @@
-# Path: modules/check_path/check_path_executor.py
 import logging
 import sys
 import argparse
