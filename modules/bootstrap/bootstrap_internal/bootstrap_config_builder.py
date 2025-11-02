@@ -1,4 +1,4 @@
-# Path: modules/bootstrap/bootstrap_config_builder.py
+# Path: modules/bootstrap/bootstrap_internal/bootstrap_config_builder.py
 from typing import Dict, Any, List
 
 

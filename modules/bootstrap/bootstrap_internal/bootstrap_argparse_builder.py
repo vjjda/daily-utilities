@@ -1,4 +1,4 @@
-# Path: modules/bootstrap/bootstrap_argparse_builder.py
+# Path: modules/bootstrap/bootstrap_internal/bootstrap_argparse_builder.py
 from typing import Dict, Any, List
 from pathlib import Path
 

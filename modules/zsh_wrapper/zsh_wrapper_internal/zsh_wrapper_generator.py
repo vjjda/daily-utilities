@@ -1,4 +1,4 @@
-# Path: modules/zsh_wrapper/zsh_wrapper_generator.py
+# Path: modules/zsh_wrapper/zsh_wrapper_internal/zsh_wrapper_generator.py
 import logging
 import os
 from pathlib import Path

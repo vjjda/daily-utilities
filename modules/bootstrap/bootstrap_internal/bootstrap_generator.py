@@ -1,4 +1,4 @@
-# Path: modules/bootstrap/bootstrap_generator.py
+# Path: modules/bootstrap/bootstrap_internal/bootstrap_generator.py
 from typing import Dict, Any, Optional
 
 

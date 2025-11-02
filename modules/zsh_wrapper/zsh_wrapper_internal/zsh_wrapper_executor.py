@@ -1,4 +1,4 @@
-# Path: modules/zsh_wrapper/zsh_wrapper_executor.py
+# Path: modules/zsh_wrapper/zsh_wrapper_internal/zsh_wrapper_executor.py
 import logging
 import os
 import sys
