@@ -52,8 +52,8 @@ DEFAULT_IGNORE: Final[Set[str]] = {
 DEFAULT_INCLUDE: Final[Optional[Set[str]]] = None
 DEFAULT_OUTPUT_DIR: Final[str] = "~/Documents/code.context"
 
-DEFAULT_CLEAN_EXTENSIONS: Final[Set[str]] = {"py", "zsh", "sh", "pyi"}
-DEFAULT_FORMAT_EXTENSIONS: Final[Set[str]] = {"py", "pyi"}
+DEFAULT_CLEAN_EXTENSIONS: Final[Set[str]] = {"py", "zsh", "sh"}
+DEFAULT_FORMAT_EXTENSIONS: Final[Set[str]] = {"py"}
 
 PROJECT_CONFIG_FILENAME: Final[str] = ".project.toml"
 CONFIG_FILENAME: Final[str] = ".pcode.toml"
