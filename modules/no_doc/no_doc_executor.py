@@ -4,20 +4,22 @@ import sys
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 import argparse
-import hashlib
-import json
+import hashlib # <-- Xóa
+import json # <-- Xóa
 
-
+# Import thêm
 if not "PROJECT_ROOT" in locals():
     sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
 from utils.logging_config import log_success
 from utils.core.git import is_git_repository, git_add_and_commit
-
+# Import logic config
 from modules.no_doc.no_doc_internal import (
     load_config_files,
     merge_ndoc_configs,
 )
+# Import util hash mới
+from utils.core.config_helpers import generate_config_hash
 
 
 __all__ = ["execute_ndoc_action", "print_dry_run_report_for_group"]
@@ -50,6 +52,7 @@ def execute_ndoc_action(
     git_warning_str: str,
 ) -> None:
 
+    # Lấy cờ từ cli_args
     dry_run: bool = getattr(cli_args, "dry_run", False)
     force: bool = getattr(cli_args, "force", False)
 
@@ -65,7 +68,7 @@ def execute_ndoc_action(
     if dry_run:
         logger.warning(
             f"-> Để xóa docstring, chạy lại mà không có cờ -d (sử dụng -f/--force để bỏ qua xác nhận)."
-        )
+        ) 
         sys.exit(1)
     else:
         proceed_to_write = force
@@ -73,16 +76,14 @@ def execute_ndoc_action(
             try:
                 confirmation = input(
                     "\nTiếp tục xóa docstring và ghi đè các file này? (y/n): "
-                )
-            except EOFError:
-                confirmation = "n"
-            except KeyboardInterrupt:
+                ) 
+            except (EOFError, KeyboardInterrupt):
                 confirmation = "n"
 
-            if confirmation.lower() == "y":
+            if confirmation.lower() == "y": 
                 proceed_to_write = True
             else:
-                logger.warning("Hoạt động sửa file bị hủy bởi người dùng.")
+                logger.warning("Hoạt động sửa file bị hủy bởi người dùng.") 
                 sys.exit(0)
 
         if proceed_to_write:
@@ -108,35 +109,37 @@ def execute_ndoc_action(
 
             log_success(
                 logger, f"Hoàn tất! Đã xóa docstring khỏi {written_count} file."
-            )
+            ) 
 
+            # --- Logic Git và Hash đã được Refactor ---
             if files_written_relative and is_git_repository(scan_root):
                 try:
-
-                    file_config_data = load_config_files(scan_root, logger)
+                    # Tải cấu hình để hash
+                    file_config_data = load_config_files(scan_root, logger) 
                     merged_file_config = merge_ndoc_configs(
                         logger,
                         cli_extensions=getattr(cli_args, "extensions", None),
                         cli_ignore=getattr(cli_args, "ignore", None),
                         file_config_data=file_config_data,
-                    )
+                    ) 
 
+                    # Tạo dict cài đặt ổn định để hash
                     settings_to_hash = {
                         "all_clean": getattr(cli_args, "all_clean", False),
                         "format": getattr(cli_args, "format", False),
+                        # Sắp xếp các list để đảm bảo hash ổn định
                         "extensions": sorted(
                             list(merged_file_config["final_extensions_list"])
-                        ),
-                        "ignore": sorted(list(merged_file_config["final_ignore_list"])),
+                        ), 
+                        "ignore": sorted(list(merged_file_config["final_ignore_list"])), 
                         "format_extensions": sorted(
                             list(merged_file_config["final_format_extensions_set"])
-                        ),
+                        ), 
                     }
 
-                    canonical_str = json.dumps(settings_to_hash, sort_keys=True)
-                    hash_obj = hashlib.sha256(canonical_str.encode("utf-8"))
-                    config_hash = hash_obj.hexdigest()[:10]
-                    logger.debug(f"Config hash (sha256[:10]): {config_hash}")
+                    # --- SỬ DỤNG UTIL MỚI ---
+                    config_hash = generate_config_hash(settings_to_hash, logger)
+                    # --- (Xóa logic hash inline) ---
 
                     commit_msg = f"style(clean): Dọn dẹp {len(files_written_relative)} file (ndoc)\n\nSettings hash: {config_hash}"
 
@@ -145,7 +148,7 @@ def execute_ndoc_action(
                         scan_root=scan_root,
                         file_paths_relative=files_written_relative,
                         commit_message=commit_msg,
-                    )
+                    ) 
 
                 except Exception as e:
                     logger.error(f"❌ Lỗi khi tạo hash hoặc thực thi git commit: {e}")
@@ -155,3 +158,4 @@ def execute_ndoc_action(
                 logger.info(
                     "Bỏ qua auto-commit: Thư mục làm việc hiện tại không phải là gốc Git."
                 )
+            # --- Kết thúc logic Git ---

@@ -3,6 +3,9 @@ import logging
 from pathlib import Path
 from typing import Dict, Any, Set, List, Optional
 import tomlkit
+# Thêm 2 import này
+import hashlib
+import json
 
 from .toml_io import load_toml_file, write_toml_file
 from .parsing import parse_comma_list, parse_cli_set_operators
@@ -18,6 +21,7 @@ __all__ = [
     "resolve_config_value",
     "resolve_config_list",
     "resolve_set_modification",
+    "generate_config_hash",  # <-- Thêm vào __all__
 ]
 
 
@@ -127,3 +131,27 @@ def load_and_merge_configs(
     local_config_data = load_toml_file(local_config_path, logger)
     local_section = local_config_data.get(config_section_name, {})
     return merge_config_sections(project_section, local_section)
+
+def generate_config_hash(
+    settings: Dict[str, Any], logger: logging.Logger, length: int = 10
+) -> str:
+    """
+    Tạo một hash ổn định (stable hash) từ dictionary cài đặt.
+    Lưu ý: List/Set bên trong dict *phải được sắp xếp* trước khi truyền vào.
+    """
+    try:
+        # json.dumps với sort_keys=True đảm bảo thứ tự key của dict
+        # (quan trọng để hash ổn định)
+        canonical_str = json.dumps(settings, sort_keys=True)
+
+        hash_obj = hashlib.sha256(canonical_str.encode("utf-8"))
+        config_hash = hash_obj.hexdigest()[:length]
+
+        logger.debug(f"Config hash (sha256[:{length}]): {config_hash}")
+        logger.debug(f"Config canonical string: {canonical_str}")
+        return config_hash
+
+    except Exception as e:
+        logger.error(f"❌ Lỗi khi tạo hash cấu hình: {e}")
+        logger.debug(f"Settings gây lỗi: {settings}")
+        return "hash-error"

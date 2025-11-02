@@ -29,6 +29,7 @@ register_formatter: Any
 resolve_config_list: Any
 resolve_config_value: Any
 resolve_set_modification: Any
+generate_config_hash: Any  # <-- Thêm
 run_command: Any
 write_toml_file: Any
 
@@ -59,6 +60,7 @@ __all__: List[str] = [
     "resolve_config_list",
     "resolve_config_value",
     "resolve_set_modification",
+    "generate_config_hash",  # <-- Thêm
     "run_command",
     "write_toml_file",
 ]
