@@ -5,7 +5,11 @@ from pathlib import Path
 from typing import Dict, Optional
 
 
-TEMPLATE_DIR = Path(__file__).parent / "templates"
+# --- SỬA LỖI TẠI ĐÂY ---
+# Đường dẫn cũ: Path(__file__).parent / "templates"
+# Thêm .parent để đi lùi 1 cấp
+TEMPLATE_DIR = Path(__file__).parent.parent / "templates"
+# --- KẾT THÚC SỬA LỖI ---
 
 __all__ = ["generate_wrapper_content"]
 
