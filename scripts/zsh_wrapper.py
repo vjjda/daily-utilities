@@ -27,6 +27,7 @@ try:
         CONFIG_SECTION_NAME,
         ZRAP_DEFAULTS,
         TEMPLATE_FILENAME,
+        MODULE_DIR,
     )
 
 except ImportError as e:
@@ -38,8 +39,6 @@ except ImportError as e:
 
 
 THIS_SCRIPT_PATH = Path(__file__).resolve()
-
-MODULE_DIR: Final[Path] = PROJECT_ROOT / "modules" / "zsh_wrapper"
 
 
 def main():

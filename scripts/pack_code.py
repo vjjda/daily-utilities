@@ -26,13 +26,10 @@ try:
     from modules.pack_code import (
         process_pack_code_logic,
         execute_pack_code_action,
+        MODULE_DIR,
+        TEMPLATE_FILENAME,
+        PCODE_DEFAULTS,
         DEFAULT_START_PATH,
-        DEFAULT_EXTENSIONS,
-        DEFAULT_IGNORE,
-        DEFAULT_INCLUDE,
-        DEFAULT_CLEAN_EXTENSIONS,
-        DEFAULT_FORMAT_EXTENSIONS,
-        DEFAULT_OUTPUT_DIR,
         CONFIG_FILENAME,
         PROJECT_CONFIG_FILENAME,
         CONFIG_SECTION_NAME,
@@ -42,17 +39,6 @@ except ImportError as e:
     sys.exit(1)
 
 THIS_SCRIPT_PATH: Final[Path] = Path(__file__).resolve()
-MODULE_DIR: Final[Path] = PROJECT_ROOT / "modules" / "pack_code"
-TEMPLATE_FILENAME: Final[str] = "pack_code.toml.template"
-
-PCODE_DEFAULTS: Final[Dict[str, Any]] = {
-    "output_dir": DEFAULT_OUTPUT_DIR,
-    "extensions": sorted(list(DEFAULT_EXTENSIONS)),
-    "ignore": sorted(list(DEFAULT_IGNORE)),
-    "include": sorted(list(DEFAULT_INCLUDE)) if DEFAULT_INCLUDE else [],
-    "clean_extensions": sorted(list(DEFAULT_CLEAN_EXTENSIONS)),
-    "format_extensions": sorted(list(DEFAULT_FORMAT_EXTENSIONS)),
-}
 
 
 def main():

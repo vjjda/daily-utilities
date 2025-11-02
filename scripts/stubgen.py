@@ -25,11 +25,9 @@ try:
     )
 
     from modules.stubgen import (
-        DEFAULT_IGNORE,
-        DEFAULT_INCLUDE,
-        DYNAMIC_IMPORT_INDICATORS,
-        AST_MODULE_LIST_NAME,
-        AST_ALL_LIST_NAME,
+        MODULE_DIR,
+        TEMPLATE_FILENAME,
+        SGEN_DEFAULTS,
         PROJECT_CONFIG_FILENAME,
         CONFIG_FILENAME,
         CONFIG_SECTION_NAME,
@@ -42,15 +40,6 @@ except ImportError as e:
 
 
 THIS_SCRIPT_PATH: Final[Path] = Path(__file__).resolve()
-MODULE_DIR: Final[Path] = PROJECT_ROOT / "modules" / "stubgen"
-TEMPLATE_FILENAME: Final[str] = "stubgen.toml.template"
-SGEN_DEFAULTS: Final[Dict[str, Any]] = {
-    "ignore": DEFAULT_IGNORE,
-    "include": DEFAULT_INCLUDE or set(),
-    "dynamic_import_indicators": DYNAMIC_IMPORT_INDICATORS,
-    "ast_module_list_name": AST_MODULE_LIST_NAME,
-    "ast_all_list_name": AST_ALL_LIST_NAME,
-}
 
 
 def main():

@@ -13,11 +13,12 @@ __all__ = [
     "PROJECT_CONFIG_FILENAME",
     "CONFIG_FILENAME",
     "CONFIG_SECTION_NAME",
+    "MODULE_DIR",
+    "TEMPLATE_FILENAME",
+    "PCODE_DEFAULTS",
 ]
 
 DEFAULT_START_PATH: Final[str] = "."
-
-
 DEFAULT_EXTENSIONS: Final[Set[str]] = {
     "md",
     "py",
@@ -57,3 +58,16 @@ DEFAULT_FORMAT_EXTENSIONS: Final[Set[str]] = {"py", "pyi"}
 PROJECT_CONFIG_FILENAME: Final[str] = ".project.toml"
 CONFIG_FILENAME: Final[str] = ".pcode.toml"
 CONFIG_SECTION_NAME: Final[str] = "pcode"
+
+
+MODULE_DIR: Final[Path] = Path(__file__).parent
+TEMPLATE_FILENAME: Final[str] = "pack_code.toml.template"
+
+PCODE_DEFAULTS: Final[Dict[str, Any]] = {
+    "output_dir": DEFAULT_OUTPUT_DIR,
+    "extensions": sorted(list(DEFAULT_EXTENSIONS)),
+    "ignore": sorted(list(DEFAULT_IGNORE)),
+    "include": sorted(list(DEFAULT_INCLUDE)) if DEFAULT_INCLUDE else [],
+    "clean_extensions": sorted(list(DEFAULT_CLEAN_EXTENSIONS)),
+    "format_extensions": sorted(list(DEFAULT_FORMAT_EXTENSIONS)),
+}

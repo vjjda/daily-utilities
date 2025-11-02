@@ -13,6 +13,7 @@ __all__ = [
     "CONFIG_SECTION_NAME",
     "TEMPLATE_FILENAME",
     "ZRAP_DEFAULTS",
+    "MODULE_DIR",
 ]
 
 

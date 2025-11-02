@@ -35,8 +35,9 @@ from utils.cli import (
 from modules.check_path import (
     process_check_path_logic,
     execute_check_path_action,
-    DEFAULT_EXTENSIONS,
-    DEFAULT_IGNORE,
+    MODULE_DIR,
+    TEMPLATE_FILENAME,
+    CPATH_DEFAULTS,
     PROJECT_CONFIG_FILENAME,
     CONFIG_SECTION_NAME,
     CONFIG_FILENAME,
@@ -50,13 +51,6 @@ from modules.check_path.check_path_internal import (
 
 
 THIS_SCRIPT_PATH: Final[Path] = Path(__file__).resolve()
-MODULE_DIR: Final[Path] = THIS_SCRIPT_PATH.parent.parent / "modules" / "check_path"
-TEMPLATE_FILENAME: Final[str] = "check_path.toml.template"
-
-CPATH_DEFAULTS: Final[Dict[str, Any]] = {
-    "extensions": DEFAULT_EXTENSIONS,
-    "ignore": DEFAULT_IGNORE,
-}
 
 
 def main():

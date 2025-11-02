@@ -1,6 +1,6 @@
 # Path: modules/no_doc/no_doc_config.py
 from pathlib import Path
-from typing import Any, Optional, List, Final, Set
+from typing import Any, Optional, List, Final, Set, Dict
 
 __all__ = [
     "DEFAULT_START_PATH",
@@ -10,6 +10,9 @@ __all__ = [
     "PROJECT_CONFIG_FILENAME",
     "CONFIG_FILENAME",
     "CONFIG_SECTION_NAME",
+    "MODULE_DIR",
+    "TEMPLATE_FILENAME",
+    "NDOC_DEFAULTS",
 ]
 
 DEFAULT_START_PATH: Final[str] = "."
@@ -36,3 +39,13 @@ DEFAULT_FORMAT_EXTENSIONS: Final[Set[str]] = {"py"}
 PROJECT_CONFIG_FILENAME: Final[str] = ".project.toml"
 CONFIG_FILENAME: Final[str] = ".ndoc.toml"
 CONFIG_SECTION_NAME: Final[str] = "ndoc"
+
+
+MODULE_DIR: Final[Path] = Path(__file__).parent
+TEMPLATE_FILENAME: Final[str] = "no_doc.toml.template"
+
+NDOC_DEFAULTS: Final[Dict[str, Any]] = {
+    "extensions": sorted(list(DEFAULT_EXTENSIONS)),
+    "ignore": sorted(list(DEFAULT_IGNORE)),
+    "format_extensions": sorted(list(DEFAULT_FORMAT_EXTENSIONS)),
+}

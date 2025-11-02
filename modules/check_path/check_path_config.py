@@ -1,5 +1,6 @@
 # Path: modules/check_path/check_path_config.py
 from typing import Dict, Any, Set, Final
+from pathlib import Path
 
 __all__ = [
     "DEFAULT_IGNORE",
@@ -9,6 +10,9 @@ __all__ = [
     "PROJECT_CONFIG_FILENAME",
     "CONFIG_SECTION_NAME",
     "CONFIG_FILENAME",
+    "MODULE_DIR",
+    "TEMPLATE_FILENAME",
+    "CPATH_DEFAULTS",
 ]
 
 
@@ -40,6 +44,15 @@ DEFAULT_EXTENSIONS: Final[Set[str]] = {
 PROJECT_CONFIG_FILENAME: Final[str] = ".project.toml"
 CONFIG_FILENAME: Final[str] = ".cpath.toml"
 CONFIG_SECTION_NAME: Final[str] = "cpath"
+
+
+MODULE_DIR: Final[Path] = Path(__file__).parent
+TEMPLATE_FILENAME: Final[str] = "check_path.toml.template"
+
+CPATH_DEFAULTS: Final[Dict[str, Any]] = {
+    "extensions": DEFAULT_EXTENSIONS,
+    "ignore": DEFAULT_IGNORE,
+}
 
 
 COMMENT_RULES: Final[Dict[str, Dict[str, Any]]] = {

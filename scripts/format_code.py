@@ -32,6 +32,7 @@ try:
         process_format_code_logic,
         execute_format_code_action,
         DEFAULT_START_PATH,
+        DEFAULT_START_PATH,
         DEFAULT_EXTENSIONS,
         DEFAULT_IGNORE,
         CONFIG_FILENAME,

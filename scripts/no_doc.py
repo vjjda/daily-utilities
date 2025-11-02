@@ -37,10 +37,10 @@ try:
     from modules.no_doc import (
         process_no_doc_logic,
         execute_ndoc_action,
+        MODULE_DIR,
+        TEMPLATE_FILENAME,
+        NDOC_DEFAULTS,
         DEFAULT_START_PATH,
-        DEFAULT_EXTENSIONS,
-        DEFAULT_IGNORE,
-        DEFAULT_FORMAT_EXTENSIONS,
         CONFIG_FILENAME,
         PROJECT_CONFIG_FILENAME,
         CONFIG_SECTION_NAME,
@@ -50,14 +50,6 @@ except ImportError as e:
     sys.exit(1)
 
 THIS_SCRIPT_PATH: Final[Path] = Path(__file__).resolve()
-MODULE_DIR: Final[Path] = PROJECT_ROOT / "modules" / "no_doc"
-TEMPLATE_FILENAME: Final[str] = "no_doc.toml.template"
-
-NDOC_DEFAULTS: Final[Dict[str, Any]] = {
-    "extensions": sorted(list(DEFAULT_EXTENSIONS)),
-    "ignore": sorted(list(DEFAULT_IGNORE)),
-    "format_extensions": sorted(list(DEFAULT_FORMAT_EXTENSIONS)),
-}
 
 
 def main():
