@@ -1,6 +1,6 @@
 # Path: modules/format_code/format_code_config.py
 from pathlib import Path
-from typing import Any, Optional, List, Final, Set
+from typing import Any, Optional, List, Final, Set, Dict
 
 __all__ = [
     "DEFAULT_START_PATH",
@@ -9,6 +9,9 @@ __all__ = [
     "PROJECT_CONFIG_FILENAME",
     "CONFIG_FILENAME",
     "CONFIG_SECTION_NAME",
+    "MODULE_DIR",
+    "TEMPLATE_FILENAME",
+    "FORC_DEFAULTS",
 ]
 
 
@@ -36,3 +39,12 @@ DEFAULT_IGNORE: Final[Set[str]] = {
 PROJECT_CONFIG_FILENAME: Final[str] = ".project.toml"
 CONFIG_FILENAME: Final[str] = ".forc.toml"
 CONFIG_SECTION_NAME: Final[str] = "forc"
+
+
+MODULE_DIR: Final[Path] = Path(__file__).parent
+TEMPLATE_FILENAME: Final[str] = "format_code.toml.template"
+
+FORC_DEFAULTS: Final[Dict[str, Any]] = {
+    "extensions": sorted(list(DEFAULT_EXTENSIONS)),
+    "ignore": sorted(list(DEFAULT_IGNORE)),
+}

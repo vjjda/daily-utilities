@@ -1,0 +1,17 @@
+# Path: modules/format_code/format_code.toml.template
+# File cấu hình cục bộ cho `forc` (Format Code).
+#
+# Cài đặt tại đây sẽ GHI ĐÈ cài đặt trong `.project.toml`.
+#
+
+[{config_section_name}]
+
+# extensions (List[str]): Danh sách các đuôi file cần bao gồm.
+# GHI ĐÈ hoàn toàn danh sách mặc định CỦA SCRIPT.
+# Mặc định (từ config set): {toml_extensions}
+extensions = {toml_extensions}
+
+# ignore (List[str]): Danh sách các pattern (kiểu .gitignore) để bỏ qua.
+# Các giá trị này sẽ được THÊM vào danh sách mặc định.
+# Mặc định (được thêm vào): {toml_ignore}
+ignore = {toml_ignore}
