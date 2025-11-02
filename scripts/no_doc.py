@@ -110,14 +110,13 @@ def main():
         action="store_true",
         help="Ghi đè file mà không hỏi xác nhận (chỉ áp dụng ở chế độ fix).",
     )
-    # --- THÊM CỜ MỚI TẠI ĐÂY ---
+
     pack_group.add_argument(
         "-g",
         "--git-commit",
         action="store_true",
         help="Tự động commit các thay đổi vào Git sau khi hoàn tất.",
     )
-    # --- KẾT THÚC THÊM CỜ ---
 
     config_group = parser.add_argument_group("Khởi tạo Cấu hình (chạy riêng)")
 

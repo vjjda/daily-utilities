@@ -87,7 +87,6 @@ def execute_ndoc_action(
                 logger, f"Hoàn tất! Đã xóa docstring khỏi {written_count} file."
             )
 
-            # --- THAY ĐỔI LOGIC AUTO-COMMIT ---
             git_commit: bool = getattr(cli_args, "git_commit", False)
 
             if git_commit:
@@ -127,4 +126,3 @@ def execute_ndoc_action(
                     logger.debug("Traceback:", exc_info=True)
             else:
                 logger.info("Bỏ qua auto-commit. (Không có cờ -g/--git-commit)")
-            # --- KẾT THÚC THAY ĐỔI ---
