@@ -32,33 +32,14 @@ from modules.tree import (
     CONFIG_FILENAME,
     PROJECT_CONFIG_FILENAME,
     CONFIG_SECTION_NAME,
-    DEFAULT_IGNORE,
-    DEFAULT_PRUNE,
-    DEFAULT_DIRS_ONLY_LOGIC,
-    DEFAULT_MAX_LEVEL,
-    FALLBACK_SHOW_SUBMODULES,
-    FALLBACK_USE_GITIGNORE,
-    DEFAULT_EXTENSIONS,
+    MODULE_DIR,
+    TEMPLATE_FILENAME,
+    TREE_DEFAULTS,
     process_tree_logic,
     generate_tree,
     print_status_header,
     print_final_result,
 )
-
-
-MODULE_DIR = PROJECT_ROOT / "modules" / "tree"
-TEMPLATE_FILENAME = "tree.toml.template"
-
-
-TREE_DEFAULTS: Dict[str, Any] = {
-    "level": DEFAULT_MAX_LEVEL,
-    "show-submodules": FALLBACK_SHOW_SUBMODULES,
-    "use-gitignore": FALLBACK_USE_GITIGNORE,
-    "ignore": DEFAULT_IGNORE,
-    "prune": DEFAULT_PRUNE,
-    "dirs-only": DEFAULT_DIRS_ONLY_LOGIC,
-    "extensions": DEFAULT_EXTENSIONS,
-}
 
 
 def main():
@@ -181,7 +162,6 @@ def main():
         )
 
         if result_data is None:
-
             sys.exit(1)
 
         config_params = result_data["config_params"]
