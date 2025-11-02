@@ -11,7 +11,7 @@ except ImportError:
 if TYPE_CHECKING:
     import pathspec
 
-from utils.core import is_path_matched
+from utils.core import is_path_matched, is_extension_matched  # <<< ĐÃ THÊM
 from utils.logging_config import log_success
 
 from .tree_config import DEFAULT_MAX_LEVEL
@@ -108,12 +108,10 @@ def generate_tree(
         return
 
     try:
-
         contents = [
             path for path in directory.iterdir() if not path.name.startswith(".")
         ]
     except (FileNotFoundError, NotADirectoryError):
-
         return
 
     def is_ignored(path: Path) -> bool:
@@ -131,13 +129,14 @@ def generate_tree(
         if extensions_filter is not None:
             files_filtered = []
             for f in files_unfiltered:
-
-                file_ext = "".join(f.suffixes).lstrip(".")
-                if file_ext in extensions_filter:
+                # --- LOGIC CŨ BỊ XÓA ---
+                # file_ext = "".join(f.suffixes).lstrip(".")
+                # if file_ext in extensions_filter:
+                # --- LOGIC MỚI ---
+                if is_extension_matched(f, extensions_filter):
                     files_filtered.append(f)
             files = sorted(files_filtered, key=lambda p: p.name.lower())
         else:
-
             files = sorted(files_unfiltered, key=lambda p: p.name.lower())
 
     items_to_print = dirs + files
