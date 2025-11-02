@@ -3,9 +3,16 @@ import logging
 import sys
 from pathlib import Path
 from typing import Dict, Any, List, Optional, Tuple
+import argparse 
 
 from utils.logging_config import log_success
-from utils.core import git_add_and_commit, is_git_repository
+from utils.core import git_add_and_commit, is_git_repository 
+# Thêm import
+from utils.core.config_helpers import generate_config_hash 
+from .stubgen_internal import (
+    load_config_files, 
+    merge_stubgen_configs, 
+)
 
 
 StubResult = Dict[str, Any]
@@ -113,8 +120,11 @@ def execute_stubgen_action(
     files_to_overwrite: List[StubResult],
     force: bool,
     scan_root: Path,
+    cli_args: argparse.Namespace, # <-- Đã thêm ở bước trước
 ) -> None:
 
+    # ... (Logic dry_run, force, proceed_to_write giữ nguyên) ... 
+    
     total_changes = len(files_to_create) + len(files_to_overwrite)
     if not total_changes:
         log_success(logger, "\n✨ Stub generation complete. All stubs are up-to-date.")
@@ -140,6 +150,7 @@ def execute_stubgen_action(
             sys.exit(0)
 
     if proceed_to_write:
+        # ... (Logic ghi file giữ nguyên) ... 
         written_count = 0
         files_written_results: List[StubResult] = []
         result_being_processed: Optional[StubResult] = None
@@ -153,7 +164,6 @@ def execute_stubgen_action(
                 return str(path)
 
         try:
-
             for result in files_to_create:
                 result_being_processed = result
                 stub_path: Path = result["stub_path"]
@@ -207,20 +217,46 @@ def execute_stubgen_action(
                 f"\n✨ Stub generation complete. Successfully processed {written_count} files.",
             )
 
-        if files_written_results and is_git_repository(scan_root):
-            relative_paths = [
-                str(r["stub_path"].relative_to(scan_root))
-                for r in files_written_results
-            ]
+        # --- CẬP NHẬT LOGIC GIT ---
+        if files_written_results and is_git_repository(scan_root): 
+            try:
+                # Tải cấu hình để hash
+                file_config_data = load_config_files(scan_root, logger) 
+                cli_config = {
+                    "ignore": getattr(cli_args, "ignore", None),
+                    "include": getattr(cli_args, "include", None),
+                }
+                merged_config = merge_stubgen_configs(logger, cli_config, file_config_data) 
 
-            commit_msg = f"style(stubs): Cập nhật {len(relative_paths)} file .pyi (tự động bởi sgen)"
+                # Tạo dict cài đặt ổn định để hash
+                settings_to_hash = {
+                    "ignore": sorted(list(merged_config["ignore_list"])),
+                    "include": sorted(list(merged_config["include_list"])),
+                    "indicators": sorted(list(merged_config["indicators"])),
+                    "module_list_name": merged_config["module_list_name"],
+                    "all_list_name": merged_config["all_list_name"],
+                }
+                
+                config_hash = generate_config_hash(settings_to_hash, logger) 
 
-            git_add_and_commit(
-                logger=logger,
-                scan_root=scan_root,
-                file_paths_relative=relative_paths,
-                commit_message=commit_msg,
-            )
+                relative_paths = [
+                    str(r["stub_path"].relative_to(scan_root))
+                    for r in files_written_results
+                ]
+
+                # --- THAY ĐỔI ĐỊNH DẠNG COMMIT MSG ---
+                commit_msg = f"style(stubs): Cập nhật {len(relative_paths)} file .pyi (sgen) [Settings:{config_hash}]"
+
+                git_add_and_commit(
+                    logger=logger,
+                    scan_root=scan_root,
+                    file_paths_relative=relative_paths,
+                    commit_message=commit_msg,
+                ) 
+            except Exception as e:
+                logger.error(f"❌ Lỗi khi tạo hash hoặc thực thi git commit: {e}")
+                logger.debug("Traceback:", exc_info=True)
+
         elif files_written_results:
             logger.info(
                 "Bỏ qua auto-commit: Thư mục làm việc hiện tại không phải là gốc Git."
