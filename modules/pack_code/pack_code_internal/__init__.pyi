@@ -12,7 +12,6 @@ process_pack_code_task_dir: Any
 process_pack_code_task_file: Any
 resolve_filters: Any
 resolve_output_path: Any
-scan_files: Any
 
 # Static declaration of exported symbols (for Pylance)
 __all__: List[str] = [
@@ -24,5 +23,4 @@ __all__: List[str] = [
     "process_pack_code_task_file",
     "resolve_filters",
     "resolve_output_path",
-    "scan_files",
 ]

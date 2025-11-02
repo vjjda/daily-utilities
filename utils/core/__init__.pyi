@@ -35,6 +35,7 @@ resolve_config_list: Any
 resolve_config_value: Any
 resolve_set_modification: Any
 run_command: Any
+scan_directory_recursive: Any
 write_toml_file: Any
 
 # Static declaration of exported symbols (for Pylance)
@@ -70,5 +71,6 @@ __all__: List[str] = [
     "resolve_config_value",
     "resolve_set_modification",
     "run_command",
+    "scan_directory_recursive",
     "write_toml_file",
 ]
