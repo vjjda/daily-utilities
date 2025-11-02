@@ -10,7 +10,6 @@ apply_line_comment_rule: Any
 load_config_files: Any
 merge_check_path_configs: Any
 process_check_path_task_dir: Any
-# process_check_path_task_file: Any # <-- XÓA DÒNG NÀY
 scan_files: Any
 
 # Static declaration of exported symbols (for Pylance)
@@ -21,6 +20,5 @@ __all__: List[str] = [
     "load_config_files",
     "merge_check_path_configs",
     "process_check_path_task_dir",
-    # "process_check_path_task_file", # <-- XÓA DÒNG NÀY
     "scan_files",
 ]
