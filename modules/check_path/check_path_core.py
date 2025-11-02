@@ -4,7 +4,6 @@ import argparse
 from pathlib import Path
 from typing import List, Optional, Dict, Any, Set
 import sys
-
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 
@@ -16,12 +15,13 @@ from .check_path_internal import (
     merge_check_path_configs,
     process_check_path_task_dir,
     analyze_single_file_for_path_comment,
-    print_dry_run_report_for_group,
+    # print_dry_run_report_for_group, # <-- XÓA IMPORT SAI
 )
+# --- THÊM IMPORT ĐÚNG ---
+from .check_path_executor import print_dry_run_report_for_group
+# --- KẾT THÚC THÊM IMPORT ---
 from .check_path_config import DEFAULT_EXTENSIONS
-
 from utils.constants import MAX_THREAD_WORKERS
-
 
 __all__ = ["process_check_path_logic"]
 
@@ -73,7 +73,7 @@ def process_check_path_logic(
                     f"⚠️ Bỏ qua file '{file_path.name}': không khớp extensions ({file_ext})"
                 )
                 continue
-
+            
             processed_files.add(resolved_file)
             files_to_submit.append(file_path)
 
@@ -102,7 +102,7 @@ def process_check_path_logic(
                         logger.error(
                             f"❌ Lỗi khi xử lý file song song '{file_path.name}': {e}"
                         )
-
+        
         if file_only_results:
             file_only_results.sort(key=lambda r: r["path"])
             print_dry_run_report_for_group(
@@ -110,9 +110,7 @@ def process_check_path_logic(
             )
             all_results.extend(file_only_results)
         elif files_to_submit:
-            logger.info(
-                f"  -> ✅ Tất cả {len(files_to_submit)} file riêng lẻ đã tuân thủ."
-            )
+            logger.info(f"  -> ✅ Tất cả {len(files_to_submit)} file riêng lẻ đã tuân thủ.")
 
     if dirs_to_scan:
         logger.info(f"Đang xử lý {len(dirs_to_scan)} thư mục...")
