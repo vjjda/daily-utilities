@@ -41,13 +41,12 @@ from modules.check_path import (
     CONFIG_SECTION_NAME,
     CONFIG_FILENAME,
 )
-# --- THÊM IMPORT MODULES.CHECK_PATH.CHECK_PATH_INTERNAL ---
-# (Cần thiết cho logic auto-commit trong executor)
+
+
 from modules.check_path.check_path_internal import (
     load_config_files,
     merge_check_path_configs,
 )
-# --- KẾT THÚC THÊM IMPORT ---
 
 
 THIS_SCRIPT_PATH: Final[Path] = Path(__file__).resolve()
@@ -109,14 +108,13 @@ def main():
         action="store_true",
         help="Tự động sửa file mà không hỏi xác nhận.",
     )
-    # --- THÊM CỜ MỚI TẠI ĐÂY ---
+
     path_check_group.add_argument(
         "-g",
         "--git-commit",
         action="store_true",
         help="Tự động commit các thay đổi vào Git sau khi hoàn tất.",
     )
-    # --- KẾT THÚC THÊM CỜ ---
 
     config_group = parser.add_argument_group("Config Initialization (Chạy riêng lẻ)")
 
@@ -172,11 +170,6 @@ def main():
     files_to_process: List[Path] = [p for p in validated_paths if p.is_file()]
     dirs_to_scan: List[Path] = [p for p in validated_paths if p.is_dir()]
 
-    # --- BIẾN CŨ (Không còn dùng) ---
-    # check_mode = args.dry_run
-    # force_mode = args.force
-    # --- KẾT THÚC BIẾN CŨ ---
-
     try:
         files_to_fix = process_check_path_logic(
             logger=logger,
@@ -187,14 +180,12 @@ def main():
             reporting_root=reporting_root,
         )
 
-        # --- THAY ĐỔI LỜI GỌI EXECUTE ---
         execute_check_path_action(
             logger=logger,
             all_files_to_fix=files_to_fix,
-            cli_args=args, # Truyền toàn bộ args
+            cli_args=args,
             scan_root=reporting_root,
         )
-        # --- KẾT THÚC THAY ĐỔI LỜI GỌI ---
 
     except Exception as e:
         logger.error(f"❌ Đã xảy ra lỗi không mong muốn: {e}")
