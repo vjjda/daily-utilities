@@ -1,9 +1,6 @@
 #!/usr/bin/env zsh
 # Path: scripts/helpers/vscpath.zsh
 
-# Đặt biến HOME cho môi trường Keyboard Maestro
-HOME="${HOME}"
-
 # Lấy tên project từ cửa sổ VSCode đang mở đầu tiên
 PROJECT_NAME=$(/usr/bin/osascript <<'EOF'
 tell application "System Events"
