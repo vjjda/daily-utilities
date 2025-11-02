@@ -25,10 +25,10 @@ try:
         resolve_reporting_root,
     )
     from utils.core import parse_comma_list
-    # --- THÊM IMPORT MỚI ---
+
     from utils.core.git import find_commit_by_hash, get_diffed_files
     from utils.core.config_helpers import generate_config_hash
-    # --- KẾT THÚC IMPORT MỚI ---
+
     from modules.no_doc.no_doc_internal import (
         load_config_files,
         merge_ndoc_configs,
@@ -122,14 +122,13 @@ def main():
         action="store_true",
         help="Tự động commit các thay đổi vào Git sau khi hoàn tất.",
     )
-    # --- THÊM CỜ MỚI (-w) ---
+
     pack_group.add_argument(
         "-w",
         "--stepwise",
         action="store_true",
         help="Chế độ gia tăng. Chỉ quét các file đã thay đổi kể từ lần chạy cuối cùng có cùng cài đặt.",
     )
-    # --- KẾT THÚC THÊM CỜ ---
 
     config_group = parser.add_argument_group("Khởi tạo Cấu hình (chạy riêng)")
 
@@ -173,17 +172,17 @@ def main():
         logger.debug("Traceback:", exc_info=True)
         sys.exit(1)
 
-    # --- LOGIC STEPWISE MỚI ---
     stepwise: bool = getattr(args, "stepwise", False)
     validated_paths: List[Path] = []
-    
-    # 1. Xác định gốc báo cáo (cần cho cả 2 chế độ)
-    # Chúng ta cần đường dẫn sơ bộ để tìm gốc, ngay cả trước khi xác thực chúng
-    preliminary_paths_str = args.start_paths_arg if args.start_paths_arg else [DEFAULT_START_PATH]
-    preliminary_paths = [Path(p).expanduser() for p in preliminary_paths_str]
-    reporting_root = resolve_reporting_root(logger, preliminary_paths, cli_root_arg=None)
 
-    # 2. Luôn tải config để biết cài đặt
+    preliminary_paths_str = (
+        args.start_paths_arg if args.start_paths_arg else [DEFAULT_START_PATH]
+    )
+    preliminary_paths = [Path(p).expanduser() for p in preliminary_paths_str]
+    reporting_root = resolve_reporting_root(
+        logger, preliminary_paths, cli_root_arg=None
+    )
+
     file_config_data = load_config_files(reporting_root, logger)
     merged_config = merge_ndoc_configs(
         logger,
@@ -191,17 +190,14 @@ def main():
         cli_ignore=getattr(args, "ignore", None),
         file_config_data=file_config_data,
     )
-    
+
     last_run_sha: Optional[str] = None
     if stepwise:
-        # 3. Tạo hash cài đặt hiện tại
-        # (Logic này phải khớp với logic trong executor)
+
         settings_to_hash = {
             "all_clean": getattr(args, "all_clean", False),
             "format": getattr(args, "format", False),
-            "extensions": sorted(
-                list(merged_config["final_extensions_list"])
-            ),
+            "extensions": sorted(list(merged_config["final_extensions_list"])),
             "ignore": sorted(list(merged_config["final_ignore_list"])),
             "format_extensions": sorted(
                 list(merged_config["final_format_extensions_set"])
@@ -209,34 +205,35 @@ def main():
         }
         config_hash = generate_config_hash(settings_to_hash, logger)
         logger.info(f"Chế độ Stepwise (-w): Tìm kiếm cài đặt hash: {config_hash}")
-        
-        # 4. Tìm commit cuối cùng
+
         last_run_sha = find_commit_by_hash(logger, reporting_root, config_hash)
 
     if stepwise and last_run_sha:
-        # 5. Chế độ Stepwise: Lấy diff
+
         logger.info(f"Tìm thấy commit khớp: {last_run_sha[:7]}. Lấy diff file...")
         diffed_files = get_diffed_files(logger, reporting_root, last_run_sha)
-        
+
         relevant_extensions = merged_config["final_extensions_list"]
-        
+
         validated_paths = [
             f
             for f in diffed_files
             if f.is_file() and "".join(f.suffixes).lstrip(".") in relevant_extensions
         ]
-        
+
         if not validated_paths:
             logger.info("✅ Không có file .py nào thay đổi kể từ lần chạy cuối.")
             sys.exit(0)
-        
+
         logger.info(f"Sẽ chỉ quét {len(validated_paths)} file .py đã thay đổi.")
-        
+
     else:
-        # 6. Chế độ Full Scan (mặc định)
+
         if stepwise:
-            logger.warning("Không tìm thấy commit nào khớp. Sẽ thực hiện quét toàn bộ...")
-            
+            logger.warning(
+                "Không tìm thấy commit nào khớp. Sẽ thực hiện quét toàn bộ..."
+            )
+
         validated_paths = resolve_input_paths(
             logger=logger,
             raw_paths=args.start_paths_arg,
@@ -246,7 +243,6 @@ def main():
     if not validated_paths:
         logger.warning("Không tìm thấy đường dẫn hợp lệ nào để quét. Đã dừng.")
         sys.exit(0)
-    # --- KẾT THÚC LOGIC STEPWISE ---
 
     files_to_process: List[Path] = []
     dirs_to_scan: List[Path] = []
@@ -254,7 +250,7 @@ def main():
         if path.is_file():
             files_to_process.append(path)
         elif path.is_dir():
-            # Nếu chạy stepwise, chúng ta chỉ nhận file, nên dirs_to_scan sẽ rỗng
+
             dirs_to_scan.append(path)
 
     try:
