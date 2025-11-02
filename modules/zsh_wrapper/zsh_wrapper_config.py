@@ -36,3 +36,6 @@ ZRAP_DEFAULTS: Final[Dict[str, Any]] = {
     "relative_dir": DEFAULT_WRAPPER_RELATIVE_DIR,
     "absolute_dir": str(DEFAULT_WRAPPER_ABSOLUTE_PATH),
 }
+
+
+MODULE_DIR: Final[Path] = Path(__file__).parent
