@@ -6,10 +6,11 @@ from pathlib import Path
 from typing import Dict, Any, List, Optional, Set, Tuple
 
 
-from . import merge_stubgen_configs, process_single_gateway
-
-
-from ..stubgen_executor import classify_and_report_stub_changes
+from . import (
+    merge_stubgen_configs,
+    process_single_gateway,
+    classify_and_report_stub_changes,  # <-- Thêm
+)
 
 
 __all__ = ["process_stubgen_task_file"]

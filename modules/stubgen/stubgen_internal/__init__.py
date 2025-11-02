@@ -16,6 +16,7 @@ modules_to_export: List[str] = [
     "gateway_processor",
     "stubgen_task_file",
     "stubgen_task_dir",
+    "stubgen_classifier",  # <-- Thêm
 ]
 
 __all__: List[str] = []

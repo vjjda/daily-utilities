@@ -18,11 +18,8 @@ from . import (
     merge_stubgen_configs,
     find_gateway_files,
     process_single_gateway,
+    classify_and_report_stub_changes,
 )
-
-
-from ..stubgen_executor import classify_and_report_stub_changes
-
 
 from utils.core import compile_spec_from_patterns
 from utils.constants import MAX_THREAD_WORKERS
