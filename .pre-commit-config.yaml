@@ -6,7 +6,7 @@ repos:
       - id: ndoc
         name: "NDoc Code Cleaner"
         # Chạy ndoc VÀ git add lại các file đã xử lý ($@)
-        entry: bash -c 'ndoc -abf "$@" && git add "$@"' --
+        entry: zsh -c 'ndoc -abf "$@" && git add "$@"' --
         language: system
         types: [python]
         stages: [pre-commit]
@@ -15,7 +15,7 @@ repos:
       - id: cpath
         name: "CPath Path Comment Checker"
         # Chạy cpath ở chế độ Force (-f) VÀ git add lại file ($@)
-        entry: bash -c 'cpath -f "$@" && git add "$@"' --
+        entry: zsh -c 'cpath -f "$@" && git add "$@"' --
         language: system
         types: [python, shell] 
         stages: [pre-commit]
