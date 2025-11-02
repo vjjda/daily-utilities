@@ -12,7 +12,7 @@ modules_to_export: List[str] = [
     "format_code_merger",
     "format_code_scanner",
     "format_code_analyzer",
-    "format_code_task_file",
+    # "format_code_task_file", # <-- XÓA DÒNG NÀY
     "format_code_task_dir",
 ]
 

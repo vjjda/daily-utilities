@@ -8,7 +8,7 @@ analyze_file_content_for_formatting: Any
 load_config_files: Any
 merge_format_code_configs: Any
 process_format_code_task_dir: Any
-process_format_code_task_file: Any
+# process_format_code_task_file: Any # <-- XÓA DÒNG NÀY
 scan_files: Any
 
 # Static declaration of exported symbols (for Pylance)
@@ -17,6 +17,6 @@ __all__: List[str] = [
     "load_config_files",
     "merge_format_code_configs",
     "process_format_code_task_dir",
-    "process_format_code_task_file",
+    # "process_format_code_task_file", # <-- XÓA DÒNG NÀY
     "scan_files",
 ]
