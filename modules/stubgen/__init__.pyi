@@ -11,7 +11,10 @@ CONFIG_SECTION_NAME: Any
 DEFAULT_IGNORE: Any
 DEFAULT_INCLUDE: Any
 DYNAMIC_IMPORT_INDICATORS: Any
+MODULE_DIR: Any
 PROJECT_CONFIG_FILENAME: Any
+SGEN_DEFAULTS: Any
+TEMPLATE_FILENAME: Any
 execute_stubgen_action: Any
 process_stubgen_logic: Any
 
@@ -24,7 +27,10 @@ __all__: List[str] = [
     "DEFAULT_IGNORE",
     "DEFAULT_INCLUDE",
     "DYNAMIC_IMPORT_INDICATORS",
+    "MODULE_DIR",
     "PROJECT_CONFIG_FILENAME",
+    "SGEN_DEFAULTS",
+    "TEMPLATE_FILENAME",
     "execute_stubgen_action",
     "process_stubgen_logic",
 ]
