@@ -13,7 +13,7 @@ modules_to_export: List[str] = [
     "no_doc_merger",
     "no_doc_scanner",
     "no_doc_analyzer",
-    "no_doc_task_file",
+    # "no_doc_task_file", # <-- XÓA DÒNG NÀY
     "no_doc_task_dir",
     "no_doc_reporter",
 ]
