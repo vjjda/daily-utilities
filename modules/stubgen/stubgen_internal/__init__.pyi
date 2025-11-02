@@ -1,4 +1,5 @@
 # Path: modules/stubgen/stubgen_internal/__init__.pyi
+"""Statically declared API for stubgen_internal"""
 
 from typing import Any, List, Optional, Set, Dict, Union
 from pathlib import Path
@@ -14,7 +15,7 @@ process_single_gateway: Any
 process_stubgen_task_dir: Any
 process_stubgen_task_file: Any
 
-
+# Static declaration of exported symbols (for Pylance)
 __all__: List[str] = [
     "classify_and_report_stub_changes",
     "collect_all_exported_symbols",

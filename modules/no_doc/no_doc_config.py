@@ -13,7 +13,7 @@ __all__ = [
 ]
 
 DEFAULT_START_PATH: Final[str] = "."
-DEFAULT_EXTENSIONS: Final[Set[str]] = {"py", "pyi"}
+DEFAULT_EXTENSIONS: Final[Set[str]] = {"py"}
 
 DEFAULT_IGNORE: Final[Set[str]] = {
     ".venv",
@@ -31,7 +31,7 @@ DEFAULT_IGNORE: Final[Set[str]] = {
 }
 
 
-DEFAULT_FORMAT_EXTENSIONS: Final[Set[str]] = {"py", "pyi"}
+DEFAULT_FORMAT_EXTENSIONS: Final[Set[str]] = {"py"}
 
 PROJECT_CONFIG_FILENAME: Final[str] = ".project.toml"
 CONFIG_FILENAME: Final[str] = ".ndoc.toml"

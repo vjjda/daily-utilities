@@ -1,4 +1,5 @@
 # Path: utils/core/__init__.pyi
+"""Statically declared API for core"""
 
 from typing import Any, List, Optional, Set, Dict, Union
 from pathlib import Path
@@ -36,7 +37,7 @@ resolve_set_modification: Any
 run_command: Any
 write_toml_file: Any
 
-
+# Static declaration of exported symbols (for Pylance)
 __all__: List[str] = [
     "Logger",
     "auto_commit_changes",

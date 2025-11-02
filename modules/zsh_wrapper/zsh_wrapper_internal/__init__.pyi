@@ -1,4 +1,5 @@
 # Path: modules/zsh_wrapper/zsh_wrapper_internal/__init__.pyi
+"""Statically declared API for zsh_wrapper_internal"""
 
 from typing import Any, List, Optional, Set, Dict, Union
 from pathlib import Path
@@ -11,7 +12,7 @@ resolve_output_path_interactively: Any
 resolve_root_interactively: Any
 resolve_wrapper_inputs: Any
 
-
+# Static declaration of exported symbols (for Pylance)
 __all__: List[str] = [
     "execute_zsh_wrapper_action",
     "find_project_root",

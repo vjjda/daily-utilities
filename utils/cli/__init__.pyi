@@ -1,4 +1,5 @@
 # Path: utils/cli/__init__.pyi
+"""Statically declared API for cli"""
 
 from typing import Any, List, Optional, Set, Dict, Union
 from pathlib import Path
@@ -11,7 +12,7 @@ prompt_config_overwrite: Any
 resolve_input_paths: Any
 resolve_reporting_root: Any
 
-
+# Static declaration of exported symbols (for Pylance)
 __all__: List[str] = [
     "handle_config_init_request",
     "handle_project_root_validation",
