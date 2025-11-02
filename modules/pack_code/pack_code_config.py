@@ -21,7 +21,6 @@ DEFAULT_START_PATH: Final[str] = "."
 DEFAULT_EXTENSIONS: Final[Set[str]] = {
     "md",
     "py",
-    "pyi",
     "txt",
     "json",
     "xml",
@@ -52,8 +51,8 @@ DEFAULT_IGNORE: Final[Set[str]] = {
 DEFAULT_INCLUDE: Final[Optional[Set[str]]] = None
 DEFAULT_OUTPUT_DIR: Final[str] = "~/Documents/code.context"
 
-DEFAULT_CLEAN_EXTENSIONS: Final[Set[str]] = {"py", "zsh", "sh"}
-DEFAULT_FORMAT_EXTENSIONS: Final[Set[str]] = {"py"}
+DEFAULT_CLEAN_EXTENSIONS: Final[Set[str]] = {"py", "zsh", "sh", "pyi"}
+DEFAULT_FORMAT_EXTENSIONS: Final[Set[str]] = {"py", "pyi"}
 
 PROJECT_CONFIG_FILENAME: Final[str] = ".project.toml"
 CONFIG_FILENAME: Final[str] = ".pcode.toml"
