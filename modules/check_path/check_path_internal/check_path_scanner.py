@@ -16,13 +16,14 @@ except ImportError:
 if TYPE_CHECKING:
     import pathspec
 
+
 from utils.core import (
     get_submodule_paths,
-    parse_gitignore,
     is_path_matched,
-    compile_spec_from_patterns,
     is_extension_matched,
+    scan_directory_recursive,
 )
+from ..check_path_config import DEFAULT_IGNORE
 
 __all__ = ["scan_files"]
 
@@ -46,34 +47,28 @@ def scan_files(
     if submodule_paths:
         scan_status["gitmodules_found"] = True
 
-    gitignore_patterns: List[str] = parse_gitignore(scan_root)
-    if gitignore_patterns:
+    if (ignore_spec is not None) and (len(ignore_spec.patterns) > len(DEFAULT_IGNORE)):
         scan_status["gitignore_found"] = True
-
-    all_ignore_patterns_list: List[str]
-    if ignore_spec:
-        try:
-            all_ignore_patterns_list = [
-                p.pattern for p in ignore_spec.patterns
-            ] + gitignore_patterns
-        except Exception:
-            all_ignore_patterns_list = gitignore_patterns
-    else:
-        all_ignore_patterns_list = gitignore_patterns
-
-    final_ignore_spec = compile_spec_from_patterns(all_ignore_patterns_list, scan_root)
+    final_ignore_spec = ignore_spec
 
     all_files: List[Path] = []
     extensions_set = set(extensions)
 
     if scan_path.is_dir():
-        logger.debug(f"Scanner (fixed): Chạy rglob('*') trên {scan_path.name}")
-        all_files_raw = [p for p in scan_path.rglob("*") if p.is_file()]
+        logger.debug(
+            f"Scanner (new): Chạy scan_directory_recursive trên {scan_path.name}"
+        )
 
-        for f in all_files_raw:
-
-            if is_extension_matched(f, extensions_set):
-                all_files.append(f)
+        all_files = scan_directory_recursive(
+            logger=logger,
+            directory=scan_path,
+            scan_root=scan_root,
+            ignore_spec=final_ignore_spec,
+            include_spec=None,
+            prune_spec=None,
+            extensions_filter=extensions_set,
+            submodule_paths=submodule_paths,
+        )
 
     elif scan_path.is_file():
 
@@ -87,24 +82,21 @@ def scan_files(
 
     files_to_process: List[Path] = []
 
-    for file_path in all_files:
-        abs_file_path = file_path.resolve()
-
-        is_in_submodule = any(abs_file_path.is_relative_to(p) for p in submodule_paths)
-        if is_in_submodule:
-            continue
-
-        try:
-            relative_path_str = os.path.relpath(
-                file_path.as_posix(), scan_root.resolve().as_posix()
+    if scan_path.is_file():
+        if all_files:
+            file_path = all_files[0]
+            abs_file_path = file_path.resolve()
+            is_in_submodule = any(
+                abs_file_path.is_relative_to(p) for p in submodule_paths
             )
-        except ValueError:
-            relative_path_str = file_path.as_posix()
 
-        if is_path_matched(file_path, final_ignore_spec, scan_root):
-            continue
+            if not is_in_submodule and not is_path_matched(
+                file_path, final_ignore_spec, scan_root
+            ):
+                files_to_process.append(file_path)
+    else:
 
-        files_to_process.append(file_path)
+        files_to_process = all_files
 
     files_to_process.sort(key=lambda p: p.as_posix())
     return files_to_process, scan_status

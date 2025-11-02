@@ -3,7 +3,7 @@ import logging
 from pathlib import Path
 import sys
 from typing import List, Set, Optional, TYPE_CHECKING, Iterable, Tuple, Dict
-
+import os
 
 if not "PROJECT_ROOT" in locals():
     sys.path.append(str(Path(__file__).resolve().parent.parent.parent.parent))
@@ -22,6 +22,7 @@ from utils.core import (
     is_path_matched,
     compile_spec_from_patterns,
     is_extension_matched,
+    scan_directory_recursive,
 )
 
 __all__ = ["scan_files"]
@@ -59,10 +60,16 @@ def scan_files(
 
     if scan_path.is_dir():
 
-        all_files_raw = [p for p in scan_path.rglob("*") if p.is_file()]
-        for f in all_files_raw:
-            if is_extension_matched(f, extensions_set):
-                all_files.append(f)
+        all_files = scan_directory_recursive(
+            logger=logger,
+            directory=scan_path,
+            scan_root=scan_root,
+            ignore_spec=ignore_spec,
+            include_spec=None,
+            prune_spec=None,
+            extensions_filter=extensions_set,
+            submodule_paths=submodule_paths,
+        )
 
     elif scan_path.is_file():
 
@@ -76,17 +83,21 @@ def scan_files(
 
     files_to_process: List[Path] = []
 
-    for file_path in all_files:
-        abs_file_path = file_path.resolve()
+    if scan_path.is_file():
+        if all_files:
+            file_path = all_files[0]
+            abs_file_path = file_path.resolve()
+            is_in_submodule = any(
+                abs_file_path.is_relative_to(p) for p in submodule_paths
+            )
 
-        is_in_submodule = any(abs_file_path.is_relative_to(p) for p in submodule_paths)
-        if is_in_submodule:
-            continue
+            if not is_in_submodule and not is_path_matched(
+                file_path, ignore_spec, scan_root
+            ):
+                files_to_process.append(file_path)
+    else:
 
-        if is_path_matched(file_path, ignore_spec, scan_root):
-            continue
-
-        files_to_process.append(file_path)
+        files_to_process = all_files
 
     files_to_process.sort(key=lambda p: p.as_posix())
     return files_to_process, scan_status
