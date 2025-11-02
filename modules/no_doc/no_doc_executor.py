@@ -4,7 +4,6 @@ import sys
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 import argparse
-import json
 
 if not "PROJECT_ROOT" in locals():
     sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
@@ -88,37 +87,44 @@ def execute_ndoc_action(
                 logger, f"Hoàn tất! Đã xóa docstring khỏi {written_count} file."
             )
 
-            try:
+            # --- THAY ĐỔI LOGIC AUTO-COMMIT ---
+            git_commit: bool = getattr(cli_args, "git_commit", False)
 
-                file_config_data = load_config_files(scan_root, logger)
-                merged_file_config = merge_ndoc_configs(
-                    logger,
-                    cli_extensions=getattr(cli_args, "extensions", None),
-                    cli_ignore=getattr(cli_args, "ignore", None),
-                    file_config_data=file_config_data,
-                )
+            if git_commit:
+                try:
 
-                settings_to_hash = {
-                    "all_clean": getattr(cli_args, "all_clean", False),
-                    "format": getattr(cli_args, "format", False),
-                    "extensions": sorted(
-                        list(merged_file_config["final_extensions_list"])
-                    ),
-                    "ignore": sorted(list(merged_file_config["final_ignore_list"])),
-                    "format_extensions": sorted(
-                        list(merged_file_config["final_format_extensions_set"])
-                    ),
-                }
+                    file_config_data = load_config_files(scan_root, logger)
+                    merged_file_config = merge_ndoc_configs(
+                        logger,
+                        cli_extensions=getattr(cli_args, "extensions", None),
+                        cli_ignore=getattr(cli_args, "ignore", None),
+                        file_config_data=file_config_data,
+                    )
 
-                auto_commit_changes(
-                    logger=logger,
-                    scan_root=scan_root,
-                    files_written_relative=files_written_relative,
-                    settings_to_hash=settings_to_hash,
-                    commit_scope="clean",
-                    tool_name="ndoc",
-                )
+                    settings_to_hash = {
+                        "all_clean": getattr(cli_args, "all_clean", False),
+                        "format": getattr(cli_args, "format", False),
+                        "extensions": sorted(
+                            list(merged_file_config["final_extensions_list"])
+                        ),
+                        "ignore": sorted(list(merged_file_config["final_ignore_list"])),
+                        "format_extensions": sorted(
+                            list(merged_file_config["final_format_extensions_set"])
+                        ),
+                    }
 
-            except Exception as e:
-                logger.error(f"❌ Lỗi khi chuẩn bị auto-commit: {e}")
-                logger.debug("Traceback:", exc_info=True)
+                    auto_commit_changes(
+                        logger=logger,
+                        scan_root=scan_root,
+                        files_written_relative=files_written_relative,
+                        settings_to_hash=settings_to_hash,
+                        commit_scope="clean",
+                        tool_name="ndoc",
+                    )
+
+                except Exception as e:
+                    logger.error(f"❌ Lỗi khi chuẩn bị auto-commit: {e}")
+                    logger.debug("Traceback:", exc_info=True)
+            else:
+                logger.info("Bỏ qua auto-commit. (Không có cờ -g/--git-commit)")
+            # --- KẾT THÚC THAY ĐỔI ---
