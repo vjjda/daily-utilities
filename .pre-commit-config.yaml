@@ -9,7 +9,7 @@ repos:
         language: system
         # Chỉ chạy ndoc cho các file Python 
         types: [python]
-        stages: [commit]
+        stages: [pre-commit]
         entry_modifies_files: true
 
       # 2️⃣ Hook thứ hai: Chạy cpath
@@ -21,7 +21,7 @@ repos:
         # (Bạn cũng có thể dùng 'types' hoặc 'files' ở đây để lọc chính xác)
         # Ví dụ: files: \.(py|pyi|js|sh|zsh|css|ts)$
         types: [python, shell] # 'text' bắt các file .sh, .zsh
-        stages: [commit]
+        stages: [pre-commit]
         # cpath có thể sửa file nếu không dùng -d, nên ta cũng thêm entry_modifies_files
         entry_modifies_files: true
       
@@ -33,6 +33,6 @@ repos:
         # (Bạn cũng có thể dùng 'types' hoặc 'files' ở đây để lọc chính xác)
         # Ví dụ: files: \.(py|pyi|js|sh|zsh|css|ts)$
         types: [python] # 'text' bắt các file .sh, .zsh
-        stages: [commit]
+        stages: [pre-commit]
         # cpath có thể sửa file nếu không dùng -d, nên ta cũng thêm entry_modifies_files
         entry_modifies_files: true
