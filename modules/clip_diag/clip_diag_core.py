@@ -8,13 +8,22 @@ from typing import Optional, Dict, Any, Tuple
 
 from .clip_diag_config import GRAPHVIZ_PREFIX, MERMAID_PREFIX, DEFAULT_OUTPUT_DIR
 
-__all__ = ["process_clipboard_content"]
+# --- THAY ĐỔI __all__ ---
+__all__ = [
+    "process_clipboard_content",
+    "detect_diagram_type",
+    "filter_emoji",
+    "trim_leading_whitespace",
+]
+# --- KẾT THÚC THAY ĐỔI ---
 
 
 DiagramResult = Dict[str, Any]
 
 
-def _detect_diagram_type(content: str) -> Optional[str]:
+# --- ĐỔI TÊN HÀM (bỏ _) ---
+def detect_diagram_type(content: str) -> Optional[str]:
+# --- KẾT THÚC ĐỔI TÊN ---
     stripped_content = content.strip()
     lower_content = stripped_content.lower()
 
@@ -72,7 +81,9 @@ def _remove_comments(content: str, diagram_type: str) -> str:
     return "\n".join(cleaned_lines)
 
 
-def _filter_emoji(content: str, logger: logging.Logger) -> str:
+# --- ĐỔI TÊN HÀM (bỏ _) ---
+def filter_emoji(content: str, logger: logging.Logger) -> str:
+# --- KẾT THÚC ĐỔI TÊN ---
     logger.info("🔍 Filtering emoji...")
 
     emoji_pattern = re.compile(
@@ -94,7 +105,9 @@ def _filter_emoji(content: str, logger: logging.Logger) -> str:
     return emoji_pattern.sub(r"", content)
 
 
-def _trim_leading_comments_and_whitespace(content: str) -> str:
+# --- ĐỔI TÊN HÀM (bỏ _) ---
+def trim_leading_whitespace(content: str) -> str:
+# --- KẾT THÚC ĐỔI TÊN ---
     lines = content.splitlines()
     first_code_line_index = -1
 
@@ -133,16 +146,19 @@ def process_clipboard_content(
     processed_content = clipboard_content.replace("\xa0", " ")
 
     if filter_emoji:
-        processed_content = _filter_emoji(processed_content, logger)
+        # --- CẬP NHẬT TÊN HÀM ĐƯỢC GỌI ---
+        processed_content = filter_emoji(processed_content, logger)
 
     logger.info("🧹 Trimming leading comments/whitespace...")
-    processed_content = _trim_leading_comments_and_whitespace(processed_content)
+    # --- CẬP NHẬT TÊN HÀM ĐƯỢC GỌI ---
+    processed_content = trim_leading_whitespace(processed_content)
 
     if not processed_content.strip():
         logger.info("Content is empty after filtering and trimming.")
         return None
 
-    diagram_type = _detect_diagram_type(processed_content)
+    # --- CẬP NHẬT TÊN HÀM ĐƯỢC GỌI ---
+    diagram_type = detect_diagram_type(processed_content)
     if not diagram_type:
         logger.error("❌ Could not find valid Graphviz or Mermaid code in clipboard.")
         return None
