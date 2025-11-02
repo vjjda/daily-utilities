@@ -11,13 +11,11 @@ DOT_PATH: Any
 GRAPHVIZ_PREFIX: Any
 MERMAID_PREFIX: Any
 MMC_PATH: Any
-execute_diagram_generation: Any
-process_clipboard_content: Any
-# --- THÊM CÁC HÀM MỚI ---
 detect_diagram_type: Any
+execute_diagram_generation: Any
 filter_emoji: Any
+process_clipboard_content: Any
 trim_leading_whitespace: Any
-# --- KẾT THÚC THÊM ---
 
 # Static declaration of exported symbols (for Pylance)
 __all__: List[str] = [
@@ -28,11 +26,9 @@ __all__: List[str] = [
     "GRAPHVIZ_PREFIX",
     "MERMAID_PREFIX",
     "MMC_PATH",
-    "execute_diagram_generation",
-    "process_clipboard_content",
-    # --- THÊM CÁC HÀM MỚI ---
     "detect_diagram_type",
+    "execute_diagram_generation",
     "filter_emoji",
+    "process_clipboard_content",
     "trim_leading_whitespace",
-    # --- KẾT THÚC THÊM ---
 ]
