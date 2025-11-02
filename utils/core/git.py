@@ -6,7 +6,7 @@ from typing import Set, Optional, List, TYPE_CHECKING, Tuple, Iterable, Dict, An
 
 from .process import run_command
 from ..logging_config import log_success
-# Thêm import
+
 from .config_helpers import generate_config_hash
 
 
@@ -17,7 +17,7 @@ __all__ = [
     "parse_gitignore",
     "git_add_and_commit",
     "find_file_upwards",
-    "auto_commit_changes",  # <-- Thêm
+    "auto_commit_changes",
 ]
 
 
@@ -158,10 +158,9 @@ def git_add_and_commit(
     except Exception as e:
         logger.error(f"❌ Đã xảy ra lỗi không mong muốn khi thực thi Git: {e}")
         return False
-    
-    # SỬA LỖI: Thêm return dự phòng để Pylance hài lòng
-    # Mặc dù về mặt logic, code sẽ không bao giờ chạy đến đây.
+
     return False
+
 
 def auto_commit_changes(
     logger: logging.Logger,
@@ -171,10 +170,6 @@ def auto_commit_changes(
     commit_scope: str,
     tool_name: str,
 ) -> None:
-    """
-    Tự động commit các thay đổi nếu đây là kho Git.
-    Hàm này xử lý việc kiểm tra repo, tạo hash, và thực thi commit.
-    """
     if not files_written_relative or not is_git_repository(scan_root):
         if files_written_relative:
             logger.info(
@@ -183,20 +178,18 @@ def auto_commit_changes(
         return
 
     try:
-        # 1. Tạo hash (Logic chung)
-        config_hash = generate_config_hash(settings_to_hash, logger) 
 
-        # 2. Tạo message (Logic chung)
+        config_hash = generate_config_hash(settings_to_hash, logger)
+
         file_count = len(files_written_relative)
         commit_msg = f"style({commit_scope}): Cập nhật {file_count} file ({tool_name}) [Settings:{config_hash}]"
 
-        # 3. Thực thi Git (Logic chung)
         git_add_and_commit(
             logger=logger,
             scan_root=scan_root,
             file_paths_relative=files_written_relative,
             commit_message=commit_msg,
-        ) 
+        )
     except Exception as e:
         logger.error(f"❌ Lỗi khi tạo hash hoặc thực thi git commit: {e}")
         logger.debug("Traceback:", exc_info=True)

@@ -22,6 +22,7 @@ __all__ = ["execute_ndoc_action"]
 
 FileResult = Dict[str, Any]
 
+
 def execute_ndoc_action(
     logger: logging.Logger,
     all_files_to_fix: List[FileResult],
@@ -88,7 +89,7 @@ def execute_ndoc_action(
             )
 
             try:
-                # 1. Tải cấu hình (Logic CỤ THỂ của ndoc)
+
                 file_config_data = load_config_files(scan_root, logger)
                 merged_file_config = merge_ndoc_configs(
                     logger,
@@ -97,7 +98,6 @@ def execute_ndoc_action(
                     file_config_data=file_config_data,
                 )
 
-                # 2. Tạo settings dict (Logic CỤ THỂ của ndoc)
                 settings_to_hash = {
                     "all_clean": getattr(cli_args, "all_clean", False),
                     "format": getattr(cli_args, "format", False),
@@ -110,7 +110,6 @@ def execute_ndoc_action(
                     ),
                 }
 
-                # 3. Gọi hàm Util (Logic CHUNG)
                 auto_commit_changes(
                     logger=logger,
                     scan_root=scan_root,

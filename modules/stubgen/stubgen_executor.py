@@ -118,21 +118,21 @@ def execute_stubgen_action(
             )
 
         files_written_relative = [
-            str(r["stub_path"].relative_to(scan_root))
-            for r in files_written_results
+            str(r["stub_path"].relative_to(scan_root)) for r in files_written_results
         ]
-        
+
         if files_written_relative and is_git_repository(scan_root):
             try:
-                # 1. Tải cấu hình (Logic CỤ THỂ của sgen)
+
                 file_config_data = load_config_files(scan_root, logger)
                 cli_config = {
                     "ignore": getattr(cli_args, "ignore", None),
                     "include": getattr(cli_args, "include", None),
                 }
-                merged_config = merge_stubgen_configs(logger, cli_config, file_config_data)
+                merged_config = merge_stubgen_configs(
+                    logger, cli_config, file_config_data
+                )
 
-                # 2. Tạo settings dict (Logic CỤ THỂ của sgen)
                 settings_to_hash = {
                     "ignore": sorted(list(merged_config["ignore_list"])),
                     "include": sorted(list(merged_config["include_list"])),
@@ -140,8 +140,7 @@ def execute_stubgen_action(
                     "module_list_name": merged_config["module_list_name"],
                     "all_list_name": merged_config["all_list_name"],
                 }
-                
-                # 3. Gọi hàm Util (Logic CHUNG)
+
                 auto_commit_changes(
                     logger=logger,
                     scan_root=scan_root,
