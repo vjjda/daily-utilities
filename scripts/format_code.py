@@ -32,13 +32,12 @@ try:
         CONFIG_SECTION_NAME,
     )
 
-    # --- THÊM IMPORT MODULES.FORMAT_CODE.FORMAT_CODE_INTERNAL ---
     from modules.format_code.format_code_internal import (
         load_config_files,
         merge_format_code_configs,
     )
 
-    # --- KẾT THÚC THÊM IMPORT ---
+
 except ImportError as e:
     print(f"Lỗi: Không thể import project utilities/modules: {e}", file=sys.stderr)
     sys.exit(1)
@@ -91,14 +90,13 @@ def main():
         action="store_true",
         help="Ghi đè file mà không hỏi xác nhận (chỉ áp dụng ở chế độ fix).",
     )
-    # --- THÊM CỜ MỚI TẠI ĐÂY ---
+
     pack_group.add_argument(
         "-g",
         "--git-commit",
         action="store_true",
         help="Tự động commit các thay đổi vào Git sau khi hoàn tất.",
     )
-    # --- KẾT THÚC THÊM CỜ ---
 
     if argcomplete:
         argcomplete.autocomplete(parser)
@@ -138,14 +136,13 @@ def main():
 
         reporting_root = Path.cwd()
 
-        # --- THAY ĐỔI LỜI GỌI EXECUTE ---
         execute_format_code_action(
             logger=logger,
             all_files_to_fix=files_to_fix,
-            cli_args=args,  # Truyền toàn bộ args
+            cli_args=args,
             scan_root=reporting_root,
         )
-        # --- KẾT THÚC THAY ĐỔI LỜI GỌI ---
+
     except Exception as e:
         logger.error(f"❌ Đã xảy ra lỗi không mong muốn: {e}")
         logger.debug("Traceback:", exc_info=True)
