@@ -13,7 +13,9 @@ from . import (
     analyze_file_for_cleaning_and_formatting,
 )
 
-from ..no_doc_executor import print_dry_run_report_for_group
+# SỬA LỖI: Import trực tiếp từ file reporter
+from .no_doc_reporter import print_dry_run_report_for_group
+# Xóa import cũ: from ..no_doc_executor import print_dry_run_report_for_group
 from utils.constants import MAX_THREAD_WORKERS
 
 __all__ = ["process_no_doc_task_dir"]

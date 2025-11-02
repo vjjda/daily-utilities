@@ -17,8 +17,8 @@ from modules.no_doc.no_doc_internal import (
 )
 from utils.core.config_helpers import generate_config_hash
 
-
-__all__ = ["execute_ndoc_action", "print_dry_run_report_for_group"]
+# Xóa 'print_dry_run_report_for_group' khỏi __all__
+__all__ = ["execute_ndoc_action"]
 
 FileResult = Dict[str, Any]
 
@@ -69,16 +69,6 @@ def _perform_auto_commit(
     except Exception as e:
         logger.error(f"❌ Lỗi khi tạo hash hoặc thực thi git commit: {e}")
         logger.debug("Traceback:", exc_info=True)
-
-
-def print_dry_run_report_for_group(
-    logger: logging.Logger,
-    group_name: str,
-    files_in_group: List[FileResult],
-    scan_root: Path,
-) -> None:
-
-    pass
 
 
 def execute_ndoc_action(
