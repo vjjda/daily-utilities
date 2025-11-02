@@ -1,40 +1,24 @@
 # Path: modules/tree/__init__.py
-from pathlib import Path
-from importlib import import_module
-from typing import List
+from .tree_config import *
+from .tree_core import *
+from .tree_executor import *
 
-
-current_dir = Path(__file__).parent
-
-
-modules_to_export: List[str] = [
-    "tree_config",
-    "tree_core",
-    "tree_executor",
+__all__ = [
+    "DEFAULT_IGNORE",
+    "DEFAULT_PRUNE",
+    "DEFAULT_DIRS_ONLY_LOGIC",
+    "DEFAULT_EXTENSIONS",
+    "FALLBACK_SHOW_SUBMODULES",
+    "DEFAULT_MAX_LEVEL",
+    "FALLBACK_USE_GITIGNORE",
+    "CONFIG_FILENAME",
+    "PROJECT_CONFIG_FILENAME",
+    "CONFIG_SECTION_NAME",
+    "MODULE_DIR",
+    "TEMPLATE_FILENAME",
+    "TREE_DEFAULTS",
+    "process_tree_logic",
+    "generate_tree",
+    "print_status_header",
+    "print_final_result",
 ]
-
-__all__: List[str] = []
-
-for module_name in modules_to_export:
-    try:
-        module = import_module(f".{module_name}", package=__name__)
-
-        if hasattr(module, "__all__"):
-            public_symbols = getattr(module, "__all__")
-            for name in public_symbols:
-                obj = getattr(module, name)
-                globals()[name] = obj
-            __all__.extend(public_symbols)
-    except ImportError as e:
-        print(f"Warning: Could not import symbols from {module_name}: {e}")
-
-
-del Path, import_module, List, current_dir, modules_to_export, module_name
-if "module" in locals():
-    del module
-if "public_symbols" in locals():
-    del public_symbols
-if "name" in locals():
-    del name
-if "obj" in locals():
-    del obj

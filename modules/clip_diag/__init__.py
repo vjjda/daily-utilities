@@ -1,41 +1,20 @@
 # Path: modules/clip_diag/__init__.py
-from pathlib import Path
-from importlib import import_module
-from typing import List
+from .clip_diag_config import *
+from .clip_diag_core import *
+from .clip_diag_executor import *
 
-
-current_dir = Path(__file__).parent
-
-
-modules_to_export: List[str] = [
-    "clip_diag_config",
-    "clip_diag_core",
-    "clip_diag_executor",
+__all__ = [
+    "DEFAULT_OUTPUT_DIR",
+    "DOT_PATH",
+    "MMC_PATH",
+    "APP_CONFIG",
+    "GRAPHVIZ_PREFIX",
+    "MERMAID_PREFIX",
+    "DEFAULT_TO_ARG",
+    "process_clipboard_content",
+    "detect_diagram_type",
+    "filter_emoji",
+    "trim_leading_whitespace",
+    "get_diagram_type_from_clipboard",
+    "execute_diagram_generation",
 ]
-
-__all__: List[str] = []
-
-for module_name in modules_to_export:
-    try:
-        module = import_module(f".{module_name}", package=__name__)
-
-        if hasattr(module, "__all__"):
-            public_symbols = getattr(module, "__all__")
-            for name in public_symbols:
-                obj = getattr(module, name)
-                globals()[name] = obj
-            __all__.extend(public_symbols)
-
-    except ImportError as e:
-        print(f"Warning: Could not import symbols from {module_name}: {e}")
-
-
-del Path, import_module, List, current_dir, modules_to_export, module_name
-if "module" in locals():
-    del module
-if "public_symbols" in locals():
-    del public_symbols
-if "name" in locals():
-    del name
-if "obj" in locals():
-    del obj

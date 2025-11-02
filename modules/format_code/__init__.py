@@ -1,43 +1,18 @@
 # Path: modules/format_code/__init__.py
-from pathlib import Path
-from importlib import import_module
-from typing import List
+from .format_code_config import *
+from .format_code_core import *
+from .format_code_executor import *
 
-
-current_dir = Path(__file__).parent
-
-
-modules_to_export: List[str] = [
-    "format_code_config",
-    "format_code_core",
-    "format_code_executor",
+__all__ = [
+    "DEFAULT_START_PATH",
+    "DEFAULT_EXTENSIONS",
+    "DEFAULT_IGNORE",
+    "PROJECT_CONFIG_FILENAME",
+    "CONFIG_FILENAME",
+    "CONFIG_SECTION_NAME",
+    "MODULE_DIR",
+    "TEMPLATE_FILENAME",
+    "FORC_DEFAULTS",
+    "process_format_code_logic",
+    "execute_format_code_action",
 ]
-
-__all__: List[str] = []
-
-for submodule_stem in modules_to_export:
-    try:
-        module = import_module(f".{submodule_stem}", package=__name__)
-
-        if hasattr(module, "__all__"):
-            public_symbols = getattr(module, "__all__")
-            for name in public_symbols:
-                obj = getattr(module, name)
-                globals()[name] = obj
-            __all__.extend(public_symbols)
-
-    except ImportError as e:
-        print(
-            f"Cảnh báo: Không thể import từ {submodule_stem} trong module {__name__}: {e}"
-        )
-
-
-del Path, import_module, List, current_dir, modules_to_export, submodule_stem
-if "module" in locals():
-    del module
-if "public_symbols" in locals():
-    del public_symbols
-if "name" in locals():
-    del name
-if "obj" in locals():
-    del obj
