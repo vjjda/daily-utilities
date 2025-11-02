@@ -13,10 +13,8 @@ if not "PROJECT_ROOT" in locals():
 from .no_doc_internal import (
     merge_ndoc_configs,
     process_no_doc_task_dir,
-    # --- THÊM IMPORT CỐT LÕI ---
     analyze_file_for_cleaning_and_formatting,
     print_dry_run_report_for_group,
-    # --- KẾT THÚC THÊM IMPORT ---
 )
 from utils.constants import MAX_THREAD_WORKERS
 
@@ -66,7 +64,6 @@ def process_no_doc_logic(
 
     if files_to_process:
         logger.info(f"Đang xử lý {len(files_to_process)} file riêng lẻ (song song)...")
-        # --- XÓA LOGIC IN ---
 
         file_only_results: List[FileResult] = []
         files_to_submit: List[Path] = []
@@ -113,12 +110,10 @@ def process_no_doc_logic(
                         logger.error(
                             f"❌ Lỗi khi xử lý file song song '{file_path.name}': {e}"
                         )
-        
-        # --- GỠ BỎ LOGIC IN BÁO CÁO ---
+
         if file_only_results:
             file_only_results.sort(key=lambda r: r["path"])
             all_results.extend(file_only_results)
-        # --- KẾT THÚC GỠ BỎ ---
 
     if dirs_to_scan:
         logger.info(f"Đang xử lý {len(dirs_to_scan)} thư mục...")

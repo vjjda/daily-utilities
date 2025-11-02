@@ -14,9 +14,7 @@ from utils.core.git import is_git_repository, auto_commit_changes
 from modules.no_doc.no_doc_internal import (
     load_config_files,
     merge_ndoc_configs,
-    # --- THÊM IMPORT ---
-    print_dry_run_report_for_group
-    # --- KẾT THÚC THÊM IMPORT ---
+    print_dry_run_report_for_group,
 )
 from utils.core.config_helpers import generate_config_hash
 
@@ -40,28 +38,24 @@ def execute_ndoc_action(
     total_files_to_fix = len(all_files_to_fix)
 
     if total_files_to_fix == 0:
-        # Đã được log ở core, chỉ cần return
+
         return
 
-    logger.warning(
-        f"\n⚠️ Tổng cộng {total_files_to_fix} file cần được sửa."
-    )
-    
-    # --- CHUYỂN LOGIC DRY-RUN LÊN ĐẦU ---
+    logger.warning(f"\n⚠️ Tổng cộng {total_files_to_fix} file cần được sửa.")
+
     if dry_run:
         logger.info("Chế độ Dry-run: Báo cáo các file cần sửa.")
         print_dry_run_report_for_group(
             logger=logger,
             group_name="Tổng hợp (Dry Run)",
             files_in_group=all_files_to_fix,
-            scan_root=scan_root
+            scan_root=scan_root,
         )
         logger.warning(
             f"\n-> Để xóa docstring, chạy lại mà không có cờ -d (sử dụng -f/--force để bỏ qua xác nhận)."
         )
         sys.exit(1)
-    # --- KẾT THÚC CHUYỂN LOGIC ---
-    
+
     proceed_to_write = force
     if not force:
         try:
@@ -97,11 +91,8 @@ def execute_ndoc_action(
                     e,
                 )
 
-        log_success(
-            logger, f"Hoàn tất! Đã xóa docstring khỏi {written_count} file."
-        )
+        log_success(logger, f"Hoàn tất! Đã xóa docstring khỏi {written_count} file.")
 
-        
         git_commit: bool = getattr(cli_args, "git_commit", False)
 
         if git_commit and files_written_relative:

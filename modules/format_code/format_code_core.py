@@ -16,9 +16,8 @@ from .format_code_internal import (
     process_format_code_task_dir,
     analyze_file_content_for_formatting,
 )
-# --- XÓA IMPORT NÀY ---
-# from .format_code_executor import print_dry_run_report_for_group
-# --- KẾT THÚC XÓA ---
+
+
 from utils.constants import MAX_THREAD_WORKERS
 
 
@@ -51,7 +50,6 @@ def process_format_code_logic(
 
     if files_to_process:
         logger.info(f"Đang xử lý {len(files_to_process)} file riêng lẻ (song song)...")
-        # --- XÓA CÁC LOG KHÔNG CẦN THIẾT ---
 
         file_only_results: List[FileResult] = []
         files_to_submit: List[Path] = []
@@ -67,7 +65,7 @@ def process_format_code_logic(
                     f"⚠️ Bỏ qua file '{file_path.name}': không khớp extensions (.{file_ext})"
                 )
                 continue
-            
+
             processed_files.add(resolved_file)
             files_to_submit.append(file_path)
 
@@ -94,12 +92,10 @@ def process_format_code_logic(
                             f"❌ Lỗi khi xử lý file song song '{file_path.name}': {e}"
                         )
 
-        # --- GỠ BỎ LOGIC IN BÁO CÁO ---
         if file_only_results:
             file_only_results.sort(key=lambda r: r["path"])
             all_results.extend(file_only_results)
-        # --- KẾT THÚC GỠ BỎ ---
-            
+
     if dirs_to_scan:
         logger.info(f"Đang xử lý {len(dirs_to_scan)} thư mục...")
         for scan_dir in dirs_to_scan:

@@ -14,10 +14,6 @@ from . import (
 )
 
 
-# --- XÓA IMPORT NÀY ---
-# from .no_doc_reporter import print_dry_run_report_for_group
-# --- KẾT THÚC XÓA ---
-
 from utils.constants import MAX_THREAD_WORKERS
 
 __all__ = ["process_no_doc_task_dir"]
@@ -131,10 +127,8 @@ def process_no_doc_task_dir(
 
     dir_results.sort(key=lambda r: r["path"])
 
-    # --- GỠ BỎ LOGIC IN BÁO CÁO ---
     if not dir_results and files_to_submit:
         logger.info(f"  -> ✅ Tất cả file trong thư mục đã sạch / đã định dạng.")
-    # --- KẾT THÚC GỠ BỎ ---
 
     logger.info(f"--- ✅ Kết thúc {scan_dir.name} ---")
     logger.info("")
