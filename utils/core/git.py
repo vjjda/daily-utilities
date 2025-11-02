@@ -18,6 +18,8 @@ __all__ = [
     "git_add_and_commit",
     "find_file_upwards",
     "auto_commit_changes",
+    "find_commit_by_hash", # <-- THÊM MỚI
+    "get_diffed_files",     # <-- THÊM MỚI
 ]
 
 
@@ -105,6 +107,60 @@ def parse_gitignore(root: Path) -> List[str]:
         logger = logging.getLogger(__name__)
         logger.warning(f"Không thể đọc file .gitignore: {e}")
         return patterns
+
+
+# --- HÀM MỚI 1 ---
+def find_commit_by_hash(
+    logger: logging.Logger, scan_root: Path, settings_hash: str
+) -> Optional[str]:
+    """Tìm SHA của commit cuối cùng chứa một settings hash cụ thể."""
+    if not is_git_repository(scan_root):
+        logger.debug("Không phải kho Git, bỏ qua tìm kiếm hash commit.")
+        return None
+
+    grep_str = f"[Settings:{settings_hash}]"
+    command = ["git", "log", "--grep", grep_str, "-n", "1", "--pretty=format:%H"]
+    
+    success, output = run_command(
+        command, logger, description=f"Tìm commit với hash {settings_hash}", cwd=scan_root
+    )
+    
+    if success and output.strip():
+        commit_sha = output.strip()
+        logger.debug(f"Tìm thấy commit: {commit_sha} khớp với hash: {settings_hash}")
+        return commit_sha
+    
+    logger.debug(f"Không tìm thấy commit nào khớp với hash: {settings_hash}")
+    return None
+# --- KẾT THÚC HÀM MỚI 1 ---
+
+
+# --- HÀM MỚI 2 ---
+def get_diffed_files(
+    logger: logging.Logger, scan_root: Path, start_sha: str
+) -> List[Path]:
+    """Lấy danh sách các file đã thay đổi (dưới dạng Path tuyệt đối) từ một SHA cụ thể."""
+    if not is_git_repository(scan_root):
+        logger.warning("Không phải kho Git, không thể lấy diff.")
+        return []
+
+    end_sha = "HEAD"
+    command = ["git", "diff", "--name-only", f"{start_sha}...{end_sha}"]
+    
+    success, output = run_command(
+        command, logger, description=f"Lấy diff từ {start_sha[:7]}...{end_sha}", cwd=scan_root
+    )
+    
+    if success and output.strip():
+        relative_paths = [p.strip() for p in output.splitlines() if p.strip()]
+        # Trả về đường dẫn tuyệt đối để logic xử lý file nhất quán
+        absolute_paths = [scan_root / p for p in relative_paths]
+        logger.debug(f"Tìm thấy {len(absolute_paths)} file đã thay đổi.")
+        return absolute_paths
+    
+    logger.debug("Không tìm thấy file nào thay đổi hoặc lệnh diff thất bại.")
+    return []
+# --- KẾT THÚC HÀM MỚI 2 ---
 
 
 def git_add_and_commit(
