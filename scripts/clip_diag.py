@@ -4,7 +4,7 @@ import argparse
 import logging
 from pathlib import Path
 from typing import Optional, Final
-import pyperclip 
+import pyperclip
 
 
 try:
@@ -42,7 +42,7 @@ def main():
     )
 
     output_group = parser.add_mutually_exclusive_group()
-    
+
     output_group.add_argument(
         "-t",
         "--to",
@@ -50,7 +50,7 @@ def main():
         choices=["svg", "png"],
         help="Convert source code to an image file (svg or png) and open it.",
     )
-    
+
     output_group.add_argument(
         "-g",
         "--is-graph",
@@ -76,31 +76,31 @@ def main():
             if not content:
                 print("False")
                 sys.exit(0)
-            
+
             content = content.replace("\xa0", " ")
-            
+
             if args.filter:
                 dummy_logger = logging.getLogger("cdiag_silent")
                 dummy_logger.setLevel(logging.CRITICAL + 1)
                 content = filter_emoji(content, dummy_logger)
-            
+
             content = trim_leading_whitespace(content)
-            
+
             if not content.strip():
                 print("False")
                 sys.exit(0)
 
             diagram_type = detect_diagram_type(content)
-            
+
             if diagram_type == "graphviz":
                 print("Graphviz")
             elif diagram_type == "mermaid":
                 print("Mermaid")
             else:
                 print("False")
-            
+
             sys.exit(0)
-            
+
         except Exception:
             print("False")
             sys.exit(1)
@@ -110,12 +110,10 @@ def main():
 
     try:
 
-        # --- CẬP NHẬT TÊN THAM SỐ TẠI ĐÂY ---
         result = process_clipboard_content(
             logger=logger,
-            enable_filter_emoji=args.filter, 
+            enable_filter_emoji=args.filter,
         )
-        # --- KẾT THÚC CẬP NHẬT ---
 
         if result:
 

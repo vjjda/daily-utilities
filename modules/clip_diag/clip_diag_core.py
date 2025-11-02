@@ -122,11 +122,9 @@ def trim_leading_whitespace(content: str) -> str:
     return "\n".join(lines[first_code_line_index:])
 
 
-# --- THAY ĐỔI TÊN THAM SỐ ---
 def process_clipboard_content(
     logger: logging.Logger, enable_filter_emoji: bool
 ) -> Optional[DiagramResult]:
-# --- KẾT THÚC THAY ĐỔI ---
 
     try:
         clipboard_content = pyperclip.paste()
@@ -139,9 +137,8 @@ def process_clipboard_content(
 
     processed_content = clipboard_content.replace("\xa0", " ")
 
-    # --- CẬP NHẬT BIẾN IF ---
     if enable_filter_emoji:
-        # Giờ 'filter_emoji' ở đây là hàm, 'enable_filter_emoji' là bool
+
         processed_content = filter_emoji(processed_content, logger)
 
     logger.info("🧹 Trimming leading comments/whitespace...")
