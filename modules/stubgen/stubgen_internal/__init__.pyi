@@ -4,6 +4,7 @@
 from typing import Any, List, Optional, Set, Dict, Union
 from pathlib import Path
 
+classify_and_report_stub_changes: Any
 collect_all_exported_symbols: Any
 extract_module_list: Any
 find_gateway_files: Any
@@ -16,6 +17,7 @@ process_stubgen_task_file: Any
 
 # Static declaration of exported symbols (for Pylance)
 __all__: List[str] = [
+    "classify_and_report_stub_changes",
     "collect_all_exported_symbols",
     "extract_module_list",
     "find_gateway_files",

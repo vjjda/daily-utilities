@@ -12,7 +12,6 @@ DEFAULT_IGNORE: Any
 DEFAULT_INCLUDE: Any
 DYNAMIC_IMPORT_INDICATORS: Any
 PROJECT_CONFIG_FILENAME: Any
-classify_and_report_stub_changes: Any
 execute_stubgen_action: Any
 process_stubgen_logic: Any
 
@@ -26,7 +25,6 @@ __all__: List[str] = [
     "DEFAULT_INCLUDE",
     "DYNAMIC_IMPORT_INDICATORS",
     "PROJECT_CONFIG_FILENAME",
-    "classify_and_report_stub_changes",
     "execute_stubgen_action",
     "process_stubgen_logic",
 ]
