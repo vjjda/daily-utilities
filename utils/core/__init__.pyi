@@ -9,11 +9,13 @@ auto_commit_changes: Any
 clean_code: Any
 compile_spec_from_patterns: Any
 copy_file_to_clipboard: Any
+find_commit_by_hash: Any
 find_file_upwards: Any
 find_git_root: Any
 format_code: Any
 format_value_to_toml: Any
 generate_config_hash: Any
+get_diffed_files: Any
 get_submodule_paths: Any
 git_add_and_commit: Any
 is_git_repository: Any
@@ -41,11 +43,13 @@ __all__: List[str] = [
     "clean_code",
     "compile_spec_from_patterns",
     "copy_file_to_clipboard",
+    "find_commit_by_hash",
     "find_file_upwards",
     "find_git_root",
     "format_code",
     "format_value_to_toml",
     "generate_config_hash",
+    "get_diffed_files",
     "get_submodule_paths",
     "git_add_and_commit",
     "is_git_repository",
