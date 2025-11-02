@@ -4,9 +4,7 @@ import argparse
 import logging
 from pathlib import Path
 from typing import Optional, Final, Dict, Any, List, Set
-import hashlib
-import json
-
+# KHÔNG CẦN hashlib hay json ở đây nữa
 
 try:
     import argcomplete
@@ -20,11 +18,7 @@ try:
     from utils.logging_config import setup_logging
     from utils.cli import handle_config_init_request, resolve_input_paths
     from utils.core import parse_comma_list
-    # Import thêm
-    from modules.no_doc.no_doc_internal import (
-        load_config_files,
-        merge_ndoc_configs,
-    )
+    # KHÔNG CẦN import logic git hay config ở đây
 
     from modules.no_doc import (
         process_no_doc_logic,
@@ -151,42 +145,8 @@ def main():
         logger.debug("Traceback:", exc_info=True)
         sys.exit(1)
 
-    # --- Bổ sung logic HASH ---
+    # --- Xóa bỏ logic HASH khỏi đây ---
     reporting_root = Path.cwd()
-    config_hash = ""
-    try:
-        file_config_data = load_config_files(reporting_root, logger)
-        merged_file_config = merge_ndoc_configs(
-            logger,
-            cli_extensions=args.extensions,
-            cli_ignore=args.ignore,
-            file_config_data=file_config_data,
-        )
-
-        # Tạo dict cài đặt ổn định để hash
-        settings_to_hash = {
-            "all_clean": args.all_clean,
-            "format": args.format,
-            # Sắp xếp các list để đảm bảo hash ổn định
-            "extensions": sorted(
-                list(merged_file_config["final_extensions_list"])
-            ),
-            "ignore": sorted(list(merged_file_config["final_ignore_list"])),
-            "format_extensions": sorted(
-                list(merged_file_config["final_format_extensions_set"])
-            ),
-        }
-
-        canonical_str = json.dumps(settings_to_hash, sort_keys=True)
-        hash_obj = hashlib.sha256(canonical_str.encode("utf-8"))
-        config_hash = hash_obj.hexdigest()[:10]
-        logger.debug(f"Config hash (sha256[:10]): {config_hash}")
-        logger.debug(f"Config canonical string: {canonical_str}")
-
-    except Exception as e:
-        logger.error(f"❌ Lỗi khi tạo hash cấu hình: {e}")
-        sys.exit(1)
-    # --- Kết thúc logic HASH ---
 
     validated_paths: List[Path] = resolve_input_paths(
         logger=logger,
@@ -215,23 +175,14 @@ def main():
             script_file_path=THIS_SCRIPT_PATH,
         )
 
-        # reporting_root đã được định nghĩa ở trên
-        # reporting_root = Path.cwd()
-
-        # Truyền config_hash vào executor
+        # Truyền toàn bộ `args` vào executor
         execute_ndoc_action(
             logger=logger,
             all_files_to_fix=results_from_core,
-            dry_run=args.dry_run,
-            force=args.force,
+            cli_args=args, # Truyền args
             scan_root=reporting_root,
             git_warning_str="",
-            config_hash=config_hash,  # Tham số mới
         )
-
-        # --- Xóa bỏ logic Git khỏi đây ---
-        # if files_written_relative and is_git_repository(reporting_root):
-        #     ...
 
     except Exception as e:
         logger.error(f"❌ Đã xảy ra lỗi không mong muốn: {e}")

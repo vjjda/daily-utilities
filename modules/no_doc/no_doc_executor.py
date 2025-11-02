@@ -3,13 +3,21 @@ import logging
 import sys
 from pathlib import Path
 from typing import List, Dict, Any, Optional
+import argparse # Thêm
+import hashlib # Thêm
+import json # Thêm
 
-
+# Import thêm
 if not "PROJECT_ROOT" in locals():
     sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
 from utils.logging_config import log_success
 from utils.core.git import is_git_repository, git_add_and_commit
+# Import logic config
+from modules.no_doc.no_doc_internal import (
+    load_config_files,
+    merge_ndoc_configs,
+)
 
 
 __all__ = ["execute_ndoc_action", "print_dry_run_report_for_group"]
@@ -37,12 +45,14 @@ def print_dry_run_report_for_group(
 def execute_ndoc_action(
     logger: logging.Logger,
     all_files_to_fix: List[FileResult],
-    dry_run: bool,
-    force: bool,
+    cli_args: argparse.Namespace, # Thay đổi: nhận cli_args
     scan_root: Path,
     git_warning_str: str,
-    config_hash: str,
-) -> None:
+) -> None: # Thay đổi: kiểu trả về là None
+
+    # Lấy cờ từ cli_args
+    dry_run: bool = getattr(cli_args, "dry_run", False)
+    force: bool = getattr(cli_args, "force", False)
 
     total_files_to_fix = len(all_files_to_fix)
 
@@ -101,16 +111,52 @@ def execute_ndoc_action(
                 logger, f"Hoàn tất! Đã xóa docstring khỏi {written_count} file."
             )
 
+            # --- Thêm logic Git và Hash vào Executor ---
             if files_written_relative and is_git_repository(scan_root):
-                commit_msg = f"style(clean): Dọn dẹp {len(files_written_relative)} file (ndoc)\n\nSettings hash: {config_hash}"
+                try:
+                    # Tải cấu hình để hash
+                    file_config_data = load_config_files(scan_root, logger) 
+                    merged_file_config = merge_ndoc_configs(
+                        logger,
+                        cli_extensions=getattr(cli_args, "extensions", None),
+                        cli_ignore=getattr(cli_args, "ignore", None),
+                        file_config_data=file_config_data,
+                    ) 
 
-                git_add_and_commit(
-                    logger=logger,
-                    scan_root=scan_root,
-                    file_paths_relative=files_written_relative,
-                    commit_message=commit_msg,
-                )
+                    # Tạo dict cài đặt ổn định để hash
+                    settings_to_hash = {
+                        "all_clean": getattr(cli_args, "all_clean", False),
+                        "format": getattr(cli_args, "format", False),
+                        # Sắp xếp các list để đảm bảo hash ổn định
+                        "extensions": sorted(
+                            list(merged_file_config["final_extensions_list"])
+                        ), 
+                        "ignore": sorted(list(merged_file_config["final_ignore_list"])), 
+                        "format_extensions": sorted(
+                            list(merged_file_config["final_format_extensions_set"])
+                        ), 
+                    }
+
+                    canonical_str = json.dumps(settings_to_hash, sort_keys=True)
+                    hash_obj = hashlib.sha256(canonical_str.encode("utf-8"))
+                    config_hash = hash_obj.hexdigest()[:10]
+                    logger.debug(f"Config hash (sha256[:10]): {config_hash}")
+
+                    commit_msg = f"style(clean): Dọn dẹp {len(files_written_relative)} file (ndoc)\n\nSettings hash: {config_hash}"
+
+                    git_add_and_commit(
+                        logger=logger,
+                        scan_root=scan_root,
+                        file_paths_relative=files_written_relative,
+                        commit_message=commit_msg,
+                    ) 
+                
+                except Exception as e:
+                    logger.error(f"❌ Lỗi khi tạo hash hoặc thực thi git commit: {e}")
+                    logger.debug("Traceback:", exc_info=True)
+
             elif files_written_relative:
                 logger.info(
                     "Bỏ qua auto-commit: Thư mục làm việc hiện tại không phải là gốc Git."
-                )
+                ) 
+            # --- Kết thúc logic Git ---
