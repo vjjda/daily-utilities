@@ -12,7 +12,6 @@ DEFAULT_EXTENSIONS: Any
 DEFAULT_IGNORE: Any
 PROJECT_CONFIG_FILENAME: Any
 execute_check_path_action: Any
-print_dry_run_report_for_group: Any
 process_check_path_logic: Any
 
 # Static declaration of exported symbols (for Pylance)
@@ -25,6 +24,5 @@ __all__: List[str] = [
     "DEFAULT_IGNORE",
     "PROJECT_CONFIG_FILENAME",
     "execute_check_path_action",
-    "print_dry_run_report_for_group",
     "process_check_path_logic",
 ]
