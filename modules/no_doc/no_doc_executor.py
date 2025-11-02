@@ -4,7 +4,7 @@ import sys
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 
-# Import thêm
+
 if not "PROJECT_ROOT" in locals():
     sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
@@ -41,13 +41,13 @@ def execute_ndoc_action(
     force: bool,
     scan_root: Path,
     git_warning_str: str,
-    config_hash: str,  # Tham số mới
-) -> None:  # Thay đổi kiểu trả về
+    config_hash: str,
+) -> None:
 
     total_files_to_fix = len(all_files_to_fix)
 
     if total_files_to_fix == 0:
-        return  # Thay đổi
+        return
 
     logger.warning(
         f"\n⚠️ Tổng cộng {total_files_to_fix} file cần được sửa (chi tiết ở trên)."
@@ -78,7 +78,7 @@ def execute_ndoc_action(
 
         if proceed_to_write:
             written_count = 0
-            files_written_relative: List[str] = []  # Thêm lại
+            files_written_relative: List[str] = []
 
             for info in all_files_to_fix:
                 target_path: Path = info["path"]
@@ -87,7 +87,7 @@ def execute_ndoc_action(
                 try:
                     target_path.write_text(new_content, encoding="utf-8")
                     rel_path_str = target_path.relative_to(scan_root).as_posix()
-                    files_written_relative.append(rel_path_str)  # Thêm lại
+                    files_written_relative.append(rel_path_str)
                     logger.info(f"Đã sửa: {rel_path_str}")
                     written_count += 1
                 except IOError as e:
@@ -101,7 +101,6 @@ def execute_ndoc_action(
                 logger, f"Hoàn tất! Đã xóa docstring khỏi {written_count} file."
             )
 
-            # --- Thêm logic Git vào Executor ---
             if files_written_relative and is_git_repository(scan_root):
                 commit_msg = f"style(clean): Dọn dẹp {len(files_written_relative)} file (ndoc)\n\nSettings hash: {config_hash}"
 
@@ -115,6 +114,3 @@ def execute_ndoc_action(
                 logger.info(
                     "Bỏ qua auto-commit: Thư mục làm việc hiện tại không phải là gốc Git."
                 )
-            # --- Kết thúc logic Git ---
-
-    # return [] # Xóa
