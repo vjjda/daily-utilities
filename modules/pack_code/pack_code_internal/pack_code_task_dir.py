@@ -10,7 +10,8 @@ if TYPE_CHECKING:
     import pathspec
 
 
-from . import load_config_files, resolve_filters, scan_files, load_files_content
+from . import load_config_files, resolve_filters, load_files_content
+from utils.core import scan_directory_recursive
 
 __all__ = ["process_pack_code_task_dir"]
 
@@ -50,16 +51,17 @@ def process_pack_code_task_dir(
     logger.info(f"    - Clean Extensions (-a): {sorted(list(clean_extensions_set))}")
     logger.info(f"    - Format Extensions (-f): {sorted(list(format_extensions_set))}")
 
-    files_to_pack = scan_files(
+    files_to_pack = scan_directory_recursive(
         logger=logger,
-        start_path=scan_dir,
+        directory=scan_dir,
+        scan_root=scan_dir,
         ignore_spec=ignore_spec,
         include_spec=include_spec,
-        ext_filter_set=ext_filter_set,
+        prune_spec=None,
+        extensions_filter=ext_filter_set,
         submodule_paths=submodule_paths,
-        scan_root=scan_dir,
-        script_file_path=script_file_path,
     )
+    files_to_pack.sort(key=lambda p: p.as_posix())
 
     if not files_to_pack:
         logger.info(

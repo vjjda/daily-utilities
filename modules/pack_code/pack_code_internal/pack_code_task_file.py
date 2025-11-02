@@ -5,7 +5,9 @@ from pathlib import Path
 from typing import Dict, Any, List, Optional, Set, Tuple
 
 
-from . import load_config_files, resolve_filters, scan_files, load_files_content
+from . import load_config_files, resolve_filters, load_files_content
+
+from utils.core import is_path_matched, is_extension_matched
 
 __all__ = ["process_pack_code_task_file"]
 
@@ -40,16 +42,23 @@ def process_pack_code_task_file(
         format_extensions_set,
     ) = resolve_filters(logger, cli_args, file_config, scan_dir)
 
-    files_to_pack = scan_files(
-        logger,
-        file_path,
-        ignore_spec,
-        include_spec,
-        ext_filter_set,
-        submodule_paths,
-        scan_dir,
-        script_file_path,
-    )
+    files_to_pack: List[Path] = []
+    passes_filter = True
+    abs_file_path = file_path.resolve()
+
+    if abs_file_path in submodule_paths:
+        passes_filter = False
+    elif is_path_matched(file_path, ignore_spec, scan_dir):
+        passes_filter = False
+    elif include_spec and not is_path_matched(file_path, include_spec, scan_dir):
+        passes_filter = False
+    elif ext_filter_set is not None and not is_extension_matched(
+        file_path, ext_filter_set
+    ):
+        passes_filter = False
+
+    if passes_filter:
+        files_to_pack.append(file_path)
 
     if not files_to_pack:
         logger.warning(f"  -> ⚠️ Bỏ qua '{file_path.name}' (không khớp filter).")

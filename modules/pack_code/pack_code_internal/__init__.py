@@ -10,7 +10,6 @@ current_dir = Path(__file__).parent
 
 modules_to_export: List[str] = [
     "pack_code_loader",
-    "pack_code_scanner",
     "pack_code_tree",
     "pack_code_resolver",
     "pack_code_builder",
