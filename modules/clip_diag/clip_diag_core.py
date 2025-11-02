@@ -13,10 +13,43 @@ __all__ = [
     "detect_diagram_type",
     "filter_emoji",
     "trim_leading_whitespace",
+    "get_diagram_type_from_clipboard",
 ]
 
 
 DiagramResult = Dict[str, Any]
+
+
+def get_diagram_type_from_clipboard(
+    logger: logging.Logger, enable_filter_emoji: bool
+) -> str:
+    try:
+        content = pyperclip.paste()
+        if not content:
+            return "False"
+
+        content = content.replace("\xa0", " ")
+
+        if enable_filter_emoji:
+            content = filter_emoji(content, logger)
+
+        content = trim_leading_whitespace(content)
+
+        if not content.strip():
+            return "False"
+
+        diagram_type = detect_diagram_type(content)
+
+        if diagram_type == "graphviz":
+            return "Graphviz"
+        elif diagram_type == "mermaid":
+            return "Mermaid"
+        else:
+            return "False"
+
+    except Exception as e:
+        logger.debug(f"Lỗi khi kiểm tra clipboard (is-graph mode): {e}")
+        return "False"
 
 
 def detect_diagram_type(content: str) -> Optional[str]:

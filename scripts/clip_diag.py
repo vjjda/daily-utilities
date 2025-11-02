@@ -24,9 +24,7 @@ from modules.clip_diag import (
     process_clipboard_content,
     execute_diagram_generation,
     DEFAULT_TO_ARG,
-    detect_diagram_type,
-    filter_emoji,
-    trim_leading_whitespace,
+    get_diagram_type_from_clipboard,
 )
 
 
@@ -72,32 +70,14 @@ def main():
 
     if args.is_graph:
         try:
-            content = pyperclip.paste()
-            if not content:
-                print("False")
-                sys.exit(0)
 
-            content = content.replace("\xa0", " ")
+            dummy_logger = logging.getLogger("cdiag_silent")
+            dummy_logger.setLevel(logging.CRITICAL + 1)
 
-            if args.filter:
-                dummy_logger = logging.getLogger("cdiag_silent")
-                dummy_logger.setLevel(logging.CRITICAL + 1)
-                content = filter_emoji(content, dummy_logger)
-
-            content = trim_leading_whitespace(content)
-
-            if not content.strip():
-                print("False")
-                sys.exit(0)
-
-            diagram_type = detect_diagram_type(content)
-
-            if diagram_type == "graphviz":
-                print("Graphviz")
-            elif diagram_type == "mermaid":
-                print("Mermaid")
-            else:
-                print("False")
+            result_str = get_diagram_type_from_clipboard(
+                logger=dummy_logger, enable_filter_emoji=args.filter
+            )
+            print(result_str)
 
             sys.exit(0)
 
