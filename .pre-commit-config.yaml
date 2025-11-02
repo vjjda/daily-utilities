@@ -15,13 +15,14 @@ repos:
         name: "CPath Path Comment Checker"
         entry: cpath
         language: system
-        types: [python, shell]
+        types: [python, shell] 
         stages: [pre-commit]
       
-      # 3️⃣ Hook thứ ba: Chạy stubgen
+      # 3️⃣ Hook thứ ba: Chạy stubgen (ĐÃ SỬA)
       - id: stubgen
         name: "Stubs Generator"
         entry: sgen
         language: system
-        types: [python]
         stages: [pre-commit]
+        always_run: true       # <<< THAY ĐỔI: Luôn chạy
+        pass_filenames: false  # <<< THAY ĐỔI: Không truyền tên file
