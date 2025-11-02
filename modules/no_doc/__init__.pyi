@@ -12,7 +12,6 @@ DEFAULT_IGNORE: Any
 DEFAULT_START_PATH: Any
 PROJECT_CONFIG_FILENAME: Any
 execute_ndoc_action: Any
-print_dry_run_report_for_group: Any
 process_no_doc_logic: Any
 
 # Static declaration of exported symbols (for Pylance)
@@ -25,6 +24,5 @@ __all__: List[str] = [
     "DEFAULT_START_PATH",
     "PROJECT_CONFIG_FILENAME",
     "execute_ndoc_action",
-    "print_dry_run_report_for_group",
     "process_no_doc_logic",
 ]

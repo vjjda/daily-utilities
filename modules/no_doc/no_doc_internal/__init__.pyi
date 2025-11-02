@@ -7,6 +7,7 @@ from pathlib import Path
 analyze_file_for_cleaning_and_formatting: Any
 load_config_files: Any
 merge_ndoc_configs: Any
+print_dry_run_report_for_group: Any
 process_no_doc_task_dir: Any
 process_no_doc_task_file: Any
 scan_files: Any
@@ -16,6 +17,7 @@ __all__: List[str] = [
     "analyze_file_for_cleaning_and_formatting",
     "load_config_files",
     "merge_ndoc_configs",
+    "print_dry_run_report_for_group",
     "process_no_doc_task_dir",
     "process_no_doc_task_file",
     "scan_files",
