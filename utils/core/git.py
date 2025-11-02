@@ -156,8 +156,12 @@ def git_add_and_commit(
             return False
 
     except Exception as e:
-        logger.error(f"❌ Lỗi khi tạo hash hoặc thực thi git commit: {e}")
-        logger.debug("Traceback:", exc_info=True)
+        logger.error(f"❌ Đã xảy ra lỗi không mong muốn khi thực thi Git: {e}")
+        return False
+    
+    # SỬA LỖI: Thêm return dự phòng để Pylance hài lòng
+    # Mặc dù về mặt logic, code sẽ không bao giờ chạy đến đây.
+    return False
 
 def auto_commit_changes(
     logger: logging.Logger,
