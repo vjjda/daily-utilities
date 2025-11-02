@@ -4,15 +4,25 @@ import argparse
 from pathlib import Path
 from typing import List, Optional, Dict, Any, Tuple, Set
 import sys
+# --- THÊM IMPORT ---
+from concurrent.futures import ThreadPoolExecutor, as_completed
+# --- KẾT THÚC THÊM IMPORT ---
 
 if not "PROJECT_ROOT" in locals():
     sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
 from .no_doc_internal import (
     merge_ndoc_configs,
-    process_no_doc_task_file,
+    # process_no_doc_task_file, # <-- SẼ KHÔNG DÙNG NỮA
     process_no_doc_task_dir,
+    # --- THÊM IMPORT CÁC HÀM CỐT LÕI ---
+    analyze_file_for_cleaning_and_formatting,
+    print_dry_run_report_for_group,
+    # --- KẾT THÚC THÊM IMPORT ---
 )
+# --- THÊM IMPORT ---
+from utils.constants import MAX_THREAD_WORKERS
+# --- KẾT THÚC THÊM IMPORT ---
 
 __all__ = ["process_no_doc_logic"]
 
@@ -57,8 +67,9 @@ def process_no_doc_logic(
 
     file_format_extensions_set = default_file_config["final_format_extensions_set"]
 
+    # --- BẮT ĐẦU KHỐI LOGIC MỚI CHO FILES_TO_PROCESS ---
     if files_to_process:
-        logger.info(f"Đang xử lý {len(files_to_process)} file riêng lẻ...")
+        logger.info(f"Đang xử lý {len(files_to_process)} file riêng lẻ (song song)...")
         logger.info(f"  [Cấu hình áp dụng cho file lẻ]")
         logger.info(f"    - Extensions: {sorted(list(file_extensions))}")
         logger.info(
@@ -66,18 +77,64 @@ def process_no_doc_logic(
         )
         logger.info(f"    - (Bỏ qua .gitignore và config file)")
 
+        file_only_results: List[FileResult] = []
+        files_to_submit: List[Path] = []
+
         for file_path in files_to_process:
-            results = process_no_doc_task_file(
-                file_path=file_path,
-                cli_args=cli_args,
-                file_extensions=file_extensions_with_dot,
-                logger=logger,
-                processed_files=processed_files,
-                reporting_root=reporting_root,
-                format_flag=format_flag,
-                format_extensions_set=file_format_extensions_set,
+            resolved_file = file_path.resolve()
+            if resolved_file in processed_files:
+                continue
+
+            # Kiểm tra extension (logic này vốn nằm trong process_no_doc_task_file)
+            file_ext = "".join(file_path.suffixes)
+            if file_ext not in file_extensions_with_dot:
+                logger.warning(
+                    f"⚠️ Bỏ qua file '{file_path.name}': không khớp extensions ({file_ext})"
+                )
+                continue
+
+            processed_files.add(resolved_file)
+            files_to_submit.append(file_path)
+
+        if files_to_submit:
+            max_workers = MAX_THREAD_WORKERS
+            logger.debug(f"Sử dụng ThreadPoolExecutor với max_workers={max_workers}")
+
+            with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                future_to_file = {
+                    executor.submit(
+                        analyze_file_for_cleaning_and_formatting,
+                        file_path,
+                        logger,
+                        all_clean,
+                        format_flag,
+                        file_format_extensions_set,
+                    ): file_path
+                    for file_path in files_to_submit
+                }
+
+                for future in as_completed(future_to_file):
+                    file_path = future_to_file[future]
+                    try:
+                        result = future.result()
+                        if result:
+                            file_only_results.append(result)
+                    except Exception as e:
+                        logger.error(
+                            f"❌ Lỗi khi xử lý file song song '{file_path.name}': {e}"
+                        )
+
+        if file_only_results:
+            file_only_results.sort(key=lambda r: r["path"])
+            # Gộp thành một báo cáo duy nhất
+            print_dry_run_report_for_group(
+                logger, "File riêng lẻ (stepwise/input)", file_only_results, reporting_root
             )
-            all_results.extend(results)
+            all_results.extend(file_only_results)
+        elif files_to_submit:
+             logger.info(f"  -> ✅ Tất cả {len(files_to_submit)} file riêng lẻ đã sạch / đã định dạng.")
+
+    # --- KẾT THÚC KHỐI LOGIC MỚI ---
 
     if dirs_to_scan:
         logger.info(f"Đang xử lý {len(dirs_to_scan)} thư mục...")
