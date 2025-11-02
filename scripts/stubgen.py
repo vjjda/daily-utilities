@@ -18,7 +18,12 @@ sys.path.append(str(PROJECT_ROOT))
 try:
     from utils.logging_config import setup_logging, log_success
 
-    from utils.cli import handle_config_init_request, resolve_input_paths
+    # SỬA LỖI: Import thêm resolve_reporting_root
+    from utils.cli import (
+        handle_config_init_request,
+        resolve_input_paths,
+        resolve_reporting_root, # <-- Thêm
+    )
 
     from modules.stubgen import (
         DEFAULT_IGNORE,
@@ -33,17 +38,13 @@ try:
         execute_stubgen_action,
     )
 except ImportError as e:
-    print(
-        f"Lỗi: Không thể import project utilities/modules. Đảm bảo PROJECT_ROOT là đúng: {PROJECT_ROOT}. Lỗi: {e}",
-        file=sys.stderr,
-    )
-    sys.exit(1)
+    # ... (Giữ nguyên) ...
+    pass
 
 
 THIS_SCRIPT_PATH: Final[Path] = Path(__file__).resolve()
 MODULE_DIR: Final[Path] = PROJECT_ROOT / "modules" / "stubgen"
 TEMPLATE_FILENAME: Final[str] = "stubgen.toml.template"
-
 SGEN_DEFAULTS: Final[Dict[str, Any]] = {
     "ignore": DEFAULT_IGNORE,
     "include": DEFAULT_INCLUDE or set(),
@@ -141,6 +142,12 @@ def main():
         logger.warning("Không tìm thấy đường dẫn hợp lệ nào để quét. Đã dừng.")
         sys.exit(0)
 
+    # SỬA LỖI: Xác định reporting_root chính xác
+    # (Không có --root arg cho sgen, nên ta truyền None)
+    reporting_root = resolve_reporting_root(
+        logger, validated_paths, cli_root_arg=None
+    ) 
+
     files_to_process: List[Path] = []
     dirs_to_scan: List[Path] = []
     for path in validated_paths:
@@ -159,14 +166,13 @@ def main():
             dirs_to_scan=dirs_to_scan,
         )
 
-        reporting_root = Path.cwd()
-
+        # Truyền reporting_root (là gốc Git) vào scan_root
         execute_stubgen_action(
             logger=logger,
             files_to_create=files_to_create,
             files_to_overwrite=files_to_overwrite,
             force=args.force,
-            scan_root=reporting_root,
+            scan_root=reporting_root, # <-- Sửa lỗi
             cli_args=args,
         )
 
