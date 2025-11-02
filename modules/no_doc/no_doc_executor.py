@@ -14,8 +14,10 @@ from utils.core.git import is_git_repository, auto_commit_changes
 from modules.no_doc.no_doc_internal import (
     load_config_files,
     merge_ndoc_configs,
-    print_dry_run_report_for_group,
 )
+# --- GỌI TRỰC TIẾP HÀM HELPER ---
+from utils.cli.ui_helpers import print_grouped_report
+# --- KẾT THÚC IMPORT ---
 from utils.core.config_helpers import generate_config_hash
 
 
@@ -38,26 +40,52 @@ def execute_ndoc_action(
     total_files_to_fix = len(all_files_to_fix)
 
     if total_files_to_fix == 0:
-
         return
 
-    logger.warning(f"\n⚠️ Tổng cộng {total_files_to_fix} file cần được sửa.")
+    logger.warning(
+        f"\n⚠️ Tổng cộng {total_files_to_fix} file cần được sửa."
+    )
+    
+    # --- ĐỊNH NGHĨA FORMATTER (CỤC BỘ) ---
+    def _title_formatter(info: FileResult) -> str:
+        file_path: Path = info["path"]
+        try:
+            rel_path = file_path.relative_to(scan_root).as_posix()
+        except ValueError:
+            rel_path = str(file_path)
+        return f"{rel_path} (Sẽ bị thay đổi định dạng do AST unparse)"
+
+    def _detail_formatter(info: FileResult) -> List[str]:
+        return []
+    # --- KẾT THÚC FORMATTER ---
 
     if dry_run:
         logger.info("Chế độ Dry-run: Báo cáo các file cần sửa.")
-        print_dry_run_report_for_group(
+        print_grouped_report(
             logger=logger,
             group_name="Tổng hợp (Dry Run)",
             files_in_group=all_files_to_fix,
             scan_root=scan_root,
+            title_formatter=_title_formatter,
+            detail_formatter=_detail_formatter
         )
         logger.warning(
             f"\n-> Để xóa docstring, chạy lại mà không có cờ -d (sử dụng -f/--force để bỏ qua xác nhận)."
         )
         sys.exit(1)
-
+    
     proceed_to_write = force
     if not force:
+        # --- SỬA LOGIC: LUÔN IN BÁO CÁO TRƯỚC KHI HỎI ---
+        print_grouped_report(
+            logger=logger,
+            group_name="Các thay đổi sắp thực hiện",
+            files_in_group=all_files_to_fix,
+            scan_root=scan_root,
+            title_formatter=_title_formatter,
+            detail_formatter=_detail_formatter
+        )
+        # --- KẾT THÚC SỬA LOGIC ---
         try:
             confirmation = input(
                 "\nTiếp tục xóa docstring và ghi đè các file này? (y/n): "
@@ -91,8 +119,11 @@ def execute_ndoc_action(
                     e,
                 )
 
-        log_success(logger, f"Hoàn tất! Đã xóa docstring khỏi {written_count} file.")
+        log_success(
+            logger, f"Hoàn tất! Đã xóa docstring khỏi {written_count} file."
+        )
 
+        
         git_commit: bool = getattr(cli_args, "git_commit", False)
 
         if git_commit and files_written_relative:
