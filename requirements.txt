@@ -13,3 +13,4 @@ tomli_w
 pipreqs
 pipdeptree
 argcomplete
+pre-commit
