@@ -118,7 +118,9 @@ def find_commit_by_hash(
         return None
 
     grep_str = f"[Settings:{settings_hash}]"
-    command = ["git", "log", "--grep", grep_str, "-n", "1", "--pretty=format:%H"]
+    
+    # --- THÊM --fixed-strings ĐỂ TRÁNH LỖI REGEX ---
+    command = ["git", "log", "--fixed-strings", "--grep", grep_str, "-n", "1", "--pretty=format:%H"]
     
     success, output = run_command(
         command, logger, description=f"Tìm commit với hash {settings_hash}", cwd=scan_root
@@ -131,6 +133,7 @@ def find_commit_by_hash(
     
     logger.debug(f"Không tìm thấy commit nào khớp với hash: {settings_hash}")
     return None
+# --- KẾT THÚC SỬA LỖI ---
 
 
 def get_diffed_files(
@@ -141,14 +144,12 @@ def get_diffed_files(
         logger.warning("Không phải kho Git, không thể lấy diff.")
         return []
 
-    # --- THAY ĐỔI LOGIC ---
-    # Bỏ "...HEAD" để so sánh với working tree
+    # So sánh start_sha với working tree
     command = ["git", "diff", "--name-only", start_sha]
     
     success, output = run_command(
         command, logger, description=f"Lấy diff từ {start_sha[:7]}...WORKING_TREE", cwd=scan_root
     )
-    # --- KẾT THÚC THAY ĐỔI ---
     
     if success and output.strip():
         relative_paths = [p.strip() for p in output.splitlines() if p.strip()]
