@@ -18,6 +18,7 @@ generate_config_hash: Any
 get_diffed_files: Any
 get_submodule_paths: Any
 git_add_and_commit: Any
+is_extension_matched: Any
 is_git_repository: Any
 is_path_matched: Any
 load_and_merge_configs: Any
@@ -52,6 +53,7 @@ __all__: List[str] = [
     "get_diffed_files",
     "get_submodule_paths",
     "git_add_and_commit",
+    "is_extension_matched",
     "is_git_repository",
     "is_path_matched",
     "load_and_merge_configs",
