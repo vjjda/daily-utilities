@@ -121,7 +121,6 @@ def execute_stubgen_action(
             str(r["stub_path"].relative_to(scan_root)) for r in files_written_results
         ]
 
-        # --- THAY ĐỔI LOGIC AUTO-COMMIT ---
         git_commit: bool = getattr(cli_args, "git_commit", False)
 
         if files_written_relative and is_git_repository(scan_root) and git_commit:
@@ -159,4 +158,3 @@ def execute_stubgen_action(
             logger.info(
                 "Bỏ qua auto-commit. (Không có cờ -g/--git-commit hoặc không phải gốc Git)"
             )
-        # --- KẾT THÚC THAY ĐỔI ---
