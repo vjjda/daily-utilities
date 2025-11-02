@@ -1,40 +1,48 @@
 # Path: utils/core/__init__.py
-import logging
-from pathlib import Path
-from importlib import import_module
-from typing import List, Tuple, Union, Set, Optional, Dict, Any
+from .code_cleaner import *
+from .code_formatter import *
+from .config_helpers import *
+from .file_extensions import *
+from .file_helpers import *
+from .file_scanner import *
+from .filter import *
+from .git import *
+from .parsing import *
+from .platform_utils import *
+from .process import *
+from .toml_io import *
 
-Logger = logging.Logger
-
-
-current_dir = Path(__file__).parent
-
-
-modules_to_export = [
-    f.stem
-    for f in current_dir.iterdir()
-    if f.is_file() and f.suffix == ".py" and f.name != "__init__.py"
+__all__ = [
+    "clean_code",
+    "register_cleaner",
+    "format_code",
+    "register_formatter",
+    "load_project_config_section",
+    "load_and_merge_configs",
+    "merge_config_sections",
+    "format_value_to_toml",
+    "resolve_config_value",
+    "resolve_config_list",
+    "resolve_set_modification",
+    "generate_config_hash",
+    "is_extension_matched",
+    "load_text_template",
+    "scan_directory_recursive",
+    "is_path_matched",
+    "compile_spec_from_patterns",
+    "is_git_repository",
+    "find_git_root",
+    "get_submodule_paths",
+    "parse_gitignore",
+    "git_add_and_commit",
+    "find_file_upwards",
+    "auto_commit_changes",
+    "find_commit_by_hash",
+    "get_diffed_files",
+    "parse_comma_list",
+    "parse_cli_set_operators",
+    "copy_file_to_clipboard",
+    "run_command",
+    "load_toml_file",
+    "write_toml_file",
 ]
-
-__all__: List[str] = []
-
-for module_name in modules_to_export:
-    try:
-
-        module = import_module(f".{module_name}", package=__name__)
-
-        if hasattr(module, "__all__"):
-            module_exports = getattr(module, "__all__")
-
-            for name in module_exports:
-                obj = getattr(module, name)
-                globals()[name] = obj
-            __all__.extend(module_exports)
-        else:
-
-            print(
-                f"Cảnh báo: Module '{module_name}' trong utils/core thiếu định nghĩa __all__."
-            )
-
-    except ImportError as e:
-        print(f"Cảnh báo: Không thể import từ utils/core/{module_name}: {e}")
