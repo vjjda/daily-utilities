@@ -26,28 +26,24 @@ __all__ = [
 
 
 def format_value_to_toml(value: Any) -> str:
+
     if isinstance(value, bool):
+        return "true" if value else "false"
 
-        return tomlkit.boolean(value).as_string()
     elif isinstance(value, (int, float)):
-
         return tomlkit.item(value).as_string()
     elif isinstance(value, (str, Path)):
-
         return tomlkit.string(str(value)).as_string()
     elif isinstance(value, (list, set)):
         if not value:
             return "[]"
 
         a = tomlkit.array()
-
         items = sorted(list(value)) if isinstance(value, set) else value
         for item in items:
-
             try:
                 a.append(tomlkit.item(item))
             except Exception:
-
                 logger.warning(
                     f"Could not format item '{item}' of type {type(item)} within list for TOML. Using repr."
                 )
@@ -56,12 +52,9 @@ def format_value_to_toml(value: Any) -> str:
         return a.as_string()
 
     elif value is None:
-
         return ""
     else:
-
         try:
-
             return tomlkit.item(value).as_string()
         except Exception as e:
             logger.warning(
