@@ -1,10 +1,19 @@
 # Path: modules/check_path/check_path_executor.py
 import logging
 import sys
+import argparse # <-- THÊM IMPORT
 from pathlib import Path
 from typing import List, Dict, Any
 
 from utils.logging_config import log_success
+# --- THÊM CÁC IMPORT CẦN THIẾT ---
+from utils.core.git import is_git_repository, auto_commit_changes
+from modules.check_path.check_path_internal import (
+    load_config_files,
+    merge_check_path_configs,
+)
+from utils.core.config_helpers import generate_config_hash
+# --- KẾT THÚC THÊM IMPORT ---
 
 __all__ = ["execute_check_path_action", "print_dry_run_report_for_group"]
 
@@ -35,13 +44,19 @@ def print_dry_run_report_for_group(
         logger.warning(f"      (Đề xuất:     {fix_preview})")
 
 
+# --- THAY ĐỔI CHỮ KÝ HÀM ---
 def execute_check_path_action(
     logger: logging.Logger,
     all_files_to_fix: List[FileResult],
-    dry_run: bool,
-    force: bool,
+    cli_args: argparse.Namespace, # Thay vì dry_run, force
     scan_root: Path,
 ) -> None:
+# --- KẾT THÚC THAY ĐỔI CHỮ KÝ ---
+
+    # --- Lấy giá trị từ cli_args ---
+    dry_run: bool = getattr(cli_args, "dry_run", False)
+    force: bool = getattr(cli_args, "force", False)
+    # --- KẾT THÚC LẤY GIÁ TRỊ ---
 
     total_files_to_fix = len(all_files_to_fix)
 
@@ -72,6 +87,7 @@ def execute_check_path_action(
 
         if proceed_to_write:
             written_count = 0
+            files_written_relative: List[str] = [] # <-- Thêm list để theo dõi file
             for info in all_files_to_fix:
                 target_path: Path = info["path"]
                 new_lines: List[str] = info["new_lines"]
@@ -79,6 +95,7 @@ def execute_check_path_action(
                     with target_path.open("w", encoding="utf-8") as f:
                         f.writelines(new_lines)
                     rel_path_str = target_path.relative_to(scan_root).as_posix()
+                    files_written_relative.append(rel_path_str) # <-- Thêm file đã sửa
                     logger.info(f"Đã sửa: {rel_path_str}")
                     written_count += 1
                 except IOError as e:
@@ -88,8 +105,44 @@ def execute_check_path_action(
                         e,
                     )
                 except ValueError:
-
+                    # Xử lý trường hợp file nằm ngoài scan_root (ít xảy ra)
+                    files_written_relative.append(target_path.as_posix()) # <-- Thêm file đã sửa
                     logger.info(f"Đã sửa (absolute path): {target_path.as_posix()}")
                     written_count += 1
 
             log_success(logger, f"Hoàn tất! Đã sửa {written_count} file.")
+
+            # --- THÊM LOGIC AUTO-COMMIT ---
+            git_commit: bool = getattr(cli_args, "git_commit", False)
+
+            if git_commit and files_written_relative:
+                try:
+                    # Tải cấu hình để tạo hash
+                    file_config_data = load_config_files(scan_root, logger)
+                    merged_file_config = merge_check_path_configs(
+                        logger,
+                        cli_extensions=getattr(cli_args, "extensions", None),
+                        cli_ignore=getattr(cli_args, "ignore", None),
+                        file_config_data=file_config_data,
+                    )
+
+                    settings_to_hash = {
+                        "extensions": sorted(list(merged_file_config["final_extensions_list"])),
+                        "ignore": sorted(list(merged_file_config["final_ignore_list"])),
+                    }
+
+                    auto_commit_changes(
+                        logger=logger,
+                        scan_root=scan_root,
+                        files_written_relative=files_written_relative,
+                        settings_to_hash=settings_to_hash,
+                        commit_scope="style(cpath)", # Phù hợp hơn cho cpath
+                        tool_name="cpath",
+                    )
+
+                except Exception as e:
+                    logger.error(f"❌ Lỗi khi chuẩn bị auto-commit: {e}")
+                    logger.debug("Traceback:", exc_info=True)
+            elif files_written_relative:
+                logger.info("Bỏ qua auto-commit. (Không có cờ -g/--git-commit hoặc không phải gốc Git)")
+            # --- KẾT THÚC LOGIC AUTO-COMMIT ---
