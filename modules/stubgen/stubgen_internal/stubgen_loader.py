@@ -2,6 +2,7 @@
 import logging
 from pathlib import Path
 from typing import List, Set, Dict, Any, TYPE_CHECKING, Iterable, Optional, Tuple
+import os
 
 try:
     import pathspec
@@ -48,6 +49,63 @@ def _is_dynamic_gateway(path: Path, dynamic_import_indicators: List[str]) -> boo
         return False
 
 
+def _scan_for_inits_recursive(
+    logger: logging.Logger,
+    directory: Path,
+    scan_root: Path,
+    ignore_spec: Optional["pathspec.PathSpec"],
+    include_spec: Optional["pathspec.PathSpec"],
+    submodule_paths: Set[Path],
+    dynamic_import_indicators: List[str],
+    script_file_path: Path,
+) -> List[Path]:
+    found_files: List[Path] = []
+
+    try:
+
+        contents = list(os.scandir(directory))
+    except (FileNotFoundError, NotADirectoryError, PermissionError) as e:
+        logger.debug(f"Không thể truy cập thư mục: {directory.as_posix()} ({e})")
+        return []
+
+    for entry in contents:
+        path = Path(entry.path)
+
+        if is_path_matched(path, ignore_spec, scan_root):
+            continue
+
+        abs_path = path.resolve()
+        if abs_path in submodule_paths:
+            continue
+
+        if entry.is_dir(follow_symlinks=False):
+
+            found_files.extend(
+                _scan_for_inits_recursive(
+                    logger=logger,
+                    directory=path,
+                    scan_root=scan_root,
+                    ignore_spec=ignore_spec,
+                    include_spec=include_spec,
+                    submodule_paths=submodule_paths,
+                    dynamic_import_indicators=dynamic_import_indicators,
+                    script_file_path=script_file_path,
+                )
+            )
+        elif entry.is_file(follow_symlinks=False) and entry.name == "__init__.py":
+
+            if abs_path.samefile(script_file_path):
+                continue
+
+            if include_spec and not is_path_matched(path, include_spec, scan_root):
+                continue
+
+            if _is_dynamic_gateway(path, dynamic_import_indicators):
+                found_files.append(path)
+
+    return found_files
+
+
 def find_gateway_files(
     logger: logging.Logger,
     scan_root: Path,
@@ -70,39 +128,20 @@ def find_gateway_files(
     if submodule_paths:
         scan_status["gitmodules_found"] = True
 
-    logger.debug(f"Scanning for '__init__.py' within: {scan_root.as_posix()}")
+    logger.debug(f"Scanning for dynamic '__init__.py' within: {scan_root.as_posix()}")
 
     if include_spec:
         logger.debug(f"Applying inclusion filter (include).")
 
-    gateway_files: List[Path] = []
-
-    for path in scan_root.rglob("*"):
-        if not path.is_file() or path.name != "__init__.py":
-            continue
-
-        abs_path = path.resolve()
-
-        if abs_path.samefile(script_file_path):
-            continue
-
-        is_in_submodule = any(abs_path.is_relative_to(p) for p in submodule_paths)
-        if is_in_submodule:
-            continue
-
-        if is_path_matched(path.parent, ignore_spec, scan_root) or is_path_matched(
-            path, ignore_spec, scan_root
-        ):
-            continue
-
-        if include_spec:
-            if not is_path_matched(path, include_spec, scan_root):
-                logger.debug(
-                    f"Skipping (not in include_spec): {path.relative_to(scan_root).as_posix()}"
-                )
-                continue
-
-        if _is_dynamic_gateway(path, dynamic_import_indicators):
-            gateway_files.append(path)
+    gateway_files: List[Path] = _scan_for_inits_recursive(
+        logger=logger,
+        directory=scan_root,
+        scan_root=scan_root,
+        ignore_spec=ignore_spec,
+        include_spec=include_spec,
+        submodule_paths=submodule_paths,
+        dynamic_import_indicators=dynamic_import_indicators,
+        script_file_path=script_file_path,
+    )
 
     return gateway_files, scan_status
