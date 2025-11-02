@@ -4,7 +4,7 @@ import argparse
 import logging
 from pathlib import Path
 from typing import Optional, Final, Dict, Any, List, Set
-# KHÔNG CẦN hashlib hay json ở đây nữa
+
 
 try:
     import argcomplete
@@ -18,7 +18,6 @@ try:
     from utils.logging_config import setup_logging
     from utils.cli import handle_config_init_request, resolve_input_paths
     from utils.core import parse_comma_list
-    # KHÔNG CẦN import logic git hay config ở đây
 
     from modules.no_doc import (
         process_no_doc_logic,
@@ -145,7 +144,6 @@ def main():
         logger.debug("Traceback:", exc_info=True)
         sys.exit(1)
 
-    # --- Xóa bỏ logic HASH khỏi đây ---
     reporting_root = Path.cwd()
 
     validated_paths: List[Path] = resolve_input_paths(
@@ -175,11 +173,10 @@ def main():
             script_file_path=THIS_SCRIPT_PATH,
         )
 
-        # Truyền toàn bộ `args` vào executor
         execute_ndoc_action(
             logger=logger,
             all_files_to_fix=results_from_core,
-            cli_args=args, # Truyền args
+            cli_args=args,
             scan_root=reporting_root,
             git_warning_str="",
         )

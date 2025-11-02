@@ -82,9 +82,6 @@ def scan_files(
     for file_path in all_files:
         abs_file_path = file_path.resolve()
 
-        # if abs_file_path.samefile(script_file_path.resolve()):
-        #     continue
-
         is_in_submodule = any(abs_file_path.is_relative_to(p) for p in submodule_paths)
         if is_in_submodule:
             continue
