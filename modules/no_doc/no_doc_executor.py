@@ -9,13 +9,11 @@ if not "PROJECT_ROOT" in locals():
     sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
 from utils.logging_config import log_success
-from utils.core.git import is_git_repository, auto_commit_changes
+from utils.core.git import auto_commit_changes
 from modules.no_doc.no_doc_internal import (
     load_config_files,
     merge_ndoc_configs,
 )
-from utils.core.config_helpers import generate_config_hash
-
 
 __all__ = ["execute_ndoc_action"]
 

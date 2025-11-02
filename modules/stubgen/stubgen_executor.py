@@ -7,7 +7,6 @@ import argparse
 
 from utils.logging_config import log_success
 from utils.core import auto_commit_changes, is_git_repository
-from utils.core.config_helpers import generate_config_hash
 from .stubgen_internal import (
     load_config_files,
     merge_stubgen_configs,
