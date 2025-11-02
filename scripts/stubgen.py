@@ -90,6 +90,14 @@ def main():
         default=None,
         help="Bộ lọc dương (inclusion filter). Chỉ giữ lại các file khớp (THÊM vào config).",
     )
+    # --- THÊM CỜ MỚI TẠI ĐÂY ---
+    stubgen_group.add_argument(
+        "-g",
+        "--git-commit",
+        action="store_true",
+        help="Tự động commit các thay đổi vào Git sau khi hoàn tất.",
+    )
+    # --- KẾT THÚC THÊM CỜ ---
 
     config_group = parser.add_argument_group("Config Initialization (Chạy riêng lẻ)")
     config_group.add_argument(

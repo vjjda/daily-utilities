@@ -121,7 +121,10 @@ def execute_stubgen_action(
             str(r["stub_path"].relative_to(scan_root)) for r in files_written_results
         ]
 
-        if files_written_relative and is_git_repository(scan_root):
+        # --- THAY ĐỔI LOGIC AUTO-COMMIT ---
+        git_commit: bool = getattr(cli_args, "git_commit", False)
+
+        if files_written_relative and is_git_repository(scan_root) and git_commit:
             try:
 
                 file_config_data = load_config_files(scan_root, logger)
@@ -154,5 +157,6 @@ def execute_stubgen_action(
                 logger.debug("Traceback:", exc_info=True)
         elif files_written_relative:
             logger.info(
-                "Bỏ qua auto-commit: Thư mục làm việc hiện tại không phải là gốc Git."
+                "Bỏ qua auto-commit. (Không có cờ -g/--git-commit hoặc không phải gốc Git)"
             )
+        # --- KẾT THÚC THAY ĐỔI ---
