@@ -14,9 +14,6 @@ def print_dry_run_report_for_group(
     files_in_group: List[FileResult],
     scan_root: Path,
 ) -> None:
-    """
-    In báo cáo chi tiết (dry-run style) cho một nhóm file.
-    """
     logger.warning(f"\n   --- Nhóm: {group_name} ({len(files_in_group)} file) ---")
     for info in files_in_group:
         file_path: Path = info["path"]

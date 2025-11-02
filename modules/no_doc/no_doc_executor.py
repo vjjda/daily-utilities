@@ -17,7 +17,7 @@ from modules.no_doc.no_doc_internal import (
 )
 from utils.core.config_helpers import generate_config_hash
 
-# Xóa 'print_dry_run_report_for_group' khỏi __all__
+
 __all__ = ["execute_ndoc_action"]
 
 FileResult = Dict[str, Any]
