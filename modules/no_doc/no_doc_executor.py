@@ -10,7 +10,7 @@ if not "PROJECT_ROOT" in locals():
     sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
 from utils.logging_config import log_success
-from utils.core.git import is_git_repository, git_add_and_commit
+from utils.core.git import is_git_repository, auto_commit_changes
 from modules.no_doc.no_doc_internal import (
     load_config_files,
     merge_ndoc_configs,
@@ -21,55 +21,6 @@ from utils.core.config_helpers import generate_config_hash
 __all__ = ["execute_ndoc_action"]
 
 FileResult = Dict[str, Any]
-
-
-def _perform_auto_commit(
-    logger: logging.Logger,
-    scan_root: Path,
-    files_written_relative: List[str],
-    cli_args: argparse.Namespace,
-) -> None:
-    if not files_written_relative or not is_git_repository(scan_root):
-        if files_written_relative:
-            logger.info(
-                "Bỏ qua auto-commit: Thư mục làm việc hiện tại không phải là gốc Git."
-            )
-        return
-
-    try:
-
-        file_config_data = load_config_files(scan_root, logger)
-        merged_file_config = merge_ndoc_configs(
-            logger,
-            cli_extensions=getattr(cli_args, "extensions", None),
-            cli_ignore=getattr(cli_args, "ignore", None),
-            file_config_data=file_config_data,
-        )
-
-        settings_to_hash = {
-            "all_clean": getattr(cli_args, "all_clean", False),
-            "format": getattr(cli_args, "format", False),
-            "extensions": sorted(list(merged_file_config["final_extensions_list"])),
-            "ignore": sorted(list(merged_file_config["final_ignore_list"])),
-            "format_extensions": sorted(
-                list(merged_file_config["final_format_extensions_set"])
-            ),
-        }
-
-        config_hash = generate_config_hash(settings_to_hash, logger)
-
-        commit_msg = f"style(clean): Dọn dẹp {len(files_written_relative)} file (ndoc) [Settings:{config_hash}]"
-
-        git_add_and_commit(
-            logger=logger,
-            scan_root=scan_root,
-            file_paths_relative=files_written_relative,
-            commit_message=commit_msg,
-        )
-    except Exception as e:
-        logger.error(f"❌ Lỗi khi tạo hash hoặc thực thi git commit: {e}")
-        logger.debug("Traceback:", exc_info=True)
-
 
 def execute_ndoc_action(
     logger: logging.Logger,
@@ -136,4 +87,39 @@ def execute_ndoc_action(
                 logger, f"Hoàn tất! Đã xóa docstring khỏi {written_count} file."
             )
 
-            _perform_auto_commit(logger, scan_root, files_written_relative, cli_args)
+            try:
+                # 1. Tải cấu hình (Logic CỤ THỂ của ndoc)
+                file_config_data = load_config_files(scan_root, logger)
+                merged_file_config = merge_ndoc_configs(
+                    logger,
+                    cli_extensions=getattr(cli_args, "extensions", None),
+                    cli_ignore=getattr(cli_args, "ignore", None),
+                    file_config_data=file_config_data,
+                )
+
+                # 2. Tạo settings dict (Logic CỤ THỂ của ndoc)
+                settings_to_hash = {
+                    "all_clean": getattr(cli_args, "all_clean", False),
+                    "format": getattr(cli_args, "format", False),
+                    "extensions": sorted(
+                        list(merged_file_config["final_extensions_list"])
+                    ),
+                    "ignore": sorted(list(merged_file_config["final_ignore_list"])),
+                    "format_extensions": sorted(
+                        list(merged_file_config["final_format_extensions_set"])
+                    ),
+                }
+
+                # 3. Gọi hàm Util (Logic CHUNG)
+                auto_commit_changes(
+                    logger=logger,
+                    scan_root=scan_root,
+                    files_written_relative=files_written_relative,
+                    settings_to_hash=settings_to_hash,
+                    commit_scope="clean",
+                    tool_name="ndoc",
+                )
+
+            except Exception as e:
+                logger.error(f"❌ Lỗi khi chuẩn bị auto-commit: {e}")
+                logger.debug("Traceback:", exc_info=True)

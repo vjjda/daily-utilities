@@ -6,7 +6,7 @@ from typing import Dict, Any, List, Optional, Tuple
 import argparse
 
 from utils.logging_config import log_success
-from utils.core import git_add_and_commit, is_git_repository
+from utils.core import auto_commit_changes, is_git_repository
 from utils.core.config_helpers import generate_config_hash
 from .stubgen_internal import (
     load_config_files,
@@ -18,55 +18,6 @@ StubResult = Dict[str, Any]
 
 
 __all__ = ["execute_stubgen_action"]
-
-
-def _perform_auto_commit(
-    logger: logging.Logger,
-    scan_root: Path,
-    files_written_results: List[StubResult],
-    cli_args: argparse.Namespace,
-) -> None:
-    if not files_written_results or not is_git_repository(scan_root):
-        if files_written_results:
-            logger.info(
-                "Bỏ qua auto-commit: Thư mục làm việc hiện tại không phải là gốc Git."
-            )
-        return
-
-    try:
-
-        file_config_data = load_config_files(scan_root, logger)
-        cli_config = {
-            "ignore": getattr(cli_args, "ignore", None),
-            "include": getattr(cli_args, "include", None),
-        }
-        merged_config = merge_stubgen_configs(logger, cli_config, file_config_data)
-
-        settings_to_hash = {
-            "ignore": sorted(list(merged_config["ignore_list"])),
-            "include": sorted(list(merged_config["include_list"])),
-            "indicators": sorted(list(merged_config["indicators"])),
-            "module_list_name": merged_config["module_list_name"],
-            "all_list_name": merged_config["all_list_name"],
-        }
-
-        config_hash = generate_config_hash(settings_to_hash, logger)
-
-        relative_paths = [
-            str(r["stub_path"].relative_to(scan_root)) for r in files_written_results
-        ]
-
-        commit_msg = f"style(stubs): Cập nhật {len(relative_paths)} file .pyi (sgen) [Settings:{config_hash}]"
-
-        git_add_and_commit(
-            logger=logger,
-            scan_root=scan_root,
-            file_paths_relative=relative_paths,
-            commit_message=commit_msg,
-        )
-    except Exception as e:
-        logger.error(f"❌ Lỗi khi tạo hash hoặc thực thi git commit: {e}")
-        logger.debug("Traceback:", exc_info=True)
 
 
 def execute_stubgen_action(
@@ -166,4 +117,43 @@ def execute_stubgen_action(
                 f"\n✨ Stub generation complete. Successfully processed {written_count} files.",
             )
 
-        _perform_auto_commit(logger, scan_root, files_written_results, cli_args)
+        files_written_relative = [
+            str(r["stub_path"].relative_to(scan_root))
+            for r in files_written_results
+        ]
+        
+        if files_written_relative and is_git_repository(scan_root):
+            try:
+                # 1. Tải cấu hình (Logic CỤ THỂ của sgen)
+                file_config_data = load_config_files(scan_root, logger)
+                cli_config = {
+                    "ignore": getattr(cli_args, "ignore", None),
+                    "include": getattr(cli_args, "include", None),
+                }
+                merged_config = merge_stubgen_configs(logger, cli_config, file_config_data)
+
+                # 2. Tạo settings dict (Logic CỤ THỂ của sgen)
+                settings_to_hash = {
+                    "ignore": sorted(list(merged_config["ignore_list"])),
+                    "include": sorted(list(merged_config["include_list"])),
+                    "indicators": sorted(list(merged_config["indicators"])),
+                    "module_list_name": merged_config["module_list_name"],
+                    "all_list_name": merged_config["all_list_name"],
+                }
+                
+                # 3. Gọi hàm Util (Logic CHUNG)
+                auto_commit_changes(
+                    logger=logger,
+                    scan_root=scan_root,
+                    files_written_relative=files_written_relative,
+                    settings_to_hash=settings_to_hash,
+                    commit_scope="stubs",
+                    tool_name="sgen",
+                )
+            except Exception as e:
+                logger.error(f"❌ Lỗi khi chuẩn bị auto-commit: {e}")
+                logger.debug("Traceback:", exc_info=True)
+        elif files_written_relative:
+            logger.info(
+                "Bỏ qua auto-commit: Thư mục làm việc hiện tại không phải là gốc Git."
+            )
