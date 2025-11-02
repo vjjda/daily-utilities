@@ -18,8 +18,12 @@ from . import (
     merge_stubgen_configs,
     find_gateway_files,
     process_single_gateway,
-    classify_and_report_stub_changes,
+    # KHÔNG import classify_and_report_stub_changes từ đây
 )
+
+# SỬA LỖI: Import trực tiếp từ file classifier
+from .stubgen_classifier import classify_and_report_stub_changes
+
 
 from utils.core import compile_spec_from_patterns
 from utils.constants import MAX_THREAD_WORKERS
@@ -37,6 +41,7 @@ def process_stubgen_task_dir(
     reporting_root: Path,
     script_file_path: Path,
 ) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+    # ... (Code của hàm giữ nguyên) ...
     logger.info(f"--- 📁 Quét thư mục: {scan_dir.name} ---")
 
     file_config = load_config_files(scan_dir, logger)
