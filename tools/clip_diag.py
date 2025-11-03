@@ -21,9 +21,11 @@ from utils.logging_config import setup_logging
 
 
 from modules.clip_diag import (
-    process_clipboard_content,
     execute_diagram_generation,
-    DEFAULT_TO_ARG,
+)
+from modules.clip_diag.clip_diag_config import DEFAULT_TO_ARG
+from modules.clip_diag.clip_diag_core import (
+    process_clipboard_content,
     get_diagram_type_from_clipboard,
 )
 
