@@ -53,7 +53,7 @@ Khi viết/chỉnh sửa mã, bạn phải tuân thủ nghiêm ngặt các nguy�
 3. **Tách Biệt Cấu hình (Configuration Abstraction):** 
    Tách mọi giá trị cấu hình (đường dẫn, hằng số) khỏi logic. Ưu tiên **Environment Variables** hoặc Pydantic Settings.
 
-4. **Module Gateway & `__all__` (ĐÃ SỬA):**
+4. **Module Gateway & `__all__`:**
    - **Ưu tiên Static Import:** Các file `__init__.py` (đóng vai trò "facade") phải sử dụng **Static Import** tường minh.
    - **Phân biệt `_` và `__all__`:**
      - **Quy ước `_` (underscore):** Dùng để định nghĩa các hàm/biến _nội bộ_ (private) _bên trong_ một file.
