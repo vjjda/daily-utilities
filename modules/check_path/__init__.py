@@ -1,4 +1,5 @@
 # Path: modules/check_path/__init__.py
+
 from .check_path_config import (
     MODULE_DIR,
     TEMPLATE_FILENAME,
@@ -8,12 +9,11 @@ from .check_path_config import (
     CONFIG_FILENAME,
 )
 
-from .check_path_core import process_check_path_logic, run_check_path
-from .check_path_executor import execute_check_path_action
+
+from .check_path_core import run_check_path
+
 
 __all__ = [
-    "process_check_path_logic",
-    "execute_check_path_action",
     "run_check_path",
     "MODULE_DIR",
     "TEMPLATE_FILENAME",
