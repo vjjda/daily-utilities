@@ -1,8 +1,9 @@
 # Path: tools/bootstrap_tool.py
 import sys
 import argparse
+import logging
 from pathlib import Path
-from typing import Final, Dict, Any
+from typing import Final, Dict, Any, Optional
 
 try:
     import argcomplete

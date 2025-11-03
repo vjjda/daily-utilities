@@ -9,6 +9,7 @@ from .bootstrap_config import (
     TEMPLATE_FILENAME,
     BOOTSTRAP_DEFAULTS,
     PROJECT_CONFIG_FILENAME,
+    SPEC_TEMPLATE_FILENAME,
 )
 from .bootstrap_core import process_bootstrap_logic, orchestrate_bootstrap
 from .bootstrap_executor import execute_bootstrap_action
@@ -29,4 +30,5 @@ __all__ = [
     "TEMPLATE_FILENAME",
     "BOOTSTRAP_DEFAULTS",
     "PROJECT_CONFIG_FILENAME",
+    "SPEC_TEMPLATE_FILENAME",
 ]
