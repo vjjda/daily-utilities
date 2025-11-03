@@ -47,7 +47,7 @@ def main():
 
     parser = argparse.ArgumentParser(
         description="Tự động tạo file .pyi stub cho các module gateway động.",
-        epilog="Ví dụ: sgen . -i 'modules/core/**' -f",
+        epilog="Ví dụ: sgen . -f",
         formatter_class=argparse.RawTextHelpFormatter,
     )
 
@@ -71,14 +71,6 @@ def main():
         type=str,
         default=None,
         help="Danh sách pattern (giống .gitignore) để bỏ qua (THÊM vào config).",
-    )
-
-    stubgen_group.add_argument(
-        "-i",
-        "--include",
-        type=str,
-        default=None,
-        help="Bộ lọc dương (inclusion filter). Chỉ giữ lại các file khớp (THÊM vào config).",
     )
 
     stubgen_group.add_argument(

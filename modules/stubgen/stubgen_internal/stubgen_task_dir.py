@@ -46,26 +46,19 @@ def process_stubgen_task_dir(
     file_config = load_config_files(scan_dir, logger)
     cli_config = {
         "ignore": getattr(cli_args, "ignore", None),
-        "include": getattr(cli_args, "include", None),
     }
     merged_config = merge_stubgen_configs(logger, cli_config, file_config)
-
-    final_include_spec: Optional["pathspec.PathSpec"] = compile_spec_from_patterns(
-        merged_config["include_list"], scan_dir
-    )
 
     gateway_files, scan_status = find_gateway_files(
         logger=logger,
         scan_root=scan_dir,
         ignore_list=merged_config["ignore_list"],
-        include_spec=final_include_spec,
         dynamic_import_indicators=merged_config["indicators"],
         script_file_path=script_file_path,
     )
 
     logger.info(f"  [Cấu hình áp dụng]")
     logger.info(f"    - Ignore (từ config/CLI): {merged_config['ignore_list']}")
-    logger.info(f"    - Include (từ config/CLI): {merged_config['include_list']}")
     logger.info(
         f"    - Tải .gitignore cục bộ: {'Có' if scan_status['gitignore_found'] else 'Không'}"
     )

@@ -47,14 +47,12 @@ def process_stubgen_task_file(
     file_config_data = {}
     cli_config = {
         "ignore": getattr(cli_args, "ignore", None),
-        "include": getattr(cli_args, "include", None),
     }
     merged_config = merge_stubgen_configs(logger, cli_config, file_config_data)
     scan_dir = file_path.parent
 
     logger.info(f"  [Cấu hình áp dụng]")
     logger.info(f"    - Ignore (từ config/CLI): {merged_config['ignore_list']}")
-    logger.info(f"    - Include (từ config/CLI): {merged_config['include_list']}")
     logger.info(f"    - (Bỏ qua .gitignore và config file)")
 
     stub_content, symbols_count = process_single_gateway(

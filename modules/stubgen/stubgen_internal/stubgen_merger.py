@@ -7,7 +7,6 @@ from utils.core import resolve_config_value, resolve_config_list, parse_comma_li
 
 from ..stubgen_config import (
     DEFAULT_IGNORE,
-    DEFAULT_INCLUDE,
     DYNAMIC_IMPORT_INDICATORS,
     AST_MODULE_LIST_NAME,
     AST_ALL_LIST_NAME,
@@ -28,17 +27,7 @@ def merge_stubgen_configs(
         default_set_value=DEFAULT_IGNORE,
     )
 
-    default_include_set = DEFAULT_INCLUDE if DEFAULT_INCLUDE is not None else set()
-    final_include_list = resolve_config_list(
-        cli_str_value=cli_config.get("include"),
-        file_list_value=file_config.get("include"),
-        default_set_value=default_include_set,
-    )
-
-    if final_include_list:
-        logger.debug(f"Danh sách 'include' cuối cùng (đã merge): {final_include_list}")
-    else:
-        logger.debug("Không áp dụng bộ lọc 'include'.")
+    logger.debug("Không áp dụng bộ lọc 'include'.")
 
     final_indicators = resolve_config_value(
         cli_value=None,
@@ -58,7 +47,6 @@ def merge_stubgen_configs(
 
     return {
         "ignore_list": final_ignore_list,
-        "include_list": final_include_list,
         "indicators": final_indicators,
         "module_list_name": final_module_list_name,
         "all_list_name": final_all_list_name,

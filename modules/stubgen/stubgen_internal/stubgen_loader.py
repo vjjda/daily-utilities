@@ -54,7 +54,6 @@ def _scan_for_inits_recursive(
     directory: Path,
     scan_root: Path,
     ignore_spec: Optional["pathspec.PathSpec"],
-    include_spec: Optional["pathspec.PathSpec"],
     submodule_paths: Set[Path],
     dynamic_import_indicators: List[str],
     script_file_path: Path,
@@ -86,7 +85,6 @@ def _scan_for_inits_recursive(
                     directory=path,
                     scan_root=scan_root,
                     ignore_spec=ignore_spec,
-                    include_spec=include_spec,
                     submodule_paths=submodule_paths,
                     dynamic_import_indicators=dynamic_import_indicators,
                     script_file_path=script_file_path,
@@ -95,9 +93,6 @@ def _scan_for_inits_recursive(
         elif entry.is_file(follow_symlinks=False) and entry.name == "__init__.py":
 
             if abs_path.samefile(script_file_path):
-                continue
-
-            if include_spec and not is_path_matched(path, include_spec, scan_root):
                 continue
 
             if _is_dynamic_gateway(path, dynamic_import_indicators):
@@ -110,7 +105,6 @@ def find_gateway_files(
     logger: logging.Logger,
     scan_root: Path,
     ignore_list: List[str],
-    include_spec: Optional["pathspec.PathSpec"],
     dynamic_import_indicators: List[str],
     script_file_path: Path,
 ) -> Tuple[List[Path], Dict[str, bool]]:
@@ -130,15 +124,11 @@ def find_gateway_files(
 
     logger.debug(f"Scanning for dynamic '__init__.py' within: {scan_root.as_posix()}")
 
-    if include_spec:
-        logger.debug(f"Applying inclusion filter (include).")
-
     gateway_files: List[Path] = _scan_for_inits_recursive(
         logger=logger,
         directory=scan_root,
         scan_root=scan_root,
         ignore_spec=ignore_spec,
-        include_spec=include_spec,
         submodule_paths=submodule_paths,
         dynamic_import_indicators=dynamic_import_indicators,
         script_file_path=script_file_path,

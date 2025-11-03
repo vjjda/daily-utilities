@@ -128,7 +128,6 @@ def execute_stubgen_action(
                 file_config_data = load_config_files(scan_root, logger)
                 cli_config = {
                     "ignore": getattr(cli_args, "ignore", None),
-                    "include": getattr(cli_args, "include", None),
                 }
                 merged_config = merge_stubgen_configs(
                     logger, cli_config, file_config_data
@@ -136,7 +135,6 @@ def execute_stubgen_action(
 
                 settings_to_hash = {
                     "ignore": sorted(list(merged_config["ignore_list"])),
-                    "include": sorted(list(merged_config["include_list"])),
                     "indicators": sorted(list(merged_config["indicators"])),
                     "module_list_name": merged_config["module_list_name"],
                     "all_list_name": merged_config["all_list_name"],

@@ -1,3 +1,4 @@
+# Path: modules/stubgen/stubgen.toml.template
 # Template cho file cấu hình .sgen.toml (local scope)
 
 [{config_section_name}]
@@ -7,13 +8,6 @@
 # Ví dụ: ignore = ["*_test.py", "**/legacy/*"]
 # Mặc định (được thêm vào): {toml_ignore}
 ignore = {toml_ignore}
-
-# include (List[str]): Bộ lọc dương. Chỉ xử lý các file khớp với pattern này.
-# Hoạt động sau khi đã áp dụng 'restrict' và 'ignore'.
-# Các pattern này sẽ được NỐI VÀO danh sách mặc định (thường là rỗng).
-# Ví dụ: include = ["modules/core/**", "utils/network.py"]
-# Mặc định (được thêm vào): {toml_include}
-include = {toml_include}
 
 # --- Cấu hình nâng cao (Ít khi cần thay đổi) ---
 
