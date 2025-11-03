@@ -4,6 +4,11 @@ from .bootstrap_config import (
     DEFAULT_SCRIPTS_DIR_NAME,
     DEFAULT_MODULES_DIR_NAME,
     DEFAULT_DOCS_DIR_NAME,
+    CONFIG_SECTION_NAME,
+    MODULE_DIR,
+    TEMPLATE_FILENAME,
+    BOOTSTRAP_DEFAULTS,
+    PROJECT_CONFIG_FILENAME,
 )
 from .bootstrap_core import process_bootstrap_logic, orchestrate_bootstrap
 from .bootstrap_executor import execute_bootstrap_action
@@ -19,4 +24,9 @@ __all__ = [
     "process_bootstrap_logic",
     "execute_bootstrap_action",
     "orchestrate_bootstrap",
+    "CONFIG_SECTION_NAME",
+    "MODULE_DIR",
+    "TEMPLATE_FILENAME",
+    "BOOTSTRAP_DEFAULTS",
+    "PROJECT_CONFIG_FILENAME",
 ]

@@ -12,6 +12,17 @@ module_name = "new_tool"
 # Tên logger (thường là tên tool viết hoa chữ cái đầu)
 logger_name = "NewTool"
 
+# --- Phần [layout]: Cấu trúc thư mục (Sẽ được điền tự động) ---
+# btool sẽ đọc section này để biết nơi đặt các file.
+# Chạy `btool -s` sẽ tự động điền các giá trị này
+# dựa trên .project.toml (nếu có) hoặc giá trị mặc định.
+[layout]
+bin_dir = "{layout_bin_dir}"
+scripts_dir = "{layout_scripts_dir}"
+modules_dir = "{layout_modules_dir}"
+docs_dir = "{layout_docs_dir}"
+
+
 # --- Phần [cli]: Cấu hình giao diện dòng lệnh ---
 [cli]
 # Loại giao diện: "typer" (mặc định) hoặc "argparse"

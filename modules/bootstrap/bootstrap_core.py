@@ -41,22 +41,14 @@ def orchestrate_bootstrap(
     logger: logging.Logger, cli_args: argparse.Namespace, project_root: Path
 ) -> None:
     try:
-        toml_config = load_bootstrap_config(logger, project_root)
 
-        bin_dir_name = toml_config.get("bin_dir", DEFAULT_BIN_DIR_NAME)
-        scripts_dir_name = toml_config.get("scripts_dir", DEFAULT_SCRIPTS_DIR_NAME)
-        modules_dir_name = toml_config.get("modules_dir", DEFAULT_MODULES_DIR_NAME)
-        docs_dir_name = toml_config.get("docs_dir", DEFAULT_DOCS_DIR_NAME)
+        spec_file_path_str = getattr(cli_args, "spec_file_path_str", None)
+        if not spec_file_path_str:
+            logger.error("Lỗi: Không có file spec nào được cung cấp.")
+            logger.error("Gợi ý: Chạy `btool -s <tên_file>` để tạo file spec mới.")
+            sys.exit(1)
 
-        configured_paths = {
-            "BIN_DIR": project_root / bin_dir_name,
-            "SCRIPTS_DIR": project_root / scripts_dir_name,
-            "MODULES_DIR": project_root / modules_dir_name,
-            "DOCS_DIR": project_root / docs_dir_name,
-        }
-        logger.debug(f"Đã tải các đường dẫn cấu hình: {configured_paths}")
-
-        spec_file_path = Path(cli_args.spec_file_path_str).resolve()
+        spec_file_path = Path(spec_file_path_str).resolve()
         if not spec_file_path.is_file() or not spec_file_path.name.endswith(
             ".spec.toml"
         ):
@@ -74,6 +66,31 @@ def orchestrate_bootstrap(
         logger.info(f"   File Spec: {spec_rel_path}")
 
         config_spec = load_spec_file(logger, spec_file_path)
+
+        layout_config = config_spec.get("layout", {})
+        if not layout_config:
+            logger.error(
+                f"❌ Lỗi: File spec '{spec_file_path.name}' thiếu section [layout] bắt buộc."
+            )
+            logger.error(
+                f"   Gợi ý: Chạy `btool -s {spec_file_path.as_posix()}` để tạo lại file spec với cấu trúc đúng."
+            )
+            sys.exit(1)
+
+        logger.debug(f"Đã tải cấu hình [layout] từ file spec: {layout_config}")
+
+        bin_dir_name = layout_config.get("bin_dir", DEFAULT_BIN_DIR_NAME)
+        scripts_dir_name = layout_config.get("scripts_dir", DEFAULT_SCRIPTS_DIR_NAME)
+        modules_dir_name = layout_config.get("modules_dir", DEFAULT_MODULES_DIR_NAME)
+        docs_dir_name = layout_config.get("docs_dir", DEFAULT_DOCS_DIR_NAME)
+
+        configured_paths = {
+            "BIN_DIR": project_root / bin_dir_name,
+            "SCRIPTS_DIR": project_root / scripts_dir_name,
+            "MODULES_DIR": project_root / modules_dir_name,
+            "DOCS_DIR": project_root / docs_dir_name,
+        }
+        logger.debug(f"Đã giải quyết các đường dẫn cấu hình: {configured_paths}")
 
         (generated_content, target_paths, module_path) = process_bootstrap_logic(
             logger=logger,

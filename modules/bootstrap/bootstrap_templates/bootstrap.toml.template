@@ -1,0 +1,25 @@
+# Path: modules/bootstrap/bootstrap_templates/bootstrap.toml.template
+#
+# Cấu hình mặc định cho section [bootstrap] trong .project.toml.
+# Được sử dụng bởi `btool --config-project` để khởi tạo.
+#
+# Section [bootstrap] này định nghĩa cấu trúc thư mục *chuẩn* của project,
+# và được dùng làm "kế thừa" khi chạy `btool --init-spec`.
+#
+[{config_section_name}]
+
+# Tên thư mục chứa các wrapper Zsh
+# Mặc định: {toml_bin_dir}
+bin_dir = {toml_bin_dir}
+
+# Tên thư mục chứa các script entrypoint Python
+# Mặc định: {toml_scripts_dir}
+scripts_dir = {toml_scripts_dir}
+
+# Tên thư mục chứa các module code logic
+# Mặc định: {toml_modules_dir}
+modules_dir = {toml_modules_dir}
+
+# Tên thư mục chứa tài liệu
+# Mặc định: {toml_docs_dir}
+docs_dir = {toml_docs_dir}

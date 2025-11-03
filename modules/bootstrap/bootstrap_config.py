@@ -1,6 +1,6 @@
 # Path: modules/bootstrap/bootstrap_config.py
 from pathlib import Path
-from typing import Dict, Set, Final
+from typing import Dict, Set, Final, Any
 
 __all__ = [
     "TEMPLATE_DIR",
@@ -11,6 +11,11 @@ __all__ = [
     "DEFAULT_SCRIPTS_DIR_NAME",
     "DEFAULT_MODULES_DIR_NAME",
     "DEFAULT_DOCS_DIR_NAME",
+    "TEMPLATE_FILENAME",
+    "SPEC_TEMPLATE_FILENAME",
+    "PROJECT_CONFIG_FILENAME",
+    "MODULE_DIR",
+    "BOOTSTRAP_DEFAULTS",
 ]
 
 
@@ -35,3 +40,23 @@ DEFAULT_BIN_DIR_NAME: Final[str] = "bin"
 DEFAULT_SCRIPTS_DIR_NAME: Final[str] = "tools"
 DEFAULT_MODULES_DIR_NAME: Final[str] = "modules"
 DEFAULT_DOCS_DIR_NAME: Final[str] = "docs"
+
+
+TEMPLATE_FILENAME: Final[str] = "bootstrap.toml.template"
+
+
+SPEC_TEMPLATE_FILENAME: Final[str] = "docs/internal/tool_spec.template.toml"
+
+
+PROJECT_CONFIG_FILENAME: Final[str] = ".project.toml"
+
+
+MODULE_DIR: Final[Path] = Path(__file__).parent
+
+
+BOOTSTRAP_DEFAULTS: Final[Dict[str, Any]] = {
+    "bin_dir": DEFAULT_BIN_DIR_NAME,
+    "scripts_dir": DEFAULT_SCRIPTS_DIR_NAME,
+    "modules_dir": DEFAULT_MODULES_DIR_NAME,
+    "docs_dir": DEFAULT_DOCS_DIR_NAME,
+}
