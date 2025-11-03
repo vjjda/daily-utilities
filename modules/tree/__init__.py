@@ -7,7 +7,7 @@ from .tree_config import (
     TEMPLATE_FILENAME,
     TREE_DEFAULTS,
 )
-from .tree_core import process_tree_logic
+from .tree_core import process_tree_logic, orchestrate_tree
 from .tree_executor import (
     generate_tree,
     print_status_header,
@@ -22,6 +22,7 @@ __all__ = [
     "TEMPLATE_FILENAME",
     "TREE_DEFAULTS",
     "process_tree_logic",
+    "orchestrate_tree",
     "generate_tree",
     "print_status_header",
     "print_final_result",

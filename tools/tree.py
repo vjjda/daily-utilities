@@ -35,10 +35,7 @@ from modules.tree import (
     MODULE_DIR,
     TEMPLATE_FILENAME,
     TREE_DEFAULTS,
-    process_tree_logic,
-    generate_tree,
-    print_status_header,
-    print_final_result,
+    orchestrate_tree,
 )
 
 
@@ -150,50 +147,9 @@ def main():
         logger.debug("Traceback:", exc_info=True)
         sys.exit(1)
 
-    start_path_obj = Path(args.start_path).expanduser()
-    if not start_path_obj.exists():
-        logger.error(f"❌ Lỗi: Đường dẫn bắt đầu không tồn tại: {start_path_obj}")
-        sys.exit(1)
-
     try:
 
-        result_data = process_tree_logic(
-            logger=logger, cli_args=args, start_path_obj=start_path_obj
-        )
-
-        if result_data is None:
-            sys.exit(1)
-
-        config_params = result_data["config_params"]
-        start_dir = result_data["start_dir"]
-        is_git_repo = result_data["is_git_repo"]
-        cli_no_gitignore = result_data["cli_no_gitignore"]
-
-        print_status_header(
-            config_params=config_params,
-            start_dir=start_dir,
-            is_git_repo=is_git_repo,
-            cli_no_gitignore=cli_no_gitignore,
-        )
-
-        counters = {"dirs": 0, "files": 0}
-
-        generate_tree(
-            start_dir,
-            start_dir,
-            counters=counters,
-            max_level=config_params["max_level"],
-            ignore_spec=config_params["ignore_spec"],
-            submodules=config_params["submodules"],
-            prune_spec=config_params["prune_spec"],
-            dirs_only_spec=config_params["dirs_only_spec"],
-            extensions_filter=config_params["extensions_filter"],
-            is_in_dirs_only_zone=config_params["is_in_dirs_only_zone"],
-        )
-
-        print_final_result(
-            counters=counters, global_dirs_only=config_params["global_dirs_only_flag"]
-        )
+        orchestrate_tree(logger=logger, cli_args=args)
 
     except Exception as e:
         logger.error(f"❌ Đã xảy ra lỗi không mong muốn: {e}")
