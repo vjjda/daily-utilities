@@ -8,7 +8,7 @@ from .no_doc_config import (
     TEMPLATE_FILENAME,
     NDOC_DEFAULTS,
 )
-from .no_doc_core import process_no_doc_logic
+from .no_doc_core import process_no_doc_logic, orchestrate_no_doc
 from .no_doc_executor import execute_ndoc_action
 
 __all__ = [
@@ -21,4 +21,5 @@ __all__ = [
     "NDOC_DEFAULTS",
     "process_no_doc_logic",
     "execute_ndoc_action",
+    "orchestrate_no_doc",
 ]
