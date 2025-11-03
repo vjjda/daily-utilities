@@ -1,5 +1,7 @@
 # Path: modules/bootstrap/bootstrap_internal/bootstrap_generator.py
 import sys
+import logging
+import argparse
 from pathlib import Path
 from typing import Dict, Any, Optional, Tuple
 from modules.zsh_wrapper import generate_wrapper_content
