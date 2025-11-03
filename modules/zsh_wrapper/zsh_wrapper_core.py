@@ -30,10 +30,10 @@ from .zsh_wrapper_config import (
     CONFIG_SECTION_NAME,
 )
 
-__all__ = ["run_zsh_wrapper"]
+__all__ = ["orchestrate_zsh_wrapper"]
 
 
-def run_zsh_wrapper(
+def orchestrate_zsh_wrapper(
     logger: logging.Logger, cli_args: argparse.Namespace, project_root: Path
 ) -> None:
 

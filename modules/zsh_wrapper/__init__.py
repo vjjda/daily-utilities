@@ -9,7 +9,7 @@ from .zsh_wrapper_config import (
     ZRAP_DEFAULTS,
     MODULE_DIR,
 )
-from .zsh_wrapper_core import run_zsh_wrapper
+from .zsh_wrapper_core import orchestrate_zsh_wrapper
 
 from .zsh_wrapper_internal import generate_wrapper_content
 
@@ -22,6 +22,6 @@ __all__ = [
     "TEMPLATE_FILENAME",
     "ZRAP_DEFAULTS",
     "MODULE_DIR",
-    "run_zsh_wrapper",
+    "orchestrate_zsh_wrapper",
     "generate_wrapper_content",
 ]

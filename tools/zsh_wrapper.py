@@ -19,7 +19,7 @@ try:
     from modules.zsh_wrapper import (
         DEFAULT_MODE,
         DEFAULT_VENV,
-        run_zsh_wrapper,
+        orchestrate_zsh_wrapper,
         CONFIG_FILENAME,
         PROJECT_CONFIG_FILENAME,
         CONFIG_SECTION_NAME,
@@ -135,7 +135,7 @@ def main():
     config_initializer.check_and_handle_requests(args)
 
     try:
-        run_zsh_wrapper(logger=logger, cli_args=args, project_root=PROJECT_ROOT)
+        orchestrate_zsh_wrapper(logger=logger, cli_args=args, project_root=PROJECT_ROOT)
 
     except SystemExit as e:
         sys.exit(e.code)
