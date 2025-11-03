@@ -35,6 +35,22 @@ except ImportError as e:
     sys.exit(1)
 
 
+def _generate_names_from_stem(stem: str) -> Dict[str, str]:
+
+    snake_case_name = stem.replace("-", "_")
+
+    pascal_case_name = "".join(part.capitalize() for part in snake_case_name.split("_"))
+
+    tool_name = stem
+
+    return {
+        "meta_tool_name": tool_name,
+        "meta_script_file": f"{snake_case_name}.py",
+        "meta_module_name": snake_case_name,
+        "meta_logger_name": pascal_case_name,
+    }
+
+
 def handle_init_spec_request(
     logger: logging.Logger,
     init_spec_path_str: Optional[str],
@@ -53,7 +69,8 @@ def handle_init_spec_request(
         )
         target_path = target_path / "new_tool.spec.toml"
     elif not target_path.name.endswith(".spec.toml"):
-        target_path = target_path.with_suffix(".spec.toml")
+
+        target_path = target_path.with_name(f"{target_path.name}.spec.toml")
 
     logger.info(f"   File spec đích: {target_path.as_posix()}")
 
@@ -88,26 +105,38 @@ def handle_init_spec_request(
             "docs_dir": DEFAULT_DOCS_DIR_NAME,
         }
 
+    spec_stem = target_path.stem
+    logger.info(f"   Đang tự động điền tên meta từ stem: '{spec_stem}'...")
+    meta_names = _generate_names_from_stem(spec_stem)
+    logger.debug(f"   Tên đã tạo: {meta_names}")
+
+    format_values = {**layout_defaults, **meta_names}
+
     try:
+
         spec_template_path = project_root / SPEC_TEMPLATE_FILENAME
         template_content = load_text_template(spec_template_path, logger)
 
         final_content = template_content.format(
-            layout_bin_dir=layout_defaults.get("bin_dir", DEFAULT_BIN_DIR_NAME),
-            layout_scripts_dir=layout_defaults.get(
+            layout_bin_dir=format_values.get("bin_dir", DEFAULT_BIN_DIR_NAME),
+            layout_scripts_dir=format_values.get(
                 "scripts_dir", DEFAULT_SCRIPTS_DIR_NAME
             ),
-            layout_modules_dir=layout_defaults.get(
+            layout_modules_dir=format_values.get(
                 "modules_dir", DEFAULT_MODULES_DIR_NAME
             ),
-            layout_docs_dir=layout_defaults.get("docs_dir", DEFAULT_DOCS_DIR_NAME),
+            layout_docs_dir=format_values.get("docs_dir", DEFAULT_DOCS_DIR_NAME),
+            meta_tool_name=format_values.get("meta_tool_name", "new_tool"),
+            meta_script_file=format_values.get("meta_script_file", "new_tool.py"),
+            meta_module_name=format_values.get("meta_module_name", "new_tool"),
+            meta_logger_name=format_values.get("meta_logger_name", "NewTool"),
         )
 
         target_path.parent.mkdir(parents=True, exist_ok=True)
         target_path.write_text(final_content, encoding="utf-8")
 
         log_success(logger, f"Đã tạo file spec mẫu tại: {target_path.as_posix()}")
-        logger.info("   Vui lòng chỉnh sửa file này và chạy lại `btool`.")
+        logger.info("   Vui lòng kiểm tra và chạy lại `btool`.")
         launch_editor(logger, target_path)
 
     except Exception as e:
@@ -187,7 +216,6 @@ def main():
             config_section_name=CONFIG_SECTION_NAME,
             base_defaults=BOOTSTRAP_DEFAULTS,
         )
-
         config_initializer.check_and_handle_requests(
             argparse.Namespace(config_project=args.config_project, config_local=False)
         )

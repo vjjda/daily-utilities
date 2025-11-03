@@ -42,10 +42,12 @@ DEFAULT_MODULES_DIR_NAME: Final[str] = "modules"
 DEFAULT_DOCS_DIR_NAME: Final[str] = "docs"
 
 
-TEMPLATE_FILENAME: Final[str] = "bootstrap.toml.template"
+TEMPLATE_FILENAME: Final[str] = "bootstrap_templates/bootstrap.toml.template"
 
 
-SPEC_TEMPLATE_FILENAME: Final[str] = "docs/internal/tool_spec.template.toml"
+SPEC_TEMPLATE_FILENAME: Final[str] = (
+    "modules/bootstrap/bootstrap_templates/tool_spec.template.toml"
+)
 
 
 PROJECT_CONFIG_FILENAME: Final[str] = ".project.toml"

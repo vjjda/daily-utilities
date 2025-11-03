@@ -1,16 +1,17 @@
-# Path: docs/internal/tool_spec.template.toml
+# Path: modules/bootstrap/bootstrap_templates/tool_spec.template.toml
 # Template để tạo file <tên_tool>.spec.toml
+# (ĐÃ DI DỜI TỪ docs/internal/ VÀ CẬP NHẬT)
 
 # --- Phần [meta]: Thông tin cơ bản về tool ---
 [meta]
 # Tên tool (dùng cho file thực thi trong bin/, tên section config, v.v.)
-tool_name = "new_tool"
+tool_name = "{meta_tool_name}"
 # Tên file script Python trong thư mục scripts/
-script_file = "new_tool.py"
+script_file = "{meta_script_file}"
 # Tên thư mục module trong thư mục modules/
-module_name = "new_tool"
+module_name = "{meta_module_name}"
 # Tên logger (thường là tên tool viết hoa chữ cái đầu)
-logger_name = "NewTool"
+logger_name = "{meta_logger_name}"
 
 # --- Phần [layout]: Cấu trúc thư mục (Sẽ được điền tự động) ---
 # btool sẽ đọc section này để biết nơi đặt các file.
@@ -33,9 +34,9 @@ allow_interspersed_args = true
 # Cấu hình trợ giúp (help text)
 [cli.help]
 # Mô tả ngắn gọn về tool (hiển thị với --help)
-description = "Mô tả ngắn gọn về chức năng của new_tool."
+description = "Mô tả ngắn gọn về chức năng của {meta_logger_name}."
 # Văn bản hiển thị ở cuối phần trợ giúp (tùy chọn)
-epilog = "Ví dụ sử dụng: new_tool --option value"
+epilog = "Ví dụ sử dụng: {meta_tool_name} --option value"
 
 # Định nghĩa các đối số dòng lệnh [[cli.args]]
 # Lặp lại khối này cho mỗi đối số
