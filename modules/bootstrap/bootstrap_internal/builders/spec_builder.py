@@ -23,29 +23,23 @@ __all__ = ["run_init_spec_logic"]
 
 def _generate_names_from_stem(stem: str) -> Dict[str, str]:
 
-    sanitized_name = stem.replace("-", "_").replace(".", "_")
-
-    if sanitized_name.endswith("_spec"):
-        sanitized_name = sanitized_name[:-5]
-
     tool_name = stem
-    if stem == "new_tool.spec":
-        tool_name = "new_tool"
-        sanitized_name = "new_tool"
+
+    snake_case_name = stem.replace("-", "_").replace(".", "_")
 
     pascal_case_name = "".join(
-        part.capitalize() for part in sanitized_name.split("_") if part
+        part.capitalize() for part in snake_case_name.split("_") if part
     )
 
     if not pascal_case_name:
         pascal_case_name = "NewTool"
-        sanitized_name = "new_tool"
+        snake_case_name = "new_tool"
         tool_name = "new_tool"
 
     return {
         "meta_tool_name": tool_name,
-        "meta_script_file": f"{sanitized_name}.py",
-        "meta_module_name": sanitized_name,
+        "meta_script_file": f"{snake_case_name}.py",
+        "meta_module_name": snake_case_name,
         "meta_logger_name": pascal_case_name,
     }
 
@@ -71,6 +65,7 @@ def run_init_spec_logic(
     logger.info(f"   File spec đích: {target_spec_path.as_posix()}")
 
     if target_spec_path.exists() and not force:
+
         logger.error(f"❌ Lỗi: File spec đã tồn tại tại: {target_spec_path.as_posix()}")
         logger.error("   (Sử dụng -f hoặc --force để ghi đè)")
         sys.exit(1)
@@ -101,7 +96,9 @@ def run_init_spec_logic(
             "docs_dir": DEFAULT_DOCS_DIR_NAME,
         }
 
-    spec_stem = target_spec_path.stem
+    spec_name = target_spec_path.name
+    spec_stem = spec_name.removesuffix(".spec.toml")
+
     logger.info(f"   Đang tự động điền tên meta từ stem: '{spec_stem}'...")
     meta_names = _generate_names_from_stem(spec_stem)
     logger.debug(f"   Tên đã tạo: {meta_names}")
