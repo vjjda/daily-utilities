@@ -24,12 +24,12 @@ __all__ = [
 DiagramResult = Dict[str, Any]
 
 
-def orchestrate_clip_diag(logger: logging.Logger, args: argparse.Namespace) -> None:
-    if args.is_graph:
+def orchestrate_clip_diag(logger: logging.Logger, cli_args: argparse.Namespace) -> None:
+    if cli_args.is_graph:
         try:
 
             result_str = get_diagram_type_from_clipboard(
-                logger=logger, enable_filter_emoji=args.filter
+                logger=logger, enable_filter_emoji=cli_args.filter
             )
             print(result_str)
             sys.exit(0)
@@ -40,11 +40,11 @@ def orchestrate_clip_diag(logger: logging.Logger, args: argparse.Namespace) -> N
 
     result = process_clipboard_content(
         logger=logger,
-        enable_filter_emoji=args.filter,
+        enable_filter_emoji=cli_args.filter,
     )
 
     if result:
-        output_format: Optional[str] = args.to
+        output_format: Optional[str] = cli_args.to
         execute_diagram_generation(logger, result, output_format)
     else:
 
