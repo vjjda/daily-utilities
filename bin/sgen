@@ -19,7 +19,7 @@ PROJECT_ROOT=$( (cd -P -- "$SCRIPT_DIR/$PROJECT_ROOT_REL_TO_OUTPUT" && pwd -P) )
 
 # Đường dẫn venv và script (tương đối so với Project Root)
 local VENV_PATH_REL_TO_PROJECT=".venv"
-local SCRIPT_PATH_REL_TO_PROJECT="scripts/stubgen.py"
+local SCRIPT_PATH_REL_TO_PROJECT="tools/stubgen.py"
 
 # Tính đường dẫn tuyệt đối cuối cùng
 local VENV_PATH_ABS="$PROJECT_ROOT/$VENV_PATH_REL_TO_PROJECT"
