@@ -5,6 +5,12 @@ from pathlib import Path
 from typing import List, Optional, Dict, Any, Set
 import sys
 
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
+
+if not "PROJECT_ROOT" in locals():
+    sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
+
 
 from .check_path_internal import (
     merge_check_path_configs,
@@ -13,6 +19,7 @@ from .check_path_internal import (
     load_config_files,
 )
 from .check_path_executor import execute_check_path_action
+
 
 from .check_path_config import DEFAULT_EXTENSIONS
 from utils.constants import MAX_THREAD_WORKERS
