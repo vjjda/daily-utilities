@@ -6,6 +6,7 @@ from typing import List, Optional, Dict, Any, Tuple, Set
 import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
+
 if not "PROJECT_ROOT" in locals():
     sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
@@ -24,6 +25,8 @@ from utils.constants import MAX_THREAD_WORKERS
 
 
 __all__ = ["process_no_doc_logic", "orchestrate_no_doc"]
+
+FileResult = Dict[str, Any]
 
 
 def orchestrate_no_doc(
