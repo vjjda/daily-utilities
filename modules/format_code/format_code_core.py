@@ -6,7 +6,6 @@ from typing import List, Optional, Dict, Any, Tuple, Set
 import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-
 if not "PROJECT_ROOT" in locals():
     sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
@@ -15,15 +14,86 @@ from .format_code_internal import (
     merge_format_code_configs,
     process_format_code_task_dir,
     analyze_file_content_for_formatting,
+    load_config_files,
 )
+from .format_code_executor import execute_format_code_action
+from .format_code_config import DEFAULT_START_PATH
 
-
+from utils.cli import resolve_reporting_root, resolve_stepwise_paths
+from utils.core.config_helpers import generate_config_hash
 from utils.constants import MAX_THREAD_WORKERS
 
 
-__all__ = ["process_format_code_logic"]
+__all__ = ["process_format_code_logic", "orchestrate_format_code"]
 
 FileResult = Dict[str, Any]
+
+
+def orchestrate_format_code(
+    logger: logging.Logger,
+    cli_args: argparse.Namespace,
+    project_root: Path,
+    this_script_path: Path,
+) -> None:
+    stepwise: bool = getattr(cli_args, "stepwise", False)
+
+    preliminary_paths_str = (
+        cli_args.start_path_arg if cli_args.start_path_arg else [DEFAULT_START_PATH]
+    )
+    preliminary_paths = [Path(p).expanduser() for p in preliminary_paths_str]
+    reporting_root = resolve_reporting_root(
+        logger, preliminary_paths, cli_root_arg=None
+    )
+
+    file_config_data = load_config_files(reporting_root, logger)
+    merged_config = merge_format_code_configs(
+        logger,
+        cli_extensions=getattr(cli_args, "extensions", None),
+        cli_ignore=getattr(cli_args, "ignore", None),
+        file_config_data=file_config_data,
+    )
+
+    settings_to_hash = {
+        "extensions": sorted(list(merged_config["final_extensions_list"])),
+        "ignore": sorted(list(merged_config["final_ignore_list"])),
+    }
+
+    validated_paths = resolve_stepwise_paths(
+        logger=logger,
+        stepwise_flag=stepwise,
+        reporting_root=reporting_root,
+        settings_to_hash=settings_to_hash,
+        relevant_extensions=set(merged_config["final_extensions_list"]),
+        raw_paths=cli_args.start_path_arg,
+        default_path_str=DEFAULT_START_PATH,
+    )
+
+    if not validated_paths:
+        logger.warning("Không tìm thấy đường dẫn hợp lệ nào để quét. Đã dừng.")
+        sys.exit(0)
+
+    files_to_process: List[Path] = []
+    dirs_to_scan: List[Path] = []
+    for path in validated_paths:
+        if path.is_file():
+            files_to_process.append(path)
+        elif path.is_dir():
+            dirs_to_scan.append(path)
+
+    files_to_fix = process_format_code_logic(
+        logger=logger,
+        files_to_process=files_to_process,
+        dirs_to_scan=dirs_to_scan,
+        cli_args=cli_args,
+        script_file_path=this_script_path,
+    )
+
+    execute_format_code_action(
+        logger=logger,
+        all_files_to_fix=files_to_fix,
+        cli_args=cli_args,
+        scan_root=reporting_root,
+    )
 
 
 def process_format_code_logic(
