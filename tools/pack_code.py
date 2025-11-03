@@ -15,16 +15,13 @@ sys.path.append(str(PROJECT_ROOT))
 
 try:
     from utils.logging_config import setup_logging
+
     from utils.cli import (
         ConfigInitializer,
-        resolve_input_paths,
-        resolve_reporting_root,
     )
-    from utils.core import parse_comma_list
 
     from modules.pack_code import (
-        process_pack_code_logic,
-        execute_pack_code_action,
+        run_pack_code,
         MODULE_DIR,
         TEMPLATE_FILENAME,
         PCODE_DEFAULTS,
@@ -41,6 +38,7 @@ THIS_SCRIPT_PATH: Final[Path] = Path(__file__).resolve()
 
 
 def main():
+
     parser = argparse.ArgumentParser(
         description="Đóng gói mã nguồn thành một file context duy nhất cho LLM.",
         epilog="Ví dụ: pcode . -e 'py,md' -a -o 'my_context.txt'",
@@ -170,31 +168,17 @@ def main():
     )
     config_initializer.check_and_handle_requests(args)
 
-    validated_paths: List[Path] = resolve_input_paths(
-        logger=logger,
-        raw_paths=args.start_paths_arg,
-        default_path_str=DEFAULT_START_PATH,
-    )
-
-    if not validated_paths:
-        logger.warning("Không tìm thấy đường dẫn hợp lệ nào để quét. Đã dừng.")
-        sys.exit(0)
-
-    reporting_root = resolve_reporting_root(logger, validated_paths, cli_root_arg=None)
-
     try:
-        cli_args_dict = vars(args)
 
-        results_from_core = process_pack_code_logic(
+        run_pack_code(
             logger=logger,
-            cli_args=cli_args_dict,
-            validated_paths=validated_paths,
-            reporting_root=reporting_root,
-            script_file_path=THIS_SCRIPT_PATH,
+            cli_args=args,
+            this_script_path=THIS_SCRIPT_PATH,
         )
 
-        execute_pack_code_action(logger=logger, result=results_from_core)
-
+    except KeyboardInterrupt:
+        print("\n\n❌ [Lệnh dừng] Đã dừng đóng gói Code.")
+        sys.exit(1)
     except Exception as e:
         logger.error(f"❌ Đã xảy ra lỗi không mong muốn: {e}")
         logger.debug("Traceback:", exc_info=True)
@@ -202,8 +186,5 @@ def main():
 
 
 if __name__ == "__main__":
-    try:
-        main()
-    except KeyboardInterrupt:
-        print("\n\n❌ [Lệnh dừng] Đã dừng đóng gói Code.")
-        sys.exit(1)
+
+    main()

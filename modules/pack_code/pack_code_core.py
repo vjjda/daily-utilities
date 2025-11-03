@@ -1,7 +1,9 @@
 # Path: modules/pack_code/pack_code_core.py
 import logging
+import argparse
 from pathlib import Path
 from typing import Dict, Any, List, Optional, Set, Tuple
+import sys
 
 
 from .pack_code_internal import (
@@ -13,9 +15,52 @@ from .pack_code_internal import (
     assemble_packed_content,
 )
 
-__all__ = ["process_pack_code_logic"]
+from .pack_code_executor import execute_pack_code_action
+from utils.cli import (
+    resolve_input_paths,
+    resolve_reporting_root,
+)
+from .pack_code_config import DEFAULT_START_PATH
+
+
+__all__ = ["process_pack_code_logic", "run_pack_code"]
 
 FileResult = Dict[str, Any]
+
+
+def run_pack_code(
+    logger: logging.Logger, cli_args: argparse.Namespace, this_script_path: Path
+) -> None:
+
+    validated_paths: List[Path] = resolve_input_paths(
+        logger=logger,
+        raw_paths=cli_args.start_paths_arg,
+        default_path_str=DEFAULT_START_PATH,
+    )
+
+    if not validated_paths:
+        logger.warning("Không tìm thấy đường dẫn hợp lệ nào để quét. Đã dừng.")
+        sys.exit(0)
+
+    reporting_root = resolve_reporting_root(logger, validated_paths, cli_root_arg=None)
+
+    try:
+        cli_args_dict = vars(cli_args)
+
+        results_from_core = process_pack_code_logic(
+            logger=logger,
+            cli_args=cli_args_dict,
+            validated_paths=validated_paths,
+            reporting_root=reporting_root,
+            script_file_path=this_script_path,
+        )
+
+        execute_pack_code_action(logger=logger, result=results_from_core)
+
+    except Exception as e:
+        logger.error(f"❌ Đã xảy ra lỗi không mong muốn trong 'run_pack_code': {e}")
+        logger.debug("Traceback:", exc_info=True)
+        raise
 
 
 def process_pack_code_logic(
