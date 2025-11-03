@@ -9,7 +9,7 @@ from utils.cli import launch_editor
 from utils.core import load_project_config_section, load_text_template
 
 
-from ..bootstrap_config import (
+from ...bootstrap_config import (
     PROJECT_CONFIG_FILENAME,
     CONFIG_SECTION_NAME,
     DEFAULT_BIN_DIR_NAME,
