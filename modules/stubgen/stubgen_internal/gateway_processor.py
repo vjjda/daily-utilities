@@ -4,7 +4,8 @@ from pathlib import Path
 from typing import Dict, Any, List, Optional, Set, Tuple
 
 
-from . import extract_module_list, collect_all_exported_symbols, format_stub_content
+from .stubgen_parser import extract_module_list, collect_all_exported_symbols
+from .stubgen_formatter import format_stub_content
 
 __all__ = ["process_single_gateway"]
 
