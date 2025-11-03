@@ -11,7 +11,12 @@ from .bootstrap_config import (
     PROJECT_CONFIG_FILENAME,
     SPEC_TEMPLATE_FILENAME,
 )
-from .bootstrap_core import process_bootstrap_logic, orchestrate_bootstrap
+
+from .bootstrap_core import (
+    process_bootstrap_logic,
+    orchestrate_bootstrap,
+    orchestrate_init_spec,
+)
 from .bootstrap_executor import execute_bootstrap_action
 from .bootstrap_internal.bootstrap_loader import load_bootstrap_config, load_spec_file
 
@@ -25,6 +30,7 @@ __all__ = [
     "process_bootstrap_logic",
     "execute_bootstrap_action",
     "orchestrate_bootstrap",
+    "orchestrate_init_spec",
     "CONFIG_SECTION_NAME",
     "MODULE_DIR",
     "TEMPLATE_FILENAME",

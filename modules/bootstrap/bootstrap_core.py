@@ -13,6 +13,7 @@ from .bootstrap_internal import (
     generate_module_file,
     generate_module_init_file,
     generate_doc_file,
+    generate_spec_file,
 )
 
 
@@ -34,7 +35,32 @@ from .bootstrap_executor import execute_bootstrap_action
 __all__ = [
     "process_bootstrap_logic",
     "orchestrate_bootstrap",
+    "orchestrate_init_spec",
 ]
+
+
+def orchestrate_init_spec(
+    logger: logging.Logger,
+    project_root: Path,
+    target_spec_path: Path,
+    force: bool,
+) -> None:
+    try:
+        logger.info(f"🚀 Yêu cầu khởi tạo file spec (chế độ -s)...")
+        generate_spec_file(
+            logger=logger,
+            project_root=project_root,
+            target_spec_path=target_spec_path,
+            force=force,
+        )
+    except SystemExit:
+        raise
+    except Exception as e:
+        logger.error(
+            f"❌ Đã xảy ra lỗi không mong muốn trong 'orchestrate_init_spec': {e}"
+        )
+        logger.debug("Traceback:", exc_info=True)
+        sys.exit(1)
 
 
 def orchestrate_bootstrap(
