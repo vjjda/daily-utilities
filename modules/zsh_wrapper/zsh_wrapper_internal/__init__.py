@@ -1,5 +1,5 @@
 # Path: modules/zsh_wrapper/zsh_wrapper_internal/__init__.py
-from .zsh_wrapper_builder import generate_wrapper_content
+from .zsh_wrapper_generator import generate_wrapper_content
 from .zsh_wrapper_loader import execute_zsh_wrapper_action
 from .zsh_wrapper_resolver import (
     resolve_wrapper_inputs,
