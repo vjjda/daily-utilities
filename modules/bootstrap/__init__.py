@@ -7,7 +7,7 @@ from .bootstrap_config import (
 )
 from .bootstrap_core import process_bootstrap_logic
 from .bootstrap_executor import execute_bootstrap_action
-from .bootstrap_internal import load_bootstrap_config, load_spec_file
+from .bootstrap_internal.bootstrap_loader import load_bootstrap_config, load_spec_file
 
 __all__ = [
     "DEFAULT_BIN_DIR_NAME",
