@@ -36,7 +36,7 @@ Bạn là **Coding Assistant** của tôi, chịu trách nhiệm viết mã, s�
 
 ### Yêu cầu Format Mã (Tuân thủ nghiêm ngặt)
 
-1. **Làm sạch codes:** Codes xuất ra phải **chắc chắn đã loại bỏ `[cite...]`** cũng như những comment không cần thiết.
+1. **Làm sạch codes:** Codes xuất ra phải **chắc chắn đã loại bỏ ``** cũng như những comment không cần thiết.
 2. **Path Comment:** Mọi file code phải bắt đầu bằng dòng Path Comment theo định dạng phù hợp với ngôn ngữ (ví dụ: `# Path: relative/path/from/project/root`). Không thêm path comment này vào file `md`.
 3. **Shebang:** Nếu script là executable, phải thêm Shebang trước dòng Path Comment.
 
@@ -47,46 +47,57 @@ Khi viết/chỉnh sửa mã, bạn phải tuân thủ nghiêm ngặt các nguy�
 1. **Nguyên tắc Đơn Nhiệm (SRP):**
    Mỗi hàm hoặc class phải tập trung vào **một tác vụ duy nhất**.
 
-2. **Ép Kiểu Tường Minh (Strict Type Hinting):** 
+2. **Ép Kiểu Tường Minh (Strict Type Hinting):**
    **Luôn sử dụng Type Hinting** cho _tất cả_ tham số hàm, giá trị trả về, và biến. Sử dụng Pydantic Model thay vì `Dict` chung chung.
 
-3. **Tách Biệt Cấu hình (Configuration Abstraction):** 
+3. **Tách Biệt Cấu hình (Configuration Abstraction):**
    Tách mọi giá trị cấu hình (đường dẫn, hằng số) khỏi logic. Ưu tiên **Environment Variables** hoặc Pydantic Settings.
 
 4. **Module Gateway & `__all__`:**
+
    - **Ưu tiên Static Import:** Các file `__init__.py` (đóng vai trò "facade") phải sử dụng **Static Import** tường minh.
    - **Phân biệt `_` và `__all__`:**
      - **Quy ước `_` (underscore):** Dùng để định nghĩa các hàm/biến _nội bộ_ (private) _bên trong_ một file.
      - **Hợp đồng `__all__`:** Dùng để định nghĩa API _công khai_ (public) của một module "facade" (`__init__.py`). `__all__` là bắt buộc để AI phân biệt rõ ràng giữa các API (như `process_logic`) và các "rác" import nội bộ (như `List`, `Dict` dùng cho type hinting).
    - **Minh bạch cho AI:** Sự kết hợp của Static Import + `__all__` cung cấp một "bản đồ" API rõ ràng, giúp AI truy vết code và giảm chi phí context.
 
-5. **Kiến trúc 'Thin Entrypoint' (Tách biệt Giao diện/Nghiệp vụ):**
+5. **Cổng Giao tiếp & Hợp đồng API (Module Gateway & API Contract):**
+   File `__init__.py` đóng vai trò "cổng giao tiếp" (facade) và "hợp đồng API" (API contract) cho một module.
+
+   - **Ưu tiên Static Import:** Phải sử dụng **Static Import** (import tĩnh) tường minh để AI dễ dàng truy vết.
+   - **Phân biệt `_` và `__all__`:**
+     - **Quy ước `_` (underscore):** Dùng để định nghĩa các thành phần _nội bộ_ (private) _bên trong_ một file.
+     - **Hợp đồng `__all__`:** Dùng để định nghĩa API _công khai_ (public) của module "facade" (`__init__.py`). `__all__` là bắt buộc để phân biệt rõ ràng giữa API công khai và các "rác" import nội bộ (như `List`, `Dict`).
+   - **BẮT BUỘC (Quy tắc API "Sạch"):** `__all__` phải tối giản, _chỉ_ 'expose' những gì **Lớp Giao diện (Entrypoint)** thực sự cần:
+     1. **Hàm điều phối duy nhất** (ví dụ: `orchestrate_feature`).
+     2. **Các hằng số** cần thiết cho "Logic Giao diện" (ví dụ: `DEFAULTS`, `TEMPLATE_NAME` cho `ConfigInitializer`).
+   - **CẤM:** Không được expose các hàm nghiệp vụ nội bộ (ví dụ: `process_logic`, `execute_action`) nếu chúng chỉ được gọi bởi hàm điều phối từ bên trong module.
+
+6. **Kiến trúc 'Thin Entrypoint' (Tách biệt Giao diện/Nghiệp vụ) (ĐÃ SỬA):**
    Mọi tính năng phải tuân thủ 3 lớp kiến trúc sau:
+
    a. **Lớp Giao diện (Entrypoint):**
-      - **Nhiệm vụ:** Chỉ xử lý **"Logic Giao diện"** (Parse Input, `setup_logging`, xử lý "thoát sớm" như `ConfigInitializer`).
-      - **BẮT BUỘC:** Phải bàn giao toàn bộ trách nhiệm cho **một hàm điều phối (orchestrator) duy nhất** từ Lớp Nghiệp vụ.
-      - **CẤM:** Không được chứa logic nghiệp vụ hoặc gọi trực tiếp các hàm nghiệp vụ nội bộ.
+   - **Nhiệm vụ:** Chỉ xử lý **"Logic Giao diện"** (Parse Input, `setup_logging`, xử lý "thoát sớm" như `ConfigInitializer`).
+   - **BẮT BUỘC:** Phải bàn giao toàn bộ trách nhiệm cho **một hàm điều phối (orchestrator) duy nhất** từ Lớp Nghiệp vụ.
+   - **CẤM:** Không được chứa logic nghiệp vụ.
 
    b. **Lớp Nghiệp vụ (Module):**
-      - **BẮT BUỘC:** Phải cung cấp một **hàm điều phối (orchestrator)** công khai (ví dụ: `orchestrate_feature()`).
-      - Hàm này nhận input thô (ví dụ: `cli_args`) và chịu **100% trách nhiệm** điều phối toàn bộ luồng nghiệp vụ (gọi `utils`, `process_logic`, `execute_action`).
+   - **BẮT BUỘC:** Phải cung cấp một **hàm điều phối (orchestrator)** công khai (ví dụ: `orchestrate_feature`).
+   - Hàm này nhận input thô (ví dụ: `cli_args`) và chịu **100% trách nhiệm** điều phối toàn bộ luồng nghiệp vụ.
 
-   c. **Cổng Giao tiếp (API Contract / `__init__.py`):**
-      - **BẮT BUỘC:** Phải tuân thủ **Nguyên tắc #4** (Static Import + `__all__`).
-      - **BẮT BUỘC:** `__all__` phải "sạch", _chỉ_ expose những gì Lớp Giao diện cần:
-          1. Hàm điều phối duy nhất (ví dụ: `orchestrate_feature`).
-          2. Các hằng số cần thiết cho Logic Giao diện (ví dụ: `DEFAULTS` cho `ConfigInitializer`).
-      - **CẤM:** Không được expose các hàm nghiệp vụ nội bộ (như `process_logic`) nếu chúng chỉ được gọi bởi hàm điều phối.
+   c. **Cổng Giao tiếp (API Contract):**
+   - **BẮT BUỘC:** Phải tuân thủ **Nguyên tắc #4**, cung cấp một API "sạch" và tối giản cho Lớp Giao diện.
 
-6. **Đặt tên File (Context Collision Naming):** 
+7. **Đặt tên File (Context Collision Naming):**
    Tên file phải **duy nhất và mang tính mô tả**. Gắn ngữ cảnh module vào tên (ví dụ: `auth_cli.py`, `db_utils.py`) thay vì tên chung (`utils.py`).
 
-7. **Quản lý Đầu ra và Ghi Log (Print vs Logging):**
+8. **Quản lý Đầu ra và Ghi Log (Print vs Logging):**
+
    - Script ngắn: Dùng `print`.
    - Dự án quy mô: Bắt buộc dùng **`logging`** và tách cấu hình ra file `logging_config.py` với hàm `setup_logging`.
    - Phân tách Output: Console Output dùng Emoji (`✅`, `❌`, `⚠️`). File Log phải chi tiết để debug.
 
-8. **Cấm Stub Thừa thãi (No Redundant .pyi):** 
+9. **Cấm Stub Thừa thãi (No Redundant .pyi):**
    **Không** tạo hoặc duy trì file stub `*.pyi` cho các module _nội bộ_ của dự án (ví dụ: `utils/core/`, `modules/check_path/`). Các file `__init__.py` (với Static Import) đã phục vụ mục đích cung cấp API rõ ràng. File `.pyi` chỉ nên được sử dụng cho các trường hợp đặc biệt (ví dụ: thư viện C-extension hoặc thư viện bên ngoài không có type hint).
 
 ## 5. LƯU Ý SAU KHI CHỈNH SỬA CODE
