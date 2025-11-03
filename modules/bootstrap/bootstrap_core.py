@@ -7,13 +7,16 @@ from typing import Dict, Any, Tuple, Optional
 
 from utils.logging_config import log_success
 
+
 from .bootstrap_internal import (
-    generate_bin_wrapper,
     generate_script_entrypoint,
     generate_module_file,
     generate_module_init_file,
     generate_doc_file,
 )
+
+
+from modules.zsh_wrapper import generate_wrapper_content
 
 from .bootstrap_config import (
     DEFAULT_BIN_DIR_NAME,
@@ -77,6 +80,7 @@ def orchestrate_bootstrap(
             config=config_spec,
             configured_paths=configured_paths,
             cli_args=cli_args,
+            project_root=project_root,
         )
 
         logger.info(
@@ -109,6 +113,7 @@ def process_bootstrap_logic(
     config: Dict[str, Any],
     configured_paths: Dict[str, Path],
     cli_args: argparse.Namespace,
+    project_root: Path,
 ) -> Tuple[Dict[str, str], Dict[str, Path], Path]:
 
     BIN_DIR = configured_paths["BIN_DIR"]
@@ -139,18 +144,6 @@ def process_bootstrap_logic(
     try:
         mod_name = config["module_name"]
 
-        generated_content = {
-            "bin": generate_bin_wrapper(config),
-            "script": generate_script_entrypoint(
-                config, cli_interface_override=cli_args.interface
-            ),
-            "config": generate_module_file(config, "config"),
-            "loader": generate_module_file(config, "loader"),
-            "core": generate_module_file(config, "core"),
-            "executor": generate_module_file(config, "executor"),
-            "init": generate_module_init_file(config),
-        }
-
         target_paths = {
             "bin": BIN_DIR / tool_name,
             "script": SCRIPTS_DIR / script_file,
@@ -159,6 +152,31 @@ def process_bootstrap_logic(
             "core": module_path / f"{mod_name}_core.py",
             "executor": module_path / f"{mod_name}_executor.py",
             "init": module_path / "__init__.py",
+        }
+
+        bin_wrapper_content = generate_wrapper_content(
+            logger=logger,
+            script_path=target_paths["script"],
+            output_path=target_paths["bin"],
+            project_root=project_root,
+            venv_name=".venv",
+            mode="relative",
+        )
+
+        if bin_wrapper_content is None:
+            logger.error("❌ Lỗi khi tạo nội dung bin wrapper từ logic zrap.")
+            sys.exit(1)
+
+        generated_content = {
+            "bin": bin_wrapper_content,
+            "script": generate_script_entrypoint(
+                config, cli_interface_override=cli_args.interface
+            ),
+            "config": generate_module_file(config, "config"),
+            "loader": generate_module_file(config, "loader"),
+            "core": generate_module_file(config, "core"),
+            "executor": generate_module_file(config, "executor"),
+            "init": generate_module_init_file(config),
         }
 
         if config.get("docs", {}).get("enabled", False):

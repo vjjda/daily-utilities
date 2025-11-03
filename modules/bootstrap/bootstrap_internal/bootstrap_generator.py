@@ -22,20 +22,11 @@ from .bootstrap_argparse_builder import (
 )
 
 __all__ = [
-    "generate_bin_wrapper",
     "generate_script_entrypoint",
     "generate_module_file",
     "generate_module_init_file",
     "generate_doc_file",
 ]
-
-
-def generate_bin_wrapper(config: Dict[str, Any]) -> str:
-
-    template = load_template("bin_wrapper.zsh.template")
-    return template.format(
-        tool_name=config["meta"]["tool_name"], script_file=config["meta"]["script_file"]
-    )
 
 
 def generate_script_entrypoint(

@@ -11,6 +11,8 @@ from .zsh_wrapper_config import (
 )
 from .zsh_wrapper_core import run_zsh_wrapper
 
+from .zsh_wrapper_internal import generate_wrapper_content
+
 __all__ = [
     "DEFAULT_MODE",
     "DEFAULT_VENV",
@@ -21,4 +23,5 @@ __all__ = [
     "ZRAP_DEFAULTS",
     "MODULE_DIR",
     "run_zsh_wrapper",
+    "generate_wrapper_content",
 ]
