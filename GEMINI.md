@@ -44,28 +44,35 @@ Bạn là **Coding Assistant** của tôi, chịu trách nhiệm viết mã, s�
 
 Khi viết/chỉnh sửa mã, bạn phải tuân thủ nghiêm ngặt các nguyên tắc sau. Nếu tôi yêu cầu điều gì đó vi phạm một trong các nguyên tắc này, bạn phải phản biện lại bằng Tiếng Việt, nêu rõ nguyên tắc bị vi phạm và đề xuất giải pháp thay thế.
 
-1. **Nguyên tắc Đơn Nhiệm (SRP):** Mỗi hàm hoặc class phải tập trung vào **một tác vụ duy nhất**.
+1. **Nguyên tắc Đơn Nhiệm (SRP):**
+   Mỗi hàm hoặc class phải tập trung vào **một tác vụ duy nhất**.
 
-2. **Ép Kiểu Tường Minh (Strict Type Hinting):** **Luôn sử dụng Type Hinting** cho _tất cả_ tham số hàm, giá trị trả về, và biến. Sử dụng Pydantic Model thay vì `Dict` chung chung.
+2. **Ép Kiểu Tường Minh (Strict Type Hinting):** 
+   **Luôn sử dụng Type Hinting** cho _tất cả_ tham số hàm, giá trị trả về, và biến. Sử dụng Pydantic Model thay vì `Dict` chung chung.
 
-3. **Tách Biệt Cấu hình (Configuration Abstraction):** Tách mọi giá trị cấu hình (đường dẫn, hằng số) khỏi logic. Ưu tiên **Environment Variables** hoặc Pydantic Settings.
+3. **Tách Biệt Cấu hình (Configuration Abstraction):** 
+   Tách mọi giá trị cấu hình (đường dẫn, hằng số) khỏi logic. Ưu tiên **Environment Variables** hoặc Pydantic Settings.
 
-4. **Module Gateway & `__all__`:**
-   - **Ưu tiên Static Import:** Các file `__init__.py` (đóng vai trò "facade" hay "gateway" cho một module) phải sử dụng **Static Import** (import tĩnh) tường minh.
-   - **Minh bạch cho AI:** Thay vì dùng dynamic import (nạp động), việc khai báo `from .module_core import function_A` giúp AI (người bảo trì chính) dễ dàng truy vết (trace) nguồn gốc của code và giảm lượng token context cần thiết (chỉ cần đọc 1 file `__init__.py` thay vì 2 file `__init__.py` và `__init__.pyi`).
-   - **Khai báo `__all__`:** Mỗi file `__init__.py` này phải khai báo `__all__` để định nghĩa rõ API công khai của module.
+4. **Module Gateway & `__all__` (ĐÃ SỬA):**
+   - **Ưu tiên Static Import:** Các file `__init__.py` (đóng vai trò "facade") phải sử dụng **Static Import** tường minh.
+   - **Phân biệt `_` và `__all__`:**
+     - **Quy ước `_` (underscore):** Dùng để định nghĩa các hàm/biến _nội bộ_ (private) _bên trong_ một file.
+     - **Hợp đồng `__all__`:** Dùng để định nghĩa API _công khai_ (public) của một module "facade" (`__init__.py`). `__all__` là bắt buộc để AI phân biệt rõ ràng giữa các API (như `process_logic`) và các "rác" import nội bộ (như `List`, `Dict` dùng cho type hinting).
+   - **Minh bạch cho AI:** Sự kết hợp của Static Import + `__all__` cung cấp một "bản đồ" API rõ ràng, giúp AI truy vết code và giảm chi phí context.
 
-5. **Thiết lập Cổng Giao Tiếp (Standardized CLI Entry):** Khối `if __name__ == "__main__":` chỉ được phép xuất hiện trong file entry point (ví dụ: `cli.py`, `main.py`).
+5. **Thiết lập Cổng Giao Tiếp (Standardized CLI Entry):** 
+   Khối `if __name__ == "__main__":` chỉ được phép xuất hiện trong file entry point (ví dụ: `cli.py`, `main.py`).
 
-6. **Đặt tên File (Context Collision Naming):** Tên file phải **duy nhất và mang tính mô tả**. Gắn ngữ cảnh module vào tên (ví dụ: `auth_cli.py`, `db_utils.py`) thay vì tên chung (`utils.py`).
+6. **Đặt tên File (Context Collision Naming):** 
+   Tên file phải **duy nhất và mang tính mô tả**. Gắn ngữ cảnh module vào tên (ví dụ: `auth_cli.py`, `db_utils.py`) thay vì tên chung (`utils.py`).
 
 7. **Quản lý Đầu ra và Ghi Log (Print vs Logging):**
+   - Script ngắn: Dùng `print`.
+   - Dự án quy mô: Bắt buộc dùng **`logging`** và tách cấu hình ra file `logging_config.py` với hàm `setup_logging`.
+   - Phân tách Output: Console Output dùng Emoji (`✅`, `❌`, `⚠️`). File Log phải chi tiết để debug.
 
-- Script ngắn: Dùng `print`.
-- Dự án quy mô: Bắt buộc dùng **`logging`** và tách cấu hình ra file `logging_config.py` với hàm `setup_logging`.
-- Phân tách Output: Console Output dùng Emoji (`✅`, `❌`, `⚠️`). File Log phải chi tiết để debug.
-
-8. **Cấm Stub Thừa thãi (No Redundant .pyi):** **Không** tạo hoặc duy trì file stub `*.pyi` cho các module _nội bộ_ của dự án (ví dụ: `utils/core/`, `modules/check_path/`). Các file `__init__.py` (với Static Import) đã phục vụ mục đích cung cấp API rõ ràng. File `.pyi` chỉ nên được sử dụng cho các trường hợp đặc biệt (ví dụ: thư viện C-extension hoặc thư viện bên ngoài không có type hint).
+8. **Cấm Stub Thừa thãi (No Redundant .pyi):** 
+   **Không** tạo hoặc duy trì file stub `*.pyi` cho các module _nội bộ_ của dự án (ví dụ: `utils/core/`, `modules/check_path/`). Các file `__init__.py` (với Static Import) đã phục vụ mục đích cung cấp API rõ ràng. File `.pyi` chỉ nên được sử dụng cho các trường hợp đặc biệt (ví dụ: thư viện C-extension hoặc thư viện bên ngoài không có type hint).
 
 ## 5. LƯU Ý SAU KHI CHỈNH SỬA CODE
 
