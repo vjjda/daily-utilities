@@ -1,4 +1,4 @@
-# Path: scripts/check_path.py
+# Path: tools/check_path.py
 import sys
 import argparse
 import logging

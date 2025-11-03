@@ -1,4 +1,4 @@
-# Path: scripts/tree.py
+# Path: tools/tree.py
 import sys
 import argparse
 import logging

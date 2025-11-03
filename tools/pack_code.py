@@ -1,4 +1,4 @@
-# Path: scripts/pack_code.py
+# Path: tools/pack_code.py
 import sys
 import argparse
 import logging

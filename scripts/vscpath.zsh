@@ -1,5 +1,5 @@
 #!/usr/bin/env zsh
-# Path: scripts/helpers/vscpath.zsh
+# Path: scripts/vscpath.zsh
 
 # Lấy tên project từ cửa sổ VSCode đang mở đầu tiên
 PROJECT_NAME=$(/usr/bin/osascript <<'EOF'

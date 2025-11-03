@@ -1,4 +1,4 @@
-# Path: scripts/format_code.py
+# Path: tools/format_code.py
 import sys
 import argparse
 import logging

@@ -1,4 +1,4 @@
-# Path: scripts/bootstrap_tool.py
+# Path: tools/bootstrap_tool.py
 import sys
 import argparse
 import logging

@@ -1,4 +1,4 @@
-# Path: scripts/stubgen.py
+# Path: tools/stubgen.py
 import sys
 import argparse
 import logging
