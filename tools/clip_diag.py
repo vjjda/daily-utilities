@@ -21,13 +21,9 @@ from utils.logging_config import setup_logging
 
 
 from modules.clip_diag import (
-    execute_diagram_generation,
+    orchestrate_clip_diag,
 )
 from modules.clip_diag.clip_diag_config import DEFAULT_TO_ARG
-from modules.clip_diag.clip_diag_core import (
-    process_clipboard_content,
-    get_diagram_type_from_clipboard,
-)
 
 
 THIS_SCRIPT_PATH: Final[Path] = Path(__file__).resolve()
@@ -71,44 +67,26 @@ def main():
     args = parser.parse_args()
 
     if args.is_graph:
-        try:
-
-            dummy_logger = logging.getLogger("cdiag_silent")
-            dummy_logger.setLevel(logging.CRITICAL + 1)
-
-            result_str = get_diagram_type_from_clipboard(
-                logger=dummy_logger, enable_filter_emoji=args.filter
-            )
-            print(result_str)
-
-            sys.exit(0)
-
-        except Exception:
-            print("False")
-            sys.exit(1)
-
-    logger = setup_logging(script_name="CDiag")
-    logger.debug("CDiag script started.")
+        logger = logging.getLogger("cdiag_silent")
+        logger.setLevel(logging.CRITICAL + 1)
+    else:
+        logger = setup_logging(script_name="CDiag")
+        logger.debug("CDiag script started.")
 
     try:
 
-        result = process_clipboard_content(
-            logger=logger,
-            enable_filter_emoji=args.filter,
-        )
+        orchestrate_clip_diag(logger, args)
 
-        if result:
+    except SystemExit:
 
-            output_format: Optional[str] = args.to
-            execute_diagram_generation(logger, result, output_format)
-
+        sys.exit(0)
+    except Exception as e:
+        if not args.is_graph:
+            logger.error(f"❌ Đã xảy ra lỗi không mong muốn: {e}")
+            logger.debug("Traceback:", exc_info=True)
         else:
 
-            pass
-
-    except Exception as e:
-        logger.error(f"❌ Đã xảy ra lỗi không mong muốn: {e}")
-        logger.debug("Traceback:", exc_info=True)
+            print("False")
         sys.exit(1)
 
 

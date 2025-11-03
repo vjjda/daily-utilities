@@ -5,8 +5,11 @@ import pyperclip
 import logging
 from pathlib import Path
 from typing import Optional, Dict, Any, Tuple
+import argparse
+import sys
 
 from .clip_diag_config import GRAPHVIZ_PREFIX, MERMAID_PREFIX, DEFAULT_OUTPUT_DIR
+from .clip_diag_executor import execute_diagram_generation
 
 __all__ = [
     "process_clipboard_content",
@@ -14,10 +17,38 @@ __all__ = [
     "filter_emoji",
     "trim_leading_whitespace",
     "get_diagram_type_from_clipboard",
+    "orchestrate_clip_diag",
 ]
 
 
 DiagramResult = Dict[str, Any]
+
+
+def orchestrate_clip_diag(logger: logging.Logger, args: argparse.Namespace) -> None:
+    if args.is_graph:
+        try:
+
+            result_str = get_diagram_type_from_clipboard(
+                logger=logger, enable_filter_emoji=args.filter
+            )
+            print(result_str)
+            sys.exit(0)
+        except Exception as e:
+            logger.debug(f"Lỗi khi chạy is_graph: {e}")
+            print("False")
+            sys.exit(1)
+
+    result = process_clipboard_content(
+        logger=logger,
+        enable_filter_emoji=args.filter,
+    )
+
+    if result:
+        output_format: Optional[str] = args.to
+        execute_diagram_generation(logger, result, output_format)
+    else:
+
+        pass
 
 
 def get_diagram_type_from_clipboard(
