@@ -58,7 +58,8 @@ def run_init_spec_logic(
     force: bool,
 ) -> None:
 
-    target_spec_path = Path(init_spec_path_str).resolve()
+    target_spec_path = Path(init_spec_path_str).expanduser().resolve()
+
     if target_spec_path.is_dir():
         logger.warning(
             f"⚠️ Đường dẫn '{init_spec_path_str}' là một thư mục. Đang tạo file 'new_tool.spec.toml' bên trong đó."

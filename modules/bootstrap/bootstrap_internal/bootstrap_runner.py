@@ -118,7 +118,8 @@ def run_bootstrap_logic(
             "Lỗi logic: run_bootstrap_logic được gọi mà không có spec_file_path_str."
         )
 
-    spec_file_path = Path(spec_file_path_str).resolve()
+    spec_file_path = Path(spec_file_path_str).expanduser().resolve()
+
     if not spec_file_path.is_file() or not spec_file_path.name.endswith(".spec.toml"):
         logger.error(
             f"❌ Lỗi: Đường dẫn cung cấp không phải là file *.spec.toml hợp lệ."
