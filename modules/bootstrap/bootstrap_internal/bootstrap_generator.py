@@ -126,14 +126,23 @@ def generate_module_file(config: Dict[str, Any], file_type: str) -> str:
 
 
 def generate_module_init_file(config: Dict[str, Any]) -> str:
-
     template = load_template("module_init.py.template")
-    return template.format(module_name=config["module_name"])
+    module_name = config["module_name"]
 
+    config_constants_str = build_config_all_list(config)
 
-def generate_doc_file(config: Dict[str, Any]) -> str:
+    if config_constants_str:
+        constants_list = [c.strip().strip('"') for c in config_constants_str.split(",")]
 
-    template = load_template("doc_file.md.template")
+        config_import_block = "from .{\
+module_name}_config import (\n"
+        config_import_block += "\n".join(f"    {const}," for const in constants_list)
+        config_import_block += "\n)"
+
+        config_all_block = "\n".join(f'    "{const}",' for const in constants_list)
+    else:
+        config_import_block = "# (Không có hằng số config nào để import)"
+        config_all_block = "# (Không có hằng số config nào trong __all__)"
 
     return template.format(
         tool_name=config["meta"]["tool_name"],

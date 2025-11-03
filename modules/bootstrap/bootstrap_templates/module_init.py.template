@@ -1,55 +1,39 @@
 # Path: modules/{module_name}/__init__.py
 """
 Cổng giao tiếp (Facade) cho module '{module_name}'.
-(Tạo tự động bởi bootstrap_tool.py)
+(Tạo tự động bởi bootstrap_tool.py - Chế độ Static Import)
 
 Export các thành phần public từ các file con.
 """
 
-from pathlib import Path
-from importlib import import_module
-from typing import List
+# 1. Import từ Config
+{config_import_block}
 
-# --- Tự động Tái xuất (Dynamic Re-export) ---
-current_dir = Path(__file__).parent
+# 2. Import từ Core
+from .{module_name}_core import (
+    process_{module_name}_logic,
+)
 
-# Định nghĩa thứ tự load các module nội bộ
-# (Thứ tự có thể quan trọng nếu có dependencies)
-modules_to_export: List[str] = [
-    "{module_name}_config",
-    "{module_name}_loader",
-    "{module_name}_core",
-    "{module_name}_executor",
-    # Thêm các file .py khác trong module nếu cần export
+# 3. Import từ Executor
+from .{module_name}_executor import (
+    execute_{module_name}_action,
+)
+
+# 4. Import từ Loader (nếu có)
+from .{module_name}_loader import (
+    # Thêm các hàm loader public vào __all__ của loader.py và import tại đây
+)
+
+# 5. Định nghĩa API công khai
+__all__ = [
+    # Từ Config
+{config_all_block}
+    
+    # Từ Core
+    "process_{module_name}_logic",
+    
+    # Từ Executor
+    "execute_{module_name}_action",
+    
+    # Từ Loader (thêm tên các hàm loader ở đây)
 ]
-
-__all__: List[str] = []
-
-for submodule_stem in modules_to_export:
-    try:
-        module = import_module(f".{{submodule_stem}}", package=__name__)
-
-        if hasattr(module, '__all__'):
-            public_symbols = getattr(module, '__all__') #
-            for name in public_symbols:
-                obj = getattr(module, name)
-                globals()[name] = obj
-            __all__.extend(public_symbols)
-
-    except ImportError as e:
-        print(f"Cảnh báo: Không thể import từ {{submodule_stem}} trong module {{__name__}}: {{e}}") #
-
-# Dọn dẹp
-del Path, import_module, List, current_dir, modules_to_export, submodule_stem
-if 'module' in locals(): #
-    del module
-if 'public_symbols' in locals(): #
-    del public_symbols
-if 'name' in locals(): #
-    del name
-if 'obj' in locals(): #
-    del obj
-
-# Thêm định nghĩa logger chung cho module (tùy chọn)
-# import logging
-# Logger = logging.getLogger(__name__)
