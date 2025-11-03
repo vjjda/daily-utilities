@@ -22,7 +22,9 @@ __all__ = ["generate_script_entrypoint"]
 
 
 def generate_script_entrypoint(
-    config: Dict[str, Any], cli_interface_override: Optional[str] = None
+    config: Dict[str, Any],
+    cli_interface_override: Optional[str] = None,
+    relative_path: str = "tools/unknown_script.py",
 ) -> str:
     cli_config = config.get("cli", {})
     cli_help_config = cli_config.get("help", {})
@@ -59,14 +61,14 @@ except ImportError:
 
         return template.format(
             tool_name=config["meta"]["tool_name"],
-            script_file=config["meta"]["script_file"],
+            relative_path=relative_path,
             logger_name=config["meta"]["logger_name"],
             module_name=config["module_name"],
             config_imports=config_imports_code,
             cli_description=formatted_description,
             cli_epilog=formatted_epilog,
             argparse_arguments=argparse_args_code,
-            argparse_path_expands=path_expands_code,
+            argparse_path_expands=argparse_path_expands,
             argparse_args_pass_to_core=args_pass_code,
             argcomplete_imports=argcomplete_imports_code,
             argcomplete_logic=argcomplete_logic_code,
@@ -82,7 +84,7 @@ except ImportError:
 
         return template.format(
             tool_name=config["meta"]["tool_name"],
-            script_file=config["meta"]["script_file"],
+            relative_path=relative_path,
             logger_name=config["meta"]["logger_name"],
             module_name=config["module_name"],
             config_imports=config_imports_code,
