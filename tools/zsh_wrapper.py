@@ -15,7 +15,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.append(str(PROJECT_ROOT))
 
 try:
-    from utils.logging_config import setup_logging, log_success
+    from utils.logging_config import setup_logging
     from utils.cli import handle_config_init_request
 
     from modules.zsh_wrapper import (
@@ -141,14 +141,11 @@ def main():
         if config_action_taken:
             sys.exit(0)
 
-        success = run_zsh_wrapper(
-            logger=logger, cli_args=args, project_root=PROJECT_ROOT
-        )
-        if success:
-            log_success(logger, "Hoàn thành.")
-        else:
-            sys.exit(1)
+        run_zsh_wrapper(logger=logger, cli_args=args, project_root=PROJECT_ROOT)
 
+    except SystemExit as e:
+
+        sys.exit(e.code)
     except Exception as e:
         logger.error(f"❌ Đã xảy ra lỗi không mong muốn ở entrypoint: {e}")
         logger.debug("Traceback:", exc_info=True)

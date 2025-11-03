@@ -3,6 +3,7 @@ import logging
 import argparse
 from pathlib import Path
 from typing import Dict, Any, Optional, Tuple
+import sys
 
 from utils.core import find_git_root
 from .zsh_wrapper_helpers import resolve_root_interactively

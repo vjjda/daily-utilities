@@ -4,9 +4,11 @@ import os
 import argparse
 from pathlib import Path
 from typing import Dict, Any, List, Optional, Tuple
+import sys
 
 from utils.core import load_and_merge_configs
 from utils.core.config_helpers import resolve_config_value
+from utils.logging_config import log_success
 
 
 from .zsh_wrapper_internal import (
@@ -33,11 +35,11 @@ __all__ = ["run_zsh_wrapper"]
 
 def run_zsh_wrapper(
     logger: logging.Logger, cli_args: argparse.Namespace, project_root: Path
-) -> bool:
+) -> None:
 
     input_data = resolve_wrapper_inputs(logger, cli_args, project_root)
     if not input_data:
-        return False
+        sys.exit(1)
 
     tool_name: str = input_data["tool_name"]
     script_path: Path = input_data["script_path"]
@@ -149,4 +151,8 @@ def run_zsh_wrapper(
             logger.error(f"❌ Lỗi khi thực thi ghi file (mode: {mode}): {e}")
             all_success = False
 
-    return all_success
+    if all_success:
+        log_success(logger, "Hoàn thành.")
+    else:
+        logger.error("❌ Đã xảy ra lỗi trong quá trình tạo wrapper.")
+        sys.exit(1)
