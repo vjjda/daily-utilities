@@ -15,28 +15,20 @@ sys.path.append(str(PROJECT_ROOT))
 
 from utils.logging_config import setup_logging, log_success
 
+
 from utils.cli import (
     ConfigInitializer,
-    resolve_input_paths,
-    resolve_reporting_root,
 )
 
 
 from modules.check_path import (
-    process_check_path_logic,
-    execute_check_path_action,
+    run_check_path,
     MODULE_DIR,
     TEMPLATE_FILENAME,
     CPATH_DEFAULTS,
     PROJECT_CONFIG_FILENAME,
     CONFIG_SECTION_NAME,
     CONFIG_FILENAME,
-)
-
-
-from modules.check_path.check_path_internal import (
-    load_config_files,
-    merge_check_path_configs,
 )
 
 
@@ -134,29 +126,12 @@ def main():
     )
     config_initializer.check_and_handle_requests(args)
 
-    validated_paths: List[Path] = resolve_input_paths(
-        logger=logger, raw_paths=args.start_paths_arg, default_path_str="."
-    )
-    if not validated_paths:
-        logger.warning("Không tìm thấy đường dẫn hợp lệ nào để quét. Đã dừng.")
-        sys.exit(0)
-
-    reporting_root = resolve_reporting_root(logger, validated_paths, args.root)
-
     try:
-        files_to_fix = process_check_path_logic(
-            logger=logger,
-            validated_paths=validated_paths,
-            cli_args=args,
-            script_file_path=THIS_SCRIPT_PATH,
-            reporting_root=reporting_root,
-        )
 
-        execute_check_path_action(
+        run_check_path(
             logger=logger,
-            all_files_to_fix=files_to_fix,
             cli_args=args,
-            scan_root=reporting_root,
+            this_script_path=THIS_SCRIPT_PATH,
         )
 
     except Exception as e:

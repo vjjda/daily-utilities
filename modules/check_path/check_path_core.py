@@ -4,26 +4,64 @@ import argparse
 from pathlib import Path
 from typing import List, Optional, Dict, Any, Set
 import sys
-from concurrent.futures import ThreadPoolExecutor, as_completed
-
-
-if not "PROJECT_ROOT" in locals():
-    sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
 
 from .check_path_internal import (
     merge_check_path_configs,
     process_check_path_task_dir,
     analyze_single_file_for_path_comment,
+    load_config_files,
 )
-
+from .check_path_executor import execute_check_path_action
 
 from .check_path_config import DEFAULT_EXTENSIONS
 from utils.constants import MAX_THREAD_WORKERS
 
-__all__ = ["process_check_path_logic"]
+
+from utils.cli import (
+    resolve_input_paths,
+    resolve_reporting_root,
+)
+
+
+__all__ = ["process_check_path_logic", "run_check_path"]
 
 FileResult = Dict[str, Any]
+
+
+def run_check_path(
+    logger: logging.Logger, cli_args: argparse.Namespace, this_script_path: Path
+) -> None:
+
+    validated_paths: List[Path] = resolve_input_paths(
+        logger=logger, raw_paths=cli_args.start_paths_arg, default_path_str="."
+    )
+    if not validated_paths:
+        logger.warning("Không tìm thấy đường dẫn hợp lệ nào để quét. Đã dừng.")
+        sys.exit(0)
+
+    reporting_root = resolve_reporting_root(logger, validated_paths, cli_args.root)
+
+    try:
+        files_to_fix = process_check_path_logic(
+            logger=logger,
+            validated_paths=validated_paths,
+            cli_args=cli_args,
+            script_file_path=this_script_path,
+            reporting_root=reporting_root,
+        )
+
+        execute_check_path_action(
+            logger=logger,
+            all_files_to_fix=files_to_fix,
+            cli_args=cli_args,
+            scan_root=reporting_root,
+        )
+
+    except Exception as e:
+        logger.error(f"❌ Đã xảy ra lỗi không mong muốn trong 'run_check_path': {e}")
+        logger.debug("Traceback:", exc_info=True)
+        raise
 
 
 def process_check_path_logic(

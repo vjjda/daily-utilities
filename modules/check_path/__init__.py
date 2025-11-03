@@ -7,12 +7,14 @@ from .check_path_config import (
     CONFIG_SECTION_NAME,
     CONFIG_FILENAME,
 )
-from .check_path_core import process_check_path_logic
+
+from .check_path_core import process_check_path_logic, run_check_path
 from .check_path_executor import execute_check_path_action
 
 __all__ = [
     "process_check_path_logic",
     "execute_check_path_action",
+    "run_check_path",
     "MODULE_DIR",
     "TEMPLATE_FILENAME",
     "CPATH_DEFAULTS",
