@@ -1,9 +1,8 @@
 # Path: tools/format_code.py
 import sys
 import argparse
-import logging
 from pathlib import Path
-from typing import Optional, Final, Dict, Any, List, Set
+from typing import Final
 
 
 try:
@@ -21,9 +20,6 @@ try:
     from utils.cli import (
         ConfigInitializer,
     )
-    from utils.core import parse_comma_list
-    from utils.core.config_helpers import generate_config_hash
-
     from modules.format_code import (
         orchestrate_format_code,
         DEFAULT_START_PATH,

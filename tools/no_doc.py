@@ -1,12 +1,8 @@
 # Path: tools/no_doc.py
 import sys
 import argparse
-import logging
 from pathlib import Path
-from typing import Optional, Final, Dict, Any, List, Set
-import hashlib
-import json
-
+from typing import Final
 
 try:
     import argcomplete

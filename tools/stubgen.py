@@ -1,9 +1,8 @@
 # Path: tools/stubgen.py
 import sys
 import argparse
-import logging
 from pathlib import Path
-from typing import Optional, List, Set, Dict, Any, Final
+from typing import List, Final
 
 
 try:

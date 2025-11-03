@@ -1,9 +1,7 @@
 # Path: tools/zsh_wrapper.py
 import sys
 import argparse
-import logging
 from pathlib import Path
-from typing import Optional, Final, Dict, Any
 
 try:
     import argcomplete

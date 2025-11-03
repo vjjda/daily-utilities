@@ -1,9 +1,7 @@
 # Path: tools/tree.py
 import sys
 import argparse
-import logging
 from pathlib import Path
-from typing import Optional, Set, Dict, Any
 
 
 try:

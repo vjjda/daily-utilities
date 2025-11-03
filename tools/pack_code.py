@@ -1,9 +1,8 @@
 # Path: tools/pack_code.py
 import sys
 import argparse
-import logging
 from pathlib import Path
-from typing import Optional, Final, Dict, Any, List, Set
+from typing import Final, List
 
 
 try:

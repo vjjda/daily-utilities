@@ -1,10 +1,8 @@
 # Path: tools/bootstrap_tool.py
 import sys
 import argparse
-import logging
-import os
 from pathlib import Path
-from typing import Dict, Any, List, Optional, Final
+from typing import Final
 
 
 try:
@@ -17,7 +15,7 @@ PROJECT_ROOT: Final[Path] = Path(__file__).resolve().parent.parent
 sys.path.append(str(PROJECT_ROOT))
 
 try:
-    from utils.logging_config import setup_logging, log_success
+    from utils.logging_config import setup_logging
 
     from modules.bootstrap import (
         orchestrate_bootstrap,

@@ -3,8 +3,7 @@ import sys
 import argparse
 import logging
 from pathlib import Path
-from typing import Optional, Final
-import pyperclip
+from typing import Final
 
 
 try:

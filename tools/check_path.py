@@ -1,10 +1,8 @@
 # Path: tools/check_path.py
 import sys
 import argparse
-import logging
 from pathlib import Path
-from typing import List, Optional, Set, Dict, Any, Final
-import os
+from typing import List, Final
 
 
 try:
