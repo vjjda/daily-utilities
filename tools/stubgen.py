@@ -30,10 +30,10 @@ try:
         SGEN_DEFAULTS,
         PROJECT_CONFIG_FILENAME,
         CONFIG_FILENAME,
-        CONFIG_SECTION_NAME,
         process_stubgen_logic,
         execute_stubgen_action,
     )
+    from modules.stubgen.stubgen_config import CONFIG_SECTION_NAME
 except ImportError as e:
 
     pass
