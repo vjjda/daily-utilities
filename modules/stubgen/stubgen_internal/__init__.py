@@ -1,49 +1,22 @@
 # Path: modules/stubgen/stubgen_internal/__init__.py
+from .gateway_processor import process_single_gateway
+from .stubgen_classifier import classify_and_report_stub_changes
+from .stubgen_formatter import format_stub_content
+from .stubgen_loader import find_gateway_files, load_config_files
+from .stubgen_merger import merge_stubgen_configs
+from .stubgen_parser import extract_module_list, collect_all_exported_symbols
+from .stubgen_task_dir import process_stubgen_task_dir
+from .stubgen_task_file import process_stubgen_task_file
 
-from pathlib import Path
-from importlib import import_module
-from typing import List
-
-
-current_dir = Path(__file__).parent
-
-
-modules_to_export: List[str] = [
-    "stubgen_loader",
-    "stubgen_merger",
-    "stubgen_parser",
-    "stubgen_formatter",
-    "gateway_processor",
-    "stubgen_task_file",
-    "stubgen_task_dir",
-    "stubgen_classifier",
+__all__ = [
+    "process_single_gateway",
+    "classify_and_report_stub_changes",
+    "format_stub_content",
+    "find_gateway_files",
+    "load_config_files",
+    "merge_stubgen_configs",
+    "extract_module_list",
+    "collect_all_exported_symbols",
+    "process_stubgen_task_dir",
+    "process_stubgen_task_file",
 ]
-
-__all__: List[str] = []
-
-for submodule_stem in modules_to_export:
-    try:
-        module = import_module(f".{submodule_stem}", package=__name__)
-
-        if hasattr(module, "__all__"):
-            public_symbols = getattr(module, "__all__")
-            for name in public_symbols:
-                obj = getattr(module, name)
-                globals()[name] = obj
-            __all__.extend(public_symbols)
-
-    except ImportError as e:
-        print(
-            f"Cảnh báo: Không thể import từ {submodule_stem} trong module {__name__}: {e}"
-        )
-
-
-del Path, import_module, List, current_dir, modules_to_export, submodule_stem
-if "module" in locals():
-    del module
-if "public_symbols" in locals():
-    del public_symbols
-if "name" in locals():
-    del name
-if "obj" in locals():
-    del obj
