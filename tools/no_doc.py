@@ -142,7 +142,7 @@ def main():
 
     args = parser.parse_args()
 
-    logger = setup_logging(script_name="Ndoc")
+    logger = setup_logging(script_name="NDoc")
     logger.debug("Ndoc script started.")
 
     try:

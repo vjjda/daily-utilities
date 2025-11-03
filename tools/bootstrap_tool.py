@@ -36,7 +36,7 @@ except ImportError as e:
 
 def main():
 
-    logger = setup_logging(script_name="Bootstrap", console_level_str="INFO")
+    logger = setup_logging(script_name="Btool", console_level_str="INFO")
     logger.debug("Script bootstrap bắt đầu.")
 
     parser = argparse.ArgumentParser(

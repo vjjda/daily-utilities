@@ -128,7 +128,7 @@ def main():
 
     args = parser.parse_args()
 
-    logger = setup_logging(script_name="tree")
+    logger = setup_logging(script_name="Tree")
     logger.debug("Tree script (argparse) started.")
 
     try:

@@ -125,7 +125,7 @@ def main():
 
     args = parser.parse_args()
 
-    logger = setup_logging(script_name="FormatCode")
+    logger = setup_logging(script_name="Forc")
     logger.debug("FormatCode script started.")
 
     try:
