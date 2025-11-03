@@ -1,4 +1,4 @@
-# Path: modules/{module_name}/{module_name}_loader.py
+# Path: modules/bootstrap/bootstrap_templates/module_loader.py.template
 """
 Logic tải dữ liệu cho module '{module_name}'.
 (Tạo tự động bởi bootstrap_tool.py)

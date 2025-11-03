@@ -1,4 +1,4 @@
-# Path: modules/{module_name}/{module_name}_config.py
+# Path: modules/bootstrap/bootstrap_templates/module_config.py.template
 """
 Các hằng số cấu hình cho module '{module_name}'.
 (Tạo tự động bởi bootstrap_tool.py)
