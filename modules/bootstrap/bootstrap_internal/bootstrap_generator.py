@@ -1,7 +1,6 @@
 # Path: modules/bootstrap/bootstrap_internal/bootstrap_generator.py
 from typing import Dict, Any, Optional
 
-
 from .bootstrap_loader import load_template
 
 from .bootstrap_config_builder import (
@@ -22,6 +21,7 @@ from .bootstrap_argparse_builder import (
 )
 
 __all__ = [
+    "generate_bin_wrapper",
     "generate_script_entrypoint",
     "generate_module_file",
     "generate_module_init_file",
@@ -29,10 +29,16 @@ __all__ = [
 ]
 
 
+def generate_bin_wrapper(config: Dict[str, Any]) -> str:
+    template = load_template("bin_wrapper.zsh.template")
+    return template.format(
+        tool_name=config["meta"]["tool_name"], script_file=config["meta"]["script_file"]
+    )
+
+
 def generate_script_entrypoint(
     config: Dict[str, Any], cli_interface_override: Optional[str] = None
 ) -> str:
-
     cli_config = config.get("cli", {})
     cli_help_config = cli_config.get("help", {})
 
@@ -104,7 +110,6 @@ except ImportError:
 
 
 def generate_module_file(config: Dict[str, Any], file_type: str) -> str:
-
     template_name_map = {
         "config": "module_config.py.template",
         "core": "module_core.py.template",
@@ -134,15 +139,26 @@ def generate_module_init_file(config: Dict[str, Any]) -> str:
     if config_constants_str:
         constants_list = [c.strip().strip('"') for c in config_constants_str.split(",")]
 
-        config_import_block = "from .{\
-module_name}_config import (\n"
-        config_import_block += "\n".join(f"    {const}," for const in constants_list)
+        config_import_block = f"from .{module_name}_config import ("
+        config_import_block += "\n" + "\n".join(
+            f"    {const}," for const in constants_list
+        )
         config_import_block += "\n)"
 
         config_all_block = "\n".join(f'    "{const}",' for const in constants_list)
     else:
         config_import_block = "# (Không có hằng số config nào để import)"
         config_all_block = "# (Không có hằng số config nào trong __all__)"
+
+    return template.format(
+        module_name=module_name,
+        config_import_block=config_import_block,
+        config_all_block=config_all_block,
+    )
+
+
+def generate_doc_file(config: Dict[str, Any]) -> str:
+    template = load_template("doc_file.md.template")
 
     return template.format(
         tool_name=config["meta"]["tool_name"],
