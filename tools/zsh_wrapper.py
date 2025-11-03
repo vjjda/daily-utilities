@@ -16,7 +16,7 @@ sys.path.append(str(PROJECT_ROOT))
 
 try:
     from utils.logging_config import setup_logging
-    from utils.cli import handle_config_init_request
+    from utils.cli import ConfigInitializer
 
     from modules.zsh_wrapper import (
         DEFAULT_MODE,
@@ -125,26 +125,21 @@ def main():
     logger = setup_logging(script_name="Zrap")
     logger.debug("Zrap script started.")
 
+    config_initializer = ConfigInitializer(
+        logger=logger,
+        module_dir=MODULE_DIR,
+        template_filename=TEMPLATE_FILENAME,
+        config_filename=CONFIG_FILENAME,
+        project_config_filename=PROJECT_CONFIG_FILENAME,
+        config_section_name=CONFIG_SECTION_NAME,
+        base_defaults=ZRAP_DEFAULTS,
+    )
+    config_initializer.check_and_handle_requests(args)
+
     try:
-
-        config_action_taken = handle_config_init_request(
-            logger=logger,
-            config_project=args.config_project,
-            config_local=args.config_local,
-            module_dir=MODULE_DIR,
-            template_filename=TEMPLATE_FILENAME,
-            config_filename=CONFIG_FILENAME,
-            project_config_filename=PROJECT_CONFIG_FILENAME,
-            config_section_name=CONFIG_SECTION_NAME,
-            base_defaults=ZRAP_DEFAULTS,
-        )
-        if config_action_taken:
-            sys.exit(0)
-
         run_zsh_wrapper(logger=logger, cli_args=args, project_root=PROJECT_ROOT)
 
     except SystemExit as e:
-
         sys.exit(e.code)
     except Exception as e:
         logger.error(f"❌ Đã xảy ra lỗi không mong muốn ở entrypoint: {e}")

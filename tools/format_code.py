@@ -19,7 +19,7 @@ try:
     from utils.logging_config import setup_logging
 
     from utils.cli import (
-        handle_config_init_request,
+        ConfigInitializer,
     )
     from utils.core import parse_comma_list
     from utils.core.config_helpers import generate_config_hash
@@ -120,24 +120,16 @@ def main():
     logger = setup_logging(script_name="Forc")
     logger.debug("FormatCode script started.")
 
-    try:
-        config_action_taken = handle_config_init_request(
-            logger=logger,
-            config_project=args.config_project,
-            config_local=args.config_local,
-            module_dir=MODULE_DIR,
-            template_filename=TEMPLATE_FILENAME,
-            config_filename=CONFIG_FILENAME,
-            project_config_filename=PROJECT_CONFIG_FILENAME,
-            config_section_name=CONFIG_SECTION_NAME,
-            base_defaults=FORC_DEFAULTS,
-        )
-        if config_action_taken:
-            sys.exit(0)
-    except Exception as e:
-        logger.error(f"❌ Đã xảy ra lỗi khi khởi tạo config: {e}")
-        logger.debug("Traceback:", exc_info=True)
-        sys.exit(1)
+    config_initializer = ConfigInitializer(
+        logger=logger,
+        module_dir=MODULE_DIR,
+        template_filename=TEMPLATE_FILENAME,
+        config_filename=CONFIG_FILENAME,
+        project_config_filename=PROJECT_CONFIG_FILENAME,
+        config_section_name=CONFIG_SECTION_NAME,
+        base_defaults=FORC_DEFAULTS,
+    )
+    config_initializer.check_and_handle_requests(args)
 
     try:
         orchestrate_format_code(
