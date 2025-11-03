@@ -60,8 +60,23 @@ Khi viết/chỉnh sửa mã, bạn phải tuân thủ nghiêm ngặt các nguy�
      - **Hợp đồng `__all__`:** Dùng để định nghĩa API _công khai_ (public) của một module "facade" (`__init__.py`). `__all__` là bắt buộc để AI phân biệt rõ ràng giữa các API (như `process_logic`) và các "rác" import nội bộ (như `List`, `Dict` dùng cho type hinting).
    - **Minh bạch cho AI:** Sự kết hợp của Static Import + `__all__` cung cấp một "bản đồ" API rõ ràng, giúp AI truy vết code và giảm chi phí context.
 
-5. **Thiết lập Cổng Giao Tiếp (Standardized CLI Entry):** 
-   Khối `if __name__ == "__main__":` chỉ được phép xuất hiện trong file entry point (ví dụ: `cli.py`, `main.py`).
+5. **Kiến trúc 'Thin Entrypoint' (Tách biệt Giao diện/Nghiệp vụ):**
+   Mọi tính năng phải tuân thủ 3 lớp kiến trúc sau:
+   a. **Lớp Giao diện (Entrypoint):**
+      - **Nhiệm vụ:** Chỉ xử lý **"Logic Giao diện"** (Parse Input, `setup_logging`, xử lý "thoát sớm" như `ConfigInitializer`).
+      - **BẮT BUỘC:** Phải bàn giao toàn bộ trách nhiệm cho **một hàm điều phối (orchestrator) duy nhất** từ Lớp Nghiệp vụ.
+      - **CẤM:** Không được chứa logic nghiệp vụ hoặc gọi trực tiếp các hàm nghiệp vụ nội bộ.
+
+   b. **Lớp Nghiệp vụ (Module):**
+      - **BẮT BUỘC:** Phải cung cấp một **hàm điều phối (orchestrator)** công khai (ví dụ: `orchestrate_feature()`).
+      - Hàm này nhận input thô (ví dụ: `cli_args`) và chịu **100% trách nhiệm** điều phối toàn bộ luồng nghiệp vụ (gọi `utils`, `process_logic`, `execute_action`).
+
+   c. **Cổng Giao tiếp (API Contract / `__init__.py`):**
+      - **BẮT BUỘC:** Phải tuân thủ **Nguyên tắc #4** (Static Import + `__all__`).
+      - **BẮT BUỘC:** `__all__` phải "sạch", _chỉ_ expose những gì Lớp Giao diện cần:
+          1. Hàm điều phối duy nhất (ví dụ: `orchestrate_feature`).
+          2. Các hằng số cần thiết cho Logic Giao diện (ví dụ: `DEFAULTS` cho `ConfigInitializer`).
+      - **CẤM:** Không được expose các hàm nghiệp vụ nội bộ (như `process_logic`) nếu chúng chỉ được gọi bởi hàm điều phối.
 
 6. **Đặt tên File (Context Collision Naming):** 
    Tên file phải **duy nhất và mang tính mô tả**. Gắn ngữ cảnh module vào tên (ví dụ: `auth_cli.py`, `db_utils.py`) thay vì tên chung (`utils.py`).
