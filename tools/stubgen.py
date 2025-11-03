@@ -15,6 +15,8 @@ except ImportError:
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.append(str(PROJECT_ROOT))
 
+from modules.stubgen.stubgen_config import CONFIG_SECTION_NAME
+
 try:
     from utils.logging_config import setup_logging, log_success
 
@@ -33,7 +35,6 @@ try:
         process_stubgen_logic,
         execute_stubgen_action,
     )
-    from modules.stubgen.stubgen_config import CONFIG_SECTION_NAME
 except ImportError as e:
 
     pass
