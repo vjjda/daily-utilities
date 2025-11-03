@@ -28,8 +28,7 @@ FileResult = Dict[str, Any]
 
 def process_check_path_logic(
     logger: logging.Logger,
-    files_to_process: List[Path],
-    dirs_to_scan: List[Path],
+    validated_paths: List[Path],
     cli_args: argparse.Namespace,
     script_file_path: Path,
     reporting_root: Path,
@@ -37,6 +36,9 @@ def process_check_path_logic(
 
     all_results: List[FileResult] = []
     processed_files: Set[Path] = set()
+
+    files_to_process: List[Path] = [p for p in validated_paths if p.is_file()]
+    dirs_to_scan: List[Path] = [p for p in validated_paths if p.is_dir()]
 
     cli_extensions_str: Optional[str] = getattr(cli_args, "extensions", None)
     default_file_config = merge_check_path_configs(

@@ -21,8 +21,7 @@ FileResult = Dict[str, Any]
 def process_pack_code_logic(
     logger: logging.Logger,
     cli_args: Dict[str, Any],
-    files_to_process: List[Path],
-    dirs_to_scan: List[Path],
+    validated_paths: List[Path],
     reporting_root: Optional[Path],
     script_file_path: Path,
 ) -> Dict[str, Any]:
@@ -31,6 +30,9 @@ def process_pack_code_logic(
     try:
         all_file_results: List[FileResult] = []
         processed_files: Set[Path] = set()
+
+        files_to_process: List[Path] = [p for p in validated_paths if p.is_file()]
+        dirs_to_scan: List[Path] = [p for p in validated_paths if p.is_dir()]
 
         format_flag: bool = cli_args.get("format", False)
         if format_flag:

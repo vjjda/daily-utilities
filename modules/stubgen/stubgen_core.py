@@ -23,8 +23,7 @@ def process_stubgen_logic(
     logger: logging.Logger,
     cli_args: argparse.Namespace,
     script_file_path: Path,
-    files_to_process: List[Path],
-    dirs_to_scan: List[Path],
+    validated_paths: List[Path],
 ) -> Tuple[List[StubResult], List[StubResult]]:
 
     try:
@@ -38,6 +37,9 @@ def process_stubgen_logic(
     total_files_to_overwrite: List[StubResult] = []
     processed_files: Set[Path] = set()
     reporting_root = Path.cwd()
+
+    files_to_process: List[Path] = [p for p in validated_paths if p.is_file()]
+    dirs_to_scan: List[Path] = [p for p in validated_paths if p.is_dir()]
 
     if files_to_process:
         for file_path in files_to_process:

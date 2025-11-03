@@ -161,14 +161,10 @@ def main():
 
     reporting_root = resolve_reporting_root(logger, validated_paths, args.root)
 
-    files_to_process: List[Path] = [p for p in validated_paths if p.is_file()]
-    dirs_to_scan: List[Path] = [p for p in validated_paths if p.is_dir()]
-
     try:
         files_to_fix = process_check_path_logic(
             logger=logger,
-            files_to_process=files_to_process,
-            dirs_to_scan=dirs_to_scan,
+            validated_paths=validated_paths,
             cli_args=args,
             script_file_path=THIS_SCRIPT_PATH,
             reporting_root=reporting_root,

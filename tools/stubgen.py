@@ -132,22 +132,13 @@ def main():
 
     reporting_root = resolve_reporting_root(logger, validated_paths, cli_root_arg=None)
 
-    files_to_process: List[Path] = []
-    dirs_to_scan: List[Path] = []
-    for path in validated_paths:
-        if path.is_file():
-            files_to_process.append(path)
-        elif path.is_dir():
-            dirs_to_scan.append(path)
-
     try:
 
         files_to_create, files_to_overwrite = process_stubgen_logic(
             logger=logger,
             cli_args=args,
             script_file_path=THIS_SCRIPT_PATH,
-            files_to_process=files_to_process,
-            dirs_to_scan=dirs_to_scan,
+            validated_paths=validated_paths,
         )
 
         execute_stubgen_action(
