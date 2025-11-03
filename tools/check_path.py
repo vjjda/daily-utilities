@@ -6,14 +6,6 @@ from pathlib import Path
 from typing import List, Optional, Set, Dict, Any, Final
 import os
 
-try:
-    import tomllib
-except ImportError:
-    try:
-        import toml as tomllib
-    except ImportError:
-        tomllib = None
-
 
 try:
     import argcomplete

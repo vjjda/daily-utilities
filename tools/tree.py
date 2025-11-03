@@ -5,14 +5,6 @@ import logging
 from pathlib import Path
 from typing import Optional, Set, Dict, Any
 
-try:
-    import tomllib
-except ImportError:
-    try:
-        import toml as tomllib
-    except ImportError:
-        tomllib = None
-
 
 try:
     import argcomplete
