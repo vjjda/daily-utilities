@@ -116,3 +116,15 @@ format_extensions = ["py"]
 # Các giá trị này sẽ được THÊM vào danh sách mặc định.
 # Ví dụ: ignore = ["**/tests/*"] # Placeholder vẫn là list
 ignore = [".DS_Store", ".git", ".hg", ".svn", ".venv", "/.gitignore", "__pycache__", "build", "dist", "node_modules", "out", "venv"]
+
+[forc]
+
+# extensions (List[str]): Danh sách các đuôi file cần bao gồm.
+# GHI ĐÈ hoàn toàn danh sách mặc định CỦA SCRIPT.
+# Mặc định (từ config set): {toml_extensions}
+extensions = ["py"]
+
+# ignore (List[str]): Danh sách các pattern (kiểu .gitignore) để bỏ qua.
+# Các giá trị này sẽ được THÊM vào danh sách mặc định.
+# Mặc định (được thêm vào): {toml_ignore}
+ignore = [".DS_Store", ".git", ".hg", ".svn", ".venv", "__pycache__", "build", "dist", "node_modules", "out", "venv"]
