@@ -4,7 +4,6 @@ import argparse
 from pathlib import Path
 from typing import List, Final
 
-
 try:
     import argcomplete
 except ImportError:
@@ -14,13 +13,10 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.append(str(PROJECT_ROOT))
 
 from utils.logging_config import setup_logging, log_success
-
-
 from utils.cli import (
     ConfigInitializer,
+    run_cli_app,
 )
-
-
 from modules.check_path import (
     orchestrate_check_path,
     MODULE_DIR,
@@ -110,6 +106,7 @@ def main():
         argcomplete.autocomplete(parser)
 
     args = parser.parse_args()
+
     logger = setup_logging(script_name="CPath")
     logger.debug("CPath script started.")
 
@@ -124,23 +121,13 @@ def main():
     )
     config_initializer.check_and_handle_requests(args)
 
-    try:
-
-        orchestrate_check_path(
-            logger=logger,
-            cli_args=args,
-            this_script_path=THIS_SCRIPT_PATH,
-        )
-
-    except Exception as e:
-        logger.error(f"❌ Đã xảy ra lỗi không mong muốn: {e}")
-        logger.debug("Traceback:", exc_info=True)
-        sys.exit(1)
+    run_cli_app(
+        logger=logger,
+        orchestrator_func=orchestrate_check_path,
+        cli_args=args,
+        this_script_path=THIS_SCRIPT_PATH,
+    )
 
 
 if __name__ == "__main__":
-    try:
-        main()
-    except KeyboardInterrupt:
-        print("\n\n❌ [Lệnh dừng] Đã dừng kiểm tra đường dẫn.")
-        sys.exit(1)
+    main()

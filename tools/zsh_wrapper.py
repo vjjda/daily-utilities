@@ -8,14 +8,15 @@ try:
 except ImportError:
     argcomplete = None
 
-
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.append(str(PROJECT_ROOT))
 
 try:
     from utils.logging_config import setup_logging
-    from utils.cli import ConfigInitializer
-
+    from utils.cli import (
+        ConfigInitializer,
+        run_cli_app,
+    )
     from modules.zsh_wrapper import (
         DEFAULT_MODE,
         DEFAULT_VENV,
@@ -27,14 +28,12 @@ try:
         TEMPLATE_FILENAME,
         MODULE_DIR,
     )
-
 except ImportError as e:
     print(
         f"Lỗi: Không thể import utils/modules. Đảm bảo bạn đang chạy từ Project Root: {e}",
         file=sys.stderr,
     )
     sys.exit(1)
-
 
 THIS_SCRIPT_PATH = Path(__file__).resolve()
 
@@ -134,22 +133,13 @@ def main():
     )
     config_initializer.check_and_handle_requests(args)
 
-    try:
-        orchestrate_zsh_wrapper(logger=logger, cli_args=args, project_root=PROJECT_ROOT)
-
-    except SystemExit as e:
-        sys.exit(e.code)
-    except Exception as e:
-        logger.error(f"❌ Đã xảy ra lỗi không mong muốn ở entrypoint: {e}")
-        logger.debug("Traceback:", exc_info=True)
-        sys.exit(1)
+    run_cli_app(
+        logger=logger,
+        orchestrator_func=orchestrate_zsh_wrapper,
+        cli_args=args,
+        project_root=PROJECT_ROOT,
+    )
 
 
 if __name__ == "__main__":
-    try:
-        main()
-    except KeyboardInterrupt:
-        print(
-            "\n\n❌ [Lệnh dừng] Hoạt động của tool đã bị dừng bởi người dùng (Ctrl+C)."
-        )
-        sys.exit(1)
+    main()

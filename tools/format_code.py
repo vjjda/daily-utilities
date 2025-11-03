@@ -4,21 +4,19 @@ import argparse
 from pathlib import Path
 from typing import Final
 
-
 try:
     import argcomplete
 except ImportError:
     argcomplete = None
-
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.append(str(PROJECT_ROOT))
 
 try:
     from utils.logging_config import setup_logging
-
     from utils.cli import (
         ConfigInitializer,
+        run_cli_app,
     )
     from modules.format_code import (
         orchestrate_format_code,
@@ -33,7 +31,6 @@ try:
 except ImportError as e:
     print(f"Lỗi: Không thể import project utilities/modules: {e}", file=sys.stderr)
     sys.exit(1)
-
 
 THIS_SCRIPT_PATH: Final[Path] = Path(__file__).resolve()
 
@@ -127,22 +124,14 @@ def main():
     )
     config_initializer.check_and_handle_requests(args)
 
-    try:
-        orchestrate_format_code(
-            logger=logger,
-            cli_args=args,
-            project_root=PROJECT_ROOT,
-            this_script_path=THIS_SCRIPT_PATH,
-        )
-    except Exception as e:
-        logger.error(f"❌ Đã xảy ra lỗi không mong muốn: {e}")
-        logger.debug("Traceback:", exc_info=True)
-        sys.exit(1)
+    run_cli_app(
+        logger=logger,
+        orchestrator_func=orchestrate_format_code,
+        cli_args=args,
+        project_root=PROJECT_ROOT,
+        this_script_path=THIS_SCRIPT_PATH,
+    )
 
 
 if __name__ == "__main__":
-    try:
-        main()
-    except KeyboardInterrupt:
-        print("\n\n❌ [Lệnh dừng] Đã dừng định dạng Code.")
-        sys.exit(1)
+    main()

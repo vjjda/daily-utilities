@@ -3,20 +3,19 @@ import sys
 import argparse
 from pathlib import Path
 
-
 try:
     import argcomplete
 except ImportError:
     argcomplete = None
 
-
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.append(str(PROJECT_ROOT))
 
-
 from utils.logging_config import setup_logging, log_success
-from utils.cli import ConfigInitializer
-
+from utils.cli import (
+    ConfigInitializer,
+    run_cli_app,
+)
 from modules.tree import (
     CONFIG_FILENAME,
     PROJECT_CONFIG_FILENAME,
@@ -128,19 +127,12 @@ def main():
     )
     config_initializer.check_and_handle_requests(args)
 
-    try:
-
-        orchestrate_tree(logger=logger, cli_args=args)
-
-    except Exception as e:
-        logger.error(f"❌ Đã xảy ra lỗi không mong muốn: {e}")
-        logger.debug("Traceback:", exc_info=True)
-        sys.exit(1)
+    run_cli_app(
+        logger=logger,
+        orchestrator_func=orchestrate_tree,
+        cli_args=args,
+    )
 
 
 if __name__ == "__main__":
-    try:
-        main()
-    except KeyboardInterrupt:
-        print("\n\n❌ [Lệnh dừng] Đã dừng tạo cây.")
-        sys.exit(1)
+    main()

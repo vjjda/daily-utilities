@@ -14,9 +14,9 @@ sys.path.append(str(PROJECT_ROOT))
 
 try:
     from utils.logging_config import setup_logging
-
     from utils.cli import (
         ConfigInitializer,
+        run_cli_app,
     )
     from utils.core import parse_comma_list
     from utils.core.config_helpers import generate_config_hash
@@ -142,22 +142,14 @@ def main():
     )
     config_initializer.check_and_handle_requests(args)
 
-    try:
-        orchestrate_no_doc(
-            logger=logger,
-            cli_args=args,
-            project_root=PROJECT_ROOT,
-            this_script_path=THIS_SCRIPT_PATH,
-        )
-    except Exception as e:
-        logger.error(f"❌ Đã xảy ra lỗi không mong muốn: {e}")
-        logger.debug("Traceback:", exc_info=True)
-        sys.exit(1)
+    run_cli_app(
+        logger=logger,
+        orchestrator_func=orchestrate_no_doc,
+        cli_args=args,
+        project_root=PROJECT_ROOT,
+        this_script_path=THIS_SCRIPT_PATH,
+    )
 
 
 if __name__ == "__main__":
-    try:
-        main()
-    except KeyboardInterrupt:
-        print("\n\n❌ [Lệnh dừng] Đã dừng xóa Docstring.")
-        sys.exit(1)
+    main()

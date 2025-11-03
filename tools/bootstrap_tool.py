@@ -4,30 +4,26 @@ import argparse
 from pathlib import Path
 from typing import Final
 
-
 try:
     import argcomplete
 except ImportError:
     argcomplete = None
-
 
 PROJECT_ROOT: Final[Path] = Path(__file__).resolve().parent.parent
 sys.path.append(str(PROJECT_ROOT))
 
 try:
     from utils.logging_config import setup_logging
-
+    from utils.cli import run_cli_app
     from modules.bootstrap import (
         orchestrate_bootstrap,
     )
-
 except ImportError as e:
     print(f"Lỗi: Không thể import utils hoặc gateway bootstrap: {e}", file=sys.stderr)
     sys.exit(1)
 
 
 def main():
-
     logger = setup_logging(script_name="Btool", console_level_str="INFO")
     logger.debug("Script bootstrap bắt đầu.")
 
@@ -60,17 +56,12 @@ def main():
 
     args = parser.parse_args()
 
-    try:
-
-        orchestrate_bootstrap(logger=logger, cli_args=args, project_root=PROJECT_ROOT)
-
-    except SystemExit:
-
-        sys.exit(1)
-    except Exception as e:
-        logger.error(f"❌ Đã xảy ra lỗi không mong muốn ở entrypoint: {e}")
-        logger.debug("Traceback:", exc_info=True)
-        sys.exit(1)
+    run_cli_app(
+        logger=logger,
+        orchestrator_func=orchestrate_bootstrap,
+        cli_args=args,
+        project_root=PROJECT_ROOT,
+    )
 
 
 if __name__ == "__main__":

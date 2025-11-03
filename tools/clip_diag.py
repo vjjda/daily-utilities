@@ -5,25 +5,20 @@ import logging
 from pathlib import Path
 from typing import Final
 
-
 try:
     import argcomplete
 except ImportError:
     argcomplete = None
 
-
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.append(str(PROJECT_ROOT))
 
-
 from utils.logging_config import setup_logging
-
-
+from utils.cli import run_cli_app
 from modules.clip_diag import (
     orchestrate_clip_diag,
 )
 from modules.clip_diag.clip_diag_config import DEFAULT_TO_ARG
-
 
 THIS_SCRIPT_PATH: Final[Path] = Path(__file__).resolve()
 
@@ -65,6 +60,7 @@ def main():
 
     args = parser.parse_args()
 
+    logger: logging.Logger
     if args.is_graph:
         logger = logging.getLogger("cdiag_silent")
         logger.setLevel(logging.CRITICAL + 1)
@@ -72,26 +68,12 @@ def main():
         logger = setup_logging(script_name="CDiag")
         logger.debug("CDiag script started.")
 
-    try:
-
-        orchestrate_clip_diag(logger, args)
-
-    except SystemExit:
-
-        sys.exit(0)
-    except Exception as e:
-        if not args.is_graph:
-            logger.error(f"❌ Đã xảy ra lỗi không mong muốn: {e}")
-            logger.debug("Traceback:", exc_info=True)
-        else:
-
-            print("False")
-        sys.exit(1)
+    run_cli_app(
+        logger=logger,
+        orchestrator_func=orchestrate_clip_diag,
+        cli_args=args,
+    )
 
 
 if __name__ == "__main__":
-    try:
-        main()
-    except KeyboardInterrupt:
-        print("\n\n❌ [Lệnh dừng] Hoạt động của tool đã bị dừng bởi người dùng.")
-        sys.exit(1)
+    main()

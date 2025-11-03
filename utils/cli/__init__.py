@@ -5,6 +5,7 @@ from .path_resolver import *
 from .reporting_root_resolver import *
 from .stepwise_resolver import *
 from .config_initializer import *
+from .entrypoint_handler import *
 
 __all__ = [
     "prompt_config_overwrite",
@@ -16,4 +17,5 @@ __all__ = [
     "resolve_input_paths",
     "resolve_reporting_root",
     "resolve_stepwise_paths",
+    "run_cli_app",
 ]

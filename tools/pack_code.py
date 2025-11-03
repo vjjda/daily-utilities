@@ -4,7 +4,6 @@ import argparse
 from pathlib import Path
 from typing import Final, List
 
-
 try:
     import argcomplete
 except ImportError:
@@ -15,10 +14,11 @@ sys.path.append(str(PROJECT_ROOT))
 
 try:
     from utils.logging_config import setup_logging
-
     from utils.cli import (
         ConfigInitializer,
+        run_cli_app,
     )
+    from utils.core import parse_comma_list
 
     from modules.pack_code import (
         orchestrate_pack_code,
@@ -153,6 +153,7 @@ def main():
         argcomplete.autocomplete(parser)
 
     args = parser.parse_args()
+
     logger = setup_logging(script_name="PCode")
     logger.debug("PCode script started.")
 
@@ -167,25 +168,13 @@ def main():
     )
     config_initializer.check_and_handle_requests(args)
 
-    try:
-
-        orchestrate_pack_code(
-            logger=logger,
-            cli_args=args,
-            this_script_path=THIS_SCRIPT_PATH,
-        )
-
-    except KeyboardInterrupt:
-        print("\n\n❌ [Lệnh dừng] Đã dừng đóng gói Code.")
-        sys.exit(1)
-    except SystemExit as e:
-        sys.exit(e.code)
-    except Exception as e:
-        logger.error(f"❌ Đã xảy ra lỗi không mong muốn: {e}")
-        logger.debug("Traceback:", exc_info=True)
-        sys.exit(1)
+    run_cli_app(
+        logger=logger,
+        orchestrator_func=orchestrate_pack_code,
+        cli_args=args,
+        this_script_path=THIS_SCRIPT_PATH,
+    )
 
 
 if __name__ == "__main__":
-
     main()
