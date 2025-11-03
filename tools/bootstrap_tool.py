@@ -20,14 +20,18 @@ try:
     from utils.logging_config import setup_logging, log_success
 
     from modules.bootstrap import (
+        process_bootstrap_logic,
+        execute_bootstrap_action,
+    )
+    from modules.bootstrap.bootstrap_config import (
         DEFAULT_BIN_DIR_NAME,
         DEFAULT_SCRIPTS_DIR_NAME,
         DEFAULT_MODULES_DIR_NAME,
         DEFAULT_DOCS_DIR_NAME,
+    )
+    from modules.bootstrap.bootstrap_internal.bootstrap_loader import (
         load_bootstrap_config,
         load_spec_file,
-        process_bootstrap_logic,
-        execute_bootstrap_action,
     )
 except ImportError as e:
     print(f"Lỗi: Không thể import utils hoặc gateway bootstrap: {e}", file=sys.stderr)
