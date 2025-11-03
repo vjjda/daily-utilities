@@ -1,5 +1,3 @@
-# Path: modules/bootstrap/bootstrap_templates/bootstrap.toml.template
-#
 # Cấu hình mặc định cho section [bootstrap] trong .project.toml.
 # Được sử dụng bởi `btool --config-project` để khởi tạo.
 #

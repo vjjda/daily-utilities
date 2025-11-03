@@ -1,17 +1,10 @@
 # Path: modules/bootstrap/bootstrap_internal/bootstrap_runner.py
-import logging
-import sys
-import argparse
-from pathlib import Path
-from typing import Dict, Any, Tuple
 
 from utils.logging_config import log_success
-
 
 from .builders.script_builder import generate_script_entrypoint
 from .builders.module_builder import generate_module_file, generate_module_init_file
 from .builders.doc_builder import generate_doc_file
-
 
 from .bootstrap_loader import load_spec_file
 from modules.zsh_wrapper import generate_wrapper_content
@@ -71,6 +64,22 @@ def _generate_all_content_and_paths(
             "init": module_path / "__init__.py",
         }
 
+        def get_rel_path(key: str) -> str:
+            try:
+                return target_paths[key].relative_to(project_root).as_posix()
+            except ValueError:
+                logger.warning(f"Không thể tính relative_path cho {key}")
+                return target_paths[key].name
+
+        rel_paths = {
+            "script": get_rel_path("script"),
+            "config": get_rel_path("config"),
+            "loader": get_rel_path("loader"),
+            "core": get_rel_path("core"),
+            "executor": get_rel_path("executor"),
+            "init": get_rel_path("init"),
+        }
+
         bin_wrapper_content = generate_wrapper_content(
             logger=logger,
             script_path=target_paths["script"],
@@ -87,16 +96,27 @@ def _generate_all_content_and_paths(
         generated_content = {
             "bin": bin_wrapper_content,
             "script": generate_script_entrypoint(
-                config, cli_interface_override=cli_args.interface
+                config,
+                cli_interface_override=cli_args.interface,
+                relative_path=rel_paths["script"],
             ),
-            "config": generate_module_file(config, "config"),
-            "loader": generate_module_file(config, "loader"),
-            "core": generate_module_file(config, "core"),
-            "executor": generate_module_file(config, "executor"),
-            "init": generate_module_init_file(config),
+            "config": generate_module_file(
+                config, "config", relative_path=rel_paths["config"]
+            ),
+            "loader": generate_module_file(
+                config, "loader", relative_path=rel_paths["loader"]
+            ),
+            "core": generate_module_file(
+                config, "core", relative_path=rel_paths["core"]
+            ),
+            "executor": generate_module_file(
+                config, "executor", relative_path=rel_paths["executor"]
+            ),
+            "init": generate_module_init_file(config, relative_path=rel_paths["init"]),
         }
 
         if config.get("docs", {}).get("enabled", False):
+
             generated_content["docs"] = generate_doc_file(config)
             target_paths["docs"] = DOCS_DIR / "tools" / f"{tool_name}.md"
 

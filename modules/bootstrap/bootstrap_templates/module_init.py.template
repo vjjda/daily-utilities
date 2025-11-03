@@ -1,4 +1,4 @@
-# Path: modules/{module_name}/__init__.py
+# Path: {relative_path}
 """
 Cổng giao tiếp (Facade) cho module '{module_name}'.
 (Tạo tự động bởi bootstrap_tool.py - Chế độ Static Import)

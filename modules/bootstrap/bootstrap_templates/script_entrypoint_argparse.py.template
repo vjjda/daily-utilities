@@ -1,6 +1,4 @@
-# Path: modules/bootstrap/bootstrap_templates/script_entrypoint_argparse.py.template
-#!/usr/bin/env python3
-# Path: scripts/{script_file}
+# Path: {relative_path}
 import sys
 import argparse
 import logging

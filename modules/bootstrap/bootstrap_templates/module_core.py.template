@@ -1,4 +1,4 @@
-# Path: modules/{module_name}/{module_name}_core.py
+# Path: {relative_path}
 """
 Logic cốt lõi (Orchestrator) cho module '{module_name}'.
 (Tạo tự động bởi bootstrap_tool.py)

@@ -12,7 +12,9 @@ from .snippet_config import (
 __all__ = ["generate_module_file", "generate_module_init_file"]
 
 
-def generate_module_file(config: Dict[str, Any], file_type: str) -> str:
+def generate_module_file(
+    config: Dict[str, Any], file_type: str, relative_path: str
+) -> str:
     template_name_map = {
         "config": "module_config.py.template",
         "core": "module_core.py.template",
@@ -22,7 +24,10 @@ def generate_module_file(config: Dict[str, Any], file_type: str) -> str:
     template_name = template_name_map[file_type]
     template = load_template(template_name)
 
-    format_dict = {"module_name": config["module_name"]}
+    format_dict = {
+        "module_name": config["module_name"],
+        "relative_path": relative_path,
+    }
 
     if file_type == "config":
         config_constants_code = build_config_constants(config)
@@ -33,7 +38,7 @@ def generate_module_file(config: Dict[str, Any], file_type: str) -> str:
     return template.format(**format_dict)
 
 
-def generate_module_init_file(config: Dict[str, Any]) -> str:
+def generate_module_init_file(config: Dict[str, Any], relative_path: str) -> str:
     template = load_template("module_init.py.template")
     module_name = config["module_name"]
 
@@ -57,4 +62,5 @@ def generate_module_init_file(config: Dict[str, Any]) -> str:
         module_name=module_name,
         config_import_block=config_import_block,
         config_all_block=config_all_block,
+        relative_path=relative_path,
     )

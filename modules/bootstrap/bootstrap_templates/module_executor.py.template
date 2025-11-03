@@ -1,4 +1,4 @@
-# Path: modules/{module_name}/{module_name}_executor.py
+# Path: {relative_path}
 """
 Logic thực thi/hành động cho module '{module_name}'.
 (Tạo tự động bởi bootstrap_tool.py)
