@@ -1,6 +1,4 @@
-# Path: modules/bootstrap/bootstrap_templates/tool_spec.template.toml
-# Template để tạo file <tên_tool>.spec.toml
-# (ĐÃ DI DỜI TỪ docs/internal/ VÀ CẬP NHẬT)
+# Template để tạo file {meta_tool_name}.spec.toml
 
 # --- Phần [meta]: Thông tin cơ bản về tool ---
 [meta]
@@ -26,7 +24,7 @@ docs_dir = "{layout_docs_dir}"
 
 # --- Phần [cli]: Cấu hình giao diện dòng lệnh ---
 [cli]
-# Loại giao diện: "typer" (mặc định) hoặc "argparse"
+# Loại giao diện: "typer" hoặc "argparse"
 interface = "argparse"
 allow_interspersed_args = true
 
