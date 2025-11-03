@@ -32,6 +32,6 @@ CONFIG_SECTION_NAME: Final[str] = "bootstrap"
 
 
 DEFAULT_BIN_DIR_NAME: Final[str] = "bin"
-DEFAULT_SCRIPTS_DIR_NAME: Final[str] = "scripts"
+DEFAULT_SCRIPTS_DIR_NAME: Final[str] = "tools"
 DEFAULT_MODULES_DIR_NAME: Final[str] = "modules"
 DEFAULT_DOCS_DIR_NAME: Final[str] = "docs"
