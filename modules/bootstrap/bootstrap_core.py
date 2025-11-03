@@ -19,13 +19,13 @@ __all__ = [
 def orchestrate_bootstrap(
     logger: logging.Logger, cli_args: argparse.Namespace, project_root: Path
 ) -> None:
+
     try:
         init_spec_path_str = getattr(cli_args, "init_spec_path_str", None)
         spec_file_path_str = getattr(cli_args, "spec_file_path_str", None)
         force = getattr(cli_args, "force", False)
 
         if init_spec_path_str:
-
             logger.info(f"🚀 Yêu cầu khởi tạo file spec (chế độ -s)...")
             run_init_spec_logic(
                 logger=logger,
@@ -35,13 +35,11 @@ def orchestrate_bootstrap(
             )
 
         elif spec_file_path_str:
-
             run_bootstrap_logic(
                 logger=logger, cli_args=cli_args, project_root=project_root
             )
 
         else:
-
             logger.error(
                 "Lỗi: Không có file spec nào được cung cấp và cũng không yêu cầu tạo mới."
             )

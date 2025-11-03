@@ -8,11 +8,8 @@ from typing import Dict, Any, Tuple
 from utils.logging_config import log_success
 
 
-from .bootstrap_generator import (
-    process_bootstrap_logic,
-)
+from .builders import process_bootstrap_logic
 from .bootstrap_loader import load_spec_file
-
 
 from ..bootstrap_executor import execute_bootstrap_action
 from ..bootstrap_config import (
@@ -28,6 +25,7 @@ __all__ = ["run_bootstrap_logic"]
 def run_bootstrap_logic(
     logger: logging.Logger, cli_args: argparse.Namespace, project_root: Path
 ) -> None:
+
     spec_file_path_str = getattr(cli_args, "spec_file_path_str", None)
 
     if not spec_file_path_str:
