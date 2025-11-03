@@ -4,9 +4,9 @@ from .bootstrap_generator import (
     generate_module_file,
     generate_module_init_file,
     generate_doc_file,
+    process_bootstrap_logic,
 )
 from .bootstrap_spec_generator import run_init_spec_logic
-
 from .bootstrap_runner import run_bootstrap_logic
 
 __all__ = [
@@ -16,4 +16,5 @@ __all__ = [
     "generate_doc_file",
     "run_init_spec_logic",
     "run_bootstrap_logic",
+    "process_bootstrap_logic",
 ]
