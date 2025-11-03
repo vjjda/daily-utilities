@@ -1,4 +1,5 @@
 # Path: modules/bootstrap/bootstrap_internal/builders/__init__.py
+
 from .snippet_argparse import (
     build_argparse_arguments,
     build_path_expands as build_argparse_path_expands,
@@ -15,13 +16,10 @@ from .snippet_config import (
     build_config_all_list,
     build_config_imports,
 )
-from .tool_generator import (
-    generate_script_entrypoint,
-    generate_module_file,
-    generate_module_init_file,
-    generate_doc_file,
-    process_bootstrap_logic,
-)
+
+from .script_builder import generate_script_entrypoint
+from .module_builder import generate_module_file, generate_module_init_file
+from .doc_builder import generate_doc_file
 
 __all__ = [
     "build_argparse_arguments",
@@ -38,5 +36,4 @@ __all__ = [
     "generate_module_file",
     "generate_module_init_file",
     "generate_doc_file",
-    "process_bootstrap_logic",
 ]
