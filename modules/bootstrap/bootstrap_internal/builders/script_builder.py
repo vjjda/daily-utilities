@@ -68,7 +68,7 @@ except ImportError:
             cli_description=formatted_description,
             cli_epilog=formatted_epilog,
             argparse_arguments=argparse_args_code,
-            argparse_path_expands=argparse_path_expands,
+            argparse_path_expands=path_expands_code,
             argparse_args_pass_to_core=args_pass_code,
             argcomplete_imports=argcomplete_imports_code,
             argcomplete_logic=argcomplete_logic_code,
