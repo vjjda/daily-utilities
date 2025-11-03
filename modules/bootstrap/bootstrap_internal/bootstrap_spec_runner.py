@@ -23,15 +23,30 @@ __all__ = ["run_init_spec_logic"]
 
 
 def _generate_names_from_stem(stem: str) -> Dict[str, str]:
-
-    snake_case_name = stem.replace("-", "_")
-    pascal_case_name = "".join(part.capitalize() for part in snake_case_name.split("_"))
     tool_name = stem
+
+    sanitized_name = stem.replace("-", "_").replace(".", "_")
+
+    if sanitized_name.endswith("_spec"):
+        sanitized_name = sanitized_name[:-5]
+
+    if stem == "new_tool.spec" or stem == "new_tool":
+        tool_name = "new_tool"
+        sanitized_name = "new_tool"
+
+    pascal_case_name = "".join(
+        part.capitalize() for part in sanitized_name.split("_") if part
+    )
+
+    if not pascal_case_name:
+        pascal_case_name = "NewTool"
+        sanitized_name = "new_tool"
+        tool_name = "new_tool"
 
     return {
         "meta_tool_name": tool_name,
-        "meta_script_file": f"{snake_case_name}.py",
-        "meta_module_name": snake_case_name,
+        "meta_script_file": f"{sanitized_name}.py",
+        "meta_module_name": sanitized_name,
         "meta_logger_name": pascal_case_name,
     }
 
@@ -87,7 +102,10 @@ def run_init_spec_logic(
             "docs_dir": DEFAULT_DOCS_DIR_NAME,
         }
 
-    spec_stem = target_spec_path.stem
+    spec_name = target_spec_path.name
+
+    spec_stem = spec_name.removesuffix(".spec.toml")
+
     logger.info(f"   Đang tự động điền tên meta từ stem: '{spec_stem}'...")
     meta_names = _generate_names_from_stem(spec_stem)
     logger.debug(f"   Tên đã tạo: {meta_names}")
