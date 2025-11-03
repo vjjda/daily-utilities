@@ -16,10 +16,8 @@ sys.path.append(str(PROJECT_ROOT))
 try:
     from utils.logging_config import setup_logging
     from utils.cli import run_cli_app, ConfigInitializer
-
     from modules.bootstrap import (
         orchestrate_bootstrap,
-        orchestrate_init_spec,
         CONFIG_SECTION_NAME,
         MODULE_DIR,
         TEMPLATE_FILENAME,
@@ -46,7 +44,7 @@ def main():
         nargs="?",
         default=None,
         help="Đường dẫn đến file *.spec.toml (ví dụ: docs/drafts/new_tool.spec.toml).\n"
-        "Bắt buộc cho chế độ chạy, tùy chọn cho -s hoặc -c.",
+        "Bắt buộc cho chế độ chạy (run), bị bỏ qua nếu dùng -s hoặc -c.",
     )
 
     parser.add_argument(
@@ -100,6 +98,7 @@ def main():
             config_section_name=CONFIG_SECTION_NAME,
             base_defaults=BOOTSTRAP_DEFAULTS,
         )
+
         config_initializer.check_and_handle_requests(
             argparse.Namespace(config_project=args.config_project, config_local=False)
         )
@@ -107,35 +106,6 @@ def main():
         sys.exit(0)
     except Exception as e:
         logger.error(f"Lỗi khi chạy ConfigInitializer: {e}")
-        sys.exit(1)
-
-    if args.init_spec_path_str:
-        try:
-
-            target_path = Path(args.init_spec_path_str).resolve()
-            if target_path.is_dir():
-                target_path = target_path / "new_tool.spec.toml"
-            elif not target_path.name.endswith(".spec.toml"):
-                target_path = target_path.with_name(f"{target_path.name}.spec.toml")
-
-            orchestrate_init_spec(
-                logger=logger,
-                project_root=PROJECT_ROOT,
-                target_spec_path=target_path,
-                force=args.force,
-            )
-            sys.exit(0)
-        except SystemExit:
-            sys.exit(0)
-        except Exception as e:
-            logger.error(f"Lỗi khi chạy Init Spec: {e}")
-            logger.debug("Traceback:", exc_info=True)
-            sys.exit(1)
-
-    if not args.spec_file_path_str:
-        parser.error(
-            "Đối số 'spec_file_path_str' là bắt buộc khi không sử dụng -s hoặc -c."
-        )
         sys.exit(1)
 
     run_cli_app(

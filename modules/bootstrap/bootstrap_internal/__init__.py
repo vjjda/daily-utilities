@@ -6,12 +6,12 @@ from .bootstrap_generator import (
     generate_doc_file,
 )
 
-from .bootstrap_spec_generator import generate_spec_file
+from .bootstrap_spec_generator import run_init_spec_logic
 
 __all__ = [
     "generate_script_entrypoint",
     "generate_module_file",
     "generate_module_init_file",
     "generate_doc_file",
-    "generate_spec_file",
+    "run_init_spec_logic",
 ]

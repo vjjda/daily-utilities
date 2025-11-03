@@ -2,7 +2,7 @@
 import logging
 import sys
 from pathlib import Path
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 from utils.logging_config import log_success
 from utils.cli import launch_editor
@@ -17,7 +17,7 @@ from ..bootstrap_config import (
     SPEC_TEMPLATE_FILENAME,
 )
 
-__all__ = ["generate_spec_file"]
+__all__ = ["run_init_spec_logic"]
 
 
 def _generate_names_from_stem(stem: str) -> Dict[str, str]:
@@ -33,12 +33,24 @@ def _generate_names_from_stem(stem: str) -> Dict[str, str]:
     }
 
 
-def generate_spec_file(
+def run_init_spec_logic(
     logger: logging.Logger,
     project_root: Path,
-    target_spec_path: Path,
+    init_spec_path_str: str,
     force: bool,
 ) -> None:
+
+    target_spec_path = Path(init_spec_path_str).resolve()
+    if target_spec_path.is_dir():
+        logger.warning(
+            f"⚠️ Đường dẫn '{init_spec_path_str}' là một thư mục. Đang tạo file 'new_tool.spec.toml' bên trong đó."
+        )
+        target_spec_path = target_spec_path / "new_tool.spec.toml"
+    elif not target_spec_path.name.endswith(".spec.toml"):
+        target_spec_path = target_spec_path.with_name(
+            f"{target_spec_path.name}.spec.toml"
+        )
+
     logger.info(f"   File spec đích: {target_spec_path.as_posix()}")
 
     if target_spec_path.exists() and not force:
