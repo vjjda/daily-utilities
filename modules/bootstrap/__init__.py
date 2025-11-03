@@ -5,7 +5,7 @@ from .bootstrap_config import (
     DEFAULT_MODULES_DIR_NAME,
     DEFAULT_DOCS_DIR_NAME,
 )
-from .bootstrap_core import process_bootstrap_logic
+from .bootstrap_core import process_bootstrap_logic, orchestrate_bootstrap
 from .bootstrap_executor import execute_bootstrap_action
 from .bootstrap_internal.bootstrap_loader import load_bootstrap_config, load_spec_file
 
@@ -18,4 +18,5 @@ __all__ = [
     "load_spec_file",
     "process_bootstrap_logic",
     "execute_bootstrap_action",
+    "orchestrate_bootstrap",
 ]
