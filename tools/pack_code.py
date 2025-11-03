@@ -179,6 +179,8 @@ def main():
     except KeyboardInterrupt:
         print("\n\n❌ [Lệnh dừng] Đã dừng đóng gói Code.")
         sys.exit(1)
+    except SystemExit as e:
+        sys.exit(e.code)
     except Exception as e:
         logger.error(f"❌ Đã xảy ra lỗi không mong muốn: {e}")
         logger.debug("Traceback:", exc_info=True)

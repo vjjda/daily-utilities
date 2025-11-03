@@ -5,7 +5,6 @@ from pathlib import Path
 from typing import Dict, Any, List, Optional, Set, Tuple
 import sys
 
-
 from .pack_code_internal import (
     process_pack_code_task_file,
     process_pack_code_task_dir,
