@@ -4,25 +4,20 @@ import argparse
 from pathlib import Path
 from typing import List, Final
 
-
 try:
     import argcomplete
 except ImportError:
     argcomplete = None
 
-
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.append(str(PROJECT_ROOT))
 
-from modules.stubgen.stubgen_config import CONFIG_SECTION_NAME
 
 try:
     from utils.logging_config import setup_logging, log_success
 
     from utils.cli import (
         ConfigInitializer,
-        resolve_input_paths,
-        resolve_reporting_root,
     )
 
     from modules.stubgen import (
@@ -31,12 +26,13 @@ try:
         SGEN_DEFAULTS,
         PROJECT_CONFIG_FILENAME,
         CONFIG_FILENAME,
-        process_stubgen_logic,
-        execute_stubgen_action,
+        CONFIG_SECTION_NAME,
+        orchestrate_stubgen,
     )
 except ImportError as e:
 
-    pass
+    print(f"Lỗi: Không thể import project utilities/modules: {e}", file=sys.stderr)
+    sys.exit(1)
 
 
 THIS_SCRIPT_PATH: Final[Path] = Path(__file__).resolve()
@@ -112,34 +108,19 @@ def main():
     )
     config_initializer.check_and_handle_requests(args)
 
-    validated_paths: List[Path] = resolve_input_paths(
-        logger=logger, raw_paths=args.target_paths, default_path_str="."
-    )
-
-    if not validated_paths:
-        logger.warning("Không tìm thấy đường dẫn hợp lệ nào để quét. Đã dừng.")
-        sys.exit(0)
-
-    reporting_root = resolve_reporting_root(logger, validated_paths, cli_root_arg=None)
-
     try:
 
-        files_to_create, files_to_overwrite = process_stubgen_logic(
+        orchestrate_stubgen(
             logger=logger,
             cli_args=args,
-            script_file_path=THIS_SCRIPT_PATH,
-            validated_paths=validated_paths,
+            this_script_path=THIS_SCRIPT_PATH,
         )
 
-        execute_stubgen_action(
-            logger=logger,
-            files_to_create=files_to_create,
-            files_to_overwrite=files_to_overwrite,
-            force=args.force,
-            scan_root=reporting_root,
-            cli_args=args,
-        )
-
+    except KeyboardInterrupt:
+        print("\n\n❌ [Lệnh dừng] Hoạt động tạo Stub đã bị dừng bởi người dùng.")
+        sys.exit(1)
+    except SystemExit as e:
+        sys.exit(e.code)
     except Exception as e:
         logger.error(f"❌ Đã xảy ra lỗi không mong muốn: {e}")
         logger.debug("Traceback:", exc_info=True)
@@ -147,8 +128,5 @@ def main():
 
 
 if __name__ == "__main__":
-    try:
-        main()
-    except KeyboardInterrupt:
-        print("\n\n❌ [Lệnh dừng] Hoạt động tạo Stub đã bị dừng bởi người dùng.")
-        sys.exit(1)
+
+    main()
