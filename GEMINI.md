@@ -47,7 +47,10 @@ Khi viết/chỉnh sửa mã, bạn phải tuân thủ nghiêm ngặt các nguy�
 1. **Nguyên tắc Đơn Nhiệm (SRP):** Mỗi hàm hoặc class phải tập trung vào **một tác vụ duy nhất**.
 2. **Ép Kiểu Tường Minh (Strict Type Hinting):** **Luôn sử dụng Type Hinting** cho _tất cả_ tham số hàm, giá trị trả về, và biến. Sử dụng Pydantic Model thay vì `Dict` chung chung.
 3. **Tách Biệt Cấu hình (Configuration Abstraction):** Tách mọi giá trị cấu hình (đường dẫn, hằng số) khỏi logic. Ưu tiên **Environment Variables** hoặc Pydantic Settings.
-4. **Module Gateway & `__all__`:** Mỗi file thư viện Python phải khai báo `__all__`. File `__init__.py` của module phải dùng **Dynamic Import** để expose các mục trong `__all__`.
+4. **Module Gateway & `__all__`:**
+   - **Ưu tiên Static Import:** Các file `__init__.py` (đóng vai trò "facade" hay "gateway" cho một module) phải sử dụng **Static Import** (import tĩnh) tường minh.
+   - **Minh bạch cho AI:** Thay vì dùng dynamic import (nạp động), việc khai báo `from .module_core import function_A` giúp AI (người bảo trì chính) dễ dàng truy vết (trace) nguồn gốc của code và giảm lượng token context cần thiết (chỉ cần đọc 1 file `__init__.py` thay vì 2 file `__init__.py` và `__init__.pyi`).
+   - **Khai báo `__all__`:** Mỗi file `__init__.py` này phải khai báo `__all__` để định nghĩa rõ API công khai của module.
 5. **Thiết lập Cổng Giao Tiếp (Standardized CLI Entry):** Khối `if __name__ == "__main__":` chỉ được phép xuất hiện trong file entry point (ví dụ: `cli.py`, `main.py`).
 6. **Đặt tên File (Context Collision Naming):** Tên file phải **duy nhất và mang tính mô tả**. Gắn ngữ cảnh module vào tên (ví dụ: `auth_cli.py`, `db_utils.py`) thay vì tên chung (`utils.py`).
 7. **Quản lý Đầu ra và Ghi Log (Print vs Logging):**
