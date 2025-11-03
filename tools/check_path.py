@@ -22,7 +22,7 @@ from utils.cli import (
 
 
 from modules.check_path import (
-    run_check_path,
+    orchestrate_check_path,
     MODULE_DIR,
     TEMPLATE_FILENAME,
     CPATH_DEFAULTS,
@@ -30,7 +30,6 @@ from modules.check_path import (
     CONFIG_SECTION_NAME,
     CONFIG_FILENAME,
 )
-
 
 THIS_SCRIPT_PATH: Final[Path] = Path(__file__).resolve()
 
@@ -111,7 +110,6 @@ def main():
         argcomplete.autocomplete(parser)
 
     args = parser.parse_args()
-
     logger = setup_logging(script_name="CPath")
     logger.debug("CPath script started.")
 
@@ -128,7 +126,7 @@ def main():
 
     try:
 
-        run_check_path(
+        orchestrate_check_path(
             logger=logger,
             cli_args=args,
             this_script_path=THIS_SCRIPT_PATH,

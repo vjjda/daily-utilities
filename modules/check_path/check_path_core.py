@@ -4,13 +4,10 @@ import argparse
 from pathlib import Path
 from typing import List, Optional, Dict, Any, Set
 import sys
-
 from concurrent.futures import ThreadPoolExecutor, as_completed
-
 
 if not "PROJECT_ROOT" in locals():
     sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
-
 
 from .check_path_internal import (
     merge_check_path_configs,
@@ -20,23 +17,20 @@ from .check_path_internal import (
 )
 from .check_path_executor import execute_check_path_action
 
-
 from .check_path_config import DEFAULT_EXTENSIONS
 from utils.constants import MAX_THREAD_WORKERS
-
-
 from utils.cli import (
     resolve_input_paths,
     resolve_reporting_root,
 )
 
 
-__all__ = ["process_check_path_logic", "run_check_path"]
+__all__ = ["process_check_path_logic", "orchestrate_check_path"]
 
 FileResult = Dict[str, Any]
 
 
-def run_check_path(
+def orchestrate_check_path(
     logger: logging.Logger, cli_args: argparse.Namespace, this_script_path: Path
 ) -> None:
 
@@ -66,7 +60,9 @@ def run_check_path(
         )
 
     except Exception as e:
-        logger.error(f"❌ Đã xảy ra lỗi không mong muốn trong 'run_check_path': {e}")
+        logger.error(
+            f"❌ Đã xảy ra lỗi không mong muốn trong 'orchestrate_check_path': {e}"
+        )
         logger.debug("Traceback:", exc_info=True)
         raise
 

@@ -1,5 +1,4 @@
 # Path: modules/check_path/__init__.py
-
 from .check_path_config import (
     MODULE_DIR,
     TEMPLATE_FILENAME,
@@ -9,12 +8,10 @@ from .check_path_config import (
     CONFIG_FILENAME,
 )
 
-
-from .check_path_core import run_check_path
-
+from .check_path_core import orchestrate_check_path
 
 __all__ = [
-    "run_check_path",
+    "orchestrate_check_path",
     "MODULE_DIR",
     "TEMPLATE_FILENAME",
     "CPATH_DEFAULTS",

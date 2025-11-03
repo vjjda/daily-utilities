@@ -22,12 +22,12 @@ from utils.cli import (
 from .pack_code_config import DEFAULT_START_PATH
 
 
-__all__ = ["process_pack_code_logic", "run_pack_code"]
+__all__ = ["process_pack_code_logic", "orchestrate_pack_code"]
 
 FileResult = Dict[str, Any]
 
 
-def run_pack_code(
+def orchestrate_pack_code(
     logger: logging.Logger, cli_args: argparse.Namespace, this_script_path: Path
 ) -> None:
 
@@ -57,7 +57,9 @@ def run_pack_code(
         execute_pack_code_action(logger=logger, result=results_from_core)
 
     except Exception as e:
-        logger.error(f"❌ Đã xảy ra lỗi không mong muốn trong 'run_pack_code': {e}")
+        logger.error(
+            f"❌ Đã xảy ra lỗi không mong muốn trong 'orchestrate_pack_code': {e}"
+        )
         logger.debug("Traceback:", exc_info=True)
         raise
 

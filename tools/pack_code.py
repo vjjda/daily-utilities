@@ -21,7 +21,7 @@ try:
     )
 
     from modules.pack_code import (
-        run_pack_code,
+        orchestrate_pack_code,
         MODULE_DIR,
         TEMPLATE_FILENAME,
         PCODE_DEFAULTS,
@@ -153,7 +153,6 @@ def main():
         argcomplete.autocomplete(parser)
 
     args = parser.parse_args()
-
     logger = setup_logging(script_name="PCode")
     logger.debug("PCode script started.")
 
@@ -170,7 +169,7 @@ def main():
 
     try:
 
-        run_pack_code(
+        orchestrate_pack_code(
             logger=logger,
             cli_args=args,
             this_script_path=THIS_SCRIPT_PATH,
