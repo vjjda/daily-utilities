@@ -1,115 +1,69 @@
-# Hướng dẫn sử dụng: pcode
+# Hướng dẫn sử dụng: ndoc
 
-`pcode` (Pack Code) là công cụ dùng để thu thập nội dung của nhiều file mã nguồn hoặc văn bản từ một thư mục hoặc file chỉ định, sau đó đóng gói chúng thành một file văn bản duy nhất. Mục đích chính là tạo ra một ngữ cảnh (context) đầy đủ, dễ dàng sao chép để cung cấp cho các mô hình ngôn ngữ lớn (LLM) hoặc để lưu trữ.
-
-Công cụ này hỗ trợ lọc file theo đuôi mở rộng, bỏ qua các file/thư mục không cần thiết (tự động tôn trọng `.gitignore`), và tùy chọn hiển thị cấu trúc cây thư mục ở đầu file output.
-
-## Khởi động Nhanh
-
-Cách dễ nhất để bắt đầu là khởi tạo một file cấu hình trong dự án của bạn:
-
-```sh
-# 1. Khởi tạo file cấu hình cục bộ (.pcode.toml)
-# Tạo/cập nhật file .pcode.toml và mở nó.
-pcode --config-local
-
-# 2. Hoặc, cập nhật file cấu hình toàn dự án (.project.toml)
-# Cập nhật phần [pcode] trong file .project.toml.
-pcode --config-project
-```
+`ndoc` (No Docstring) là công cụ dùng để quét và tự động loại bỏ docstrings (và tùy chọn cả comments) khỏi các file mã nguồn. Nó rất hữu ích khi bạn muốn tạo ra một phiên bản "sạch" của code, ví dụ như để giảm kích thước file hoặc chuẩn bị code cho một số công cụ phân tích nhất định.
 
 ## Cách Sử Dụng
 
 ```sh
-pcode [start_path] [options]
+ndoc [start_paths...] [options]
 ```
 
-- `start_path`: Đường dẫn (file hoặc thư mục) để bắt đầu quét. Mặc định là thư mục hiện tại (`.`) hoặc giá trị trong file cấu hình.
+- `start_paths`: Một hoặc nhiều đường dẫn (file hoặc thư mục) để quét. Mặc định là thư mục hiện tại (`.`).
+
+Chế độ hoạt động mặc định là **sửa lỗi (fix mode)**, chỉ xóa docstrings. Công cụ sẽ tìm và sửa các file sau khi có xác nhận của bạn.
 
 ## Tùy Chọn Dòng Lệnh (CLI Options)
 
-- **`-h, --help`**: Hiển thị trợ giúp.
-- **`-o, --output <path>`**: Chỉ định file output để ghi kết quả. Nếu không cung cấp, mặc định sẽ tạo file `[output_dir]/<tên_start_path>_context.txt`.
-- **`--stdout`**: In kết quả ra màn hình (stdout) thay vì ghi vào file.
-- **`-e, --extensions <exts>`**: Chỉ **bao gồm** các file có đuôi mở rộng được liệt kê (phân cách bởi dấu phẩy).
-  - Hỗ trợ các toán tử:
-    - `py,md` (không có toán tử đầu): Ghi đè hoàn toàn danh sách mặc định/config.
-    - `+ts,js`: Thêm `ts` và `js` vào danh sách hiện có.
-    - `~yaml,yml`: Loại bỏ `yaml` và `yml` khỏi danh sách hiện có.
-- **`-I, --ignore <patterns>`**: Thêm các pattern (giống `.gitignore`, phân cách bởi dấu phẩy) vào danh sách **bỏ qua**. Các pattern này được **nối** vào danh sách từ config/default.
-- **`-i, --include <patterns>`**: **(MỚI)** Bộ lọc dương. Thêm các pattern (giống `.gitignore`, phân cách bởi dấu phẩy) vào danh sách **giữ lại**.
-  - Nếu được cung cấp, **CHỈ** các file khớp với pattern này MỚI được xử lý.
-  - Các pattern này được **nối** vào danh sách từ config/default (nếu có).
-- **`-N, --no-gitignore`**: Không tự động đọc và áp dụng các quy tắc từ file `.gitignore`.
-- **`-d, --dry-run`**: Chế độ chạy thử. Chỉ hiển thị cây thư mục (nếu bật) và danh sách file, không đọc/ghi/làm sạch nội dung.
-- **`--no-header`**: Không in cặp marker `[START_FILE_CONTENT: ...]` và `[END_FILE_CONTENT: ...]` quanh nội dung mỗi file.
-- **`--no-tree`**: Không hiển thị cây thư mục ở đầu file output.
-- **`--copy`**: Tự động sao chép **đường dẫn file output** vào clipboard sau khi ghi thành công.
-- **`-a, --all-clean`**: Làm sạch nội dung (xóa docstring/comment) của các file có đuôi được cấu hình trong `clean_extensions` trước khi đóng gói.
-- **`-x, --clean-extensions <exts>`**: Chỉ định/sửa đổi danh sách đuôi file cần **làm sạch** _khi_ `-a` được bật. Hoạt động giống `-e` với logic `+`/`~`/overwrite.
-- **`-b, --beautify`**: **(MỚI)** Định dạng (format) code TRƯỚC KHI đóng gói (ví dụ: chạy Black cho .py). Hoạt động trên các đuôi file trong `format_extensions`.
-- **`-c, --config-project`**: Khởi tạo/cập nhật section `[pcode]` trong `.project.toml`.
-- **`-C, --config-local`**: Khởi tạo/cập nhật file `.pcode.toml` cục bộ.
+### Tùy chọn Xóa Docstring & Comment
 
----
+- **`-a, --all-clean`**: Bật chế độ **làm sạch toàn bộ**. Ngoài docstrings, chế độ này sẽ loại bỏ cả tất cả các comment (`#`) khỏi file (ngoại trừ shebang `#!` ở đầu file).
+- **`-b, --beautify`**: Tự động **định dạng (format)** lại code (ví dụ: dùng Black cho Python) *sau khi* đã xóa docstring/comment. Giúp code trông gọn gàng hơn sau khi chỉnh sửa.
+- **`-d, --dry-run`**: Chuyển sang chế độ **chỉ kiểm tra (dry-run)**. Công cụ sẽ chỉ báo cáo các file cần sửa mà không thực hiện bất kỳ thay đổi nào.
+- **`-f, --force`**: Tự động sửa tất cả các file mà không cần hỏi xác nhận. Chỉ có tác dụng ở chế độ sửa lỗi (khi không dùng `-d`).
+- **`-g, --git-commit`**: Sau khi sửa lỗi thành công, tự động tạo một commit Git với các thay đổi đó.
+- **`-w, --stepwise`**: Bật **chế độ gia tăng (stepwise mode)**. `ndoc` chỉ quét các file đã thay đổi kể từ lần chạy cuối cùng có cùng cài đặt. Giúp tăng tốc độ đáng kể cho các lần chạy sau.
+- **`-e, --extensions <exts>`**: Ghi đè hoặc chỉnh sửa danh sách các đuôi file cần quét.
+- **`-I, --ignore <patterns>`**: Thêm các pattern (giống `.gitignore`) vào danh sách **bỏ qua**.
+
+### Tùy chọn Khởi tạo Cấu hình
+
+- **`-c, --config-project`**: Khởi tạo hoặc cập nhật section `[no_doc]` trong file `.project.toml`.
+- **`-C, --config-local`**: Khởi tạo hoặc cập nhật file cấu hình cục bộ (`.ndoc.toml`).
 
 ## File Cấu Hình
 
-`pcode` tự động tải cấu hình từ các file `.toml` sau (theo thứ tự ưu tiên):
+`ndoc` có thể được cấu hình thông qua các file `.toml`.
 
-1. **Đối Số Dòng Lệnh (CLI Arguments)** (Cao nhất)
-2. **File `.pcode.toml`** (Cấu hình cục bộ cho thư mục)
-3. **File `.project.toml`** (Section `[pcode]`) (Cấu hình toàn dự án)
-4. **Giá trị Mặc định của Script** (Thấp nhất)
+- `.ndoc.toml`: File cấu hình cục bộ.
+- `.project.toml`: File cấu hình dự phòng toàn dự án (section `[no_doc]`).
 
-### Các tùy chọn cấu hình trong file `.toml`
+**Độ ưu tiên:** `Đối số CLI` > `.ndoc.toml` > `.project.toml` > `Mặc định`.
 
 ```toml
-# Ví dụ: .pcode.toml hoặc section [pcode] trong .project.toml
+# Ví dụ: .ndoc.toml hoặc section [no_doc] trong .project.toml
 
-# output_dir (str): Thư mục mặc định để lưu file output.
-# Hỗ trợ ký tự '~' cho thư mục home.
-# Mặc định: "~/Documents/code.context"
-output_dir = "~/Desktop/my_contexts" 
+# Danh sách các đuôi file mặc định cần quét.
+extensions = ["py"]
 
-# extensions (List[str]): Danh sách các đuôi file mặc định cần BAO GỒM.
-# Ghi đè danh sách mặc định của script. Bị ghi đè bởi cờ -e (nếu -e không có +/-/~).
-extensions = ["py", "md", "yaml"]
+# Danh sách các pattern cần bỏ qua.
+ignore = ["__pycache__/", "*.tmp"]
 
-# ignore (List[str]): Danh sách các pattern mặc định cần BỎ QUA.
-# Ghi đè danh sách mặc định của script. Bị nối thêm bởi cờ -I.
-# Hỗ trợ cú pháp giống .gitignore.
-ignore = ["*.log", "**/temp/*", ".env"] 
-
-# include (List[str]): (MỚI) Danh sách các pattern mặc định cần GIỮ LẠI (lọc dương).
-# Nếu được định nghĩa (không rỗng), CHỈ các file khớp mới được xử lý. Bị nối thêm bởi cờ -i.
-# Mặc định: [] (không lọc)
-# include = ["src/**/*.py", "docs/**/*.md"]
-
-# clean_extensions (List[str]): Danh sách các đuôi file cần LÀM SẠCH khi dùng -a/--all-clean.
-# Ghi đè hoàn toàn danh sách mặc định của script.
-# Bị ghi đè/sửa đổi bởi cờ CLI -x/--clean-extensions.
-clean_extensions = ["py", "sh", "zsh"] 
-
-# format_extensions (List[str]): (MỚI) Danh sách các đuôi file cần ĐỊNH DẠNG khi dùng -b/--beautify.
-# Mặc định: ["py"]
+# Danh sách các đuôi file sẽ được định dạng khi dùng cờ -b/--beautify
 format_extensions = ["py"]
 ```
-
----
 
 ## Ví dụ
 
 ```sh
-# 1. Đóng gói tất cả file Python và Markdown, in ra màn hình (không có cờ -S)
-pcode . -e py,md --stdout
+# 1. Chỉ kiểm tra (dry-run) xem có file Python nào chứa docstring không
+ndoc -e py --dry-run
 
-# 2. Đóng gói thư mục 'src', loại bỏ file '.log', lưu vào file 'project_src.txt'
-pcode src -I '*.log' -o project_src.txt
+# 2. Xóa tất cả docstring VÀ comment khỏi các file đã thay đổi, sau đó commit
+ndoc -a -w -g
 
-# 3. (MỚI) Đóng gói CHỈ các file Python trong 'scripts' và file .md trong 'docs'
-pcode . -i "scripts/*.py,docs/**/*.md" -o specific_context.txt
+# 3. Xóa docstring và định dạng lại code trong thư mục 'src'
+ndoc src -b
 
-# 4. (MỚI) Đóng gói thư mục 'app', LÀM SẠCH VÀ ĐỊNH DẠNG các file Python (.py)
-pcode app -a -b -o app_cleaned_formatted.txt
+# 4. Khởi tạo file cấu hình cục bộ để tùy chỉnh
+ndoc --config-local
 ```
