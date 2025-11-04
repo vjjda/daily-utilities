@@ -46,7 +46,7 @@ TEMPLATE_FILENAME: Final[str] = "bootstrap_templates/bootstrap.toml.template"
 
 
 SPEC_TEMPLATE_FILENAME: Final[str] = (
-    "modules/bootstrap/bootstrap_templates/tool_spec.template.toml"
+    "modules/bootstrap/bootstrap_templates/tool_spec.toml.template"
 )
 
 
