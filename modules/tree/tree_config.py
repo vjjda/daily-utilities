@@ -25,6 +25,7 @@ DEFAULT_IGNORE: Final[Set[str]] = {
     "venv",
     "node_modules",
     ".git",
+    ".ruff_cache",
 }
 DEFAULT_PRUNE: Final[Set[str]] = {"dist", "build"}
 DEFAULT_DIRS_ONLY_LOGIC: Final[Set[str]] = set()

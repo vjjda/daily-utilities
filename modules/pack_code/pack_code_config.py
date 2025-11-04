@@ -46,6 +46,7 @@ DEFAULT_IGNORE: Final[Set[str]] = {
     ".hg",
     ".svn",
     ".DS_Store",
+    ".ruff_cache",
 }
 
 

@@ -25,6 +25,7 @@ DEFAULT_IGNORE: Final[Set[str]] = {
     "dist",
     "build",
     "out",
+    ".ruff_cache",
 }
 
 

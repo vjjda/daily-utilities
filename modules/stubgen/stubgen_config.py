@@ -27,6 +27,7 @@ DEFAULT_IGNORE: Final[Set[str]] = {
     "out",
     "*.pyc",
     "*.pyo",
+    ".ruff_cache",
 }
 
 

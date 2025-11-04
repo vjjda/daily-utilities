@@ -33,6 +33,7 @@ DEFAULT_IGNORE: Final[Set[str]] = {
     "build",
     "out",
     ".DS_Store",
+    ".ruff_cache",
 }
 
 
