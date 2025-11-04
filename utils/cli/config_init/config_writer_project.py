@@ -63,7 +63,6 @@ def write_project_config_section(
         display_section_name = config_section_name
 
         if root_key:
-
             if root_key not in main_doc:
                 logger.info(
                     f"Tạo section [{root_key}] mới trong '{config_file_path.name}'."
@@ -122,11 +121,11 @@ def write_project_config_section(
                 target_table.clear()
 
                 for k, v in other_items.items():
-                    target_table.add(k, v)
+                    target_table[k] = v
 
                 sorted_keys = sorted(current_tables.keys())
                 for key in sorted_keys:
-                    target_table.add(key, current_tables[key])
+                    target_table[key] = current_tables[key]
 
             with config_file_path.open("w", encoding="utf-8") as f:
                 tomlkit.dump(main_doc, f)
