@@ -2,6 +2,8 @@
 
 
 
+
+
 [tool.black]
 # Cài đặt Black tiêu chuẩn để thống nhất
 line-length = 88
@@ -25,23 +27,34 @@ exclude = '''
 '''
 
 [tool.bootstrap]
+
 bin_dir = "bin"
+
 docs_dir = "docs"
+
 modules_dir = "modules"
+
 scripts_dir = "tools"
 
 [tool.cpath]
-extensions = ["css", "js", "py", "pyi", "scss", "sh", "ts", "zsh"]
-ignore = [".git", ".venv", "__pycache__", "build", "dist", "node_modules", "out", "venv"]
+
+extensions = ["css", "js", "py", "pyi", "scss", "sh", "template.toml", "ts", "zsh"]
+
+ignore = [".git", ".ruff_cache", ".venv", "__pycache__", "build", "dist", "node_modules", "out", "venv"]
 
 [tool.forc]
+
 extensions = ["py"]
-ignore = [".DS_Store", ".git", ".hg", ".svn", ".venv", "__pycache__", "build", "dist", "node_modules", "out", "venv"]
+
+ignore = [".DS_Store", ".git", ".hg", ".ruff_cache", ".svn", ".venv", "__pycache__", "build", "dist", "node_modules", "out", "venv"]
 
 [tool.ndoc]
+
 extensions = ["py"]
+
 format_extensions = ["py"]
-ignore = [".DS_Store", ".git", ".hg", ".svn", ".venv", "/.gitignore", "__pycache__", "build", "dist", "node_modules", "out", "venv"]
+
+ignore = [".DS_Store", ".git", ".gitignore", ".hg", ".ruff_cache", ".svn", ".venv", "__pycache__", "build", "dist", "node_modules", "out", "venv"]
 
 [tool.pcode]
 
@@ -87,11 +100,14 @@ exclude = [
 ]
 
 [tool.sgen]
+
 ast_all_list_name = "__all__"
+
 ast_module_list_name = "modules_to_export"
+
 dynamic_import_indicators = ["globals()[name]", "globals().update"]
-ignore = ["*.pyc", "*.pyo", ".git", ".venv", "__pycache__", "build", "dist", "node_modules", "out", "venv"]
-include = []
+
+ignore = ["*.pyc", "*.pyo", ".git", ".ruff_cache", ".venv", "__pycache__", "build", "dist", "node_modules", "out", "venv"]
 
 [tool.tree]
 
