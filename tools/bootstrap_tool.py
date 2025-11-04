@@ -97,6 +97,7 @@ def main():
             project_config_filename=PROJECT_CONFIG_FILENAME,
             config_section_name=CONFIG_SECTION_NAME,
             base_defaults=BOOTSTRAP_DEFAULTS,
+            project_config_root_key=PROJECT_CONFIG_ROOT_KEY,
         )
 
         config_initializer.check_and_handle_requests(

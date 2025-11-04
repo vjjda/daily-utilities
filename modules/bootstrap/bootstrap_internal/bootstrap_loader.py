@@ -15,13 +15,17 @@ except ImportError:
 
 from utils.core import load_project_config_section, load_text_template
 
-from ..bootstrap_config import CONFIG_SECTION_NAME, TEMPLATE_DIR
+from ..bootstrap_config import (
+    CONFIG_SECTION_NAME,
+    PROJECT_CONFIG_FILENAME,
+    PROJECT_CONFIG_ROOT_KEY,
+    TEMPLATE_DIR,
+)
 
 __all__ = ["load_template", "load_bootstrap_config", "load_spec_file"]
 
 
 def load_template(template_name: str) -> str:
-
     logger = logging.getLogger("BootstrapLoader")
     template_path = TEMPLATE_DIR / template_name
 
@@ -35,9 +39,11 @@ def load_bootstrap_config(logger: logging.Logger, project_root: Path) -> Dict[st
         )
         sys.exit(1)
 
-    config_path = project_root / ".project.toml"
+    config_path = project_root / PROJECT_CONFIG_FILENAME
 
-    return load_project_config_section(config_path, CONFIG_SECTION_NAME, logger)
+    return load_project_config_section(
+        config_path, CONFIG_SECTION_NAME, logger, root_key=PROJECT_CONFIG_ROOT_KEY
+    )
 
 
 def load_spec_file(logger: logging.Logger, spec_file_path: Path) -> Dict[str, Any]:
