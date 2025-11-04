@@ -1,12 +1,10 @@
 # Path: modules/bootstrap/bootstrap_internal/builders/module_builder.py
-from typing import Dict, Any
+from typing import Any, Dict
 
 from ..bootstrap_loader import load_template
-
-
 from .snippet_config import (
-    build_config_constants,
     build_config_all_list,
+    build_config_constants,
 )
 
 __all__ = ["generate_module_file", "generate_module_init_file"]

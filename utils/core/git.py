@@ -1,14 +1,12 @@
 # Path: utils/core/git.py
-import logging
 import configparser
+import logging
 from pathlib import Path
-from typing import Set, Optional, List, Dict, Any
+from typing import Any, Dict, List, Optional, Set
 
-from .process import run_command
 from ..logging_config import log_success
-
 from .config_helpers import generate_config_hash
-
+from .process import run_command
 
 __all__ = [
     "is_git_repository",

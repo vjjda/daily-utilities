@@ -1,8 +1,8 @@
 # Path: utils/cli/entrypoint_handler.py
+import argparse
 import logging
 import sys
-import argparse
-from typing import Callable, Any
+from typing import Any, Callable
 
 __all__ = ["run_cli_app"]
 

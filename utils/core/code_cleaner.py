@@ -1,6 +1,6 @@
 # Path: utils/core/code_cleaner.py
 import logging
-from typing import Protocol, runtime_checkable, Dict, Final
+from typing import Dict, Final, Protocol, runtime_checkable
 
 
 @runtime_checkable

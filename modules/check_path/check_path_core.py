@@ -1,27 +1,26 @@
 # Path: modules/check_path/check_path_core.py
-import logging
 import argparse
-from pathlib import Path
-from typing import List, Optional, Dict, Any, Set
+import logging
 import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Set
 
 if "PROJECT_ROOT" not in locals():
     sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
-from .check_path_internal import (
-    merge_check_path_configs,
-    process_check_path_task_dir,
-    analyze_single_file_for_path_comment,
-)
-from .check_path_executor import execute_check_path_action
-
-from utils.constants import MAX_THREAD_WORKERS
 from utils.cli import (
     resolve_input_paths,
     resolve_reporting_root,
 )
+from utils.constants import MAX_THREAD_WORKERS
 
+from .check_path_executor import execute_check_path_action
+from .check_path_internal import (
+    analyze_single_file_for_path_comment,
+    merge_check_path_configs,
+    process_check_path_task_dir,
+)
 
 __all__ = ["process_check_path_logic", "orchestrate_check_path"]
 

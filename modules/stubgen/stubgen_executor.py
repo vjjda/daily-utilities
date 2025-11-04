@@ -1,17 +1,17 @@
 # Path: modules/stubgen/stubgen_executor.py
+import argparse
 import logging
 import sys
 from pathlib import Path
-from typing import Dict, Any, List, Optional
-import argparse
+from typing import Any, Dict, List, Optional
 
-from utils.logging_config import log_success
 from utils.core import auto_commit_changes, is_git_repository
+from utils.logging_config import log_success
+
 from .stubgen_internal import (
     load_config_files,
     merge_stubgen_configs,
 )
-
 
 StubResult = Dict[str, Any]
 

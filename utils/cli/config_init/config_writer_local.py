@@ -3,10 +3,9 @@ import logging
 from pathlib import Path
 from typing import Optional
 
+from utils.logging_config import log_success
 
 from ..ui_helpers import prompt_config_overwrite
-
-from utils.logging_config import log_success
 
 __all__ = ["write_local_config"]
 

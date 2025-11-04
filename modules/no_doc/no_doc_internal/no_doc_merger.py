@@ -1,19 +1,18 @@
 # Path: modules/no_doc/no_doc_internal/no_doc_merger.py
 import logging
-from typing import Dict, Any, List, Set, Optional
 import sys
 from pathlib import Path
+from typing import Any, Dict, List, Optional, Set
 
 if "PROJECT_ROOT" not in locals():
     sys.path.append(str(Path(__file__).resolve().parent.parent.parent.parent))
 
 from utils.core import resolve_config_list, resolve_set_modification
 
-
 from ..no_doc_config import (
     DEFAULT_EXTENSIONS,
-    DEFAULT_IGNORE,
     DEFAULT_FORMAT_EXTENSIONS,
+    DEFAULT_IGNORE,
 )
 
 __all__ = ["merge_ndoc_configs"]

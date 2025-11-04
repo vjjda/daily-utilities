@@ -1,11 +1,10 @@
 # Path: modules/stubgen/stubgen_internal/gateway_processor.py
 import logging
 from pathlib import Path
-from typing import Dict, Any, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple
 
-
-from .stubgen_parser import extract_module_list, collect_all_exported_symbols
 from .stubgen_formatter import format_stub_content
+from .stubgen_parser import collect_all_exported_symbols, extract_module_list
 
 __all__ = ["process_single_gateway"]
 

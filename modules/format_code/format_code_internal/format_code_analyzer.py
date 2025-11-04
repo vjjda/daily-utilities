@@ -1,16 +1,15 @@
 # Path: modules/format_code/format_code_internal/format_code_analyzer.py
 import logging
-from pathlib import Path
-from typing import Optional, Dict, Any
 import sys
-
+from pathlib import Path
+from typing import Any, Dict, Optional
 
 if "PROJECT_ROOT" not in locals():
     sys.path.append(str(Path(__file__).resolve().parent.parent.parent.parent))
 
 
-from utils.core import format_code
 from utils.constants import DEFAULT_EXTENSIONS_LANG_MAP
+from utils.core import format_code
 
 __all__ = ["analyze_file_content_for_formatting"]
 

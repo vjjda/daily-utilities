@@ -1,12 +1,11 @@
 # Path: modules/pack_code/pack_code_internal/pack_code_task_file.py
 import logging
 from pathlib import Path
-from typing import Dict, Any, List, Optional, Set
+from typing import Any, Dict, List, Optional, Set
 
+from utils.core import is_extension_matched, is_path_matched
 
-from . import load_config_files, resolve_filters, load_files_content
-
-from utils.core import is_path_matched, is_extension_matched
+from . import load_config_files, load_files_content, resolve_filters
 
 __all__ = ["process_pack_code_task_file"]
 

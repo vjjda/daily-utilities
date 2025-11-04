@@ -1,8 +1,8 @@
 # Path: modules/tree/tree_internal/tree_merger.py
-from pathlib import Path
-import logging
 import argparse
-from typing import Set, Optional, Dict, Any, TYPE_CHECKING, List, Tuple
+import logging
+from pathlib import Path
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Tuple
 
 try:
     import pathspec
@@ -13,23 +13,23 @@ if TYPE_CHECKING:
     import pathspec
 
 from utils.core import (
-    get_submodule_paths,
-    parse_gitignore,
-    resolve_config_value,
-    resolve_config_list,
     compile_spec_from_patterns,
+    get_submodule_paths,
     parse_comma_list,
+    parse_gitignore,
+    resolve_config_list,
+    resolve_config_value,
     resolve_set_modification,
 )
 
 from ..tree_config import (
-    DEFAULT_IGNORE,
-    DEFAULT_PRUNE,
     DEFAULT_DIRS_ONLY_LOGIC,
+    DEFAULT_EXTENSIONS,
+    DEFAULT_IGNORE,
     DEFAULT_MAX_LEVEL,
+    DEFAULT_PRUNE,
     FALLBACK_SHOW_SUBMODULES,
     FALLBACK_USE_GITIGNORE,
-    DEFAULT_EXTENSIONS,
 )
 
 __all__ = ["merge_config_sources"]

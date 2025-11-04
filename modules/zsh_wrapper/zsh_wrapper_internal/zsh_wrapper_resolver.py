@@ -1,10 +1,11 @@
 # Path: modules/zsh_wrapper/zsh_wrapper_internal/zsh_wrapper_resolver.py
-import logging
 import argparse
+import logging
 from pathlib import Path
-from typing import Dict, Any, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple
 
 from utils.core import find_git_root
+
 from .zsh_wrapper_helpers import resolve_root_interactively
 
 __all__ = ["resolve_wrapper_inputs", "find_project_root"]

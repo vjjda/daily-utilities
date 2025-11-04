@@ -1,16 +1,15 @@
 # Path: modules/pack_code/pack_code_internal/pack_code_task_dir.py
 import logging
 from pathlib import Path
-from typing import Dict, Any, List, Optional, Set
-
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set
 
 if TYPE_CHECKING:
     pass
 
 
-from . import load_config_files, resolve_filters, load_files_content
 from utils.core import scan_directory_recursive
+
+from . import load_config_files, load_files_content, resolve_filters
 
 __all__ = ["process_pack_code_task_dir"]
 

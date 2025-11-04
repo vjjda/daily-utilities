@@ -1,19 +1,18 @@
 # Path: modules/stubgen/stubgen_core.py
-import logging
 import argparse
-from pathlib import Path
-from typing import Dict, Any, List, Set, Tuple
+import logging
 import sys
-
-from .stubgen_internal import process_stubgen_task_file, process_stubgen_task_dir
-from .stubgen_executor import execute_stubgen_action
-
-from utils.core import load_text_template
+from pathlib import Path
+from typing import Any, Dict, List, Set, Tuple
 
 from utils.cli import (
     resolve_input_paths,
     resolve_reporting_root,
 )
+from utils.core import load_text_template
+
+from .stubgen_executor import execute_stubgen_action
+from .stubgen_internal import process_stubgen_task_dir, process_stubgen_task_file
 
 MODULE_DIR = Path(__file__).parent
 TEMPLATE_FILENAME = "pyi.py.template"

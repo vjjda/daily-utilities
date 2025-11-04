@@ -1,6 +1,6 @@
 # Path: modules/bootstrap/bootstrap_config.py
 from pathlib import Path
-from typing import Dict, Set, Final, Any
+from typing import Any, Dict, Final, Set
 
 __all__ = [
     "TEMPLATE_DIR",

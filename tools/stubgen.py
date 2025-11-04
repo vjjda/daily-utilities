@@ -1,6 +1,6 @@
 # Path: tools/stubgen.py
-import sys
 import argparse
+import sys
 from pathlib import Path
 from typing import Final
 
@@ -13,20 +13,20 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.append(str(PROJECT_ROOT))
 
 try:
-    from utils.logging_config import setup_logging
+    from modules.stubgen import (
+        CONFIG_FILENAME,
+        CONFIG_SECTION_NAME,
+        MODULE_DIR,
+        PROJECT_CONFIG_FILENAME,
+        SGEN_DEFAULTS,
+        TEMPLATE_FILENAME,
+        orchestrate_stubgen,
+    )
     from utils.cli import (
         ConfigInitializer,
         run_cli_app,
     )
-    from modules.stubgen import (
-        MODULE_DIR,
-        TEMPLATE_FILENAME,
-        SGEN_DEFAULTS,
-        PROJECT_CONFIG_FILENAME,
-        CONFIG_FILENAME,
-        CONFIG_SECTION_NAME,
-        orchestrate_stubgen,
-    )
+    from utils.logging_config import setup_logging
 except ImportError as e:
     print(f"Lỗi: Không thể import project utilities/modules: {e}", file=sys.stderr)
     sys.exit(1)

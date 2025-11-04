@@ -1,6 +1,6 @@
 # Path: tools/no_doc.py
-import sys
 import argparse
+import sys
 from pathlib import Path
 from typing import Final
 
@@ -13,22 +13,21 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.append(str(PROJECT_ROOT))
 
 try:
-    from utils.logging_config import setup_logging
+    from modules.no_doc import (
+        CONFIG_FILENAME,
+        CONFIG_SECTION_NAME,
+        DEFAULT_START_PATH,
+        MODULE_DIR,
+        NDOC_DEFAULTS,
+        PROJECT_CONFIG_FILENAME,
+        TEMPLATE_FILENAME,
+        orchestrate_no_doc,
+    )
     from utils.cli import (
         ConfigInitializer,
         run_cli_app,
     )
-
-    from modules.no_doc import (
-        orchestrate_no_doc,
-        MODULE_DIR,
-        TEMPLATE_FILENAME,
-        NDOC_DEFAULTS,
-        DEFAULT_START_PATH,
-        CONFIG_FILENAME,
-        PROJECT_CONFIG_FILENAME,
-        CONFIG_SECTION_NAME,
-    )
+    from utils.logging_config import setup_logging
 except ImportError as e:
     print(f"Lỗi: Không thể import project utilities/modules: {e}", file=sys.stderr)
     sys.exit(1)

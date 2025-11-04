@@ -1,27 +1,25 @@
 # Path: modules/no_doc/no_doc_core.py
-import logging
 import argparse
-from pathlib import Path
-from typing import List, Optional, Dict, Any, Set
+import logging
 import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
-
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Set
 
 if "PROJECT_ROOT" not in locals():
     sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
-from .no_doc_internal import (
-    merge_ndoc_configs,
-    process_no_doc_task_dir,
-    analyze_file_for_cleaning_and_formatting,
-    load_config_files,
-)
-from .no_doc_executor import execute_ndoc_action
-from .no_doc_config import DEFAULT_START_PATH
-
 from utils.cli import resolve_reporting_root, resolve_stepwise_paths
 from utils.constants import MAX_THREAD_WORKERS
 
+from .no_doc_config import DEFAULT_START_PATH
+from .no_doc_executor import execute_ndoc_action
+from .no_doc_internal import (
+    analyze_file_for_cleaning_and_formatting,
+    load_config_files,
+    merge_ndoc_configs,
+    process_no_doc_task_dir,
+)
 
 __all__ = ["process_no_doc_logic", "orchestrate_no_doc"]
 

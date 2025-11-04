@@ -1,8 +1,7 @@
 # Path: tools/tree.py
-import sys
 import argparse
+import sys
 from pathlib import Path
-
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.append(str(PROJECT_ROOT))
@@ -12,20 +11,20 @@ try:
 except ImportError:
     argcomplete = None
 
-from utils.logging_config import setup_logging
-from utils.cli import (
-    ConfigInitializer,
-    run_cli_app,
-)
 from modules.tree import (
     CONFIG_FILENAME,
-    PROJECT_CONFIG_FILENAME,
     CONFIG_SECTION_NAME,
     MODULE_DIR,
+    PROJECT_CONFIG_FILENAME,
     TEMPLATE_FILENAME,
     TREE_DEFAULTS,
     orchestrate_tree,
 )
+from utils.cli import (
+    ConfigInitializer,
+    run_cli_app,
+)
+from utils.logging_config import setup_logging
 
 
 def main():

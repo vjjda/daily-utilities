@@ -1,6 +1,6 @@
 # Path: modules/no_doc/no_doc_config.py
 from pathlib import Path
-from typing import Any, Final, Set, Dict
+from typing import Any, Dict, Final, Set
 
 __all__ = [
     "DEFAULT_START_PATH",

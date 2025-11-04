@@ -1,7 +1,7 @@
 # Path: utils/core/cleaners/cleaner_js.py
 import logging
 import re
-from typing import List, Final
+from typing import Final, List
 
 __all__ = ["clean_javascript_code"]
 

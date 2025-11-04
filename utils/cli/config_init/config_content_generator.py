@@ -1,15 +1,15 @@
 # Path: utils/cli/config_init/config_content_generator.py
 import logging
-from pathlib import Path
-from typing import Dict, Any, List
 import re
+from pathlib import Path
+from typing import Any, Dict, List
 
 try:
     import tomlkit
 except ImportError:
     tomlkit = None
 
-from utils.core import load_text_template, format_value_to_toml
+from utils.core import format_value_to_toml, load_text_template
 
 __all__ = ["generate_config_content"]
 

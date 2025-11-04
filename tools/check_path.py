@@ -1,31 +1,32 @@
-import sys
+# Path: tools/check_path.py
 import argparse
+import sys
 from pathlib import Path
 from typing import Final
-
-
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-sys.path.append(str(PROJECT_ROOT))
 
 try:
     import argcomplete
 except ImportError:
     argcomplete = None
 
-from utils.logging_config import setup_logging
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+sys.path.append(str(PROJECT_ROOT))
+
+
+from modules.check_path import (
+    CONFIG_FILENAME,
+    CONFIG_SECTION_NAME,
+    CPATH_DEFAULTS,
+    MODULE_DIR,
+    PROJECT_CONFIG_FILENAME,
+    TEMPLATE_FILENAME,
+    orchestrate_check_path,
+)
 from utils.cli import (
     ConfigInitializer,
     run_cli_app,
 )
-from modules.check_path import (
-    orchestrate_check_path,
-    MODULE_DIR,
-    TEMPLATE_FILENAME,
-    CPATH_DEFAULTS,
-    PROJECT_CONFIG_FILENAME,
-    CONFIG_SECTION_NAME,
-    CONFIG_FILENAME,
-)
+from utils.logging_config import setup_logging
 
 THIS_SCRIPT_PATH: Final[Path] = Path(__file__).resolve()
 

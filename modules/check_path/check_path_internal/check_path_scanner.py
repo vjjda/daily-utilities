@@ -1,8 +1,8 @@
 # Path: modules/check_path/check_path_internal/check_path_scanner.py
 import logging
-from pathlib import Path
 import sys
-from typing import List, Optional, TYPE_CHECKING, Tuple, Dict
+from pathlib import Path
+from typing import TYPE_CHECKING, Dict, List, Optional, Tuple
 
 if "PROJECT_ROOT" not in locals():
     sys.path.append(str(Path(__file__).resolve().parent.parent.parent.parent))
@@ -18,10 +18,11 @@ if TYPE_CHECKING:
 
 from utils.core import (
     get_submodule_paths,
-    is_path_matched,
     is_extension_matched,
+    is_path_matched,
     scan_directory_recursive,
 )
+
 from ..check_path_config import DEFAULT_IGNORE
 
 __all__ = ["scan_files"]

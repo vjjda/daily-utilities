@@ -1,17 +1,15 @@
 # Path: modules/no_doc/no_doc_internal/no_doc_analyzer.py
 import logging
-from pathlib import Path
-from typing import Optional, Dict, Any, Set
 import sys
-
+from pathlib import Path
+from typing import Any, Dict, Optional, Set
 
 if "PROJECT_ROOT" not in locals():
     sys.path.append(str(Path(__file__).resolve().parent.parent.parent.parent))
 
 
-from utils.core import clean_code, format_code
 from utils.constants import DEFAULT_EXTENSIONS_LANG_MAP
-
+from utils.core import clean_code, format_code
 
 __all__ = ["analyze_file_for_cleaning_and_formatting"]
 

@@ -2,8 +2,7 @@
 import logging
 import sys
 
-
-from .constants import LOG_DIR_PATH, FILE_LOG_LEVEL, CONSOLE_LOG_LEVEL
+from .constants import CONSOLE_LOG_LEVEL, FILE_LOG_LEVEL, LOG_DIR_PATH
 
 
 def setup_logging(

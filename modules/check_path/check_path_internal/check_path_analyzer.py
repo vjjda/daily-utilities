@@ -2,12 +2,10 @@
 import logging
 import os
 from pathlib import Path
-from typing import List, Dict, Any, Optional
-
+from typing import Any, Dict, List, Optional
 
 from ..check_path_config import COMMENT_RULES_BY_EXT
-from .check_path_rules import apply_line_comment_rule, apply_block_comment_rule
-
+from .check_path_rules import apply_block_comment_rule, apply_line_comment_rule
 
 __all__ = ["analyze_single_file_for_path_comment"]
 

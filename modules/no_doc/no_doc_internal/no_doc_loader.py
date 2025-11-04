@@ -2,8 +2,7 @@
 import logging
 import sys
 from pathlib import Path
-from typing import Dict, Any
-
+from typing import Any, Dict
 
 if "PROJECT_ROOT" not in locals():
 
@@ -20,9 +19,9 @@ except ImportError as e:
 
 
 from ..no_doc_config import (
-    PROJECT_CONFIG_FILENAME,
-    CONFIG_SECTION_NAME,
     CONFIG_FILENAME,
+    CONFIG_SECTION_NAME,
+    PROJECT_CONFIG_FILENAME,
 )
 
 __all__ = ["load_config_files"]

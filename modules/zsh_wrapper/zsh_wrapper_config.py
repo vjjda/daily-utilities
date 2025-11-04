@@ -1,6 +1,6 @@
 # Path: modules/zsh_wrapper/zsh_wrapper_config.py
 from pathlib import Path
-from typing import Dict, Any, Final
+from typing import Any, Dict, Final
 
 __all__ = [
     "DEFAULT_MODE",

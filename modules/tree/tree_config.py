@@ -1,6 +1,6 @@
 # Path: modules/tree/tree_config.py
-from typing import Set, Optional, Final, Dict, Any
 from pathlib import Path
+from typing import Any, Dict, Final, Optional, Set
 
 __all__ = [
     "DEFAULT_IGNORE",

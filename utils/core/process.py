@@ -1,8 +1,8 @@
 # Path: utils/core/process.py
-import subprocess
 import logging
-from typing import List, Tuple, Union, Optional
+import subprocess
 from pathlib import Path
+from typing import List, Optional, Tuple, Union
 
 Logger = logging.Logger
 

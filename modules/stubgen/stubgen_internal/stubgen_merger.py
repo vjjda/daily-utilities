@@ -1,15 +1,14 @@
 # Path: modules/stubgen/stubgen_internal/stubgen_merger.py
 import logging
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
 
-from utils.core import resolve_config_value, resolve_config_list
-
+from utils.core import resolve_config_list, resolve_config_value
 
 from ..stubgen_config import (
+    AST_ALL_LIST_NAME,
+    AST_MODULE_LIST_NAME,
     DEFAULT_IGNORE,
     DYNAMIC_IMPORT_INDICATORS,
-    AST_MODULE_LIST_NAME,
-    AST_ALL_LIST_NAME,
 )
 
 __all__ = ["merge_stubgen_configs"]

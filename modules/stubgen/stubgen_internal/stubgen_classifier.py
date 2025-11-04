@@ -1,8 +1,7 @@
 # Path: modules/stubgen/stubgen_internal/stubgen_classifier.py
 import logging
 from pathlib import Path
-from typing import Dict, Any, List, Optional, Tuple
-
+from typing import Any, Dict, List, Optional, Tuple
 
 StubResult = Dict[str, Any]
 

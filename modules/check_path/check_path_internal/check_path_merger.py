@@ -1,8 +1,8 @@
 # Path: modules/check_path/check_path_internal/check_path_merger.py
 import logging
-from typing import Dict, Any, List, Set, Optional
+from typing import Any, Dict, List, Optional, Set
 
-from utils.core import resolve_config_list, parse_comma_list, resolve_set_modification
+from utils.core import parse_comma_list, resolve_config_list, resolve_set_modification
 
 from ..check_path_config import DEFAULT_EXTENSIONS, DEFAULT_IGNORE
 

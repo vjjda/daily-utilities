@@ -4,7 +4,6 @@ import os
 from pathlib import Path
 from typing import Dict, Optional
 
-
 TEMPLATE_DIR = Path(__file__).parent.parent / "templates"
 
 

@@ -1,11 +1,12 @@
 # Path: utils/cli/stepwise_resolver.py
 import logging
 from pathlib import Path
-from typing import List, Dict, Any, Optional, Set
+from typing import Any, Dict, List, Optional, Set
 
-from utils.core.git import find_commit_by_hash, get_diffed_files
 from utils.core.config_helpers import generate_config_hash
 from utils.core.file_extensions import is_extension_matched
+from utils.core.git import find_commit_by_hash, get_diffed_files
+
 from .path_resolver import resolve_input_paths
 
 __all__ = ["resolve_stepwise_paths"]

@@ -1,6 +1,6 @@
 # Path: utils/core/parsing.py
 import re
-from typing import Union, Set, Tuple
+from typing import Set, Tuple, Union
 
 __all__ = ["parse_comma_list", "parse_cli_set_operators"]
 

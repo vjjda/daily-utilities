@@ -1,13 +1,12 @@
 # Path: modules/bootstrap/bootstrap_core.py
+import argparse
 import logging
 import sys
-import argparse
 from pathlib import Path
 
-
 from .bootstrap_internal import (
-    run_init_spec_logic,
     run_bootstrap_logic,
+    run_init_spec_logic,
 )
 
 __all__ = [

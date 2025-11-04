@@ -1,8 +1,7 @@
 # Path: utils/cli/config_init/config_defaults_resolver.py
 import logging
 from pathlib import Path
-from typing import Dict, Any
-
+from typing import Any, Dict
 
 from utils.core import load_project_config_section
 

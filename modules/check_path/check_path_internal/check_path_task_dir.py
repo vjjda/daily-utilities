@@ -1,25 +1,21 @@
 # Path: modules/check_path/check_path_internal/check_path_task_dir.py
-import logging
 import argparse
-from pathlib import Path
-from typing import Dict, Any, List, Optional, Set
+import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
-
-from typing import TYPE_CHECKING
+from pathlib import Path
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set
 
 if TYPE_CHECKING:
     pass
 
 
+from utils.constants import MAX_THREAD_WORKERS
+from utils.core import compile_spec_from_patterns, parse_gitignore
+
+from .check_path_analyzer import analyze_single_file_for_path_comment
 from .check_path_loader import load_config_files
 from .check_path_merger import merge_check_path_configs
 from .check_path_scanner import scan_files
-from .check_path_analyzer import analyze_single_file_for_path_comment
-
-
-from utils.core import parse_gitignore, compile_spec_from_patterns
-from utils.constants import MAX_THREAD_WORKERS
-
 
 __all__ = ["process_check_path_task_dir"]
 

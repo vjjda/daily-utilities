@@ -1,8 +1,8 @@
 # Path: utils/core/file_scanner.py
 import logging
-from pathlib import Path
-from typing import List, Set, Optional, TYPE_CHECKING
 import os
+from pathlib import Path
+from typing import TYPE_CHECKING, List, Optional, Set
 
 try:
     import pathspec
@@ -12,8 +12,8 @@ except ImportError:
 if TYPE_CHECKING:
     import pathspec
 
-from .filter import is_path_matched
 from .file_extensions import is_extension_matched
+from .filter import is_path_matched
 
 __all__ = ["scan_directory_recursive"]
 

@@ -1,5 +1,5 @@
 # Path: modules/bootstrap/bootstrap_internal/builders/doc_builder.py
-from typing import Dict, Any
+from typing import Any, Dict
 
 from ..bootstrap_loader import load_template
 

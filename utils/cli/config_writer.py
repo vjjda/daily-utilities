@@ -1,9 +1,8 @@
 # Path: utils/cli/config_writer.py
 import logging
-from pathlib import Path
-from typing import Dict, Any, Optional
 import sys
-
+from pathlib import Path
+from typing import Any, Dict, Optional
 
 try:
     import tomllib
@@ -19,13 +18,11 @@ except ImportError:
 
 
 from .config_init import (
-    resolve_effective_defaults,
     generate_config_content,
+    resolve_effective_defaults,
     write_local_config,
     write_project_config_section,
 )
-
-
 from .ui_helpers import launch_editor
 
 __all__ = ["handle_config_init_request"]

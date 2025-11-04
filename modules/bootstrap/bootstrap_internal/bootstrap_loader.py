@@ -2,8 +2,7 @@
 import logging
 import sys
 from pathlib import Path
-from typing import Dict, Any
-
+from typing import Any, Dict
 
 try:
     import tomllib
@@ -14,9 +13,9 @@ except ImportError:
         tomllib = None
 
 
-from ..bootstrap_config import TEMPLATE_DIR, CONFIG_SECTION_NAME
 from utils.core import load_project_config_section, load_text_template
 
+from ..bootstrap_config import CONFIG_SECTION_NAME, TEMPLATE_DIR
 
 __all__ = ["load_template", "load_bootstrap_config", "load_spec_file"]
 

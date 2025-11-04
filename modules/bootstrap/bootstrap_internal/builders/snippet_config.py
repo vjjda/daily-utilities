@@ -1,6 +1,5 @@
 # Path: modules/bootstrap/bootstrap_internal/builders/snippet_config.py
-from typing import Dict, Any, List
-
+from typing import Any, Dict, List
 
 from .builder_utils import get_cli_args
 

@@ -4,7 +4,6 @@ import platform
 from pathlib import Path
 from typing import List
 
-
 from .process import run_command
 
 __all__ = ["copy_file_to_clipboard"]

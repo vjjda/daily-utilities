@@ -1,6 +1,6 @@
 # Path: modules/check_path/check_path_config.py
-from typing import Dict, Any, Set, Final
 from pathlib import Path
+from typing import Any, Dict, Final, Set
 
 __all__ = [
     "DEFAULT_IGNORE",

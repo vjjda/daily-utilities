@@ -1,8 +1,8 @@
 # Path: modules/format_code/format_code_internal/format_code_scanner.py
 import logging
-from pathlib import Path
 import sys
-from typing import List, TYPE_CHECKING, Tuple, Dict
+from pathlib import Path
+from typing import TYPE_CHECKING, Dict, List, Tuple
 
 if "PROJECT_ROOT" not in locals():
     sys.path.append(str(Path(__file__).resolve().parent.parent.parent.parent))
@@ -16,11 +16,11 @@ if TYPE_CHECKING:
     pass
 
 from utils.core import (
-    get_submodule_paths,
-    parse_gitignore,
-    is_path_matched,
     compile_spec_from_patterns,
+    get_submodule_paths,
     is_extension_matched,
+    is_path_matched,
+    parse_gitignore,
     scan_directory_recursive,
 )
 

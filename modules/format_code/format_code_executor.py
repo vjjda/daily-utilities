@@ -1,23 +1,20 @@
 # Path: modules/format_code/format_code_executor.py
+import argparse
 import logging
 import sys
-import argparse
 from pathlib import Path
-from typing import List, Dict, Any
-
+from typing import Any, Dict, List
 
 if "PROJECT_ROOT" not in locals():
     sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
-from utils.logging_config import log_success
-from utils.core.git import auto_commit_changes
 from modules.format_code.format_code_internal import (
     load_config_files,
     merge_format_code_configs,
 )
-
 from utils.cli.ui_helpers import print_grouped_report
-
+from utils.core.git import auto_commit_changes
+from utils.logging_config import log_success
 
 __all__ = ["execute_format_code_action"]
 

@@ -1,11 +1,10 @@
 # Path: utils/core/formatters/formatter_python.py
 import logging
 from pathlib import Path
-from typing import Optional, List
+from typing import List, Optional
 
-
-from ..process import run_command
 from ..git import find_file_upwards
+from ..process import run_command
 
 __all__ = ["format_python_black"]
 

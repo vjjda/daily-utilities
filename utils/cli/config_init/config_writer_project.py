@@ -1,13 +1,12 @@
 # Path: utils/cli/config_init/config_writer_project.py
 import logging
 from pathlib import Path
-from typing import Optional, Dict, Any
+from typing import Any, Dict, Optional
 
 try:
     import tomlkit
-    from tomlkit.exceptions import ParseError, ConvertError
-
-    from tomlkit.items import Table, Item
+    from tomlkit.exceptions import ConvertError, ParseError
+    from tomlkit.items import Item, Table
     from tomlkit.toml_document import TOMLDocument
 except ImportError:
     tomlkit = None
@@ -17,8 +16,9 @@ except ImportError:
     Item = Any
     TOMLDocument = Dict[str, Any]
 
-from ..ui_helpers import prompt_config_overwrite
 from utils.logging_config import log_success
+
+from ..ui_helpers import prompt_config_overwrite
 
 __all__ = ["write_project_config_section"]
 

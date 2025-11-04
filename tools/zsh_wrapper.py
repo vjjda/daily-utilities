@@ -1,6 +1,6 @@
 # Path: tools/zsh_wrapper.py
-import sys
 import argparse
+import sys
 from pathlib import Path
 
 try:
@@ -12,22 +12,22 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.append(str(PROJECT_ROOT))
 
 try:
-    from utils.logging_config import setup_logging
+    from modules.zsh_wrapper import (
+        CONFIG_FILENAME,
+        CONFIG_SECTION_NAME,
+        DEFAULT_MODE,
+        DEFAULT_VENV,
+        MODULE_DIR,
+        PROJECT_CONFIG_FILENAME,
+        TEMPLATE_FILENAME,
+        ZRAP_DEFAULTS,
+        orchestrate_zsh_wrapper,
+    )
     from utils.cli import (
         ConfigInitializer,
         run_cli_app,
     )
-    from modules.zsh_wrapper import (
-        DEFAULT_MODE,
-        DEFAULT_VENV,
-        orchestrate_zsh_wrapper,
-        CONFIG_FILENAME,
-        PROJECT_CONFIG_FILENAME,
-        CONFIG_SECTION_NAME,
-        ZRAP_DEFAULTS,
-        TEMPLATE_FILENAME,
-        MODULE_DIR,
-    )
+    from utils.logging_config import setup_logging
 except ImportError as e:
     print(
         f"Lỗi: Không thể import utils/modules. Đảm bảo bạn đang chạy từ Project Root: {e}",

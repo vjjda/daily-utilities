@@ -1,9 +1,9 @@
 # Path: utils/cli/config_initializer.py
+import argparse
 import logging
 import sys
-import argparse
 from pathlib import Path
-from typing import Dict, Any
+from typing import Any, Dict
 
 from .config_writer import handle_config_init_request
 

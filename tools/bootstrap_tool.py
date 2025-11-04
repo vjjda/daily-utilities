@@ -1,6 +1,6 @@
 # Path: tools/bootstrap_tool.py
-import sys
 import argparse
+import sys
 from pathlib import Path
 from typing import Final
 
@@ -13,16 +13,16 @@ PROJECT_ROOT: Final[Path] = Path(__file__).resolve().parent.parent
 sys.path.append(str(PROJECT_ROOT))
 
 try:
-    from utils.logging_config import setup_logging
-    from utils.cli import run_cli_app, ConfigInitializer
     from modules.bootstrap import (
-        orchestrate_bootstrap,
+        BOOTSTRAP_DEFAULTS,
         CONFIG_SECTION_NAME,
         MODULE_DIR,
-        TEMPLATE_FILENAME,
-        BOOTSTRAP_DEFAULTS,
         PROJECT_CONFIG_FILENAME,
+        TEMPLATE_FILENAME,
+        orchestrate_bootstrap,
     )
+    from utils.cli import ConfigInitializer, run_cli_app
+    from utils.logging_config import setup_logging
 except ImportError as e:
     print(f"Lỗi: Không thể import utils hoặc gateway bootstrap: {e}", file=sys.stderr)
     sys.exit(1)

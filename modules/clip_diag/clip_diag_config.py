@@ -1,7 +1,7 @@
 # Path: modules/clip_diag/clip_diag_config.py
 import os
 from pathlib import Path
-from typing import Dict, Optional, Final
+from typing import Dict, Final, Optional
 
 __all__ = [
     "DEFAULT_OUTPUT_DIR",

@@ -1,19 +1,17 @@
 # Path: modules/check_path/check_path_executor.py
+import argparse
 import logging
 import sys
-import argparse
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 
-from utils.logging_config import log_success
-from utils.core.git import auto_commit_changes
 from modules.check_path.check_path_internal import (
     load_config_files,
     merge_check_path_configs,
 )
-
 from utils.cli.ui_helpers import print_grouped_report
-
+from utils.core.git import auto_commit_changes
+from utils.logging_config import log_success
 
 __all__ = ["execute_check_path_action"]
 

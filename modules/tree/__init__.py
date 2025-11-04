@@ -1,17 +1,17 @@
 # Path: modules/tree/__init__.py
 from .tree_config import (
     CONFIG_FILENAME,
-    PROJECT_CONFIG_FILENAME,
     CONFIG_SECTION_NAME,
     MODULE_DIR,
+    PROJECT_CONFIG_FILENAME,
     TEMPLATE_FILENAME,
     TREE_DEFAULTS,
 )
-from .tree_core import process_tree_logic, orchestrate_tree
+from .tree_core import orchestrate_tree, process_tree_logic
 from .tree_executor import (
     generate_tree,
-    print_status_header,
     print_final_result,
+    print_status_header,
 )
 
 __all__ = [

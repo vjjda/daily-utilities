@@ -1,13 +1,14 @@
 # Path: modules/clip_diag/clip_diag_core.py
-import hashlib
-import re
-import pyperclip
-import logging
-from typing import Optional, Dict, Any
 import argparse
+import hashlib
+import logging
+import re
 import sys
+from typing import Any, Dict, Optional
 
-from .clip_diag_config import GRAPHVIZ_PREFIX, MERMAID_PREFIX, DEFAULT_OUTPUT_DIR
+import pyperclip
+
+from .clip_diag_config import DEFAULT_OUTPUT_DIR, GRAPHVIZ_PREFIX, MERMAID_PREFIX
 from .clip_diag_executor import execute_diagram_generation
 
 __all__ = [

@@ -1,19 +1,15 @@
 # Path: modules/stubgen/stubgen_internal/stubgen_task_file.py
 
-import logging
 import argparse
+import logging
 from pathlib import Path
-from typing import Dict, Any, List, Set, Tuple
-
+from typing import Any, Dict, List, Set, Tuple
 
 from . import (
     merge_stubgen_configs,
     process_single_gateway,
 )
-
-
 from .stubgen_classifier import classify_and_report_stub_changes
-
 
 __all__ = ["process_stubgen_task_file"]
 

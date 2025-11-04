@@ -1,20 +1,22 @@
 # Path: modules/bootstrap/bootstrap_internal/builders/script_builder.py
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
 
 from ..bootstrap_loader import load_template
-
-
+from .snippet_argparse import (
+    build_argparse_arguments,
+)
+from .snippet_argparse import (
+    build_args_pass_to_core as build_argparse_args_pass_to_core,
+)
+from .snippet_argparse import (
+    build_path_expands as build_argparse_path_expands,
+)
 from .snippet_config import build_config_imports
 from .snippet_typer import (
     build_typer_app_code,
-    build_typer_path_expands,
     build_typer_args_pass_to_core,
     build_typer_main_signature,
-)
-from .snippet_argparse import (
-    build_argparse_arguments,
-    build_path_expands as build_argparse_path_expands,
-    build_args_pass_to_core as build_argparse_args_pass_to_core,
+    build_typer_path_expands,
 )
 
 __all__ = ["generate_script_entrypoint"]

@@ -1,23 +1,21 @@
 # Path: modules/tree/tree_core.py
-import logging
 import argparse
-from pathlib import Path
-from typing import Dict, Any, Optional
+import logging
 import sys
+from pathlib import Path
+from typing import Any, Dict, Optional
 
 from utils.core import is_git_repository
 
+from .tree_executor import (
+    generate_tree,
+    print_final_result,
+    print_status_header,
+)
 from .tree_internal import (
     load_config_files,
     merge_config_sources,
 )
-
-from .tree_executor import (
-    generate_tree,
-    print_status_header,
-    print_final_result,
-)
-
 
 __all__ = ["process_tree_logic", "orchestrate_tree"]
 

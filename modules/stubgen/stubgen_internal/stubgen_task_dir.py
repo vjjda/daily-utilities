@@ -1,30 +1,24 @@
 # Path: modules/stubgen/stubgen_internal/stubgen_task_dir.py
 
-import logging
 import argparse
-from pathlib import Path
-from typing import Dict, Any, List, Set, Tuple
+import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
-
-from typing import TYPE_CHECKING
+from pathlib import Path
+from typing import TYPE_CHECKING, Any, Dict, List, Set, Tuple
 
 if TYPE_CHECKING:
     pass
 
 
-from . import (
-    load_config_files,
-    merge_stubgen_configs,
-    find_gateway_files,
-    process_single_gateway,
-)
-
-
-from .stubgen_classifier import classify_and_report_stub_changes
-
-
 from utils.constants import MAX_THREAD_WORKERS
 
+from . import (
+    find_gateway_files,
+    load_config_files,
+    merge_stubgen_configs,
+    process_single_gateway,
+)
+from .stubgen_classifier import classify_and_report_stub_changes
 
 __all__ = ["process_stubgen_task_dir"]
 

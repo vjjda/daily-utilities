@@ -1,7 +1,7 @@
 # Path: utils/core/code_formatter.py
 import logging
 from pathlib import Path
-from typing import Protocol, runtime_checkable, Dict, Final, Optional
+from typing import Dict, Final, Optional, Protocol, runtime_checkable
 
 
 @runtime_checkable

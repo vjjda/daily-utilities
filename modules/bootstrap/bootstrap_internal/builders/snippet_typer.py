@@ -1,6 +1,5 @@
 # Path: modules/bootstrap/bootstrap_internal/builders/snippet_typer.py
-from typing import Dict, Any, List
-
+from typing import Any, Dict, List
 
 from ...bootstrap_config import TYPE_HINT_MAP
 from .builder_utils import get_cli_args

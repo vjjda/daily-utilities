@@ -2,19 +2,19 @@
 import logging
 import sys
 from pathlib import Path
-from typing import Dict, Any
+from typing import Any, Dict
 
-from utils.logging_config import log_success
 from utils.cli import launch_editor
 from utils.core import load_project_config_section, load_text_template
+from utils.logging_config import log_success
 
 from ...bootstrap_config import (
-    PROJECT_CONFIG_FILENAME,
     CONFIG_SECTION_NAME,
     DEFAULT_BIN_DIR_NAME,
-    DEFAULT_SCRIPTS_DIR_NAME,
-    DEFAULT_MODULES_DIR_NAME,
     DEFAULT_DOCS_DIR_NAME,
+    DEFAULT_MODULES_DIR_NAME,
+    DEFAULT_SCRIPTS_DIR_NAME,
+    PROJECT_CONFIG_FILENAME,
     SPEC_TEMPLATE_FILENAME,
 )
 

@@ -1,6 +1,6 @@
 # Path: utils/core/cleaners/cleaner_python.py
 import logging
-from typing import Union, Sequence, Optional
+from typing import Optional, Sequence, Union
 
 try:
     import libcst as cst

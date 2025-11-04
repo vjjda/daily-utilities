@@ -1,10 +1,11 @@
 # Path: modules/clip_diag/clip_diag_executor.py
 import logging
 from pathlib import Path
-from typing import Optional, Dict, Any, List
+from typing import Any, Dict, List, Optional
 
 from utils.core import run_command
-from .clip_diag_config import DOT_PATH, MMC_PATH, APP_CONFIG
+
+from .clip_diag_config import APP_CONFIG, DOT_PATH, MMC_PATH
 
 __all__ = ["execute_diagram_generation"]
 

@@ -1,19 +1,16 @@
 # Path: modules/format_code/format_code_internal/format_code_task_dir.py
-import logging
 import argparse
-from pathlib import Path
-from typing import Dict, Any, List, Optional, Set
+import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
-
-
-from .format_code_loader import load_config_files
-from .format_code_merger import merge_format_code_configs
-from .format_code_scanner import scan_files
-from .format_code_analyzer import analyze_file_content_for_formatting
-
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Set
 
 from utils.constants import MAX_THREAD_WORKERS
 
+from .format_code_analyzer import analyze_file_content_for_formatting
+from .format_code_loader import load_config_files
+from .format_code_merger import merge_format_code_configs
+from .format_code_scanner import scan_files
 
 __all__ = ["process_format_code_task_dir"]
 

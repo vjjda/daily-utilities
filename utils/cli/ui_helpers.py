@@ -1,12 +1,12 @@
 # Path: utils/cli/ui_helpers.py
 import logging
-from pathlib import Path
-from typing import Tuple, Optional, List, Callable, Any, Dict
-import subprocess
-import platform
 import os
+import platform
+import subprocess
+from pathlib import Path
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
-from utils.core import is_git_repository, find_git_root
+from utils.core import find_git_root, is_git_repository
 from utils.logging_config import log_success
 
 __all__ = [

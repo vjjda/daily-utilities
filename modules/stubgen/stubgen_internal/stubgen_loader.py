@@ -1,8 +1,8 @@
 # Path: modules/stubgen/stubgen_internal/stubgen_loader.py
 import logging
-from pathlib import Path
-from typing import List, Set, Dict, Any, TYPE_CHECKING, Optional, Tuple
 import os
+from pathlib import Path
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Tuple
 
 try:
     import pathspec
@@ -13,18 +13,17 @@ if TYPE_CHECKING:
     import pathspec
 
 from utils.core import (
+    compile_spec_from_patterns,
     get_submodule_paths,
-    parse_gitignore,
     is_path_matched,
     load_and_merge_configs,
-    compile_spec_from_patterns,
+    parse_gitignore,
 )
 
-
 from ..stubgen_config import (
-    PROJECT_CONFIG_FILENAME,
     CONFIG_FILENAME,
     CONFIG_SECTION_NAME,
+    PROJECT_CONFIG_FILENAME,
 )
 
 __all__ = ["find_gateway_files", "load_config_files"]

@@ -1,6 +1,6 @@
 # Path: modules/stubgen/stubgen_config.py
-from typing import List, Set, Final, Dict, Any
 from pathlib import Path
+from typing import Any, Dict, Final, List, Set
 
 __all__ = [
     "DEFAULT_IGNORE",

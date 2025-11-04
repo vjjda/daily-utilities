@@ -1,8 +1,7 @@
 # Path: utils/constants.py
 import os
 from pathlib import Path
-from typing import Final, Dict
-
+from typing import Dict, Final
 
 PROJECT_ROOT: Final[Path] = Path(__file__).resolve().parent.parent
 

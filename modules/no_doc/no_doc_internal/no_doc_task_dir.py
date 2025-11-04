@@ -1,19 +1,18 @@
 # Path: modules/no_doc/no_doc_internal/no_doc_task_dir.py
-import logging
 import argparse
-from pathlib import Path
-from typing import Dict, Any, List, Optional, Set
+import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Set
+
+from utils.constants import MAX_THREAD_WORKERS
 
 from . import (
+    analyze_file_for_cleaning_and_formatting,
     load_config_files,
     merge_ndoc_configs,
     scan_files,
-    analyze_file_for_cleaning_and_formatting,
 )
-
-
-from utils.constants import MAX_THREAD_WORKERS
 
 __all__ = ["process_no_doc_task_dir"]
 

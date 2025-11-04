@@ -5,7 +5,6 @@ import sys
 from pathlib import Path
 from typing import List, Optional
 
-
 if "PROJECT_ROOT" not in locals():
     PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
     if str(PROJECT_ROOT) not in sys.path:

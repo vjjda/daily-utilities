@@ -1,6 +1,6 @@
 # Path: modules/tree/tree_executor.py
 from pathlib import Path
-from typing import List, Set, Optional, Dict, Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set
 
 try:
     import pathspec
@@ -10,7 +10,7 @@ except ImportError:
 if TYPE_CHECKING:
     import pathspec
 
-from utils.core import is_path_matched, is_extension_matched
+from utils.core import is_extension_matched, is_path_matched
 
 from .tree_config import DEFAULT_MAX_LEVEL
 

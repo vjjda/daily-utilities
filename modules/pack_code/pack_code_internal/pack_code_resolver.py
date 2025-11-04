@@ -1,27 +1,27 @@
 # Path: modules/pack_code/pack_code_internal/pack_code_resolver.py
 import logging
 from pathlib import Path
-from typing import Dict, Any, List, Optional, Set, TYPE_CHECKING, Tuple
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Tuple
 
 if TYPE_CHECKING:
     import pathspec
 
 from utils.core import (
-    parse_gitignore,
     compile_spec_from_patterns,
-    resolve_set_modification,
     get_submodule_paths,
+    parse_gitignore,
     resolve_config_list,
     resolve_config_value,
+    resolve_set_modification,
 )
 
 from ..pack_code_config import (
+    DEFAULT_CLEAN_EXTENSIONS,
     DEFAULT_EXTENSIONS,
+    DEFAULT_FORMAT_EXTENSIONS,
     DEFAULT_IGNORE,
     DEFAULT_INCLUDE,
-    DEFAULT_CLEAN_EXTENSIONS,
     DEFAULT_OUTPUT_DIR,
-    DEFAULT_FORMAT_EXTENSIONS,
 )
 
 __all__ = ["resolve_filters", "resolve_output_path"]

@@ -2,8 +2,7 @@
 import logging
 import sys
 from pathlib import Path
-from typing import Optional, Callable
-
+from typing import Callable, Optional
 
 __all__ = [
     "resolve_default_output_path",

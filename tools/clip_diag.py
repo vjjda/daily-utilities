@@ -1,10 +1,9 @@
 # Path: tools/clip_diag.py
-import sys
 import argparse
 import logging
+import sys
 from pathlib import Path
 from typing import Final
-
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.append(str(PROJECT_ROOT))
@@ -14,12 +13,12 @@ try:
 except ImportError:
     argcomplete = None
 
-from utils.logging_config import setup_logging
-from utils.cli import run_cli_app
 from modules.clip_diag import (
     orchestrate_clip_diag,
 )
 from modules.clip_diag.clip_diag_config import DEFAULT_TO_ARG
+from utils.cli import run_cli_app
+from utils.logging_config import setup_logging
 
 THIS_SCRIPT_PATH: Final[Path] = Path(__file__).resolve()
 

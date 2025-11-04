@@ -1,27 +1,26 @@
 # Path: modules/format_code/format_code_core.py
-import logging
 import argparse
-from pathlib import Path
-from typing import List, Optional, Dict, Any, Set
+import logging
 import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Set
 
 if "PROJECT_ROOT" not in locals():
     sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
 
-from .format_code_internal import (
-    merge_format_code_configs,
-    process_format_code_task_dir,
-    analyze_file_content_for_formatting,
-    load_config_files,
-)
-from .format_code_executor import execute_format_code_action
-from .format_code_config import DEFAULT_START_PATH
-
 from utils.cli import resolve_reporting_root, resolve_stepwise_paths
 from utils.constants import MAX_THREAD_WORKERS
 
+from .format_code_config import DEFAULT_START_PATH
+from .format_code_executor import execute_format_code_action
+from .format_code_internal import (
+    analyze_file_content_for_formatting,
+    load_config_files,
+    merge_format_code_configs,
+    process_format_code_task_dir,
+)
 
 __all__ = ["process_format_code_logic", "orchestrate_format_code"]
 

@@ -2,7 +2,7 @@
 import logging
 import sys
 from pathlib import Path
-from typing import Dict, Any
+from typing import Any, Dict
 
 try:
     from utils.core import load_and_merge_configs
@@ -14,9 +14,9 @@ except ImportError:
 
 
 from ..check_path_config import (
-    PROJECT_CONFIG_FILENAME,
-    CONFIG_SECTION_NAME,
     CONFIG_FILENAME,
+    CONFIG_SECTION_NAME,
+    PROJECT_CONFIG_FILENAME,
 )
 
 __all__ = ["load_config_files"]
