@@ -28,7 +28,7 @@ Chế độ hoạt động mặc định là **sửa lỗi (fix mode)**. Công c
 
 ### Tùy chọn Khởi tạo Cấu hình
 
-- **`-c, --config-project`**: Khởi tạo hoặc cập nhật section `[format_code]` trong file cấu hình toàn dự án (`.project.toml`).
+- **`-c, --config-project`**: Khởi tạo hoặc cập nhật section `[format_code]` trong file cấu hình toàn dự án (`pyproject.toml`).
 - **`-C, --config-local`**: Khởi tạo hoặc cập nhật file cấu hình cục bộ (`.forc.toml`) trong thư mục hiện tại.
 
 ## File Cấu Hình
@@ -36,9 +36,9 @@ Chế độ hoạt động mặc định là **sửa lỗi (fix mode)**. Công c
 `forc` có thể được cấu hình thông qua các file `.toml` để lưu lại các thiết lập thường dùng.
 
 - `.forc.toml`: File cấu hình cục bộ.
-- `.project.toml`: File cấu hình dự phòng toàn dự án (sử dụng section `[format_code]`).
+- ``pyproject.toml`: File cấu hình dự phòng toàn dự án (sử dụng section `[format_code]`).
 
-**Độ ưu tiên:** `Đối số CLI` > `.forc.toml` > `.project.toml` > `Mặc định`.
+**Độ ưu tiên:** `Đối số CLI` > `.forc.toml` > `pyproject.toml` > `Mặc định`.
 
 ```toml
 # Ví dụ: .forc.toml hoặc section [format_code] trong .project.toml

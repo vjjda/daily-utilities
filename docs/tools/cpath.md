@@ -30,7 +30,7 @@ Chế độ hoạt động mặc định là **sửa lỗi (fix mode)**. Công c
 
 ### Tùy chọn Khởi tạo Cấu hình
 
-- **`-c, --config-project`**: Khởi tạo hoặc cập nhật section `[cpath]` trong file cấu hình toàn dự án (`.project.toml`).
+- **`-c, --config-project`**: Khởi tạo hoặc cập nhật section `[cpath]` trong file cấu hình toàn dự án (`pyproject.toml`).
 - **`-C, --config-local`**: Khởi tạo hoặc cập nhật file cấu hình cục bộ (`.cpath.toml`) trong thư mục hiện tại.
 
 ## File Cấu Hình
@@ -38,9 +38,9 @@ Chế độ hoạt động mặc định là **sửa lỗi (fix mode)**. Công c
 `cpath` có thể được cấu hình thông qua các file `.toml` để bạn không phải gõ lại các tùy chọn thường dùng.
 
 - `.cpath.toml`: File cấu hình cục bộ.
-- `.project.toml`: File cấu hình dự phòng toàn dự án (sử dụng section `[cpath]`).
+- ``pyproject.toml`: File cấu hình dự phòng toàn dự án (sử dụng section `[cpath]`).
 
-**Độ ưu tiên:** `Đối số CLI` > `.cpath.toml` > `.project.toml` > `Mặc định`.
+**Độ ưu tiên:** `Đối số CLI` > `.cpath.toml` > `pyproject.toml` > `Mặc định`.
 
 ```toml
 # Ví dụ: .cpath.toml hoặc section [cpath] trong .project.toml

@@ -1,6 +1,6 @@
 # File cấu hình cục bộ cho `ndoc` (No Doc).
 #
-# Cài đặt tại đây sẽ GHI ĐÈ cài đặt trong `.project.toml`.
+# Cài đặt tại đây sẽ GHI ĐÈ cài đặt trong `pyproject.toml`.
 #
 
 [{config_section_name}]

@@ -50,7 +50,7 @@ SPEC_TEMPLATE_FILENAME: Final[str] = (
 )
 
 
-PROJECT_CONFIG_FILENAME: Final[str] = ".project.toml"
+PROJECT_CONFIG_FILENAME: Final[str] = "pyproject.toml"
 
 
 MODULE_DIR: Final[Path] = Path(__file__).parent

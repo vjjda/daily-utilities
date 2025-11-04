@@ -42,7 +42,7 @@ DEFAULT_EXTENSIONS: Final[Set[str]] = {
 }
 
 
-PROJECT_CONFIG_FILENAME: Final[str] = ".project.toml"
+PROJECT_CONFIG_FILENAME: Final[str] = "pyproject.toml"
 CONFIG_FILENAME: Final[str] = ".cpath.toml"
 CONFIG_SECTION_NAME: Final[str] = "cpath"
 

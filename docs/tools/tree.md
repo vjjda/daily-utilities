@@ -29,14 +29,14 @@ ctree [start_path] [options]
 
 ### Tùy chọn Cấu hình
 
-- **`-c, --config-project`**: Khởi tạo/cập nhật section `[tree]` trong `.project.toml`.
+- **`-c, --config-project`**: Khởi tạo/cập nhật section `[tree]` trong `pyproject.toml`.
 - **`-C, --config-local`**: Khởi tạo/cập nhật file `.tree.toml` cục bộ.
 
 ## File Cấu Hình
 
-`ctree` tự động tải cấu hình từ `.tree.toml` (cục bộ) và `.project.toml` (toàn cục).
+`ctree` tự động tải cấu hình từ `.tree.toml` (cục bộ) và `pyproject.toml` (toàn cục).
 
-**Độ ưu tiên:** `Đối số CLI` > `.tree.toml` > `.project.toml` > `Mặc định`.
+**Độ ưu tiên:** `Đối số CLI` > `.tree.toml` > `pyproject.toml` > `Mặc định`.
 
 ```toml
 # Ví dụ: .tree.toml hoặc section [tree] trong .project.toml

@@ -27,7 +27,7 @@ Chế độ hoạt động mặc định là **sửa lỗi (fix mode)**, chỉ x
 
 ### Tùy chọn Khởi tạo Cấu hình
 
-- **`-c, --config-project`**: Khởi tạo hoặc cập nhật section `[no_doc]` trong file `.project.toml`.
+- **`-c, --config-project`**: Khởi tạo hoặc cập nhật section `[no_doc]` trong file `pyproject.toml`.
 - **`-C, --config-local`**: Khởi tạo hoặc cập nhật file cấu hình cục bộ (`.ndoc.toml`).
 
 ## File Cấu Hình
@@ -35,9 +35,9 @@ Chế độ hoạt động mặc định là **sửa lỗi (fix mode)**, chỉ x
 `ndoc` có thể được cấu hình thông qua các file `.toml`.
 
 - `.ndoc.toml`: File cấu hình cục bộ.
-- `.project.toml`: File cấu hình dự phòng toàn dự án (section `[no_doc]`).
+- ``pyproject.toml`: File cấu hình dự phòng toàn dự án (section `[no_doc]`).
 
-**Độ ưu tiên:** `Đối số CLI` > `.ndoc.toml` > `.project.toml` > `Mặc định`.
+**Độ ưu tiên:** `Đối số CLI` > `.ndoc.toml` > `pyproject.toml` > `Mặc định`.
 
 ```toml
 # Ví dụ: .ndoc.toml hoặc section [no_doc] trong .project.toml

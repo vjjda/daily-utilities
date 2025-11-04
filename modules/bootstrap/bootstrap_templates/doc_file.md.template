@@ -24,7 +24,7 @@ Cách dễ nhất để bắt đầu là khởi tạo một file cấu hình tro
 
 ## File Cấu Hình
 
-*(Giải thích cách cấu hình công cụ qua file `. {tool_name}.toml` hoặc `.project.toml`.)*
+*(Giải thích cách cấu hình công cụ qua file `. {tool_name}.toml` hoặc `pyproject.toml`.)*
 
 ## Ví dụ
 

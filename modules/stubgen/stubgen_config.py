@@ -42,7 +42,7 @@ AST_MODULE_LIST_NAME: Final[str] = "modules_to_export"
 AST_ALL_LIST_NAME: Final[str] = "__all__"
 
 
-PROJECT_CONFIG_FILENAME: Final[str] = ".project.toml"
+PROJECT_CONFIG_FILENAME: Final[str] = "pyproject.toml"
 CONFIG_FILENAME: Final[str] = ".sgen.toml"
 CONFIG_SECTION_NAME: Final[str] = "sgen"
 

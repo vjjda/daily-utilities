@@ -37,7 +37,7 @@ DEFAULT_IGNORE: Final[Set[str]] = {
 }
 
 
-PROJECT_CONFIG_FILENAME: Final[str] = ".project.toml"
+PROJECT_CONFIG_FILENAME: Final[str] = "pyproject.toml"
 CONFIG_FILENAME: Final[str] = ".forc.toml"
 CONFIG_SECTION_NAME: Final[str] = "forc"
 

@@ -1,7 +1,7 @@
 # File cấu hình cục bộ cho `pcode` (pack_code).
 #
 # Được tạo tự động bởi `pcode --config-local`.
-# Cài đặt tại đây sẽ GHI ĐÈ cài đặt trong `.project.toml`.
+# Cài đặt tại đây sẽ GHI ĐÈ cài đặt trong `pyproject.toml`.
 #
 
 [{config_section_name}]

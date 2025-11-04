@@ -40,12 +40,12 @@ zrap -n <tool_name> [options]
 
 ### Tùy chọn Cấu hình
 
-- **`-c, --config-project`**: Khởi tạo/cập nhật section `[zrap]` trong `.project.toml`.
+- **`-c, --config-project`**: Khởi tạo/cập nhật section `[zrap]` trong `pyproject.toml`.
 - **`-C, --config-local`**: Khởi tạo/cập nhật file `.zrap.toml` cục bộ.
 
 ## File Cấu Hình
 
-`zrap` có thể được cấu hình qua `.zrap.toml` hoặc `.project.toml` (section `[zrap]`).
+`zrap` có thể được cấu hình qua `.zrap.toml` hoặc `pyproject.toml` (section `[zrap]`).
 
 ```toml
 # Ví dụ: .zrap.toml

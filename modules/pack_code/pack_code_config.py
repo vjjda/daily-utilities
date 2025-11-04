@@ -56,7 +56,7 @@ DEFAULT_OUTPUT_DIR: Final[str] = "~/Documents/code.context"
 DEFAULT_CLEAN_EXTENSIONS: Final[Set[str]] = {"py", "zsh", "sh"}
 DEFAULT_FORMAT_EXTENSIONS: Final[Set[str]] = {"py"}
 
-PROJECT_CONFIG_FILENAME: Final[str] = ".project.toml"
+PROJECT_CONFIG_FILENAME: Final[str] = "pyproject.toml"
 CONFIG_FILENAME: Final[str] = ".pcode.toml"
 CONFIG_SECTION_NAME: Final[str] = "pcode"
 

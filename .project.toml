@@ -1,45 +1,17 @@
 [tree]
 
-# dirs-only (Union[str, List[str], None]): Chế độ chỉ hiển thị thư mục.
-# - "_ALL_": Chỉ hiển thị thư mục cho toàn bộ cây (tương đương cờ -d).
-# - ["pattern1", "pattern2/"]: Chỉ hiển thị thư mục con BÊN TRONG các thư mục khớp pattern.
-# Các pattern này sẽ được GỘP VÀO danh sách mặc định (thường là rỗng).
-# Ví dụ 1: dirs-only = "_ALL_"
-# Ví dụ 2: dirs-only = ["assets", "static/"]
-# Mặc định: {toml_dirs_only}
 dirs-only = []
 
-# extensions (Optional[List[str]]): Chỉ hiển thị các file có đuôi trong danh sách này.
-# Ghi đè hoàn toàn danh sách mặc định (là None - hiển thị tất cả).
-# Để chỉ hiển thị file Python và Markdown: extensions = ["py", "md"]
-# Mặc định: (Không lọc - {toml_extensions} là None)
 # extensions = 
 
-# ignore (List[str]): Danh sách các pattern (giống .gitignore) để ẩn hoàn toàn khỏi cây.
-# Các pattern này sẽ được NỐI VÀO danh sách mặc định của script.
-# Ví dụ: ignore = ["*.tmp", ".env"]
-# Mặc định (được thêm vào): {toml_ignore}
-ignore = [".git", ".venv", "__pycache__", "node_modules", "venv"]
+ignore = [".git", ".ruff_cache", ".venv", "__pycache__", "node_modules", "venv"]
 
-# level (Optional[int]): Giới hạn độ sâu hiển thị của cây.
-# Bỏ comment và đặt giá trị số nguyên dương, ví dụ: level = 3
-# Mặc định: không giới hạn (None)
 # level = 
 
-# prune (List[str]): Danh sách các pattern thư mục để "cắt tỉa".
-# Thư mục sẽ hiển thị nhưng nội dung bên trong bị ẩn ([...]).
-# Các pattern này sẽ được NỐI VÀO danh sách mặc định của script.
-# Ví dụ: prune = ["node_modules/", "vendor/"]
-# Mặc định (được thêm vào): {toml_prune}
 prune = ["build", "dist"]
 
-# show-submodules (bool): Hiển thị nội dung của Git submodules.
-# Mặc định: false (ẩn submodules)
 show-submodules = false
 
-# use-gitignore (bool): Có tôn trọng file .gitignore hay không.
-# Cờ --no-gitignore trên CLI sẽ ghi đè giá trị này thành false.
-# Mặc định: true (luôn tôn trọng nếu là kho Git)
 use-gitignore = true
 
 [pcode]
@@ -131,20 +103,12 @@ ignore = [".DS_Store", ".git", ".hg", ".svn", ".venv", "__pycache__", "build", "
 
 [bootstrap]
 
-# Tên thư mục chứa các wrapper Zsh
-# Mặc định: {toml_bin_dir}
 bin_dir = "bin"
 
-# Tên thư mục chứa tài liệu
-# Mặc định: {toml_docs_dir}
 docs_dir = "docs"
 
-# Tên thư mục chứa các module code logic
-# Mặc định: {toml_modules_dir}
 modules_dir = "modules"
 
-# Tên thư mục chứa các script entrypoint Python
-# Mặc định: {toml_scripts_dir}
 scripts_dir = "tools"
 
 [cpath]

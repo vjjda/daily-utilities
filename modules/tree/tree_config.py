@@ -39,7 +39,7 @@ FALLBACK_USE_GITIGNORE: Final[bool] = True
 
 
 CONFIG_FILENAME: Final[str] = ".tree.toml"
-PROJECT_CONFIG_FILENAME: Final[str] = ".project.toml"
+PROJECT_CONFIG_FILENAME: Final[str] = "pyproject.toml"
 CONFIG_SECTION_NAME: Final[str] = "tree"
 
 

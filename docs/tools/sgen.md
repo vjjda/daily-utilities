@@ -24,7 +24,7 @@ sgen [target_paths...] [options]
 
 ### Tùy chọn Khởi tạo Cấu hình
 
-- **`-c, --config-project`**: Khởi tạo hoặc cập nhật section `[sgen]` trong file cấu hình toàn dự án (`.project.toml`).
+- **`-c, --config-project`**: Khởi tạo hoặc cập nhật section `[sgen]` trong file cấu hình toàn dự án (`pyproject.toml`).
 - **`-C, --config-local`**: Khởi tạo hoặc cập nhật file cấu hình cục bộ (`.sgen.toml`) trong thư mục hiện tại.
 
 ## File Cấu Hình
@@ -32,9 +32,9 @@ sgen [target_paths...] [options]
 `sgen` có thể được cấu hình thông qua các file `.toml` để lưu lại các thiết lập thường dùng.
 
 - `.sgen.toml`: File cấu hình cục bộ.
-- `.project.toml`: File cấu hình dự phòng toàn dự án (sử dụng section `[sgen]`).
+- ``pyproject.toml`: File cấu hình dự phòng toàn dự án (sử dụng section `[sgen]`).
 
-**Độ ưu tiên:** `Đối số CLI` > `.sgen.toml` > `.project.toml` > `Mặc định`.
+**Độ ưu tiên:** `Đối số CLI` > `.sgen.toml` > `pyproject.toml` > `Mặc định`.
 
 ```toml
 # Ví dụ: .sgen.toml hoặc section [sgen] trong .project.toml

@@ -37,7 +37,7 @@ DEFAULT_IGNORE: Final[Set[str]] = {
 
 DEFAULT_FORMAT_EXTENSIONS: Final[Set[str]] = {"py"}
 
-PROJECT_CONFIG_FILENAME: Final[str] = ".project.toml"
+PROJECT_CONFIG_FILENAME: Final[str] = "pyproject.toml"
 CONFIG_FILENAME: Final[str] = ".ndoc.toml"
 CONFIG_SECTION_NAME: Final[str] = "ndoc"
 

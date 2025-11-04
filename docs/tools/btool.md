@@ -4,7 +4,7 @@
 
 Nó có hai chế độ hoạt động chính:
 
-1.  **Chế độ Khởi tạo (Initialization Mode):** Dùng để tạo file đặc tả `*.spec.toml` hoặc cập nhật cấu hình `[bootstrap]` trong file `.project.toml`.
+1.  **Chế độ Khởi tạo (Initialization Mode):** Dùng để tạo file đặc tả `*.spec.toml` hoặc cập nhật cấu hình `[bootstrap]` trong file `pyproject.toml`.
 2.  **Chế độ Chạy (Run Mode):** Dùng để đọc một file `*.spec.toml` và tự động tạo ra toàn bộ cấu trúc của một tool mới.
 
 ## Cách Sử Dụng
@@ -37,7 +37,7 @@ Các tùy chọn được chia thành hai nhóm tương ứng với hai chế đ
 - **`-s, --init-spec [path]`**: Khởi tạo một file `.spec.toml` mới từ template.
   - Nếu không cung cấp `path`, sẽ tạo file `new_tool.spec.toml` ở thư mục hiện tại.
   - Nếu cung cấp `path` (ví dụ: `-s 'path/to/my_spec.toml'`), file sẽ được tạo ở đó.
-- **`-c, --config-project`**: Khởi tạo hoặc cập nhật section `[bootstrap]` trong file `.project.toml` với các giá trị mặc định.
+- **`-c, --config-project`**: Khởi tạo hoặc cập nhật section `[bootstrap]` trong file `pyproject.toml` với các giá trị mặc định.
 
 ### Tùy chọn Chế độ Chạy (Mặc định)
 
@@ -95,9 +95,9 @@ default = "."
 help = "Đường dẫn bắt đầu quét."
 ```
 
-## File Cấu Hình (`.project.toml`)
+## File Cấu Hình (`pyproject.toml`)
 
-`btool` đọc section `[bootstrap]` trong file `.project.toml` của dự án để biết _nơi_ đặt các file được tạo ra. Bạn có thể dùng cờ `-c` để tự động tạo section này.
+`btool` đọc section `[bootstrap]` trong file `pyproject.toml` của dự án để biết _nơi_ đặt các file được tạo ra. Bạn có thể dùng cờ `-c` để tự động tạo section này.
 
 ```toml
 # Ví dụ: .project.toml

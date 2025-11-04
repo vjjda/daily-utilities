@@ -17,7 +17,7 @@ except ImportError:
     TOMLDocument = Dict[str, Any]
 
 from utils.logging_config import log_success
-
+from utils.core.config_helpers import PROJECT_CONFIG_ROOT_KEY
 from ..ui_helpers import prompt_config_overwrite
 
 __all__ = ["write_project_config_section"]
@@ -58,10 +58,29 @@ def write_project_config_section(
             logger.error(f"❌ Lỗi khi phân tích nội dung section đã tạo: {e}")
             raise
 
-        section_existed = config_section_name in main_doc
+        if PROJECT_CONFIG_ROOT_KEY not in main_doc:
+            logger.info(
+                f"Tạo section [{PROJECT_CONFIG_ROOT_KEY}] mới trong '{config_file_path.name}'."
+            )
+            main_doc.add(tomlkit.nl())
+            tool_table = tomlkit.table()
+            main_doc.add(PROJECT_CONFIG_ROOT_KEY, tool_table)
+        else:
+            tool_table = main_doc[PROJECT_CONFIG_ROOT_KEY]  # type: ignore
+
+        if not isinstance(tool_table, (Table, dict)):
+            logger.error(
+                f"❌ Lỗi: Mục '[{PROJECT_CONFIG_ROOT_KEY}]' trong '{config_file_path.name}' "
+                "không phải là một bảng (table)."
+            )
+            return None
+
+        section_existed = config_section_name in tool_table
         if section_existed:
             should_write = prompt_config_overwrite(
-                logger, config_file_path, f"Section [{config_section_name}]"
+                logger,
+                config_file_path,
+                f"Section [{PROJECT_CONFIG_ROOT_KEY}.{config_section_name}]",
             )
 
         if should_write is None:
@@ -69,23 +88,43 @@ def write_project_config_section(
 
         if should_write:
             if not section_existed:
-
-                logger.debug(f"Section [{config_section_name}] mới. Thêm vào file.")
-                main_doc.add(tomlkit.nl())
-
-                main_doc[config_section_name] = new_section_table
+                logger.debug(
+                    f"Section [{config_section_name}] mới. Thêm vào [{PROJECT_CONFIG_ROOT_KEY}]."
+                )
             else:
-
                 logger.debug(
                     f"Section [{config_section_name}] đã tồn tại. Đang ghi đè (Overwrite)..."
                 )
-                main_doc[config_section_name] = new_section_table
+
+            tool_table[config_section_name] = new_section_table
+
+            logger.debug(
+                f"Đang sắp xếp lại các khóa bên trong [{PROJECT_CONFIG_ROOT_KEY}]..."
+            )
+
+            current_tables = {
+                k: v for k, v in tool_table.items() if isinstance(v, (Table, dict))
+            }
+
+            other_items = {
+                k: v for k, v in tool_table.items() if not isinstance(v, (Table, dict))
+            }
+
+            tool_table.clear()
+
+            for k, v in other_items.items():
+                tool_table.add(k, v)
+
+            sorted_keys = sorted(current_tables.keys())
+            for key in sorted_keys:
+                tool_table.add(key, current_tables[key])
 
             with config_file_path.open("w", encoding="utf-8") as f:
                 tomlkit.dump(main_doc, f)
 
             log_success(
-                logger, f"✅ Đã tạo/cập nhật thành công '{config_file_path.name}'."
+                logger,
+                f"✅ Đã tạo/cập nhật thành công '{config_file_path.name}'.",
             )
 
     except IOError as e:

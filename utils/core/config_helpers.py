@@ -3,7 +3,7 @@ import hashlib
 import json
 import logging
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional, Set, Final
 
 import tomlkit
 
@@ -21,7 +21,11 @@ __all__ = [
     "resolve_config_list",
     "resolve_set_modification",
     "generate_config_hash",
+    "PROJECT_CONFIG_ROOT_KEY",
 ]
+
+
+PROJECT_CONFIG_ROOT_KEY: Final[str] = "tool"
 
 
 def format_value_to_toml(value: Any) -> str:
@@ -63,6 +67,7 @@ def format_value_to_toml(value: Any) -> str:
 
 
 def resolve_config_value(cli_value: Any, file_value: Any, default_value: Any) -> Any:
+
     if cli_value is not None:
         return cli_value
     if file_value is not None:
@@ -99,7 +104,16 @@ def load_project_config_section(
     config_path: Path, section_name: str, logger: logging.Logger
 ) -> Dict[str, Any]:
     config_data = load_toml_file(config_path, logger)
-    return config_data.get(section_name, {})
+
+    tool_section_data = config_data.get(PROJECT_CONFIG_ROOT_KEY, {})
+    if not isinstance(tool_section_data, dict):
+        logger.warning(
+            f"Mục '[{PROJECT_CONFIG_ROOT_KEY}]' trong '{config_path.name}' "
+            f"không phải là một bảng (table). Trả về config rỗng."
+        )
+        return {}
+
+    return tool_section_data.get(section_name, {})
 
 
 def merge_config_sections(

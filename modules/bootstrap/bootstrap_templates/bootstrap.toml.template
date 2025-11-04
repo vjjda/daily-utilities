@@ -1,7 +1,8 @@
-# Cấu hình mặc định cho section [bootstrap] trong .project.toml.
+# Path: modules/bootstrap/bootstrap_templates/bootstrap.toml.template
+# Cấu hình mặc định cho section [tool.bootstrap] trong pyproject.toml.
 # Được sử dụng bởi `btool --config-project` để khởi tạo.
 #
-# Section [bootstrap] này định nghĩa cấu trúc thư mục *chuẩn* của project,
+# Section [tool.bootstrap] này định nghĩa cấu trúc thư mục *chuẩn* của project,
 # và được dùng làm "kế thừa" khi chạy `btool --init-spec`.
 #
 [{config_section_name}]

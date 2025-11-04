@@ -36,12 +36,12 @@ pcode [start_paths...] [options]
 
 ### Tùy chọn Cấu hình
 
-- **`-c, --config-project`**: Khởi tạo/cập nhật section `[pcode]` trong `.project.toml`.
+- **`-c, --config-project`**: Khởi tạo/cập nhật section `[pcode]` trong `pyproject.toml`.
 - **`-C, --config-local`**: Khởi tạo/cập nhật file `.pcode.toml` cục bộ.
 
 ## File Cấu Hình
 
-`pcode` tự động tải cấu hình từ các file `.toml` (ưu tiên `CLI` > `.pcode.toml` > `.project.toml` > `Mặc định`).
+`pcode` tự động tải cấu hình từ các file `.toml` (ưu tiên `CLI` > `.pcode.toml` > `pyproject.toml` > `Mặc định`).
 
 ```toml
 # Ví dụ: .pcode.toml hoặc section [pcode] trong .project.toml

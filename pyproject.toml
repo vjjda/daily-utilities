@@ -3,8 +3,8 @@
 [tool.black]
 # Cài đặt Black tiêu chuẩn để thống nhất
 line-length = 88
-# Sử dụng cùng phiên bản target với pyright để nhất quán 
-target-version = ['py313'] 
+# Sử dụng cùng phiên bản target với pyright để nhất quán
+target-version = ['py313']
 include = '\.pyi?$'
 exclude = '''
 /(
@@ -26,7 +26,7 @@ exclude = '''
 # Cấu hình Pyright (Được di chuyển từ pyrightconfig.json)
 # ---------------------------------------------------------------------------
 [tool.pyright]
-# Cấu hình môi trường thực thi 
+# Cấu hình môi trường thực thi
 executionEnvironments = [
   { root = ".", pythonVersion = "3.14", extraPaths = ["modules", "utils", "scripts"] }
 ]
@@ -46,10 +46,54 @@ reportArgumentType = "none"
 
 # Chỉ định các thư mục cần bao gồm và loại trừ
 include = ["utils", "modules", "scripts"]
-exclude = [ 
+exclude = [
   "**/__pycache__",
   "**/.venv",
   "**/venv",
   "**/node_modules",
   "/scripts/internal/bootstrap_templates/*"
 ]
+
+# ---------------------------------------------------------------------------
+# Cấu hình Công cụ (daily-utilities) (Đã di chuyển từ .project.toml)
+# ---------------------------------------------------------------------------
+[tool.bootstrap]
+bin_dir = "bin"
+docs_dir = "docs"
+modules_dir = "modules"
+scripts_dir = "tools"
+
+[tool.cpath]
+extensions = ["css", "js", "py", "pyi", "scss", "sh", "ts", "zsh"]
+ignore = [".git", ".venv", "__pycache__", "build", "dist", "node_modules", "out", "venv"]
+
+[tool.forc]
+extensions = ["py"]
+ignore = [".DS_Store", ".git", ".hg", ".svn", ".venv", "__pycache__", "build", "dist", "node_modules", "out", "venv"]
+
+[tool.ndoc]
+extensions = ["py"]
+format_extensions = ["py"]
+ignore = [".DS_Store", ".git", ".hg", ".svn", ".venv", "/.gitignore", "__pycache__", "build", "dist", "node_modules", "out", "venv"]
+
+[tool.pcode]
+clean_extensions = ["py", "sh", "zsh"]
+extensions = ["", "bash", "cfg", "cfg.py", "gitignore", "ini", "json", "md", "py", "sh", "template", "toml", "txt", "xml", "yaml", "yml", "zsh"]
+format_extensions = ["py"]
+ignore = [".DS_Store", ".git", ".hg", ".svn", ".venv", "__pycache__", "venv"]
+include = []
+output_dir = "~/Documents/code.context"
+
+[tool.sgen]
+ast_all_list_name = "__all__"
+ast_module_list_name = "modules_to_export"
+dynamic_import_indicators = ["globals()[name]", "globals().update"]
+ignore = ["*.pyc", "*.pyo", ".git", ".venv", "__pycache__", "build", "dist", "node_modules", "out", "venv"]
+include = []
+
+[tool.tree]
+dirs-only = []
+ignore = [".git", ".ruff_cache", ".venv", "__pycache__", "node_modules", "venv"]
+prune = ["build", "dist"]
+show-submodules = false
+use-gitignore = true
