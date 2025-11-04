@@ -1,33 +1,53 @@
 # Hướng dẫn sử dụng: btool
 
-`btool` (Bootstrap Tool) là một "meta-utility" (công cụ tạo công cụ) dùng để tự động khởi tạo toàn bộ cấu trúc file cần thiết cho một tool utility mới dựa trên một file đặc tả (`.spec.toml`).
+`btool` (Bootstrap Tool) là một "meta-utility" (công cụ tạo công cụ) dùng để tự động khởi tạo toàn bộ cấu trúc file cần thiết cho một tool utility mới.
 
-Nó sẽ tự động tạo ra:
+Nó có hai chế độ hoạt động chính:
 
-- File script entrypoint (trong `scripts/`)
-- File wrapper Zsh (trong `bin/`)
-- Cấu trúc module đầy đủ (trong `modules/ten_module/`)
-- File tài liệu Markdown (trong `docs/tools/`)
+1.  **Chế độ Khởi tạo (Initialization Mode):** Dùng để tạo file đặc tả `*.spec.toml` hoặc cập nhật cấu hình `[bootstrap]` trong file `.project.toml`.
+2.  **Chế độ Chạy (Run Mode):** Dùng để đọc một file `*.spec.toml` và tự động tạo ra toàn bộ cấu trúc của một tool mới.
 
 ## Cách Sử Dụng
 
 `btool` được thiết kế để chạy từ gốc của dự án.
 
+**1. Chế độ Khởi tạo**
+
 ```sh
-btool <spec_file_path> [options]
+# Tạo một file spec mẫu
+btool -s [đường_dẫn/tên_file.spec.toml]
+
+# Khởi tạo/cập nhật cấu hình trong .project.toml
+btool -c
 ```
 
-- `spec_file_path`: (Bắt buộc) Đường dẫn đến file `.spec.toml` định nghĩa tool mới của bạn (ví dụ: `docs/drafts/my_tool.spec.toml`).
+**2. Chế độ Chạy**
+
+```sh
+# Tạo tool mới từ một file spec
+btool <đường_dẫn/tên_file.spec.toml> [options]
+```
 
 ## Tùy Chọn Dòng Lệnh (CLI Options)
 
-- **`-h, --help`**: Hiển thị trợ giúp.
-- **`-f, --force`**: Ghi đè (overwrite) các file và thư mục đã tồn tại nếu có. Nếu không có cờ này, `btool` sẽ dừng lại nếu phát hiện file/thư mục đích đã tồn tại .
-- **`-i, --interface <typer|argparse>`**: Ghi đè (overwrite) lựa chọn thư viện CLI (ví dụ: `typer` hoặc `argparse`) được định nghĩa trong file `.spec.toml`.
+Các tùy chọn được chia thành hai nhóm tương ứng với hai chế độ hoạt động.
+
+### Tùy chọn Khởi tạo (Chạy riêng lẻ)
+
+- **`-s, --init-spec [path]`**: Khởi tạo một file `.spec.toml` mới từ template.
+  - Nếu không cung cấp `path`, sẽ tạo file `new_tool.spec.toml` ở thư mục hiện tại.
+  - Nếu cung cấp `path` (ví dụ: `-s 'path/to/my_spec.toml'`), file sẽ được tạo ở đó.
+- **`-c, --config-project`**: Khởi tạo hoặc cập nhật section `[bootstrap]` trong file `.project.toml` với các giá trị mặc định.
+
+### Tùy chọn Chế độ Chạy (Mặc định)
+
+- **`spec_file_path_str`**: (Đối số vị trí) Đường dẫn đến file `*.spec.toml` để định nghĩa tool mới. Bắt buộc cho chế độ này.
+- **`-f, --force`**: Ghi đè (overwrite) các file và thư mục đã tồn tại nếu có. Nếu không có cờ này, `btool` sẽ dừng lại nếu phát hiện file/thư mục đích đã tồn tại.
+- **`-i, --interface <typer|argparse>`**: Ghi đè lựa chọn thư viện CLI (`typer` hoặc `argparse`) được định nghĩa trong file `.spec.toml`.
 
 ## File Đặc Tả (`.spec.toml`)
 
-Đây là file đầu vào quan trọng nhất. `btool` đọc file này để biết _cách_ tạo ra tool mới.
+Đây là file đầu vào quan trọng nhất cho **Chế độ Chạy**. `btool` đọc file này để biết _cách_ tạo ra tool mới.
 
 ```toml
 # Ví dụ: my_tool.spec.toml
@@ -35,7 +55,7 @@ btool <spec_file_path> [options]
 # Thông tin meta bắt buộc
 [meta]
 tool_name = "mytool"           # Tên sẽ dùng cho file wrapper (ví dụ: bin/mytool)
-script_file = "my_tool.py"     # Tên file entrypoint (ví dụ: scripts/my_tool.py)
+script_file = "my_tool.py"     # Tên file entrypoint (ví dụ: tools/my_tool.py)
 module_name = "my_tool"        # Tên thư mục module (ví dụ: modules/my_tool)
 logger_name = "MyTool"         # Tên dùng cho logger
 
@@ -77,9 +97,7 @@ help = "Đường dẫn bắt đầu quét."
 
 ## File Cấu Hình (`.project.toml`)
 
-`btool` **không** có file cấu hình riêng (`.btool.toml`) và **không** hỗ trợ cờ `--config-local` hay `--config-project` như các tool khác.
-
-Thay vào đó, nó đọc section `[bootstrap]` trong file `.project.toml` của dự án để biết _nơi_ đặt các file được tạo ra.
+`btool` đọc section `[bootstrap]` trong file `.project.toml` của dự án để biết _nơi_ đặt các file được tạo ra. Bạn có thể dùng cờ `-c` để tự động tạo section này.
 
 ```toml
 # Ví dụ: .project.toml
@@ -88,22 +106,28 @@ Thay vào đó, nó đọc section `[bootstrap]` trong file `.project.toml` củ
 # Tên thư mục chứa các wrapper Zsh
 bin_dir = "bin"
 # Tên thư mục chứa các script entrypoint Python
-scripts_dir = "scripts"
+scripts_dir = "tools"
 # Tên thư mục chứa các module code logic
 modules_dir = "modules"
 # Tên thư mục chứa tài liệu
-docs_dir = "docs"
+docs_dir = "docs/tools"
 ```
 
 ## Ví dụ
 
 ```sh
-# 1. Tạo một tool mới tên là 'newtool' từ file spec
-btool docs/drafts/newtool.spec.toml
+# 1. Tạo một file spec mẫu tên là 'newtool.spec.toml'
+btool -s newtool.spec.toml
 
-# 2. Tạo tool mới, nhưng ghi đè các file cũ nếu chúng tồn tại
-btool docs/drafts/newtool.spec.toml -f
+# 2. Tự động thêm cấu hình bootstrap vào file .project.toml
+btool -c
 
-# 3. Tạo tool mới, ép buộc sử dụng 'argparse' bất kể file spec nói gì
-btool docs/drafts/newtool.spec.toml -i argparse
+# 3. Tạo một tool mới tên là 'newtool' từ file spec
+btool newtool.spec.toml
+
+# 4. Tạo tool mới, nhưng ghi đè các file cũ nếu chúng tồn tại
+btool newtool.spec.toml -f
+
+# 5. Tạo tool mới, ép buộc sử dụng 'argparse' bất kể file spec nói gì
+btool newtool.spec.toml -i argparse
 ```
