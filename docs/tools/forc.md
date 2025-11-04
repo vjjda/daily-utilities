@@ -1,73 +1,67 @@
-# Hướng dẫn sử dụng: cpath
+# Hướng dẫn sử dụng: forc
 
-`cpath` (Check Path) là công cụ để kiểm tra và tùy chọn sửa các comment đường dẫn (ví dụ: `# Path: ...`) ở đầu các file mã nguồn. Nó đảm bảo các comment này khớp chính xác với vị trí tương đối của file trong dự án.
-
-Công cụ này hỗ trợ nhiều kiểu comment khác nhau (như `#`, `//`, `/* */`) cho các ngôn ngữ lập trình phổ biến.
-
-## Khởi Động Nhanh
-
-Cách dễ nhất để bắt đầu là khởi tạo một file cấu hình trong dự án của bạn:
-
-```sh
-# 1. Khởi tạo file cấu hình cục bộ (.cpath.toml)
-# Tạo/cập nhật file .cpath.toml và mở nó.
-cpath --config-local
-
-# 2. Hoặc, cập nhật file cấu hình toàn dự án (.project.toml)
-# Cập nhật phần [cpath] trong file .project.toml.
-cpath --config-project
-```
+`forc` (Format Code) là một công cụ để quét và định dạng (format) các file mã nguồn trong dự án của bạn. Nó giúp đảm bảo code tuân thủ các tiêu chuẩn về định dạng một cách nhất quán.
 
 ## Cách Sử Dụng
 
 ```sh
-cpath [target_paths...] [options]
+forc [start_paths...] [options]
 ```
 
-- `target_paths`: Một hoặc nhiều đường dẫn (file hoặc thư mục) để quét. Mặc định là thư mục hiện tại (`.`).
+- `start_paths`: Một hoặc nhiều đường dẫn (file hoặc thư mục) để quét. Mặc định là thư mục hiện tại (`.`).
+
+Chế độ hoạt động mặc định là **sửa lỗi (fix mode)**. Công cụ sẽ tìm các file cần định dạng và tự động sửa chúng sau khi có xác nhận của bạn.
 
 ## Tùy Chọn Dòng Lệnh (CLI Options)
 
-- **`-h, --help`**: Hiển thị trợ giúp.
-- **`-r, --root <path>`**: Chỉ định tường minh đường dẫn gốc (Project Root) để tính toán path tương đối. Mặc định: tự động tìm gốc Git từ các đường dẫn đầu vào.
-- **`-e, --extensions <exts>`**: Danh sách các đuôi file cần quét (phân cách bởi dấu phẩy).
-  - Hỗ trợ các toán tử:
-    - `py,js` (không có toán tử đầu): Ghi đè hoàn toàn danh sách mặc định/config.
-    - `+ts,md`: Thêm `ts` và `md` vào danh sách hiện có.
-    - `~py`: Loại bỏ `py` khỏi danh sách hiện có.
-- **`-I, --ignore <patterns>`**: Thêm các pattern (giống `.gitignore`, phân cách bởi dấu phẩy) vào danh sách **bỏ qua**. Các pattern này được **nối** vào danh sách từ config/default.
-- **`-d, --dry-run`**: Chỉ chạy ở chế độ kiểm tra (dry-run) và báo cáo các file cần sửa, không thực hiện ghi file.
-- **`-f, --force`**: Tự động sửa file mà không hỏi xác nhận (chỉ áp dụng ở chế độ "fix", tức là khi không có `-d`).
-- **`-c, --config-project`**: Khởi tạo hoặc cập nhật section `[cpath]` trong `.project.toml`.
-- **`-C, --config-local`**: Khởi tạo hoặc cập nhật file `.cpath.toml` cục bộ.
+### Tùy chọn Định dạng & Sửa lỗi
 
----
+- **`-d, --dry-run`**: Chuyển sang chế độ **chỉ kiểm tra (dry-run)**. Công cụ sẽ chỉ báo cáo các file cần định dạng mà không thực hiện bất kỳ thay đổi nào.
+- **`-f, --force`**: Tự động sửa tất cả các file mà không cần hỏi xác nhận. Chỉ có tác dụng ở chế độ sửa lỗi (khi không dùng `-d`).
+- **`-g, --git-commit`**: Sau khi định dạng thành công, tự động tạo một commit Git với các thay đổi đó.
+- **`-w, --stepwise`**: Bật **chế độ gia tăng (stepwise mode)**. Ở chế độ này, `forc` chỉ quét các file đã thay đổi kể từ lần chạy cuối cùng có cùng cài đặt (cùng `extensions` và `ignore`). Điều này giúp tăng tốc độ đáng kể cho các lần chạy sau.
+- **`-e, --extensions <exts>`**: Ghi đè hoặc chỉnh sửa danh sách các đuôi file cần quét (phân cách bởi dấu phẩy).
+  - `py,js`: Ghi đè danh sách mặc định.
+  - `+ts,md`: Thêm `ts` và `md` vào danh sách hiện tại.
+  - `~py`: Loại bỏ `py` khỏi danh sách hiện tại.
+- **`-I, --ignore <patterns>`**: Thêm các pattern (giống `.gitignore`, phân cách bởi dấu phẩy) vào danh sách **bỏ qua**.
+
+### Tùy chọn Khởi tạo Cấu hình
+
+- **`-c, --config-project`**: Khởi tạo hoặc cập nhật section `[format_code]` trong file cấu hình toàn dự án (`.project.toml`).
+- **`-C, --config-local`**: Khởi tạo hoặc cập nhật file cấu hình cục bộ (`.forc.toml`) trong thư mục hiện tại.
 
 ## File Cấu Hình
 
-Đối với các cài đặt lâu dài, `cpath` tự động tải cấu hình từ các file `.toml` sau:
+`forc` có thể được cấu hình thông qua các file `.toml` để lưu lại các thiết lập thường dùng.
 
-- `.cpath.toml`: File cấu hình cục bộ.
-- `.project.toml`: File cấu hình dự phòng toàn dự án (sử dụng section `[cpath]`).
+- `.forc.toml`: File cấu hình cục bộ.
+- `.project.toml`: File cấu hình dự phòng toàn dự án (sử dụng section `[format_code]`).
 
-### Độ Ưu Tiên Cấu Hình
-
-1. **Đối Số Dòng Lệnh (CLI Arguments)** (Ưu tiên cao nhất)
-2. **File `.cpath.toml`** (Cấu hình cục bộ)
-3. **File `.project.toml` (Section `[cpath]`)** (Cấu hình toàn dự án)
-4. **Cài Đặt Mặc Định Của Script** (Ưu tiên thấp nhất)
-
-### Các tùy chọn cấu hình trong file `.toml`
+**Độ ưu tiên:** `Đối số CLI` > `.forc.toml` > `.project.toml` > `Mặc định`.
 
 ```toml
-# Ví dụ: .cpath.toml hoặc section [cpath] trong .project.toml
+# Ví dụ: .forc.toml hoặc section [format_code] trong .project.toml
 
-# extensions (List[str]): Danh sách các đuôi file mặc định cần BAO GỒM.
-# Mặc định: ["py", "pyi", "js", "ts", ...]
-extensions = ["py", "js", "zsh", "sh"]
+# Danh sách các đuôi file mặc định cần quét.
+extensions = ["py", "js", "ts"]
 
-# ignore (List[str]): Danh sách các pattern mặc định cần BỎ QUA.
-# Hỗ trợ cú pháp giống .gitignore.
-# Mặc định: [".venv", "__pycache__", ".git", ...]
-ignore = ["*.log", "**/temp/*"]
+# Danh sách các pattern cần bỏ qua.
+ignore = ["node_modules/", "dist/"]
+```
+
+## Ví dụ
+
+```sh
+# 1. Chỉ kiểm tra (dry-run) tất cả các file trong thư mục hiện tại
+forc --dry-run
+
+# 2. Định dạng tất cả các file đã thay đổi kể từ lần chạy trước và commit kết quả
+forc -w -g
+
+# 3. Định dạng tất cả file Python, bỏ qua thư mục 'tests'
+forc -e py -I 'tests/*'
+
+# 4. Khởi tạo file cấu hình cục bộ để tùy chỉnh
+forc --config-local
 ```
