@@ -32,7 +32,6 @@ def execute_pack_code_action(logger: logging.Logger, result: Dict[str, Any]) -> 
     stdout: bool = result.get("stdout", False)
     final_content: str = result.get("final_content", "")
     output_path_raw: Optional[Path] = result.get("output_path")
-    scan_root: Path = result.get("scan_root", Path.cwd())
     copy_to_clipboard: bool = result.get("copy_to_clipboard", False)
     file_list_relative: List[Path] = result.get("file_list_relative", [])
     tree_string: str = result.get("tree_string", "")

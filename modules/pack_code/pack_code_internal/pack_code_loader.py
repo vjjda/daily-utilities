@@ -1,7 +1,6 @@
 # Path: modules/pack_code/pack_code_internal/pack_code_loader.py
 import logging
 import sys
-import os
 from pathlib import Path
 from typing import Dict, Any, List, Optional, Set, Tuple
 from concurrent.futures import ThreadPoolExecutor, as_completed

@@ -56,7 +56,9 @@ def generate_tree_string(
 
     for i, part in enumerate(sorted_parts):
         level = len(part.parts) - 1
-        prefix = "".join(level_prefixes.get(l, "    ") for l in range(level))
+        prefix = "".join(
+            level_prefixes.get(level_index, "    ") for level_index in range(level)
+        )
 
         siblings = [
             p

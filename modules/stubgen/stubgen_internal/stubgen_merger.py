@@ -1,8 +1,8 @@
 # Path: modules/stubgen/stubgen_internal/stubgen_merger.py
 import logging
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, Optional
 
-from utils.core import resolve_config_value, resolve_config_list, parse_comma_list
+from utils.core import resolve_config_value, resolve_config_list
 
 
 from ..stubgen_config import (

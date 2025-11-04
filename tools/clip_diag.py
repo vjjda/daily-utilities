@@ -5,13 +5,14 @@ import logging
 from pathlib import Path
 from typing import Final
 
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+sys.path.append(str(PROJECT_ROOT))
+
 try:
     import argcomplete
 except ImportError:
     argcomplete = None
-
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-sys.path.append(str(PROJECT_ROOT))
 
 from utils.logging_config import setup_logging
 from utils.cli import run_cli_app

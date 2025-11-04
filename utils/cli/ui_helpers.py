@@ -5,7 +5,6 @@ from typing import Tuple, Optional, List, Callable, Any, Dict
 import subprocess
 import platform
 import os
-import sys
 
 from utils.core import is_git_repository, find_git_root
 from utils.logging_config import log_success
@@ -45,7 +44,7 @@ def prompt_config_overwrite(
         logger.info(f"✅ [Ghi đè] Đã chọn. Đang ghi đè {item_name}...")
         return True
     elif choice == "r":
-        logger.info(f"✅ [Chỉ đọc] Đã chọn. Sẽ chỉ mở file.")
+        logger.info("✅ [Chỉ đọc] Đã chọn. Sẽ chỉ mở file.")
         return False
     else:
         logger.warning("❌ Hoạt động bị hủy bởi người dùng.")
@@ -146,7 +145,7 @@ def handle_project_root_validation(
                     f"⚠️ Không tìm thấy thư mục '.git' trong '{scan_root.name}/' hoặc các thư mục cha."
                 )
                 logger.warning(
-                    f"   Quét từ một thư mục không phải dự án (như $HOME) có thể chậm hoặc không an toàn."
+                    "   Quét từ một thư mục không phải dự án (như $HOME) có thể chậm hoặc không an toàn."
                 )
                 confirmation_prompt = (
                     f"   Bạn có chắc muốn quét '{scan_root.as_posix()}'? (y/N): "

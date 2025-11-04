@@ -2,23 +2,20 @@
 import logging
 import sys
 from pathlib import Path
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 import argparse
-import json
 
-if not "PROJECT_ROOT" in locals():
+if "PROJECT_ROOT" not in locals():
     sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
 from utils.logging_config import log_success
-from utils.core.git import is_git_repository, auto_commit_changes
+from utils.core.git import auto_commit_changes
 from modules.no_doc.no_doc_internal import (
     load_config_files,
     merge_ndoc_configs,
 )
 
 from utils.cli.ui_helpers import print_grouped_report
-
-from utils.core.config_helpers import generate_config_hash
 
 
 __all__ = ["execute_ndoc_action"]
@@ -66,7 +63,7 @@ def execute_ndoc_action(
             detail_formatter=_detail_formatter,
         )
         logger.warning(
-            f"\n-> Để xóa docstring, chạy lại mà không có cờ -d (sử dụng -f/--force để bỏ qua xác nhận)."
+            "\n-> Để xóa docstring, chạy lại mà không có cờ -d (sử dụng -f/--force để bỏ qua xác nhận)."
         )
         sys.exit(1)
 

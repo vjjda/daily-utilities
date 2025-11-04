@@ -3,15 +3,16 @@ import sys
 import argparse
 from pathlib import Path
 
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+sys.path.append(str(PROJECT_ROOT))
+
 try:
     import argcomplete
 except ImportError:
     argcomplete = None
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-sys.path.append(str(PROJECT_ROOT))
-
-from utils.logging_config import setup_logging, log_success
+from utils.logging_config import setup_logging
 from utils.cli import (
     ConfigInitializer,
     run_cli_app,

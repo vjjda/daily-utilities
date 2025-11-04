@@ -21,16 +21,16 @@ def execute_bootstrap_action(
 
     module_existed_before = module_path.exists()
     if module_existed_before and not force:
-        logger.error(f"❌ Dừng lại! Thư mục module sau đã tồn tại:")
+        logger.error("❌ Dừng lại! Thư mục module sau đã tồn tại:")
         logger.error(f"   -> {module_path.relative_to(project_root).as_posix()}")
         logger.error("   (Sử dụng -f hoặc --force để ghi đè)")
         sys.exit(1)
     elif module_existed_before and force:
-        logger.warning(f"⚠️ Thư mục module đã tồn tại. Sẽ ghi đè (do --force)...")
+        logger.warning("⚠️ Thư mục module đã tồn tại. Sẽ ghi đè (do --force)...")
 
     existing_files = [p for p in target_paths.values() if p.exists()]
     if existing_files and not force:
-        logger.error(f"❌ Dừng lại! Các file sau đã tồn tại:")
+        logger.error("❌ Dừng lại! Các file sau đã tồn tại:")
         for p in existing_files:
             logger.error(f"   -> {p.relative_to(project_root).as_posix()}")
         logger.error("   (Sử dụng -f hoặc --force để ghi đè)")
@@ -66,7 +66,7 @@ def execute_bootstrap_action(
 
             if key == "bin":
                 os.chmod(path, 0o755)
-                logger.info(f"   -> Đã cấp quyền thực thi (chmod +x)")
+                logger.info("   -> Đã cấp quyền thực thi (chmod +x)")
 
     except IOError as e:
         logger.error(f"❌ Lỗi I/O khi ghi file: {e}")

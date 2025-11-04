@@ -1,18 +1,16 @@
 # Path: modules/pack_code/pack_code_internal/pack_code_resolver.py
 import logging
 from pathlib import Path
-from typing import Dict, Any, List, Optional, Set, TYPE_CHECKING, Iterable, Tuple
+from typing import Dict, Any, List, Optional, Set, TYPE_CHECKING, Tuple
 
 if TYPE_CHECKING:
     import pathspec
 
 from utils.core import (
-    find_git_root,
     parse_gitignore,
     compile_spec_from_patterns,
     resolve_set_modification,
     get_submodule_paths,
-    parse_comma_list,
     resolve_config_list,
     resolve_config_value,
 )

@@ -90,7 +90,7 @@ def generate_wrapper_content(
                 path_comment = f"# Path: {relative_output_path}"
             except ValueError:
                 logger.warning(
-                    f"Không thể tính toán đường dẫn relative cho # Path: (output nằm ngoài project)."
+                    "Không thể tính toán đường dẫn relative cho # Path: (output nằm ngoài project)."
                 )
                 path_comment = (
                     f"# Path: {output_path.as_posix()} (Warning: Non-relative)"

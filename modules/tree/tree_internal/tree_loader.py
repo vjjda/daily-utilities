@@ -2,7 +2,7 @@
 import logging
 import sys
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import Dict, Any
 
 try:
     from utils.core import load_and_merge_configs

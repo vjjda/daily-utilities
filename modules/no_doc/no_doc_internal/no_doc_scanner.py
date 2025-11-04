@@ -2,10 +2,9 @@
 import logging
 from pathlib import Path
 import sys
-from typing import List, Set, Optional, TYPE_CHECKING, Iterable, Tuple, Dict
-import os
+from typing import List, TYPE_CHECKING, Tuple, Dict
 
-if not "PROJECT_ROOT" in locals():
+if "PROJECT_ROOT" not in locals():
     sys.path.append(str(Path(__file__).resolve().parent.parent.parent.parent))
 
 try:
@@ -14,7 +13,7 @@ except ImportError:
     pathspec = None
 
 if TYPE_CHECKING:
-    import pathspec
+    pass
 
 from utils.core import (
     get_submodule_paths,

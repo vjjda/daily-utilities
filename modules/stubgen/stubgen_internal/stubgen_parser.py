@@ -1,8 +1,7 @@
 # Path: modules/stubgen/stubgen_internal/stubgen_parser.py
-import logging
 import ast
 from pathlib import Path
-from typing import Dict, Any, List, Optional, Set, Tuple, Final
+from typing import List, Optional, Set
 
 __all__ = ["extract_module_list", "collect_all_exported_symbols"]
 

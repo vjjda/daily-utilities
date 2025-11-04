@@ -1,15 +1,21 @@
 # Path: .pre-commit-config.yaml
 repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.5.5
+    hooks:
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix, --ignore=E402]
+        files: ^(tools/|modules/|utils/)
   - repo: local
     hooks:
       # 1️⃣ Hook ndoc (ĐÃ SỬA)
-      - id: ndoc
-        name: "NDoc Code Cleaner"
-        # Chạy ndoc VÀ git add lại các file đã xử lý ($@)
-        entry: zsh -c 'ndoc -abf "$@" && git add "$@"' --
-        language: system
-        types: [python]
-        stages: [pre-commit]
+      # - id: ndoc
+      #   name: "NDoc Code Cleaner"
+      #   # Chạy ndoc VÀ git add lại các file đã xử lý ($@)
+      #   entry: zsh -c 'ndoc -abf "$@" && git add "$@"' --
+      #   language: system
+      #   types: [python]
+      #   stages: [pre-commit]
 
       # 2️⃣ Hook cpath (ĐÃ SỬA)
       - id: cpath
@@ -19,4 +25,3 @@ repos:
         language: system
         types: [python, shell] 
         stages: [pre-commit]
-      

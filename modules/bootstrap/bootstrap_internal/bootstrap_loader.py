@@ -2,7 +2,7 @@
 import logging
 import sys
 from pathlib import Path
-from typing import Dict, Any, Tuple
+from typing import Dict, Any
 
 
 try:

@@ -1,13 +1,12 @@
 # Path: modules/pack_code/pack_code_internal/pack_code_task_dir.py
 import logging
-import argparse
 from pathlib import Path
-from typing import Dict, Any, List, Optional, Set, Tuple
+from typing import Dict, Any, List, Optional, Set
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    import pathspec
+    pass
 
 
 from . import load_config_files, resolve_filters, load_files_content
@@ -39,7 +38,7 @@ def process_pack_code_task_dir(
         format_extensions_set,
     ) = resolve_filters(logger, cli_args, file_config, scan_dir)
 
-    logger.info(f"  [Cấu hình áp dụng]")
+    logger.info("  [Cấu hình áp dụng]")
     logger.info(f"    - Extensions: {sorted(list(ext_filter_set))}")
     logger.info(
         f"    - Ignore (từ config/CLI+Git): {len(ignore_spec.patterns if ignore_spec else [])} quy tắc"
@@ -80,7 +79,7 @@ def process_pack_code_task_dir(
 
     if not unique_files_to_pack:
         logger.info(
-            f"  -> ✅ Tất cả file trong thư mục này đã được xử lý (do là file input riêng lẻ)."
+            "  -> ✅ Tất cả file trong thư mục này đã được xử lý (do là file input riêng lẻ)."
         )
         logger.info(f"--- ✅ Kết thúc {scan_dir.name} ---")
         logger.info("")

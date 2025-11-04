@@ -1,6 +1,5 @@
 # Path: utils/core/formatters/formatter_python.py
 import logging
-import subprocess
 from pathlib import Path
 from typing import Optional, List
 
@@ -45,7 +44,7 @@ def format_python_black(
         else:
 
             logger.warning(
-                f"⚠️ 'black' thất bại. Code có thể chứa lỗi cú pháp. Trả về nội dung gốc."
+                "⚠️ 'black' thất bại. Code có thể chứa lỗi cú pháp. Trả về nội dung gốc."
             )
             logger.debug(f"Black stderr: {output}")
             return code_content

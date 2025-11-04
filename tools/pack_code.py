@@ -2,7 +2,7 @@
 import sys
 import argparse
 from pathlib import Path
-from typing import Final, List
+from typing import Final
 
 try:
     import argcomplete
@@ -18,7 +18,6 @@ try:
         ConfigInitializer,
         run_cli_app,
     )
-    from utils.core import parse_comma_list
 
     from modules.pack_code import (
         orchestrate_pack_code,

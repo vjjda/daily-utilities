@@ -2,7 +2,7 @@
 import logging
 import configparser
 from pathlib import Path
-from typing import Set, Optional, List, TYPE_CHECKING, Tuple, Iterable, Dict, Any
+from typing import Set, Optional, List, Dict, Any
 
 from .process import run_command
 from ..logging_config import log_success

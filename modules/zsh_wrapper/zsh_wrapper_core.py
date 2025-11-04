@@ -1,9 +1,8 @@
 # Path: modules/zsh_wrapper/zsh_wrapper_core.py
 import logging
-import os
 import argparse
 from pathlib import Path
-from typing import Dict, Any, List, Optional, Tuple
+from typing import List, Optional
 import sys
 
 from utils.core import load_and_merge_configs

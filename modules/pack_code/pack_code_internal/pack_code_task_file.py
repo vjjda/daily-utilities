@@ -1,8 +1,7 @@
 # Path: modules/pack_code/pack_code_internal/pack_code_task_file.py
 import logging
-import argparse
 from pathlib import Path
-from typing import Dict, Any, List, Optional, Set, Tuple
+from typing import Dict, Any, List, Optional, Set
 
 
 from . import load_config_files, resolve_filters, load_files_content
@@ -65,7 +64,7 @@ def process_pack_code_task_file(
         logger.info("")
         return []
 
-    logger.info(f"  -> ⚡ Phân tích 1 file...")
+    logger.info("  -> ⚡ Phân tích 1 file...")
 
     files_content = load_files_content(
         logger=logger,

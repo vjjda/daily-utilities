@@ -1,8 +1,8 @@
 # Path: modules/bootstrap/bootstrap_internal/builders/snippet_typer.py
-from typing import Dict, Any, List, Optional as TypingOptional
+from typing import Dict, Any, List
 
 
-from ...bootstrap_config import TYPE_HINT_MAP, TYPING_IMPORTS
+from ...bootstrap_config import TYPE_HINT_MAP
 from .builder_utils import get_cli_args
 
 __all__ = [
@@ -21,14 +21,14 @@ def build_typer_app_code(config: Dict[str, Any]) -> str:
     epilog = help_config.get("epilog", "")
 
     code_lines = [
-        f"app = typer.Typer(",
+        "app = typer.Typer(",
         f"    help={repr(desc)},",
         f"    epilog={repr(epilog)},",
-        f"    add_completion=True,",
-        f"    context_settings={{",
-        f"        'help_option_names': ['--help', '-h'],",
-        f"    }}",
-        f")",
+        "    add_completion=True,",
+        "    context_settings={",
+        "        'help_option_names': ['--help', '-h'],",
+        "    }",
+        ")",
     ]
     return "\n".join(code_lines)
 
@@ -75,7 +75,7 @@ def build_typer_args_pass_to_core(config: Dict[str, Any]) -> str:
 
 
 def build_typer_main_signature(config: Dict[str, Any]) -> str:
-    code_lines: List[str] = [f"def main(", f"    ctx: typer.Context,"]
+    code_lines: List[str] = ["def main(", "    ctx: typer.Context,"]
 
     args = get_cli_args(config)
 
@@ -119,7 +119,7 @@ def build_typer_main_signature(config: Dict[str, Any]) -> str:
             code_lines.append(f"    {name}: {type_hint} = typer.Argument(")
             code_lines.append(f"         {default_repr},")
             code_lines.append(f"        help={repr(help_str)}")
-            code_lines.append(f"    ),")
+            code_lines.append("    ),")
         else:
             code_lines.append(f"    {name}: {type_hint} = typer.Option(")
             code_lines.append(f"        {default_repr},")
@@ -133,7 +133,7 @@ def build_typer_main_signature(config: Dict[str, Any]) -> str:
 
             code_lines.append(f"        {', '.join(option_names)},")
             code_lines.append(f"        help={repr(help_str)}")
-            code_lines.append(f"     ),")
+            code_lines.append("     ),")
 
-    code_lines.append(f"):")
+    code_lines.append("):")
     return "\n".join(code_lines)

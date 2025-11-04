@@ -1,5 +1,4 @@
 # Path: modules/bootstrap/bootstrap_internal/builders/script_builder.py
-import logging
 from typing import Dict, Any, Optional
 
 from ..bootstrap_loader import load_template

@@ -3,7 +3,7 @@ import logging
 import os
 import sys
 from pathlib import Path
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any
 
 __all__ = ["execute_zsh_wrapper_action"]
 
@@ -20,7 +20,7 @@ def execute_zsh_wrapper_action(logger: logging.Logger, result: Dict[str, Any]) -
 
     if output_path.exists() and not force:
         logger.error(f"❌ Lỗi: File output đã tồn tại: {output_path.name}")
-        logger.error(f"   Sử dụng --force (-f) để ghi đè.")
+        logger.error("   Sử dụng --force (-f) để ghi đè.")
 
         sys.exit(1)
 

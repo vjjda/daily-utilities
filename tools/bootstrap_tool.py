@@ -1,9 +1,8 @@
 # Path: tools/bootstrap_tool.py
 import sys
 import argparse
-import logging
 from pathlib import Path
-from typing import Final, Dict, Any, Optional
+from typing import Final
 
 try:
     import argcomplete
@@ -70,7 +69,7 @@ def main():
         "--init-spec",
         type=str,
         nargs="?",
-        const=f"new_tool.spec.toml",
+        const="new_tool.spec.toml",
         dest="init_spec_path_str",
         help="Khởi tạo một file .spec.toml mới từ template.\n"
         "Tùy chọn cung cấp đường dẫn (ví dụ: -s 'path/to/my_spec.toml').\n"

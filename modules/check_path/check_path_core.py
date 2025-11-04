@@ -6,14 +6,13 @@ from typing import List, Optional, Dict, Any, Set
 import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-if not "PROJECT_ROOT" in locals():
+if "PROJECT_ROOT" not in locals():
     sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
 from .check_path_internal import (
     merge_check_path_configs,
     process_check_path_task_dir,
     analyze_single_file_for_path_comment,
-    load_config_files,
 )
 from .check_path_executor import execute_check_path_action
 

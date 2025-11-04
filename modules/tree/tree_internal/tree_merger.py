@@ -2,7 +2,7 @@
 from pathlib import Path
 import logging
 import argparse
-from typing import Set, Optional, Dict, Any, TYPE_CHECKING, List, Iterable, Tuple, Final
+from typing import Set, Optional, Dict, Any, TYPE_CHECKING, List, Tuple
 
 try:
     import pathspec

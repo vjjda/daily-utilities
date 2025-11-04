@@ -1,6 +1,5 @@
 # Path: modules/bootstrap/bootstrap_internal/builders/snippet_argparse.py
 from typing import Dict, Any, List
-from pathlib import Path
 
 
 from .builder_utils import get_cli_args
@@ -35,30 +34,30 @@ def build_argparse_arguments(config: Dict[str, Any]) -> str:
 
         if py_type_str == "bool":
             if arg.get("default", False) is True:
-                arg_params.append(f'        action="store_false",')
+                arg_params.append('        action="store_false",')
             else:
-                arg_params.append(f'        action="store_true",')
+                arg_params.append('        action="store_true",')
         elif py_type_str == "int":
-            arg_params.append(f"        type=int,")
+            arg_params.append("        type=int,")
         else:
-            arg_params.append(f"        type=str,")
+            arg_params.append("        type=str,")
 
         if is_argument:
             if "default" in arg:
-                arg_params.append(f'        nargs="?",')
+                arg_params.append('        nargs="?",')
                 arg_params.append(f"        default={repr(arg['default'])},")
         else:
             if py_type_str != "bool":
                 if "default" in arg:
                     arg_params.append(f"        default={repr(arg['default'])},")
                 else:
-                    arg_params.append(f"        default=None,")
+                    arg_params.append("        default=None,")
 
         arg_params.append(f"        help={repr(help_str)}")
 
-        code_lines.append(f"    parser.add_argument(")
+        code_lines.append("    parser.add_argument(")
         code_lines.extend(arg_params)
-        code_lines.append(f"    )")
+        code_lines.append("    )")
 
     return "\n".join(code_lines)
 

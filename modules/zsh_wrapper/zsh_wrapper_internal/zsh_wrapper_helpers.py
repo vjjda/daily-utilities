@@ -2,7 +2,7 @@
 import logging
 import sys
 from pathlib import Path
-from typing import Optional, Callable, Final
+from typing import Optional, Callable
 
 
 __all__ = [
@@ -134,7 +134,7 @@ def resolve_output_path_interactively(
     )
 
     if mode == "absolute":
-        logger.warning(f"⚠️ Output path (-o) not specified for 'absolute' mode.")
+        logger.warning("⚠️ Output path (-o) not specified for 'absolute' mode.")
     else:
         logger.warning("⚠️ Output path (-o) not specified.")
 

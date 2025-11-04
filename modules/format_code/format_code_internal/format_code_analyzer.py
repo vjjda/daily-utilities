@@ -5,7 +5,7 @@ from typing import Optional, Dict, Any
 import sys
 
 
-if not "PROJECT_ROOT" in locals():
+if "PROJECT_ROOT" not in locals():
     sys.path.append(str(Path(__file__).resolve().parent.parent.parent.parent))
 
 

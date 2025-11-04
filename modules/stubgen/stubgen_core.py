@@ -2,7 +2,7 @@
 import logging
 import argparse
 from pathlib import Path
-from typing import Dict, Any, List, Optional, Set, Tuple
+from typing import Dict, Any, List, Set, Tuple
 import sys
 
 from .stubgen_internal import process_stubgen_task_file, process_stubgen_task_dir

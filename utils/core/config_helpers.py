@@ -7,7 +7,7 @@ import tomlkit
 import hashlib
 import json
 
-from .toml_io import load_toml_file, write_toml_file
+from .toml_io import load_toml_file
 from .parsing import parse_comma_list, parse_cli_set_operators
 
 

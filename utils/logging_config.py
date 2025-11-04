@@ -1,8 +1,6 @@
 # Path: utils/logging_config.py
 import logging
 import sys
-from pathlib import Path
-from typing import Final
 
 
 from .constants import LOG_DIR_PATH, FILE_LOG_LEVEL, CONSOLE_LOG_LEVEL

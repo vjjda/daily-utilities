@@ -3,7 +3,7 @@
 import logging
 import argparse
 from pathlib import Path
-from typing import Dict, Any, List, Optional, Set, Tuple
+from typing import Dict, Any, List, Set, Tuple
 
 
 from . import (
@@ -51,9 +51,9 @@ def process_stubgen_task_file(
     merged_config = merge_stubgen_configs(logger, cli_config, file_config_data)
     scan_dir = file_path.parent
 
-    logger.info(f"  [Cấu hình áp dụng]")
+    logger.info("  [Cấu hình áp dụng]")
     logger.info(f"    - Ignore (từ config/CLI): {merged_config['ignore_list']}")
-    logger.info(f"    - (Bỏ qua .gitignore và config file)")
+    logger.info("    - (Bỏ qua .gitignore và config file)")
 
     stub_content, symbols_count = process_single_gateway(
         init_file=file_path,

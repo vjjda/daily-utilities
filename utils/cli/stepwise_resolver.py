@@ -1,6 +1,5 @@
 # Path: utils/cli/stepwise_resolver.py
 import logging
-import sys
 from pathlib import Path
 from typing import List, Dict, Any, Optional, Set
 

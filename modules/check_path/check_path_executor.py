@@ -61,7 +61,7 @@ def execute_check_path_action(
             title_formatter=_title_formatter,
             detail_formatter=_detail_formatter,
         )
-        logger.warning(f"\n-> Chạy lại mà không có cờ -d để sửa (hoặc -f để tự động).")
+        logger.warning("\n-> Chạy lại mà không có cờ -d để sửa (hoặc -f để tự động).")
         sys.exit(1)
 
     proceed_to_write = force

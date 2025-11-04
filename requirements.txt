@@ -7,9 +7,6 @@ tomli_w==1.2.0
 tomlkit==0.13.3
 mypy
 black
-libcst
-tomlkit
-tomli_w
 pipreqs
 pipdeptree
 argcomplete

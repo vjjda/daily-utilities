@@ -3,7 +3,6 @@ import logging
 import argparse
 from pathlib import Path
 from typing import Dict, Any, Optional, Tuple
-import sys
 
 from utils.core import find_git_root
 from .zsh_wrapper_helpers import resolve_root_interactively
@@ -61,7 +60,7 @@ def resolve_wrapper_inputs(
         )
         return None
     if not tool_name:
-        logger.error(f"❌ Lỗi: Không thể xác định tên tool (output name).")
+        logger.error("❌ Lỗi: Không thể xác định tên tool (output name).")
         return None
 
     try:

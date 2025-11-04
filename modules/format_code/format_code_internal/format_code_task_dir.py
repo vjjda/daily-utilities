@@ -1,9 +1,8 @@
 # Path: modules/format_code/format_code_internal/format_code_task_dir.py
 import logging
 import argparse
-import os
 from pathlib import Path
-from typing import Dict, Any, List, Optional, Set, Tuple
+from typing import Dict, Any, List, Optional, Set
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 
@@ -53,7 +52,7 @@ def process_format_code_task_dir(
         script_file_path=script_file_path,
     )
 
-    logger.info(f"  [Cấu hình áp dụng]")
+    logger.info("  [Cấu hình áp dụng]")
     logger.info(f"    - Extensions: {sorted(list(final_extensions_list))}")
     logger.info(f"    - Ignore (từ config/CLI): {final_ignore_list}")
     logger.info(
@@ -116,7 +115,7 @@ def process_format_code_task_dir(
     dir_results.sort(key=lambda r: r["path"])
 
     if not dir_results and files_to_submit:
-        logger.info(f"  -> ✅ Tất cả file trong thư mục đã được định dạng.")
+        logger.info("  -> ✅ Tất cả file trong thư mục đã được định dạng.")
 
     logger.info(f"--- ✅ Kết thúc {scan_dir.name} ---")
     logger.info("")

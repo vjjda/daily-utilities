@@ -1,6 +1,5 @@
 # Path: modules/tree/tree_executor.py
 from pathlib import Path
-import logging
 from typing import List, Set, Optional, Dict, Any, TYPE_CHECKING
 
 try:
@@ -12,7 +11,6 @@ if TYPE_CHECKING:
     import pathspec
 
 from utils.core import is_path_matched, is_extension_matched
-from utils.logging_config import log_success
 
 from .tree_config import DEFAULT_MAX_LEVEL
 

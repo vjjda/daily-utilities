@@ -33,7 +33,6 @@ def generate_config_content(
     output_lines.append("")
 
     key_line_pattern = re.compile(r"^(\s*)(#?\s*)([\w-]+)(\s*=.*?)?\s*(#.*)?$")
-    placeholder_pattern = re.compile(r"\{toml_(\w+)\}")
 
     key_comments: Dict[str, str] = {}
     current_key_comment = ""

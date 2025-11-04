@@ -25,7 +25,7 @@ def orchestrate_bootstrap(
         force = getattr(cli_args, "force", False)
 
         if init_spec_path_str:
-            logger.info(f"🚀 Yêu cầu khởi tạo file spec (chế độ -s)...")
+            logger.info("🚀 Yêu cầu khởi tạo file spec (chế độ -s)...")
             run_init_spec_logic(
                 logger=logger,
                 project_root=project_root,

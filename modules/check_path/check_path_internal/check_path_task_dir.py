@@ -1,15 +1,14 @@
 # Path: modules/check_path/check_path_internal/check_path_task_dir.py
 import logging
 import argparse
-import os
 from pathlib import Path
-from typing import Dict, Any, List, Optional, Set, Tuple
+from typing import Dict, Any, List, Optional, Set
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    import pathspec
+    pass
 
 
 from .check_path_loader import load_config_files
@@ -63,7 +62,7 @@ def process_check_path_task_dir(
         script_file_path=script_file_path,
     )
 
-    logger.info(f"  [Cấu hình áp dụng]")
+    logger.info("  [Cấu hình áp dụng]")
     logger.info(f"    - Extensions: {sorted(list(final_extensions_list))}")
     logger.info(f"    - Ignore (từ config): {final_ignore_list}")
     logger.info(
@@ -128,7 +127,7 @@ def process_check_path_task_dir(
     dir_results.sort(key=lambda r: r["path"])
 
     if not dir_results and files_to_submit:
-        logger.info(f"  -> ✅ Tất cả file trong thư mục đã tuân thủ.")
+        logger.info("  -> ✅ Tất cả file trong thư mục đã tuân thủ.")
 
     logger.info(f"--- ✅ Kết thúc {scan_dir.name} ---")
     logger.info("")

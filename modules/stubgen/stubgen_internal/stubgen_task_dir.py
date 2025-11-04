@@ -2,15 +2,14 @@
 
 import logging
 import argparse
-import os
 from pathlib import Path
-from typing import Dict, Any, List, Optional, Set, Tuple
+from typing import Dict, Any, List, Set, Tuple
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    import pathspec
+    pass
 
 
 from . import (
@@ -24,7 +23,6 @@ from . import (
 from .stubgen_classifier import classify_and_report_stub_changes
 
 
-from utils.core import compile_spec_from_patterns
 from utils.constants import MAX_THREAD_WORKERS
 
 
@@ -57,7 +55,7 @@ def process_stubgen_task_dir(
         script_file_path=script_file_path,
     )
 
-    logger.info(f"  [Cấu hình áp dụng]")
+    logger.info("  [Cấu hình áp dụng]")
     logger.info(f"    - Ignore (từ config/CLI): {merged_config['ignore_list']}")
     logger.info(
         f"    - Tải .gitignore cục bộ: {'Có' if scan_status['gitignore_found'] else 'Không'}"
@@ -68,7 +66,7 @@ def process_stubgen_task_dir(
 
     if not gateway_files:
         logger.info(
-            f"  -> 🤷 Không tìm thấy file '__init__.py' (gateway động) nào khớp tiêu chí."
+            "  -> 🤷 Không tìm thấy file '__init__.py' (gateway động) nào khớp tiêu chí."
         )
         logger.info(f"--- ✅ Kết thúc {scan_dir.name} ---")
         logger.info("")

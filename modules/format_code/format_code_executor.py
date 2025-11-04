@@ -3,10 +3,10 @@ import logging
 import sys
 import argparse
 from pathlib import Path
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 
 
-if not "PROJECT_ROOT" in locals():
+if "PROJECT_ROOT" not in locals():
     sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
 from utils.logging_config import log_success
@@ -64,7 +64,7 @@ def execute_format_code_action(
             detail_formatter=_detail_formatter,
         )
         logger.warning(
-            f"\n-> Chạy lại mà không có cờ -d để định dạng (hoặc -f để tự động)."
+            "\n-> Chạy lại mà không có cờ -d để định dạng (hoặc -f để tự động)."
         )
         sys.exit(1)
 

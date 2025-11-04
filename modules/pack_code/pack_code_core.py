@@ -2,7 +2,7 @@
 import logging
 import argparse
 from pathlib import Path
-from typing import Dict, Any, List, Optional, Set, Tuple
+from typing import Dict, Any, List, Optional, Set
 import sys
 
 from .pack_code_internal import (

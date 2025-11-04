@@ -1,5 +1,5 @@
 # Path: modules/stubgen/stubgen_config.py
-from typing import List, Set, Final, Optional, Dict, Any
+from typing import List, Set, Final, Dict, Any
 from pathlib import Path
 
 __all__ = [

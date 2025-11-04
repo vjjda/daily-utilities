@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 
 
-if not "PROJECT_ROOT" in locals():
+if "PROJECT_ROOT" not in locals():
     sys.path.append(str(Path(__file__).resolve().parent.parent.parent.parent))
 
 from utils.core import resolve_config_list, resolve_set_modification

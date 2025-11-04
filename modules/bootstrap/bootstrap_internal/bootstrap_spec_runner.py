@@ -2,7 +2,7 @@
 import logging
 import sys
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 
 from utils.logging_config import log_success
 from utils.cli import launch_editor
@@ -77,7 +77,7 @@ def run_init_spec_logic(
         logger.error("   (Sử dụng -f hoặc --force để ghi đè)")
         sys.exit(1)
     elif target_spec_path.exists() and force:
-        logger.warning(f"⚠️ File spec đã tồn tại. Sẽ ghi đè (do --force)...")
+        logger.warning("⚠️ File spec đã tồn tại. Sẽ ghi đè (do --force)...")
 
     logger.debug(f"Đang tìm {PROJECT_CONFIG_FILENAME} để kế thừa [layout]...")
     project_config_path = project_root / PROJECT_CONFIG_FILENAME

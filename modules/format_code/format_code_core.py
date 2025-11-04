@@ -2,11 +2,11 @@
 import logging
 import argparse
 from pathlib import Path
-from typing import List, Optional, Dict, Any, Tuple, Set
+from typing import List, Optional, Dict, Any, Set
 import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-if not "PROJECT_ROOT" in locals():
+if "PROJECT_ROOT" not in locals():
     sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
 
@@ -20,7 +20,6 @@ from .format_code_executor import execute_format_code_action
 from .format_code_config import DEFAULT_START_PATH
 
 from utils.cli import resolve_reporting_root, resolve_stepwise_paths
-from utils.core.config_helpers import generate_config_hash
 from utils.constants import MAX_THREAD_WORKERS
 
 

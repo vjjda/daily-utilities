@@ -149,12 +149,12 @@ def run_bootstrap_logic(
 
     if not spec_file_path.is_file() or not spec_file_path.name.endswith(".spec.toml"):
         logger.error(
-            f"❌ Lỗi: Đường dẫn cung cấp không phải là file *.spec.toml hợp lệ."
+            "❌ Lỗi: Đường dẫn cung cấp không phải là file *.spec.toml hợp lệ."
         )
         logger.error(f"   Đã nhận: {spec_file_path.as_posix()}")
         sys.exit(1)
 
-    logger.info(f"🚀 Bắt đầu bootstrap:")
+    logger.info("🚀 Bắt đầu bootstrap:")
     try:
         spec_rel_path = spec_file_path.relative_to(project_root).as_posix()
     except ValueError:

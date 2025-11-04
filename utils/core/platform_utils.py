@@ -1,7 +1,6 @@
 # Path: utils/core/platform_utils.py
 import logging
 import platform
-import subprocess
 from pathlib import Path
 from typing import List
 

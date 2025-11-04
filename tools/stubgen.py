@@ -2,7 +2,7 @@
 import sys
 import argparse
 from pathlib import Path
-from typing import List, Final
+from typing import Final
 
 try:
     import argcomplete
@@ -13,7 +13,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.append(str(PROJECT_ROOT))
 
 try:
-    from utils.logging_config import setup_logging, log_success
+    from utils.logging_config import setup_logging
     from utils.cli import (
         ConfigInitializer,
         run_cli_app,
