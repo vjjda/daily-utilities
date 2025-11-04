@@ -11,3 +11,4 @@ pipreqs
 pipdeptree
 argcomplete
 pre-commit
+ruff
