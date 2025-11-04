@@ -1,5 +1,7 @@
 # Path: pyproject.toml
 
+
+
 [tool.black]
 # Cài đặt Black tiêu chuẩn để thống nhất
 line-length = 88
@@ -22,9 +24,39 @@ exclude = '''
 )/
 '''
 
-# ---------------------------------------------------------------------------
-# Cấu hình Pyright (Được di chuyển từ pyrightconfig.json)
-# ---------------------------------------------------------------------------
+[tool.bootstrap]
+bin_dir = "bin"
+docs_dir = "docs"
+modules_dir = "modules"
+scripts_dir = "tools"
+
+[tool.cpath]
+extensions = ["css", "js", "py", "pyi", "scss", "sh", "ts", "zsh"]
+ignore = [".git", ".venv", "__pycache__", "build", "dist", "node_modules", "out", "venv"]
+
+[tool.forc]
+extensions = ["py"]
+ignore = [".DS_Store", ".git", ".hg", ".svn", ".venv", "__pycache__", "build", "dist", "node_modules", "out", "venv"]
+
+[tool.ndoc]
+extensions = ["py"]
+format_extensions = ["py"]
+ignore = [".DS_Store", ".git", ".hg", ".svn", ".venv", "/.gitignore", "__pycache__", "build", "dist", "node_modules", "out", "venv"]
+
+[tool.pcode]
+
+clean_extensions = ["py", "sh", "zsh"]
+
+extensions = ["", "bash", "cfg", "cfg.py", "gitignore", "ini", "json", "md", "py", "sh", "template", "toml", "txt", "xml", "yaml", "yml", "zsh"]
+
+format_extensions = ["py"]
+
+ignore = [".DS_Store", ".git", ".hg", ".ruff_cache", ".svn", ".venv", "__pycache__", "venv"]
+
+include = []
+
+output_dir = "~/Documents/code.context"
+
 [tool.pyright]
 # Cấu hình môi trường thực thi
 executionEnvironments = [
@@ -54,36 +86,6 @@ exclude = [
   "/scripts/internal/bootstrap_templates/*"
 ]
 
-# ---------------------------------------------------------------------------
-# Cấu hình Công cụ (daily-utilities) (Đã di chuyển từ .project.toml)
-# ---------------------------------------------------------------------------
-[tool.bootstrap]
-bin_dir = "bin"
-docs_dir = "docs"
-modules_dir = "modules"
-scripts_dir = "tools"
-
-[tool.cpath]
-extensions = ["css", "js", "py", "pyi", "scss", "sh", "ts", "zsh"]
-ignore = [".git", ".venv", "__pycache__", "build", "dist", "node_modules", "out", "venv"]
-
-[tool.forc]
-extensions = ["py"]
-ignore = [".DS_Store", ".git", ".hg", ".svn", ".venv", "__pycache__", "build", "dist", "node_modules", "out", "venv"]
-
-[tool.ndoc]
-extensions = ["py"]
-format_extensions = ["py"]
-ignore = [".DS_Store", ".git", ".hg", ".svn", ".venv", "/.gitignore", "__pycache__", "build", "dist", "node_modules", "out", "venv"]
-
-[tool.pcode]
-clean_extensions = ["py", "sh", "zsh"]
-extensions = ["", "bash", "cfg", "cfg.py", "gitignore", "ini", "json", "md", "py", "sh", "template", "toml", "txt", "xml", "yaml", "yml", "zsh"]
-format_extensions = ["py"]
-ignore = [".DS_Store", ".git", ".hg", ".svn", ".venv", "__pycache__", "venv"]
-include = []
-output_dir = "~/Documents/code.context"
-
 [tool.sgen]
 ast_all_list_name = "__all__"
 ast_module_list_name = "modules_to_export"
@@ -92,8 +94,17 @@ ignore = ["*.pyc", "*.pyo", ".git", ".venv", "__pycache__", "build", "dist", "no
 include = []
 
 [tool.tree]
+
 dirs-only = []
+
+# extensions = 
+
 ignore = [".git", ".ruff_cache", ".venv", "__pycache__", "node_modules", "venv"]
+
+# level = 
+
 prune = ["build", "dist"]
+
 show-submodules = false
+
 use-gitignore = true
