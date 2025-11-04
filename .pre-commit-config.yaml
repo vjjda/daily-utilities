@@ -1,27 +1,29 @@
 # Path: .pre-commit-config.yaml
 repos:
-  # - repo: https://github.com/astral-sh/ruff-pre-commit
-  #   rev: v0.5.5
-  #   hooks:
-  #     - id: ruff
-  #       args: [--fix, --exit-non-zero-on-fix, --ignore=E402]
-  #       files: ^(tools/|modules/|utils/)
   - repo: local
     hooks:
-      # 1️⃣ Hook ndoc (ĐÃ SỬA)
+      # 1️⃣ Hook ndoc (Cleaner)
       - id: ndoc
         name: "NDoc Code Cleaner"
-        # Chạy ndoc VÀ git add lại các file đã xử lý ($@)
-        entry: zsh -c 'ndoc -abf "$@" && git add "$@"' --
+        # Chạy ndoc  VÀ git add lại các file đã xử lý ($@)
+        entry: zsh -c 'ndoc -abf "$@" && git add "$@"' -- 
         language: system
         types: [python]
         stages: [pre-commit]
 
-      # 2️⃣ Hook cpath (ĐÃ SỬA)
+      # 2️⃣ Hook Ruff (MỚI - Sắp xếp/xóa imports)
+      - id: ruff-imports
+        name: "Ruff Import Sorter/Cleaner"
+        entry: zsh -c 'ruff check --select I --fix "$@" && git add "$@"' --
+        language: system
+        types: [python]
+        stages: [pre-commit]
+
+      # 3️⃣ Hook cpath (Metadata)
       - id: cpath
         name: "CPath Path Comment Checker"
-        # Chạy cpath ở chế độ Force (-f) VÀ git add lại file ($@)
-        entry: zsh -c 'cpath -f "$@" && git add "$@"' --
+        # Chạy cpath ở chế độ Force  (-f) VÀ git add lại file ($@)
+        entry: zsh -c 'cpath -f "$@" && git add "$@"' -- 
         language: system
         types: [python, shell] 
         stages: [pre-commit]
