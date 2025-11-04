@@ -3,8 +3,7 @@ import hashlib
 import re
 import pyperclip
 import logging
-from pathlib import Path
-from typing import Optional, Dict, Any, Tuple
+from typing import Optional, Dict, Any
 import argparse
 import sys
 

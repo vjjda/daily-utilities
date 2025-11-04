@@ -17,7 +17,6 @@ from .check_path_internal import (
 )
 from .check_path_executor import execute_check_path_action
 
-from .check_path_config import DEFAULT_EXTENSIONS
 from utils.constants import MAX_THREAD_WORKERS
 from utils.cli import (
     resolve_input_paths,

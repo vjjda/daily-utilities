@@ -3,7 +3,6 @@ import logging
 import sys
 import argparse
 from pathlib import Path
-from typing import Dict, Any, Tuple, Optional
 
 
 from .bootstrap_internal import (
