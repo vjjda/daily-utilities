@@ -12,6 +12,7 @@ __all__ = [
     "FALLBACK_USE_GITIGNORE",
     "CONFIG_FILENAME",
     "PROJECT_CONFIG_FILENAME",
+    "PROJECT_CONFIG_ROOT_KEY",
     "CONFIG_SECTION_NAME",
     "MODULE_DIR",
     "TEMPLATE_FILENAME",
@@ -40,6 +41,7 @@ FALLBACK_USE_GITIGNORE: Final[bool] = True
 
 CONFIG_FILENAME: Final[str] = ".tree.toml"
 PROJECT_CONFIG_FILENAME: Final[str] = "pyproject.toml"
+PROJECT_CONFIG_ROOT_KEY: Final[str] = "tool"
 CONFIG_SECTION_NAME: Final[str] = "tree"
 
 

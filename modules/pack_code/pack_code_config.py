@@ -11,6 +11,7 @@ __all__ = [
     "DEFAULT_FORMAT_EXTENSIONS",
     "DEFAULT_OUTPUT_DIR",
     "PROJECT_CONFIG_FILENAME",
+    "PROJECT_CONFIG_ROOT_KEY",
     "CONFIG_FILENAME",
     "CONFIG_SECTION_NAME",
     "MODULE_DIR",
@@ -57,6 +58,7 @@ DEFAULT_CLEAN_EXTENSIONS: Final[Set[str]] = {"py", "zsh", "sh"}
 DEFAULT_FORMAT_EXTENSIONS: Final[Set[str]] = {"py"}
 
 PROJECT_CONFIG_FILENAME: Final[str] = "pyproject.toml"
+PROJECT_CONFIG_ROOT_KEY: Final[str] = "tool"
 CONFIG_FILENAME: Final[str] = ".pcode.toml"
 CONFIG_SECTION_NAME: Final[str] = "pcode"
 

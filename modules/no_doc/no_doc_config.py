@@ -8,6 +8,7 @@ __all__ = [
     "DEFAULT_IGNORE",
     "DEFAULT_FORMAT_EXTENSIONS",
     "PROJECT_CONFIG_FILENAME",
+    "PROJECT_CONFIG_ROOT_KEY",
     "CONFIG_FILENAME",
     "CONFIG_SECTION_NAME",
     "MODULE_DIR",
@@ -38,6 +39,7 @@ DEFAULT_IGNORE: Final[Set[str]] = {
 DEFAULT_FORMAT_EXTENSIONS: Final[Set[str]] = {"py"}
 
 PROJECT_CONFIG_FILENAME: Final[str] = "pyproject.toml"
+PROJECT_CONFIG_ROOT_KEY: Final[str] = "tool"
 CONFIG_FILENAME: Final[str] = ".ndoc.toml"
 CONFIG_SECTION_NAME: Final[str] = "ndoc"
 

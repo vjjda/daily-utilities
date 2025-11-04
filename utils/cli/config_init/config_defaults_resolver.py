@@ -1,7 +1,7 @@
 # Path: utils/cli/config_init/config_defaults_resolver.py
 import logging
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from utils.core import load_project_config_section
 
@@ -15,13 +15,14 @@ def resolve_effective_defaults(
     config_section_name: str,
     base_defaults: Dict[str, Any],
     cwd: Path,
+    root_key: Optional[str] = None,
 ) -> Dict[str, Any]:
     effective_defaults = base_defaults.copy()
 
     if scope == "local":
         project_config_path = cwd / project_config_filename
         project_section = load_project_config_section(
-            project_config_path, config_section_name, logger
+            project_config_path, config_section_name, logger, root_key
         )
         if project_section:
             logger.debug(

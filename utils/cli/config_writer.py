@@ -38,6 +38,7 @@ def handle_config_init_request(
     project_config_filename: str,
     config_section_name: str,
     base_defaults: Dict[str, Any],
+    project_config_root_key: Optional[str] = None,
 ) -> bool:
     if not (config_project or config_local):
         return False
@@ -71,6 +72,7 @@ def handle_config_init_request(
             config_section_name=config_section_name,
             base_defaults=base_defaults,
             cwd=cwd,
+            root_key=project_config_root_key,
         )
 
         use_template_comments = scope == "local"
@@ -107,6 +109,7 @@ def handle_config_init_request(
                 config_file_path=target_path,
                 config_section_name=config_section_name,
                 new_section_content_string=config_content_string,
+                root_key=project_config_root_key,
             )
 
         if config_file_path:

@@ -24,6 +24,7 @@ from ..stubgen_config import (
     CONFIG_FILENAME,
     CONFIG_SECTION_NAME,
     PROJECT_CONFIG_FILENAME,
+    PROJECT_CONFIG_ROOT_KEY,
 )
 
 __all__ = ["find_gateway_files", "load_config_files"]
@@ -36,6 +37,7 @@ def load_config_files(start_dir: Path, logger: logging.Logger) -> Dict[str, Any]
         project_config_filename=PROJECT_CONFIG_FILENAME,
         local_config_filename=CONFIG_FILENAME,
         config_section_name=CONFIG_SECTION_NAME,
+        root_key=PROJECT_CONFIG_ROOT_KEY,
     )
 
 

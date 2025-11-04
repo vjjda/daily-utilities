@@ -7,6 +7,7 @@ __all__ = [
     "DEFAULT_EXTENSIONS",
     "DEFAULT_IGNORE",
     "PROJECT_CONFIG_FILENAME",
+    "PROJECT_CONFIG_ROOT_KEY",
     "CONFIG_FILENAME",
     "CONFIG_SECTION_NAME",
     "MODULE_DIR",
@@ -38,6 +39,7 @@ DEFAULT_IGNORE: Final[Set[str]] = {
 
 
 PROJECT_CONFIG_FILENAME: Final[str] = "pyproject.toml"
+PROJECT_CONFIG_ROOT_KEY: Final[str] = "tool"
 CONFIG_FILENAME: Final[str] = ".forc.toml"
 CONFIG_SECTION_NAME: Final[str] = "forc"
 

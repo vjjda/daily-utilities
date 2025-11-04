@@ -5,6 +5,7 @@ from .check_path_config import (
     CPATH_DEFAULTS,
     MODULE_DIR,
     PROJECT_CONFIG_FILENAME,
+    PROJECT_CONFIG_ROOT_KEY,
     TEMPLATE_FILENAME,
 )
 from .check_path_core import orchestrate_check_path
@@ -15,6 +16,7 @@ __all__ = [
     "TEMPLATE_FILENAME",
     "CPATH_DEFAULTS",
     "PROJECT_CONFIG_FILENAME",
+    "PROJECT_CONFIG_ROOT_KEY",
     "CONFIG_SECTION_NAME",
     "CONFIG_FILENAME",
 ]

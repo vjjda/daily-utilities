@@ -6,6 +6,7 @@ from .no_doc_config import (
     MODULE_DIR,
     NDOC_DEFAULTS,
     PROJECT_CONFIG_FILENAME,
+    PROJECT_CONFIG_ROOT_KEY,
     TEMPLATE_FILENAME,
 )
 from .no_doc_core import orchestrate_no_doc, process_no_doc_logic
@@ -14,6 +15,7 @@ from .no_doc_executor import execute_ndoc_action
 __all__ = [
     "DEFAULT_START_PATH",
     "PROJECT_CONFIG_FILENAME",
+    "PROJECT_CONFIG_ROOT_KEY",
     "CONFIG_FILENAME",
     "CONFIG_SECTION_NAME",
     "MODULE_DIR",

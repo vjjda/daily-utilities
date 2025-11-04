@@ -19,6 +19,7 @@ try:
         DEFAULT_VENV,
         MODULE_DIR,
         PROJECT_CONFIG_FILENAME,
+        PROJECT_CONFIG_ROOT_KEY,
         TEMPLATE_FILENAME,
         ZRAP_DEFAULTS,
         orchestrate_zsh_wrapper,
@@ -128,6 +129,7 @@ def main():
         template_filename=TEMPLATE_FILENAME,
         config_filename=CONFIG_FILENAME,
         project_config_filename=PROJECT_CONFIG_FILENAME,
+        project_config_root_key=PROJECT_CONFIG_ROOT_KEY,
         config_section_name=CONFIG_SECTION_NAME,
         base_defaults=ZRAP_DEFAULTS,
     )

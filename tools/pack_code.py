@@ -20,6 +20,7 @@ try:
         MODULE_DIR,
         PCODE_DEFAULTS,
         PROJECT_CONFIG_FILENAME,
+        PROJECT_CONFIG_ROOT_KEY,
         TEMPLATE_FILENAME,
         orchestrate_pack_code,
     )
@@ -163,6 +164,7 @@ def main():
         project_config_filename=PROJECT_CONFIG_FILENAME,
         config_section_name=CONFIG_SECTION_NAME,
         base_defaults=PCODE_DEFAULTS,
+        project_config_root_key=PROJECT_CONFIG_ROOT_KEY,
     )
     config_initializer.check_and_handle_requests(args)
 

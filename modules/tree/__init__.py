@@ -4,6 +4,7 @@ from .tree_config import (
     CONFIG_SECTION_NAME,
     MODULE_DIR,
     PROJECT_CONFIG_FILENAME,
+    PROJECT_CONFIG_ROOT_KEY,
     TEMPLATE_FILENAME,
     TREE_DEFAULTS,
 )
@@ -17,6 +18,7 @@ from .tree_executor import (
 __all__ = [
     "CONFIG_FILENAME",
     "PROJECT_CONFIG_FILENAME",
+    "PROJECT_CONFIG_ROOT_KEY",
     "CONFIG_SECTION_NAME",
     "MODULE_DIR",
     "TEMPLATE_FILENAME",

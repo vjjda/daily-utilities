@@ -18,6 +18,7 @@ try:
         CONFIG_SECTION_NAME,
         MODULE_DIR,
         PROJECT_CONFIG_FILENAME,
+        PROJECT_CONFIG_ROOT_KEY,
         TEMPLATE_FILENAME,
         orchestrate_bootstrap,
     )

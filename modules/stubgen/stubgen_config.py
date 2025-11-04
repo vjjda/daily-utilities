@@ -8,6 +8,7 @@ __all__ = [
     "AST_MODULE_LIST_NAME",
     "AST_ALL_LIST_NAME",
     "PROJECT_CONFIG_FILENAME",
+    "PROJECT_CONFIG_ROOT_KEY",
     "CONFIG_FILENAME",
     "CONFIG_SECTION_NAME",
     "MODULE_DIR",
@@ -43,6 +44,7 @@ AST_ALL_LIST_NAME: Final[str] = "__all__"
 
 
 PROJECT_CONFIG_FILENAME: Final[str] = "pyproject.toml"
+PROJECT_CONFIG_ROOT_KEY: Final[str] = "tool"
 CONFIG_FILENAME: Final[str] = ".sgen.toml"
 CONFIG_SECTION_NAME: Final[str] = "sgen"
 

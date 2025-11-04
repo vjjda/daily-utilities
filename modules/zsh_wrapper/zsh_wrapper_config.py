@@ -9,6 +9,7 @@ __all__ = [
     "DEFAULT_WRAPPER_ABSOLUTE_PATH",
     "CONFIG_FILENAME",
     "PROJECT_CONFIG_FILENAME",
+    "PROJECT_CONFIG_ROOT_KEY",
     "CONFIG_SECTION_NAME",
     "TEMPLATE_FILENAME",
     "ZRAP_DEFAULTS",
@@ -26,6 +27,7 @@ DEFAULT_WRAPPER_ABSOLUTE_PATH: Final[Path] = Path.home() / "bin"
 
 CONFIG_FILENAME: Final[str] = ".zrap.toml"
 PROJECT_CONFIG_FILENAME: Final[str] = "pyproject.toml"
+PROJECT_CONFIG_ROOT_KEY: Final[str] = "tool"
 CONFIG_SECTION_NAME: Final[str] = "zrap"
 TEMPLATE_FILENAME: Final[str] = "zsh_wrapper.toml.template"
 

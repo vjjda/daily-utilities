@@ -3,7 +3,7 @@ import hashlib
 import json
 import logging
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Final
+from typing import Any, Dict, List, Optional, Set
 
 import tomlkit
 
@@ -21,11 +21,7 @@ __all__ = [
     "resolve_config_list",
     "resolve_set_modification",
     "generate_config_hash",
-    "PROJECT_CONFIG_ROOT_KEY",
 ]
-
-
-PROJECT_CONFIG_ROOT_KEY: Final[str] = "tool"
 
 
 def format_value_to_toml(value: Any) -> str:
@@ -101,19 +97,27 @@ def resolve_set_modification(
 
 
 def load_project_config_section(
-    config_path: Path, section_name: str, logger: logging.Logger
+    config_path: Path,
+    section_name: str,
+    logger: logging.Logger,
+    root_key: Optional[str] = None,
 ) -> Dict[str, Any]:
     config_data = load_toml_file(config_path, logger)
 
-    tool_section_data = config_data.get(PROJECT_CONFIG_ROOT_KEY, {})
-    if not isinstance(tool_section_data, dict):
-        logger.warning(
-            f"Mục '[{PROJECT_CONFIG_ROOT_KEY}]' trong '{config_path.name}' "
-            f"không phải là một bảng (table). Trả về config rỗng."
-        )
-        return {}
+    if root_key:
 
-    return tool_section_data.get(section_name, {})
+        root_section_data = config_data.get(root_key, {})
+        if not isinstance(root_section_data, dict):
+            logger.warning(
+                f"Mục '[{root_key}]' trong '{config_path.name}' "
+                f"không phải là một bảng (table). Trả về config rỗng."
+            )
+            return {}
+
+        return root_section_data.get(section_name, {})
+    else:
+
+        return config_data.get(section_name, {})
 
 
 def merge_config_sections(
@@ -128,12 +132,15 @@ def load_and_merge_configs(
     project_config_filename: str,
     local_config_filename: str,
     config_section_name: str,
+    root_key: Optional[str] = None,
 ) -> Dict[str, Any]:
     project_config_path = start_dir / project_config_filename
     local_config_path = start_dir / local_config_filename
+
     project_section = load_project_config_section(
-        project_config_path, config_section_name, logger
+        project_config_path, config_section_name, logger, root_key
     )
+
     local_config_data = load_toml_file(local_config_path, logger)
     local_section = local_config_data.get(config_section_name, {})
     return merge_config_sections(project_section, local_section)

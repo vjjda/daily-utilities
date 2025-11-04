@@ -8,6 +8,7 @@ __all__ = [
     "COMMENT_RULES",
     "COMMENT_RULES_BY_EXT",
     "PROJECT_CONFIG_FILENAME",
+    "PROJECT_CONFIG_ROOT_KEY",
     "CONFIG_SECTION_NAME",
     "CONFIG_FILENAME",
     "MODULE_DIR",
@@ -43,6 +44,7 @@ DEFAULT_EXTENSIONS: Final[Set[str]] = {
 
 
 PROJECT_CONFIG_FILENAME: Final[str] = "pyproject.toml"
+PROJECT_CONFIG_ROOT_KEY: Final[str] = "tool"
 CONFIG_FILENAME: Final[str] = ".cpath.toml"
 CONFIG_SECTION_NAME: Final[str] = "cpath"
 

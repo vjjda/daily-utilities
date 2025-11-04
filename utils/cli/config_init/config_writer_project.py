@@ -17,7 +17,7 @@ except ImportError:
     TOMLDocument = Dict[str, Any]
 
 from utils.logging_config import log_success
-from utils.core.config_helpers import PROJECT_CONFIG_ROOT_KEY
+
 from ..ui_helpers import prompt_config_overwrite
 
 __all__ = ["write_project_config_section"]
@@ -28,6 +28,7 @@ def write_project_config_section(
     config_file_path: Path,
     config_section_name: str,
     new_section_content_string: str,
+    root_key: Optional[str] = None,
 ) -> Optional[Path]:
 
     if tomlkit is None:
@@ -58,29 +59,37 @@ def write_project_config_section(
             logger.error(f"❌ Lỗi khi phân tích nội dung section đã tạo: {e}")
             raise
 
-        if PROJECT_CONFIG_ROOT_KEY not in main_doc:
-            logger.info(
-                f"Tạo section [{PROJECT_CONFIG_ROOT_KEY}] mới trong '{config_file_path.name}'."
-            )
-            main_doc.add(tomlkit.nl())
-            tool_table = tomlkit.table()
-            main_doc.add(PROJECT_CONFIG_ROOT_KEY, tool_table)
-        else:
-            tool_table = main_doc[PROJECT_CONFIG_ROOT_KEY]  # type: ignore
+        target_table: TOMLDocument | Table = main_doc
+        display_section_name = config_section_name
 
-        if not isinstance(tool_table, (Table, dict)):
-            logger.error(
-                f"❌ Lỗi: Mục '[{PROJECT_CONFIG_ROOT_KEY}]' trong '{config_file_path.name}' "
-                "không phải là một bảng (table)."
-            )
-            return None
+        if root_key:
 
-        section_existed = config_section_name in tool_table
+            if root_key not in main_doc:
+                logger.info(
+                    f"Tạo section [{root_key}] mới trong '{config_file_path.name}'."
+                )
+                main_doc.add(tomlkit.nl())
+                root_table = tomlkit.table()
+                main_doc.add(root_key, root_table)
+            else:
+                root_table = main_doc[root_key]  # type: ignore
+
+            if not isinstance(root_table, (Table, dict)):
+                logger.error(
+                    f"❌ Lỗi: Mục '[{root_key}]' trong '{config_file_path.name}' "
+                    "không phải là một bảng (table)."
+                )
+                return None
+
+            target_table = root_table
+            display_section_name = f"{root_key}.{config_section_name}"
+
+        section_existed = config_section_name in target_table
         if section_existed:
             should_write = prompt_config_overwrite(
                 logger,
                 config_file_path,
-                f"Section [{PROJECT_CONFIG_ROOT_KEY}.{config_section_name}]",
+                f"Section [{display_section_name}]",
             )
 
         if should_write is None:
@@ -88,36 +97,36 @@ def write_project_config_section(
 
         if should_write:
             if not section_existed:
-                logger.debug(
-                    f"Section [{config_section_name}] mới. Thêm vào [{PROJECT_CONFIG_ROOT_KEY}]."
-                )
+                logger.debug(f"Section [{display_section_name}] mới. Thêm vào file.")
             else:
                 logger.debug(
-                    f"Section [{config_section_name}] đã tồn tại. Đang ghi đè (Overwrite)..."
+                    f"Section [{display_section_name}] đã tồn tại. Đang ghi đè (Overwrite)..."
                 )
 
-            tool_table[config_section_name] = new_section_table
+            target_table[config_section_name] = new_section_table
 
-            logger.debug(
-                f"Đang sắp xếp lại các khóa bên trong [{PROJECT_CONFIG_ROOT_KEY}]..."
-            )
+            if root_key and isinstance(target_table, (Table, dict)):
+                logger.debug(f"Đang sắp xếp lại các khóa bên trong [{root_key}]...")
 
-            current_tables = {
-                k: v for k, v in tool_table.items() if isinstance(v, (Table, dict))
-            }
+                current_tables = {
+                    k: v
+                    for k, v in target_table.items()
+                    if isinstance(v, (Table, dict))
+                }
+                other_items = {
+                    k: v
+                    for k, v in target_table.items()
+                    if not isinstance(v, (Table, dict))
+                }
 
-            other_items = {
-                k: v for k, v in tool_table.items() if not isinstance(v, (Table, dict))
-            }
+                target_table.clear()
 
-            tool_table.clear()
+                for k, v in other_items.items():
+                    target_table.add(k, v)
 
-            for k, v in other_items.items():
-                tool_table.add(k, v)
-
-            sorted_keys = sorted(current_tables.keys())
-            for key in sorted_keys:
-                tool_table.add(key, current_tables[key])
+                sorted_keys = sorted(current_tables.keys())
+                for key in sorted_keys:
+                    target_table.add(key, current_tables[key])
 
             with config_file_path.open("w", encoding="utf-8") as f:
                 tomlkit.dump(main_doc, f)

@@ -14,6 +14,7 @@ __all__ = [
     "TEMPLATE_FILENAME",
     "SPEC_TEMPLATE_FILENAME",
     "PROJECT_CONFIG_FILENAME",
+    "PROJECT_CONFIG_ROOT_KEY",
     "MODULE_DIR",
     "BOOTSTRAP_DEFAULTS",
 ]
@@ -51,7 +52,7 @@ SPEC_TEMPLATE_FILENAME: Final[str] = (
 
 
 PROJECT_CONFIG_FILENAME: Final[str] = "pyproject.toml"
-
+PROJECT_CONFIG_ROOT_KEY: Final[str] = "tool"
 
 MODULE_DIR: Final[Path] = Path(__file__).parent
 

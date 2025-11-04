@@ -17,6 +17,7 @@ from .zsh_wrapper_config import (
     DEFAULT_WRAPPER_ABSOLUTE_PATH,
     DEFAULT_WRAPPER_RELATIVE_DIR,
     PROJECT_CONFIG_FILENAME,
+    PROJECT_CONFIG_ROOT_KEY,
 )
 from .zsh_wrapper_internal import (
     execute_zsh_wrapper_action,
@@ -47,6 +48,7 @@ def orchestrate_zsh_wrapper(
         project_config_filename=PROJECT_CONFIG_FILENAME,
         local_config_filename=CONFIG_FILENAME,
         config_section_name=CONFIG_SECTION_NAME,
+        root_key=PROJECT_CONFIG_ROOT_KEY,
     )
 
     modes_to_run: List[str]

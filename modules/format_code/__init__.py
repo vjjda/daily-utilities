@@ -6,6 +6,7 @@ from .format_code_config import (
     FORC_DEFAULTS,
     MODULE_DIR,
     PROJECT_CONFIG_FILENAME,
+    PROJECT_CONFIG_ROOT_KEY,
     TEMPLATE_FILENAME,
 )
 from .format_code_core import orchestrate_format_code, process_format_code_logic
@@ -18,6 +19,7 @@ __all__ = [
     "DEFAULT_START_PATH",
     "CONFIG_FILENAME",
     "PROJECT_CONFIG_FILENAME",
+    "PROJECT_CONFIG_ROOT_KEY",
     "CONFIG_SECTION_NAME",
     "MODULE_DIR",
     "TEMPLATE_FILENAME",
