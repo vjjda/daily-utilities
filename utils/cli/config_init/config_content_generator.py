@@ -20,12 +20,12 @@ def generate_config_content(
     template_filename: str,
     config_section_name: str,
     effective_defaults: Dict[str, Any],
+    use_template_comments: bool = True,
 ) -> str:
     if tomlkit is None:
         raise ImportError("Thư viện 'tomlkit' không được cài đặt.")
 
     template_path = module_dir / template_filename
-    template_lines = load_text_template(template_path, logger).splitlines()
 
     output_lines: List[str] = []
 
@@ -35,54 +35,62 @@ def generate_config_content(
     key_line_pattern = re.compile(r"^(\s*)(#?\s*)([\w-]+)(\s*=.*?)?\s*(#.*)?$")
 
     key_comments: Dict[str, str] = {}
-    current_key_comment = ""
-    in_section = False
-    for line in template_lines:
-        stripped_line = line.strip()
-        if (
-            stripped_line == f"[{config_section_name}]"
-            or stripped_line == "[{config_section_name}]"
-        ):
-            in_section = True
-            continue
-        if in_section and stripped_line.startswith("[") and stripped_line.endswith("]"):
-            in_section = False
-            break
-        if not in_section:
-            continue
 
-        if stripped_line.startswith("#"):
-            current_key_comment = (
-                f"{current_key_comment}\n{line}" if current_key_comment else line
-            )
-            continue
+    if use_template_comments:
+        logger.debug(f"Đang tải template chi tiết từ: {template_filename}")
+        template_lines = load_text_template(template_path, logger).splitlines()
+        current_key_comment = ""
+        in_section = False
+        for line in template_lines:
+            stripped_line = line.strip()
+            if (
+                stripped_line == f"[{config_section_name}]"
+                or stripped_line == "[{config_section_name}]"
+            ):
+                in_section = True
+                continue
+            if (
+                in_section
+                and stripped_line.startswith("[")
+                and stripped_line.endswith("]")
+            ):
+                in_section = False
+                break
+            if not in_section:
+                continue
 
-        match = key_line_pattern.match(line)
-        if match:
-            key_name = match.group(3)
-            if current_key_comment:
-
-                key_comments[key_name] = current_key_comment.strip()
-
-            current_key_comment = ""
-
-            trailing_comment = match.group(5)
-            if trailing_comment:
-                existing_comment = key_comments.get(key_name, "")
-
-                separator = " " if existing_comment else ""
-                key_comments[key_name] = (
-                    f"{existing_comment}{separator}{trailing_comment.strip()}"
+            if stripped_line.startswith("#"):
+                current_key_comment = (
+                    f"{current_key_comment}\n{line}" if current_key_comment else line
                 )
+                continue
 
-        elif stripped_line == "":
-            if current_key_comment:
-                current_key_comment += "\n"
-        else:
-            current_key_comment = ""
+            match = key_line_pattern.match(line)
+            if match:
+                key_name = match.group(3)
+                if current_key_comment:
+                    key_comments[key_name] = current_key_comment.strip()
+
+                current_key_comment = ""
+
+                trailing_comment = match.group(5)
+                if trailing_comment:
+                    existing_comment = key_comments.get(key_name, "")
+
+                    separator = " " if existing_comment else ""
+                    key_comments[key_name] = (
+                        f"{existing_comment}{separator}{trailing_comment.strip()}"
+                    )
+
+            elif stripped_line == "":
+                if current_key_comment:
+                    current_key_comment += "\n"
+                else:
+                    current_key_comment = ""
+    else:
+        logger.debug("Bỏ qua template comments, chỉ tạo key-value đơn giản.")
 
     for key, value in sorted(effective_defaults.items()):
-
         if key in key_comments:
             output_lines.append(key_comments[key])
 
@@ -90,8 +98,12 @@ def generate_config_content(
             value_str = format_value_to_toml(value)
             output_lines.append(f"{key} = {value_str}")
         else:
-            output_lines.append(f"# {key} = ")
-        output_lines.append("")
+
+            if not use_template_comments or key not in key_comments:
+                output_lines.append(f"# {key} = ")
+
+        if not use_template_comments:
+            output_lines.append("")
 
     while output_lines and output_lines[-1] == "":
         output_lines.pop()

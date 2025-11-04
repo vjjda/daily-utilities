@@ -39,7 +39,6 @@ def handle_config_init_request(
     config_section_name: str,
     base_defaults: Dict[str, Any],
 ) -> bool:
-
     if not (config_project or config_local):
         return False
 
@@ -74,12 +73,23 @@ def handle_config_init_request(
             cwd=cwd,
         )
 
+        use_template_comments = scope == "local"
+        if scope == "project":
+            logger.debug(
+                "Scope 'project' selected. Sẽ tạo nội dung config đơn giản hóa (không có comment template)."
+            )
+        else:
+            logger.debug(
+                "Scope 'local' selected. Sẽ tạo nội dung config chi tiết từ template."
+            )
+
         config_content_string = generate_config_content(
             logger=logger,
             module_dir=module_dir,
             template_filename=template_filename,
             config_section_name=config_section_name,
             effective_defaults=effective_defaults,
+            use_template_comments=use_template_comments,
         )
 
         config_file_path: Optional[Path] = None
