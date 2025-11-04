@@ -1,101 +1,82 @@
-# Hướng dẫn sử dụng: tree
+# Hướng dẫn sử dụng: ctree
 
-`tree` là một công cụ tạo cây thư mục thông minh, tương tự như lệnh `tree` trên Linux nhưng được tăng cường khả năng lọc. Nó cung cấp các tùy chọn lọc nâng cao thông qua các đối số dòng lệnh và file cấu hình, đồng thời tự động bỏ qua các file/thư mục không cần thiết (như `.venv`, `__pycache__`, và `.git`).
-
-## Khởi Động Nhanh
-
-Cách dễ nhất để bắt đầu là khởi tạo một file cấu hình trong dự án của bạn:
-
-```sh
-# 1. Khởi tạo file cấu hình cục bộ (.tree.toml)
-# Tạo/cập nhật file .tree.toml và mở nó.
-tree --config-local
-
-# 2. Hoặc, cập nhật file cấu hình toàn dự án (.project.toml)
-# Cập nhật phần [tree] trong file .project.toml.
-tree --config-project
-```
+`ctree` là một công cụ tạo cây thư mục thông minh, tương tự như lệnh `tree` trên Linux nhưng được tăng cường khả năng lọc. Nó cung cấp các tùy chọn lọc nâng cao thông qua các đối số dòng lệnh và file cấu hình, đồng thời tự động bỏ qua các file/thư mục không cần thiết (như `.venv`, `__pycache__`, và `.git`).
 
 ## Cách Sử Dụng
 
+Lệnh để chạy công cụ này là `ctree`.
+
 ```sh
-tree [start_path] [options]
+ctree [start_path] [options]
 ```
 
 - `start_path`: Thư mục hoặc file để bắt đầu tạo cây. Mặc định là thư mục hiện tại (`.`).
 
 ## Tùy Chọn Dòng Lệnh (CLI Options)
 
-- **`-h, --help`**: Hiển thị trợ giúp.
 - **`-L, --level <num>`**: Giới hạn độ sâu hiển thị của cây.
-- **`-e, --extensions <exts>`**: **(BỊ THIẾU TRONG DOC CŨ)** Chỉ hiển thị các file có đuôi mở rộng được liệt kê (phân cách bởi dấu phẩy).
-  - Hỗ trợ các toán tử:
-    - `py,md` (không có toán tử đầu): Ghi đè hoàn toàn danh sách mặc định/config (vốn là `None` - hiển thị tất cả).
-    - `+ts,js`: Thêm `ts` và `js` vào danh sách hiện có.
-    - `~yaml,yml`: Loại bỏ `yaml` và `yml` khỏi danh sách hiện có.
-- **`-I, --ignore <patterns>`**: Thêm các pattern (giống `.gitignore`, phân cách bởi dấu phẩy) vào danh sách **ẩn hoàn toàn**. Các pattern này được **nối** vào danh sách từ config/default .
-- **`-P, --prune <patterns>`**: Thêm các pattern thư mục (giống `.gitignore`, phân cách bởi dấu phẩy) để **cắt tỉa**. Thư mục sẽ hiển thị nhưng nội dung bên trong bị ẩn (`[...]`). Các pattern này được **nối** vào danh sách từ config/default .
 - **`-d, --all-dirs`**: Chỉ hiển thị thư mục cho toàn bộ cây.
 - **`-D, --dirs-patterns <patterns>`**: Chỉ hiển thị thư mục con _bên trong_ các thư mục khớp với pattern (phân cách bởi dấu phẩy).
-- **`-s, --show-submodules`**: Hiển thị nội dung của Git submodules (mặc định là ẩn).
-- **`-N, --no-gitignore`**: Không tôn trọng các quy tắc từ file `.gitignore` (mặc định là có nếu là kho Git).
-- **`-f, --full-view`**: Bỏ qua tất cả các bộ lọc (`.gitignore`, `ignore`, `prune`, `level`, `extensions`) và hiển thị tất cả file.
-- **`-c, --config-project`**: Khởi tạo hoặc cập nhật section `[tree]` trong `.project.toml`.
-- **`-C, --config-local`**: Khởi tạo hoặc cập nhật file `.tree.toml` cục bộ.
+- **`-f, --full-view`**: Bỏ qua tất cả các bộ lọc (`.gitignore`, `ignore`, `prune`, `level`, `extensions`) và hiển thị toàn bộ cây.
 
----
+### Tùy chọn Lọc
+
+- **`-e, --extensions <exts>`**: Chỉ hiển thị các file có đuôi mở rộng được liệt kê (phân cách bởi dấu phẩy). Hỗ trợ các toán tử `+` (thêm) và `~` (bớt).
+- **`-I, --ignore <patterns>`**: Thêm các pattern (giống `.gitignore`) để **ẩn hoàn toàn** các file/thư mục khớp. 
+- **`-P, --prune <patterns>`**: Thêm các pattern thư mục để **cắt tỉa**. Thư mục sẽ hiển thị nhưng nội dung bên trong bị ẩn (`[...]`).
+- **`-s, --show-submodules`**: Hiển thị nội dung của Git submodules (mặc định là ẩn).
+- **`-N, --no-gitignore`**: Không tôn trọng các quy tắc từ file `.gitignore`.
+
+### Tùy chọn Cấu hình
+
+- **`-c, --config-project`**: Khởi tạo/cập nhật section `[tree]` trong `.project.toml`.
+- **`-C, --config-local`**: Khởi tạo/cập nhật file `.tree.toml` cục bộ.
 
 ## File Cấu Hình
 
-`tree` tự động tải cấu hình từ các file `.toml` sau:
+`ctree` tự động tải cấu hình từ `.tree.toml` (cục bộ) và `.project.toml` (toàn cục).
 
-- `.tree.toml`: File cấu hình cục bộ.
-- `.project.toml`: File cấu hình dự phòng toàn dự án (sử dụng section `[tree]`).
-
-### Độ Ưu Tiên Cấu Hình
-
-1. **Đối Số Dòng Lệnh (CLI Arguments)** (Ưu tiên cao nhất)
-2. **File `.tree.toml`**
-3. **File `.project.toml` (Section `[tree]`)**
-4. **Cài Đặt Mặc Định Của Script** (Ưu tiên thấp nhất)
-
-### Các tùy chọn cấu hình trong file `.toml`
+**Độ ưu tiên:** `Đối số CLI` > `.tree.toml` > `.project.toml` > `Mặc định`.
 
 ```toml
 # Ví dụ: .tree.toml hoặc section [tree] trong .project.toml
 
-[tree]
-
-# level (Optional[int]): Giới hạn độ sâu hiển thị.
-# Mặc định: không giới hạn (None)
+# Giới hạn độ sâu hiển thị.
 # level = 3
 
-# show-submodules (bool): Hiển thị nội dung của Git submodules.
-# Mặc định: false (ẩn submodules)
+# Hiển thị nội dung của Git submodules.
 show-submodules = false
 
-# use-gitignore (bool): Có tôn trọng file .gitignore hay không.
-# Mặc định: true (luôn tôn trọng nếu là kho Git)
+# Có tôn trọng file .gitignore hay không (bị ghi đè bởi cờ -N).
 use-gitignore = true
 
-# ignore (List[str]): Danh sách các pattern (giống .gitignore) để ẩn hoàn toàn.
-# Các pattern này sẽ được NỐI VÀO danh sách mặc định của script.
-# Mặc định (script): [".venv", "__pycache__", ".git", ...]
+# Chỉ hiển thị các file có đuôi trong danh sách này.
+# extensions = ["py", "md"]
+
+# Danh sách các pattern để ẩn hoàn toàn.
 ignore = ["*.tmp", ".env"]
 
-# prune (List[str]): Danh sách các pattern thư mục để "cắt tỉa" ([...]).
-# Các pattern này sẽ được NỐI VÀO danh sách mặc định của script.
-# Mặc định (script): ["dist", "build"]
+# Danh sách các pattern thư mục để "cắt tỉa" (hiển thị thư mục, ẩn nội dung).
 prune = ["node_modules/", "vendor/"]
 
-# dirs-only (Union[str, List[str], None]): Chế độ chỉ hiển thị thư mục.
+# Chế độ chỉ hiển thị thư mục.
 # - "_ALL_": Chỉ hiển thị thư mục cho toàn bộ cây (tương đương cờ -d).
-# - ["pattern1", "pattern2/"]: Chỉ hiển thị thư mục con BÊN TRONG các thư mục khớp pattern.
-# Mặc định: [] (hiển thị cả file và thư mục)
+# - ["src", "libs"]: Chỉ hiển thị thư mục con bên trong `src` và `libs` (tương đương cờ -D).
 # dirs-only = "_ALL_"
+```
 
-# extensions (Optional[List[str]]): Chỉ hiển thị các file có đuôi trong danh sách này.
-# Ghi đè hoàn toàn danh sách mặc định (là None - hiển thị tất cả).
-# Bị ảnh hưởng bởi cờ -e (với logic +/~/overwrite).
-# extensions = ["py", "md"]
+## Ví dụ
+
+```sh
+# 1. Hiển thị cây thư mục hiện tại với độ sâu tối đa là 2
+ctree . -L 2
+
+# 2. Hiển thị chỉ các file Python và Markdown, bỏ qua thư mục build
+ctree . -e py,md -I build
+
+# 3. Hiển thị toàn bộ cây, không lọc gì cả
+ctree . -f
+
+# 4. Khởi tạo file cấu hình cục bộ
+ctree --config-local
 ```
