@@ -12,6 +12,7 @@ env
 *.log
 dist/
 build/
+.ruff_cache/
 
 /tmp
 /docs/drafts/*
